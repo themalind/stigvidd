@@ -69,7 +69,8 @@ public class ContentReportServiceTests
         Mock<IContentReportRepository> repo,
         Mock<IConfiguration>? cfg = null,
         Mock<IWebDavService>? webDav = null,
-        StigviddMetrics? metrics = null)
+        StigviddMetrics? metrics = null,
+        Mock<IPushQueue>? pushQueue = null)
     {
         var userService = new Mock<IUserService>();
         userService.Setup(s => s.GetUserIdByIdentifierAsync(ReporterIdentifier, It.IsAny<CancellationToken>()))
@@ -79,8 +80,10 @@ public class ContentReportServiceTests
             repo.Object,
             userService.Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
+            (pushQueue ?? new Mock<IPushQueue>()).Object,
             Utilities.Stubs.ContentReportResponseFactory(),
             metrics ?? new StigviddMetrics(),
+            Utilities.ReportHandlers(),
             NullLogger<ContentReportService>.Instance,
             (cfg ?? Config()).Object);
     }
@@ -406,7 +409,8 @@ public class ContentReportServiceTests
         ReportStatus current = ReportStatus.Pending,
         ReportedContentType contentType = ReportedContentType.Review,
         IReadOnlyCollection<string>? deletedImageUrls = null,
-        int reportsSettled = 1)
+        int reportsSettled = 1,
+        IReadOnlyList<PushMessage>? pushes = null)
     {
         var repo = new Mock<IContentReportRepository>();
 
@@ -423,7 +427,7 @@ public class ContentReportServiceTests
                 It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ReportedContentType _, int _, ReportStatus decision, string _, string? _, CancellationToken _) =>
                 RepositoryResult<DecisionOutcome>.Success(
-                    new DecisionOutcome(decision, deletedImageUrls ?? [], reportsSettled)));
+                    new DecisionOutcome(decision, deletedImageUrls ?? [], reportsSettled, pushes ?? [])));
 
         return repo;
     }
@@ -566,6 +570,23 @@ public class ContentReportServiceTests
         result.Success.Should().BeTrue();
         webDav.Verify(s => s.DeleteFileAsync("https://media/one.jpg"), Times.Once);
         webDav.Verify(s => s.DeleteFileAsync("https://media/two.jpg"), Times.Once);
+    }
+
+    [Fact]
+    public async Task Decide_UpholdingAnEvent_SendsThePushesTheRepositoryHandsBack()
+    {
+        // Arrange
+        var pushQueue = new Mock<IPushQueue>();
+        var push = new PushMessage([7, 8], "Inställt: Kvällsvandring", "Evenemanget den 3 november är inställt.", new Dictionary<string, object>());
+        var repo = DecidableRepository(contentType: ReportedContentType.Event, pushes: [push]);
+
+        // Act
+        var result = await Build(repo, pushQueue: pushQueue).DecideAsync(
+            ReportIdentifier, Decide("Uphold"), "moderator", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        pushQueue.Verify(q => q.Enqueue(push), Times.Once);
     }
 
     // Obstacles have no image column, so nothing should be asked of WebDAV.

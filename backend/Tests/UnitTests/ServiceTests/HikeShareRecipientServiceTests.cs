@@ -22,7 +22,7 @@ public class HikeShareRecipientServiceTests
         Mock<IHikeRepository>? hikeRepositoryMock = null,
         Mock<IFriendRepository>? friendRepositoryMock = null,
         Mock<IUserBlockService>? userBlockServiceMock = null,
-        Mock<IPushNotificationService>? pushNotificationServiceMock = null,
+        Mock<IPushQueue>? pushQueueMock = null,
         Mock<IHikeService>? hikeServiceMock = null,
         Mock<IHikeShareRepository>? hikeShareRepositoryMock = null,
         StigviddMetrics? metrics = null)
@@ -39,7 +39,7 @@ public class HikeShareRecipientServiceTests
             userRepository.Object,
             hikeRepositoryMock?.Object ?? new Mock<IHikeRepository>().Object,
             (userBlockServiceMock ?? Utilities.MockFactory.UserBlockServiceHiding()).Object,
-            HikeShareDistributorTests.Distributor(userRepository, friendRepositoryMock, hikeShareRepositoryMock, pushNotificationServiceMock),
+            HikeShareDistributorTests.Distributor(userRepository, friendRepositoryMock, hikeShareRepositoryMock, pushQueueMock),
             metrics ?? new StigviddMetrics(),
             hikeServiceMock?.Object ?? defaultHikeServiceMock.Object,
             Utilities.Stubs.HikeResponseFactory()

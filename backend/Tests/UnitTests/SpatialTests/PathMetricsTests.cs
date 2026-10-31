@@ -49,7 +49,7 @@ public class PathMetricsTests
     {
         var path = Utilities.GeoPath((1, 1), (2, 2), (3, 3), (4, 4), (5, 5));
 
-        var trimmed = HikeSubmissionService.Trim(path, 1, 3);
+        var trimmed = PathTrim.Trim(path, 1, 3);
 
         trimmed.Should().NotBeNull();
         trimmed.Coordinates.Select(c => c.X).Should().Equal(2, 3, 4);
@@ -65,7 +65,7 @@ public class PathMetricsTests
     {
         var path = Utilities.GeoPath((1, 1), (2, 2), (3, 3), (4, 4), (5, 5));
 
-        HikeSubmissionService.Trim(path, start, end).Should().BeNull();
+        PathTrim.Trim(path, start, end).Should().BeNull();
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class PathMetricsTests
     {
         var path = Utilities.GeoPath((1, 1), (2, 2), (3, 3));
 
-        var trimmed = HikeSubmissionService.Trim(path, null, null);
+        var trimmed = PathTrim.Trim(path, null, null);
 
         trimmed.Should().NotBeNull();
         trimmed.NumPoints.Should().Be(3);

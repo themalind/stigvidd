@@ -22,6 +22,7 @@ public interface IUserRepository
     Task<RepositoryResult<T>> AddTrailToUserWishListAsync<T>(string userIdentifier, string trailIdentifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult> RemoveTrailFromUserFavoritesListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
     Task<RepositoryResult> RemoveTrailFromUserWishListAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken);
-    Task<RepositoryResult> BanUserAsync(string identifier, string bannedBy, string? bannedReason, CancellationToken ctoken);
+    // The banned user's handed-over events, for the service to push about after commit. keep-comment: why a ban returns outcomes
+    Task<RepositoryResult<IReadOnlyList<HandOverOutcome>>> BanUserAsync(string identifier, string bannedBy, string? bannedReason, CancellationToken ctoken);
     Task<RepositoryResult> UnbanUserAsync(string identifier, string liftedBy, CancellationToken ctoken);
 }

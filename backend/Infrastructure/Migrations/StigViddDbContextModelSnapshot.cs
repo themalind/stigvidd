@@ -302,6 +302,271 @@ namespace Infrastructure.Migrations
                     b.ToTable("EmailVerificationTokens", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.Event", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AllowParticipantInvites")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Point>("Location")
+                        .IsRequired()
+                        .HasColumnType("geometry(Point, 4326)")
+                        .HasAnnotation("Sqlite:Srid", 4326);
+
+                    b.Property<string>("LocationName")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("MaxParticipants")
+                        .HasColumnType("integer");
+
+                    b.Property<Point>("MeetingPoint")
+                        .HasColumnType("geometry(Point, 4326)")
+                        .HasAnnotation("Sqlite:Srid", 4326);
+
+                    b.Property<string>("MeetingPointName")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ModerationState")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ParticipantCount")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("PastAfter")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RegistrationDeadline")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("TrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Visibility")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.HasIndex("Location");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Location"), "gist");
+
+                    b.HasIndex("PastAfter");
+
+                    b.HasIndex("TrailId");
+
+                    b.HasIndex("Visibility", "Status", "StartsAt", "Id");
+
+                    b.ToTable("Events", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ModerationState")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId")
+                        .IsUnique();
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.ToTable("EventImages", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventInvitation", b =>
+                {
+                    b.Property<int>("EventId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("InvitedUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("InvitedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("EventId", "InvitedUserId");
+
+                    b.HasIndex("InvitedByUserId", "CreatedAt");
+
+                    b.HasIndex("InvitedUserId", "Status");
+
+                    b.ToTable("EventInvitations", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventParticipant", b =>
+                {
+                    b.Property<int>("EventId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastPostPushAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastReadPostAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("MutePosts")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("EventId", "UserId");
+
+                    b.HasIndex("EventId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_EventParticipants_OneOrganizer")
+                        .HasFilter("\"Role\" = 0");
+
+                    b.HasIndex("UserId", "Status");
+
+                    b.ToTable("EventParticipants", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventPost", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EditedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ModerationState")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("EventId", "CreatedAt", "Id");
+
+                    b.ToTable("EventPosts", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventRoute", b =>
+                {
+                    b.Property<int>("EventId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LengthMetres")
+                        .HasColumnType("integer");
+
+                    b.Property<LineString>("Path")
+                        .IsRequired()
+                        .HasColumnType("geometry(LineString, 4326)")
+                        .HasAnnotation("Sqlite:Srid", 4326);
+
+                    b.HasKey("EventId");
+
+                    b.ToTable("EventRoutes", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.Facility", b =>
                 {
                     b.Property<int>("Id")
@@ -1651,6 +1916,30 @@ namespace Infrastructure.Migrations
                     b.ToTable("Users", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserActionLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Action")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Action", "CreatedAt");
+
+                    b.ToTable("UserActionLogs", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.UserBan", b =>
                 {
                     b.Property<int>("Id")
@@ -1910,6 +2199,101 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.Event", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
+                        .WithMany()
+                        .HasForeignKey("TrailId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Trail");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventImage", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Event", "Event")
+                        .WithOne("Image")
+                        .HasForeignKey("Infrastructure.Data.Entities.EventImage", "EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventInvitation", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Event", "Event")
+                        .WithMany("Invitations")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "InvitedBy")
+                        .WithMany()
+                        .HasForeignKey("InvitedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "InvitedUser")
+                        .WithMany()
+                        .HasForeignKey("InvitedUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("InvitedBy");
+
+                    b.Navigation("InvitedUser");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventParticipant", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Event", "Event")
+                        .WithMany("Participants")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventPost", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Event", "Event")
+                        .WithMany("Posts")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Event");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.EventRoute", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Event", "Event")
+                        .WithOne("Route")
+                        .HasForeignKey("Infrastructure.Data.Entities.EventRoute", "EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImage", b =>
@@ -2254,6 +2638,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("Trail");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.UserActionLog", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.UserBan", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.User", "User")
@@ -2331,6 +2726,19 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.Event", b =>
+                {
+                    b.Navigation("Image");
+
+                    b.Navigation("Invitations");
+
+                    b.Navigation("Participants");
+
+                    b.Navigation("Posts");
+
+                    b.Navigation("Route");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.Facility", b =>

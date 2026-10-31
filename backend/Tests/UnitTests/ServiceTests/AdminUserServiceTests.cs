@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
 using Core.Services;
+using Core.Services.Push;
 using AwesomeAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -13,18 +15,56 @@ public class AdminUserServiceTests
 {
     private const string Identifier = "user-identifier";
 
-    private static Mock<IUserRepository> UserRepo(RepositoryResult outcome)
+    private static Mock<IUserRepository> UserRepo(RepositoryResult outcome, IReadOnlyList<HandOverOutcome>? handOvers = null)
     {
         var repo = new Mock<IUserRepository>();
         repo.Setup(r => r.BanUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(outcome);
+            .ReturnsAsync(BanOutcome(outcome.Status, handOvers ?? []));
         repo.Setup(r => r.UnbanUserAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(outcome);
         return repo;
     }
 
-    private static AdminUserService Build(Mock<IUserRepository> userRepo, ILogger<AdminUserService>? logger = null) =>
-        new(userRepo.Object, logger ?? new Mock<ILogger<AdminUserService>>().Object);
+    private static RepositoryResult<IReadOnlyList<HandOverOutcome>> BanOutcome(RepositoryResultStatus status, IReadOnlyList<HandOverOutcome> handOvers)
+    {
+        return status switch
+        {
+            RepositoryResultStatus.Success => RepositoryResult<IReadOnlyList<HandOverOutcome>>.Success(handOvers),
+            RepositoryResultStatus.NotFound => RepositoryResult<IReadOnlyList<HandOverOutcome>>.NotFound(),
+            RepositoryResultStatus.Conflict => RepositoryResult<IReadOnlyList<HandOverOutcome>>.Conflict(),
+            _ => RepositoryResult<IReadOnlyList<HandOverOutcome>>.Error(),
+        };
+    }
+
+    private static AdminUserService Build(Mock<IUserRepository> userRepo, ILogger<AdminUserService>? logger = null, IPushQueue? pushQueue = null) =>
+        new(userRepo.Object, pushQueue ?? new Mock<IPushQueue>().Object, logger ?? new Mock<ILogger<AdminUserService>>().Object);
+
+    [Fact]
+    public async Task BanAsync_EnqueuesTheHandOverPushesAfterTheBan()
+    {
+        // Arrange
+        var startsAt = DateTime.UtcNow.AddDays(2);
+        HandOverOutcome[] handOvers =
+        [
+            new("event-1", "Tur", startsAt, WasUpcoming: true, NewOrganizerUserId: 5, CancelNotifyUserIds: []),
+            new("event-2", "Tur", startsAt, WasUpcoming: true, NewOrganizerUserId: null, CancelNotifyUserIds: [7]),
+        ];
+        var sent = new List<PushMessage>();
+        var queue = new Mock<IPushQueue>();
+        queue.Setup(q => q.Enqueue(It.IsAny<PushMessage>())).Callback<PushMessage>(sent.Add);
+
+        // Act
+        var result = await Build(UserRepo(RepositoryResult.Success(), handOvers), pushQueue: queue.Object)
+            .BanAsync(Identifier, "moderator", "spam", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        sent.Select(p => (p.Data["type"], p.UserIds.Single(), p.FromUserId)).Should().BeEquivalentTo(new[]
+        {
+            ((object)PushTypes.EventPromoted, 5, (int?)null),
+            ((object)PushTypes.EventCancelled, 7, (int?)null),
+        });
+    }
 
     [Fact]
     public async Task BanAsync_StampsTheBanWithWhoAndWhy()

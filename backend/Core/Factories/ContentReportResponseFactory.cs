@@ -47,7 +47,7 @@ public class ContentReportResponseFactory
             summary.AuthorIdentifier,
             summary.AuthorBannedAt,
             summary.ContentSnapshot,
-            summary.ContentType == ReportedContentType.HikeImage && summary.ContentSnapshot is not null
+            summary.ContentType is ReportedContentType.HikeImage or ReportedContentType.EventImage && summary.ContentSnapshot is not null
                 ? $"{_presentableBaseUrl}{summary.ContentSnapshot}"
                 : null,
             summary.ContentStillExists,

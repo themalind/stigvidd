@@ -29,8 +29,10 @@ public class ContentReportRepositoryTests : TestBase
         ModerationState = state,
     };
 
-    private static ContentReportRepository Build(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<ContentReportRepository>.Instance);
+    private static ContentReportRepository Build(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new ContentReportRepository(factory, Utilities.ReportHandlers(), NullLogger<ContentReportRepository>.Instance);
+    }
 
     // The whole point of reading past the filter: a second reporter must be able to report
     // something the first reporter already got hidden.
@@ -312,6 +314,34 @@ public class ContentReportRepositoryTests : TestBase
             .IgnoreQueryFilters(["Moderation"])
             .AnyAsync(r => r.Identifier == ReviewWithImagesIdentifier, TestContext.Current.CancellationToken);
         stillThere.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ApplyDecision_UpholdingAnEvent_RemovesItsChildrenAndTellsTheParticipants()
+    {
+        // Arrange
+        var reported = EventRepositoryTests.NewEvent(1, organizerId: 1, moderation: ModerationState.HiddenPendingReview);
+        reported.Participants.Add(new EventParticipant { UserId = 2 });
+        reported.Posts.Add(new EventPost { UserId = 2, Body = "Hej" });
+        reported.Image = new EventImage { ImageUrl = "events/reported.jpeg" };
+        var factory = CreateSeededFactory(db => db.Events.Add(reported));
+
+        // Act
+        var result = await Build(factory).ApplyDecisionAsync(
+            ReportedContentType.Event, 1, ReportStatus.Upheld, "moderator", null,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.DeletedImageUrls.Should().Equal("events/reported.jpeg");
+        result.Value.Pushes.Should().ContainSingle().Which.UserIds.Should().BeEquivalentTo([1, 2]);
+
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        (await context.Events.AnyAsync(e => e.Id == 1, TestContext.Current.CancellationToken)).Should().BeFalse();
+        (await context.EventParticipants.AnyAsync(p => p.EventId == 1, TestContext.Current.CancellationToken)).Should().BeFalse();
+        (await context.EventPosts.IgnoreQueryFilters(["Moderation"]).AnyAsync(p => p.EventId == 1, TestContext.Current.CancellationToken)).Should().BeFalse();
+        (await context.EventImages.AnyAsync(TestContext.Current.CancellationToken)).Should().BeFalse();
     }
 
     [Fact]
@@ -981,6 +1011,30 @@ public class ContentReportRepositoryTests : TestBase
 
         // Assert
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    // A removed participant is outside a private event, so they cannot report it, or its cover, to have it hidden. keep-comment: EventQueries.FindableBy matches CanView
+    [Theory]
+    [InlineData(ReportedContentType.Event, EventParticipantStatus.Joined, true)]
+    [InlineData(ReportedContentType.Event, EventParticipantStatus.Removed, false)]
+    [InlineData(ReportedContentType.EventImage, EventParticipantStatus.Joined, true)]
+    [InlineData(ReportedContentType.EventImage, EventParticipantStatus.Removed, false)]
+    public async Task GetReportableContent_PrivateEvent_IsFoundOnlyByThoseInsideIt(
+        ReportedContentType contentType, EventParticipantStatus reporterStatus, bool found)
+    {
+        // Arrange
+        var privateEvent = EventRepositoryTests.NewEvent(1, organizerId: 1, visibility: EventVisibility.Private);
+        privateEvent.Participants.Add(new EventParticipant { UserId = ReporterUserId, Status = reporterStatus });
+        privateEvent.Image = new EventImage { Identifier = "cover-1", ImageUrl = "events/cover.jpeg" };
+        var factory = CreateSeededFactory(db => db.Events.Add(privateEvent));
+        var identifier = contentType == ReportedContentType.Event ? "event-1" : "cover-1";
+
+        // Act
+        var result = await Build(factory).GetReportableContentAsync(
+            contentType, identifier, ReporterUserId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.Should().Be(found ? RepositoryResultStatus.Success : RepositoryResultStatus.NotFound);
     }
 
     [Fact]

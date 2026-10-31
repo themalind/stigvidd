@@ -3,6 +3,7 @@
 
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Services.Push;
 using Microsoft.Extensions.Logging;
 using WebDataContracts.ResponseModels.Friend;
 
@@ -13,20 +14,20 @@ public class FriendService : IFriendService
     private readonly IFriendRepository _friendRepository;
     private readonly IUserBlockService _userBlockService;
     private readonly IUserRepository _userRepository;
-    private readonly IPushNotificationService _pushNotificationService;
+    private readonly IPushQueue _pushQueue;
     private readonly ILogger _logger;
 
     public FriendService(
         IFriendRepository friendRepository,
         IUserBlockService userBlockService,
         IUserRepository userRepository,
-        IPushNotificationService pushNotificationService,
+        IPushQueue pushQueue,
         ILogger<FriendService> logger)
     {
         _friendRepository = friendRepository;
         _userBlockService = userBlockService;
         _userRepository = userRepository;
-        _pushNotificationService = pushNotificationService;
+        _pushQueue = pushQueue;
         _logger = logger;
     }
 
@@ -59,13 +60,12 @@ public class FriendService : IFriendService
             return Result.Fail(new Message(500, "An error occurred while accepting the friend request."));
         }
 
-        await _pushNotificationService.SendToUserAsync(
-            requesterIdentifier,
+        _pushQueue.Enqueue(new PushMessage(
+            [requesterIdResult.Value],
             "Vänförfrågan accepterad",
             "Din vänförfrågan har accepterats",
-            new Dictionary<string, object> { ["type"] = "friend_request_accepted" },
-            ctoken,
-            fromUserIdentifier: currentUserIdentifier);
+            new Dictionary<string, object> { ["type"] = PushTypes.FriendRequestAccepted },
+            FromUserId: currentUserIdResult.Value));
 
         return Result.Ok();
     }
@@ -239,7 +239,7 @@ public class FriendService : IFriendService
                 return Result.Fail(new Message(500, "An error occurred while retrieving the current user."));
             }
 
-            var receiverResult = await _userRepository.GetUserByNickNameAsync(receiverNickName, u => new ReceiverProjection(u.Id, u.Identifier), ctoken);
+            var receiverResult = await _userRepository.GetUserByNickNameAsync(receiverNickName, u => new ReceiverProjection(u.Id), ctoken);
             if (!receiverResult.IsSuccess)
             {
                 if (receiverResult.Status == RepositoryResultStatus.NotFound)
@@ -266,11 +266,10 @@ public class FriendService : IFriendService
                 return Result.Fail(new Message(500, "An error occurred while sending the friend request."));
             }
 
-            // Send push notification to the receiver about the new friend request
-            var notificationResult = await _pushNotificationService.SendToUserAsync(
-            receiverResult.Value.Identifier, "Ny vänförfrågan", $"{currentUserIdResult.Value.NickName} vill bli vän med dig",
-            new Dictionary<string, object> { ["type"] = "friend_request" }, ctoken,
-            fromUserIdentifier: currentUserIdentifier);
+            _pushQueue.Enqueue(new PushMessage(
+                [receiverResult.Value.Id], "Ny vänförfrågan", $"{currentUserIdResult.Value.NickName} vill bli vän med dig",
+                new Dictionary<string, object> { ["type"] = PushTypes.FriendRequest },
+                FromUserId: currentUserIdResult.Value.Id));
 
             return Result.Ok();
         }

@@ -107,7 +107,7 @@ public class HikeSubmissionService : IHikeSubmissionService
         if (pendingCountResult.Value >= HikeSubmissionLimits.PendingPerUser)
             return Result.Fail<HikeSubmissionResponse>(new Message(429, $"At most {HikeSubmissionLimits.PendingPerUser} walks can wait for review at a time."));
 
-        var path = Trim(hike.GeoPath, request.TrimStartIndex, request.TrimEndIndex);
+        var path = PathTrim.Trim(hike.GeoPath, request.TrimStartIndex, request.TrimEndIndex);
 
         if (path is null)
             return Result.Fail<HikeSubmissionResponse>(new Message(400, "The trim indexes do not leave a path."));
@@ -545,19 +545,6 @@ public class HikeSubmissionService : IHikeSubmissionService
                 LikelyDuplicate = Math.Min(x.Comparison.CoverageForward, x.Comparison.CoverageBackward) >= DuplicateShare,
             })
             .ToList();
-    }
-
-    // keep-comment: a null index keeps that end as recorded; both are inclusive and must leave at least two points
-    internal static LineString? Trim(LineString path, int? startIndex, int? endIndex)
-    {
-        var coordinates = path.Coordinates;
-        var start = startIndex ?? 0;
-        var end = endIndex ?? coordinates.Length - 1;
-
-        if (start < 0 || end >= coordinates.Length || end - start < 1)
-            return null;
-
-        return GeoPointFactory.FromLonLatPath(coordinates[start..(end + 1)].Select(c => new Coordinate(c.X, c.Y)));
     }
 
     private static Message? ToFailure(RepositoryResultStatus status, string identifier) => status switch

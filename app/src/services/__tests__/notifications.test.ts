@@ -42,8 +42,8 @@ import { Platform } from "react-native";
 import {
   claimNotificationResponse,
   releaseNotificationResponse,
-  NOTIFICATION_QUERY_KEYS,
-  NOTIFICATION_ROUTES,
+  NOTIFICATION_HANDLERS,
+  notificationHandlerFor,
   registerForPushNotificationsAsync,
   unregisterForPushNotificationsAsync,
 } from "../notifications";
@@ -76,47 +76,49 @@ beforeEach(() => {
 
 // ── Routing maps ──────────────────────────────────────────────────────────────
 
-describe("NOTIFICATION_QUERY_KEYS", () => {
-  it("has an entry for friend_request", () => {
-    expect(NOTIFICATION_QUERY_KEYS["friend_request"]).toBeDefined();
+describe("notificationHandlerFor", () => {
+  it("maps friend_request to the incoming friends query and the friends screen", () => {
+    const handler = notificationHandlerFor({ type: "friend_request" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.queryKeys).toEqual(["friends", "incoming"]);
+    expect(handler.route({ type: "friend_request" })).toContain("friends");
   });
 
-  it("has an entry for friend_request_accepted", () => {
-    expect(NOTIFICATION_QUERY_KEYS["friend_request_accepted"]).toBeDefined();
+  it("maps friend_request_accepted to the friends query and the friends screen", () => {
+    const handler = notificationHandlerFor({ type: "friend_request_accepted" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.queryKeys).toEqual(["friends"]);
+    expect(handler.route({ type: "friend_request_accepted" })).toContain("friends");
   });
 
-  it("has an entry for hike_share", () => {
-    expect(NOTIFICATION_QUERY_KEYS["hike_share"]).toBeDefined();
+  it("maps hike_share to the shared-hikes query and screen", () => {
+    const handler = notificationHandlerFor({ type: "hike_share" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.queryKeys).toEqual(["shared-hikes"]);
+    expect(handler.route({ type: "hike_share" })).toContain("shared-hikes");
   });
 
-  it("maps friend_request to the incoming friends query key", () => {
-    expect(NOTIFICATION_QUERY_KEYS["friend_request"]).toEqual(["friends", "incoming"]);
+  it("gives every push type with a screen an absolute route", () => {
+    for (const [type, handler] of Object.entries(NOTIFICATION_HANDLERS)) {
+      const route = handler.route({ type });
+      if (route !== undefined) expect(route).toMatch(/^\//);
+    }
   });
 
-  it("maps hike_share to the incoming shared-hikes query key", () => {
-    expect(NOTIFICATION_QUERY_KEYS["hike_share"]).toEqual(["shared-hikes"]);
-  });
-});
-
-describe("NOTIFICATION_ROUTES", () => {
-  it("has a route for friend_request", () => {
-    expect(NOTIFICATION_ROUTES["friend_request"]).toBeDefined();
+  it.each(["event_cancelled", "event_promoted", "event_invite"])("refreshes the events query on %s", (type) => {
+    const handler = notificationHandlerFor({ type, eventIdentifier: "event-id" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.queryKeys).toEqual(["events"]);
   });
 
-  it("has a route for friend_request_accepted", () => {
-    expect(NOTIFICATION_ROUTES["friend_request_accepted"]).toBeDefined();
-  });
-
-  it("has a route for hike_share", () => {
-    expect(NOTIFICATION_ROUTES["hike_share"]).toBeDefined();
-  });
-
-  it("routes hike_share to the shared-hikes screen", () => {
-    expect(NOTIFICATION_ROUTES["hike_share"]).toContain("shared-hikes");
-  });
-
-  it("routes friend_request to the friends screen", () => {
-    expect(NOTIFICATION_ROUTES["friend_request"]).toContain("friends");
+  it.each([
+    ["an unknown type", { type: "event_invite_from_a_newer_backend" }],
+    ["an inherited property name", { type: "toString" }],
+    ["a non-string type", { type: 42 }],
+    ["no type", {}],
+    ["no data", undefined],
+  ])("returns nothing for %s", (_label, data) => {
+    expect(notificationHandlerFor(data)).toBeUndefined();
   });
 });
 

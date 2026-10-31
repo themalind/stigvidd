@@ -48,6 +48,10 @@ If the scaffolded migration is wrong, do not patch the snapshot:
 dotnet ef migrations remove --project Infrastructure
 ```
 
+In auto mode the permission classifier refuses `migrations remove` (it deletes files). Rather than
+asking, add a second migration on top of the unapplied one; fold them together later only if the
+user wants a single migration.
+
 ## Hand-written SQL is normal here
 
 The `*PostGIS*` migrations contain hand-written `ST_SetSRID(ST_MakeLine(ST_MakePoint(...)),

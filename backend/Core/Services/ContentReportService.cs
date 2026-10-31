@@ -4,6 +4,7 @@
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Repositories.Reporting;
 using Core.Telemetry;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
@@ -30,8 +31,10 @@ public class ContentReportService : IContentReportService
     private readonly IContentReportRepository _reportRepository;
     private readonly IUserService _userService;
     private readonly IWebDavService _webDavService;
+    private readonly IPushQueue _pushQueue;
     private readonly ContentReportResponseFactory _responseFactory;
     private readonly StigviddMetrics _metrics;
+    private readonly ReportableContentHandlers _handlers;
     private readonly ILogger<ContentReportService> _logger;
     private readonly int _maxReportsPerUserPerDay;
     private readonly int _dismissedReportsBeforeHideIsWithheld;
@@ -41,16 +44,20 @@ public class ContentReportService : IContentReportService
         IContentReportRepository reportRepository,
         IUserService userService,
         IWebDavService webDavService,
+        IPushQueue pushQueue,
         ContentReportResponseFactory responseFactory,
         StigviddMetrics metrics,
+        ReportableContentHandlers handlers,
         ILogger<ContentReportService> logger,
         IConfiguration configuration)
     {
         _reportRepository = reportRepository;
         _userService = userService;
         _webDavService = webDavService;
+        _pushQueue = pushQueue;
         _responseFactory = responseFactory;
         _metrics = metrics;
+        _handlers = handlers;
         _logger = logger;
         _maxReportsPerUserPerDay = int.TryParse(configuration["ContentReports:MaxReportsPerUserPerDay"], out var max)
             ? max : DefaultMaxReportsPerUserPerDay;
@@ -68,14 +75,13 @@ public class ContentReportService : IContentReportService
         return result;
     }
 
-    private static string ContentTypeTag(string? contentType) =>
-        Enum.TryParse<ReportedContentType>(contentType, out var parsed) ? parsed switch
-        {
-            ReportedContentType.Review => MetricTags.Values.ContentTypeReview,
-            ReportedContentType.TrailObstacle => MetricTags.Values.ContentTypeTrailObstacle,
-            ReportedContentType.HikeImage => MetricTags.Values.ContentTypeHikeImage,
-            _ => MetricTags.Values.ContentTypeUnknown,
-        } : MetricTags.Values.ContentTypeUnknown;
+    private string ContentTypeTag(string? contentType)
+    {
+        if (!Enum.TryParse<ReportedContentType>(contentType, out var parsed))
+            return MetricTags.Values.ContentTypeUnknown;
+
+        return _handlers.For(parsed)?.MetricTag ?? MetricTags.Values.ContentTypeUnknown;
+    }
 
     private async Task<Result<ContentReportResponse?>> CreateCoreAsync(
         string reporterIdentifier, CreateContentReportRequest request, CancellationToken ctoken)
@@ -285,6 +291,9 @@ public class ContentReportService : IContentReportService
         await DeleteImageFilesAsync(
             outcome.Value.DeletedImageUrls,
             $"ReportIdentifier: {identifier}, ContentType: {report.ContentType}, ContentId: {report.ContentId}");
+
+        foreach (var push in outcome.Value.Pushes)
+            _pushQueue.Enqueue(push);
 
         return await GetDetailAsync(identifier, ctoken);
     }

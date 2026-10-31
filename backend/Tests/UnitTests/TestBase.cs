@@ -4,6 +4,7 @@
 using Core;
 using Core.Interfaces.Repositories;
 using Core.Repositories;
+using Core.Repositories.Events;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -42,6 +43,6 @@ public abstract class TestBase
     }
 
     protected static Task<RepositoryResult<DeletedAccount>> DeleteAccountAsync(IDbContextFactory<StigViddDbContext> factory, string userIdentifier) =>
-        new AccountDeletionRepository(factory, Mock.Of<IKeycloakAdminRepository>(), NullLogger<AccountDeletionRepository>.Instance)
+        new AccountDeletionRepository(factory, Mock.Of<IKeycloakAdminRepository>(), Utilities.ReportHandlers(), [new EventAccountDeletionStep()], NullLogger<AccountDeletionRepository>.Instance)
             .DeleteAccountAsync(userIdentifier, TestContext.Current.CancellationToken);
 }

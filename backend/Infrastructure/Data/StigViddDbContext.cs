@@ -45,6 +45,13 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<ContentReport> ContentReports { get; set; }
     public DbSet<MediaReprocessJob> MediaReprocessJobs { get; set; }
     public DbSet<MediaReprocessItem> MediaReprocessItems { get; set; }
+    public DbSet<Event> Events { get; set; }
+    public DbSet<EventParticipant> EventParticipants { get; set; }
+    public DbSet<EventInvitation> EventInvitations { get; set; }
+    public DbSet<EventImage> EventImages { get; set; }
+    public DbSet<EventPost> EventPosts { get; set; }
+    public DbSet<EventRoute> EventRoutes { get; set; }
+    public DbSet<UserActionLog> UserActionLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -109,6 +116,22 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
             modelBuilder.Entity<TrailObstacle>()
                 .HasIndex(to => to.IncidentLocation)
                 .HasMethod("gist");
+
+            modelBuilder.Entity<Event>()
+                .Property(e => e.MeetingPoint)
+                .HasColumnType("geometry(Point, 4326)");
+
+            modelBuilder.Entity<Event>()
+                .Property(e => e.Location)
+                .HasColumnType("geometry(Point, 4326)");
+
+            modelBuilder.Entity<Event>()
+                .HasIndex(e => e.Location)
+                .HasMethod("gist");
+
+            modelBuilder.Entity<EventRoute>()
+                .Property(r => r.Path)
+                .HasColumnType("geometry(LineString, 4326)");
         }
 
         // Set as a raw annotation rather than the provider's .HasSrid(4326), and left
@@ -141,6 +164,18 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
 
         modelBuilder.Entity<HikeSubmission>()
             .Property(s => s.OriginalGeoPath)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<Event>()
+            .Property(e => e.MeetingPoint)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<Event>()
+            .Property(e => e.Location)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<EventRoute>()
+            .Property(r => r.Path)
             .HasAnnotation("Sqlite:Srid", 4326);
     }
 }

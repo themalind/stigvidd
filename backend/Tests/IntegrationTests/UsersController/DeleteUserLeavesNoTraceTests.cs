@@ -50,6 +50,7 @@ public class DeleteUserLeavesNoTraceTests : IClassFixture<StigViddWebApplication
             "Users", "Hikes", "HikeShares", "Reviews", "TrailObstacles", "TrailObstacleSolvedVotes",
             "UserBlocks", "FriendRequests", "FriendNotes", "UserKeycloakMappings", "OutboxEmails", "UserPushTokens",
             "EmailVerificationTokens", "PasswordResetTokens", "UserBans", "ContentReports", "HikeSubmissions",
+            "EventParticipants", "EventInvitations", "EventPosts", "UserActionLogs",
         ]);
 
         // Act
@@ -62,6 +63,55 @@ public class DeleteUserLeavesNoTraceTests : IClassFixture<StigViddWebApplication
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         string.Join(", ", (await TracesAsync()).Select(t => $"{t.Table}.{t.Column}").Distinct()).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task DeleteUser_KeepsAReportOnTheirEventPostPendingAndThePostHidden()
+    {
+        // Arrange
+        var ctoken = TestContext.Current.CancellationToken;
+        int postId;
+        using (var db = Db())
+        {
+            var post = new EventPost { UserId = VandrarVennenId, Body = "Kränkande text", ModerationState = ModerationState.HiddenPendingReview };
+            db.Events.Add(NewEvent("board", DateTime.UtcNow,
+                [
+                    new EventParticipant { UserId = 1, Role = EventParticipantRole.Organizer },
+                    new EventParticipant { UserId = VandrarVennenId },
+                ],
+                [], [post]));
+            await db.SaveChangesAsync(ctoken);
+            postId = post.Id;
+
+            db.ContentReports.Add(new ContentReport
+            {
+                ContentType = ReportedContentType.EventPost,
+                ContentId = postId,
+                ContentIdentifier = post.Identifier,
+                ContentSnapshot = "Kränkande text",
+                AuthorNickNameSnapshot = NickName,
+                ContentAuthorUserId = VandrarVennenId,
+                ReporterUserId = 1,
+                Reason = ReportReason.Offensive,
+            });
+            await db.SaveChangesAsync(ctoken);
+        }
+
+        // Act
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Subject);
+        var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, "/api/v1/users/delete"), ctoken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        using var after = Db();
+        var report = await after.ContentReports.SingleAsync(r => r.ContentType == ReportedContentType.EventPost && r.ContentId == postId, ctoken);
+        report.Status.Should().Be(ReportStatus.Pending);
+        report.ContentSnapshot.Should().Be("Kränkande text");
+        report.AuthorNickNameSnapshot.Should().BeNull();
+        report.ContentAuthorUserId.Should().BeNull();
+        (await after.EventPosts.IgnoreQueryFilters(["Moderation"]).SingleAsync(p => p.Id == postId, ctoken))
+            .ModerationState.Should().Be(ModerationState.HiddenPendingReview);
     }
 
     private async Task SeedEverythingAsync()
@@ -98,6 +148,7 @@ public class DeleteUserLeavesNoTraceTests : IClassFixture<StigViddWebApplication
             SentAt = now,
         });
         db.UserPushTokens.Add(new UserPushToken { UserId = VandrarVennenId, ExpoToken = "ExponentPushToken[vandrar]", Platform = "ios" });
+        db.UserActionLogs.Add(new UserActionLog { UserId = VandrarVennenId, Action = UserAction.EventCreated });
         db.EmailVerificationTokens.Add(new EmailVerificationToken
         {
             UserId = VandrarVennenId, TokenHash = "token-hash", CodeHash = "code-hash", ExpiresAt = now.AddHours(1),
@@ -140,8 +191,43 @@ public class DeleteUserLeavesNoTraceTests : IClassFixture<StigViddWebApplication
             ConsentTextId = 1,
             Images = [new HikeSubmissionImage { ImageUrl = "trails/vandrar.jpeg", Width = 800, Height = 600 }],
         });
+        db.Events.AddRange(
+            NewEvent("organized", now,
+                [
+                    new EventParticipant { UserId = VandrarVennenId, Role = EventParticipantRole.Organizer },
+                    new EventParticipant { UserId = 3, Role = EventParticipantRole.CoHost },
+                ],
+                [new EventInvitation { InvitedUserId = 1, InvitedByUserId = VandrarVennenId }],
+                [new EventPost { UserId = VandrarVennenId, Body = "Välkomna", ModerationState = ModerationState.HiddenPendingReview }]),
+            NewEvent("joined", now,
+                [
+                    new EventParticipant { UserId = 1, Role = EventParticipantRole.Organizer },
+                    new EventParticipant { UserId = VandrarVennenId },
+                ],
+                [], []),
+            NewEvent("invited", now,
+                [new EventParticipant { UserId = 1, Role = EventParticipantRole.Organizer }],
+                [new EventInvitation { InvitedUserId = VandrarVennenId, InvitedByUserId = 1 }],
+                []));
 
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
+    private static Event NewEvent(string identifier, DateTime now, List<EventParticipant> participants, List<EventInvitation> invitations, List<EventPost> posts)
+    {
+        return new Event
+        {
+            Identifier = identifier,
+            Title = identifier,
+            Description = "Beskrivning",
+            Location = GeoPointFactory.FromLonLat(12.94, 57.72),
+            StartsAt = now.AddDays(3),
+            PastAfter = now.AddDays(4),
+            ParticipantCount = participants.Count,
+            Participants = participants,
+            Invitations = invitations,
+            Posts = posts,
+        };
     }
 
     // Raw SQL over every mapped table, so no query filter hides a row. keep-comment: why not DbSets

@@ -48,6 +48,11 @@ public static class GeoPointFactory
     public static LineString FromLonLatPath(IEnumerable<Coordinate> lonLatCoordinates) =>
         Wgs84Factory.CreateLineString([.. lonLatCoordinates]);
 
+    public static Geometry FromLonLatEnvelope(Envelope lonLatEnvelope)
+    {
+        return Wgs84Factory.ToGeometry(lonLatEnvelope);
+    }
+
     /// <summary>Latitude of a stored point, as the API contracts express it.</summary>
     public static decimal? ToLatitude(Point? point) => point is null ? null : (decimal)point.Y;
 

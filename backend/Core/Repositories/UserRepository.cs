@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
+using Core.Repositories.Events;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -409,11 +410,13 @@ public class UserRepository : IUserRepository
         }
     }
 
-    public async Task<RepositoryResult> BanUserAsync(string identifier, string bannedBy, string? bannedReason, CancellationToken ctoken)
+    // Hands back the hand-overs, so the service pushes about them after commit. keep-comment: a banned organizer's upcoming events are handed over in the ban's transaction
+    public async Task<RepositoryResult<IReadOnlyList<HandOverOutcome>>> BanUserAsync(string identifier, string bannedBy, string? bannedReason, CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
+            await using var transaction = await context.Database.BeginTransactionAsync(ctoken);
 
             var user = await context.Users
                 .Where(u => u.Identifier == identifier)
@@ -421,10 +424,10 @@ public class UserRepository : IUserRepository
                 .FirstOrDefaultAsync(ctoken);
 
             if (user is null)
-                return RepositoryResult.NotFound();
+                return RepositoryResult<IReadOnlyList<HandOverOutcome>>.NotFound();
 
             if (user.IsBanned)
-                return RepositoryResult.Conflict();
+                return RepositoryResult<IReadOnlyList<HandOverOutcome>>.Conflict();
 
             context.UserBans.Add(new UserBan
             {
@@ -434,23 +437,25 @@ public class UserRepository : IUserRepository
             });
 
             await context.SaveChangesAsync(ctoken);
+            var handOvers = await EventHandOver.RunForBannedAsync(context, user.Id, ctoken);
+            await transaction.CommitAsync(ctoken);
 
-            return RepositoryResult.Success();
+            return RepositoryResult<IReadOnlyList<HandOverOutcome>>.Success(handOvers);
         }
         catch (DbUpdateException ex)
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             if (await context.UserBans.AnyAsync(b => b.User != null && b.User.Identifier == identifier && b.LiftedAt == null, ctoken))
-                return RepositoryResult.Conflict();
+                return RepositoryResult<IReadOnlyList<HandOverOutcome>>.Conflict();
 
             _logger.LogError(ex, "UserRepository: BanUserAsync -> Something went wrong when banning user with identifier {identifier}.", identifier);
-            return RepositoryResult.Error();
+            return RepositoryResult<IReadOnlyList<HandOverOutcome>>.Error();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "UserRepository: BanUserAsync -> Something went wrong when banning user with identifier {identifier}.", identifier);
-            return RepositoryResult.Error();
+            return RepositoryResult<IReadOnlyList<HandOverOutcome>>.Error();
         }
     }
 

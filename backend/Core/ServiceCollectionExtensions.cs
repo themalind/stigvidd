@@ -65,12 +65,28 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEmailVerificationTokenRepository, EmailVerificationTokenRepository>();
         services.AddTransient<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddTransient<IContentReportRepository, ContentReportRepository>();
+        services.AddSingleton<IReportableContentHandler, Core.Repositories.Reporting.ReviewReportHandler>();
+        services.AddSingleton<IReportableContentHandler, Core.Repositories.Reporting.TrailObstacleReportHandler>();
+        services.AddSingleton<IReportableContentHandler, Core.Repositories.Reporting.HikeImageReportHandler>();
+        services.AddSingleton<IReportableContentHandler, Core.Repositories.Reporting.EventReportHandler>();
+        services.AddSingleton<IReportableContentHandler, Core.Repositories.Reporting.EventPostReportHandler>();
+        services.AddSingleton<IReportableContentHandler, Core.Repositories.Reporting.EventImageReportHandler>();
+        services.AddSingleton<Core.Repositories.Reporting.ReportableContentHandlers>();
         services.AddTransient<IAdminDashboardRepository, AdminDashboardRepository>();
+        services.AddTransient<IEventRepository, Core.Repositories.Events.EventRepository>();
+        services.AddTransient<IEventParticipantRepository, Core.Repositories.Events.EventParticipantRepository>();
+        services.AddTransient<IEventInvitationRepository, Core.Repositories.Events.EventInvitationRepository>();
+        services.AddTransient<IAccountDeletionStep, Core.Repositories.Events.EventAccountDeletionStep>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
         services.AddTransient<IUserService, UserService>();
         services.AddTransient<IReviewService, ReviewService>();
+        Core.Services.Events.EventLimits.Register(services);
+        services.AddTransient<Core.Services.Events.EventLoader>();
+        services.AddTransient<IEventService, Core.Services.Events.EventService>();
+        services.AddTransient<IEventParticipationService, Core.Services.Events.EventParticipationService>();
+        services.AddTransient<IEventInvitationService, Core.Services.Events.EventInvitationService>();
         services.AddTransient<IWebDavService, WebDavService>();
         services.AddTransient<IImageProcessingService, ImageProcessingService>();
         services.AddTransient<IMediaUploadService, MediaUploadService>();
@@ -142,6 +158,7 @@ public static class ServiceCollectionExtensions
                 : new SmtpMailSender(config, sp.GetRequiredService<ILogger<SmtpMailSender>>());
         });
         services.AddHttpClient<IPushNotificationService, ExpoPushService>(c => c.BaseAddress = new Uri("https://exp.host"));
+        services.AddSingleton<IPushQueue, Core.Services.Push.PushQueue>();
 
         services.AddTransient<Func<IWebDavClient>>(sp =>
         {
@@ -178,6 +195,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ContentReportResponseFactory>();
         services.AddTransient<MailTemplateResponseFactory>();
         services.AddTransient<MailOutboxResponseFactory>();
+        services.AddTransient<EventResponseFactory>();
 
         services.AddTransient<IDbMigrationRunner, DbMigrationRunner>();
     }

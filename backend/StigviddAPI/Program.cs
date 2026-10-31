@@ -175,6 +175,7 @@ public class Program
 
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessDispatcher>();
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessRetentionService>();
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.PushDispatcher>();
 
         // Swagger auth
         builder.Services.AddOpenApiDocument(config =>

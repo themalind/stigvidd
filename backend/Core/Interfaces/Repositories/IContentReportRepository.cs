@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 
@@ -74,7 +75,8 @@ public record AuthorStatistic(
 public record DecisionOutcome(
     ReportStatus AppliedStatus,
     IReadOnlyCollection<string> DeletedImageUrls,
-    int ReportsSettled);
+    int ReportsSettled,
+    IReadOnlyList<PushMessage> Pushes);
 
 public interface IContentReportRepository
 {

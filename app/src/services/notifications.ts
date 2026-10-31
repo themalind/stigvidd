@@ -22,19 +22,55 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Maps data.type from the push payload → the React Query key to invalidate.
-export const NOTIFICATION_QUERY_KEYS: Record<string, unknown[]> = {
-  friend_request: ["friends", "incoming"],
-  friend_request_accepted: ["friends"],
-  hike_share: ["shared-hikes"],
+// The backend's PushTypes, which send these as data.type. keep-comment: the two lists must match by hand
+export type PushType =
+  | "friend_request"
+  | "friend_request_accepted"
+  | "hike_share"
+  | "event_cancelled"
+  | "event_promoted"
+  | "event_invite";
+
+export type PushData = Record<string, unknown>;
+
+export interface NotificationHandler {
+  queryKeys: unknown[];
+  route: (data: PushData) => string | undefined;
+}
+
+export const NOTIFICATION_HANDLERS: Record<PushType, NotificationHandler> = {
+  friend_request: {
+    queryKeys: ["friends", "incoming"],
+    route: () => "/(tabs)/(profile-stack)/user/friends",
+  },
+  friend_request_accepted: {
+    queryKeys: ["friends"],
+    route: () => "/(tabs)/(profile-stack)/user/friends",
+  },
+  hike_share: {
+    queryKeys: ["shared-hikes"],
+    route: () => "/(tabs)/(profile-stack)/user/shared-hikes",
+  },
+  // No event screen yet, so a tap only refreshes; give these a route with the event detail. keep-comment: deliberate gap until the events tab ships
+  event_cancelled: {
+    queryKeys: ["events"],
+    route: () => undefined,
+  },
+  event_promoted: {
+    queryKeys: ["events"],
+    route: () => undefined,
+  },
+  event_invite: {
+    queryKeys: ["events"],
+    route: () => undefined,
+  },
 };
 
-// Maps data.type → the screen to navigate to when the user taps the notification.
-export const NOTIFICATION_ROUTES: Record<string, string> = {
-  friend_request: "/(tabs)/(profile-stack)/user/friends",
-  friend_request_accepted: "/(tabs)/(profile-stack)/user/friends",
-  hike_share: "/(tabs)/(profile-stack)/user/shared-hikes",
-};
+export function notificationHandlerFor(data: PushData | undefined): NotificationHandler | undefined {
+  const type = data?.type;
+  if (typeof type !== "string" || !Object.hasOwn(NOTIFICATION_HANDLERS, type)) return undefined;
+  return NOTIFICATION_HANDLERS[type as PushType];
+}
 
 const HANDLED_RESPONSES_KEY = "@stigvidd_handled_notifications";
 const HANDLED_RESPONSES_KEPT = 200;

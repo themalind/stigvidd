@@ -77,6 +77,9 @@ public static class MetricTags
         public const string ContentTypeReview = "review";
         public const string ContentTypeTrailObstacle = "trail_obstacle";
         public const string ContentTypeHikeImage = "hike_image";
+        public const string ContentTypeEvent = "event";
+        public const string ContentTypeEventPost = "event_post";
+        public const string ContentTypeEventImage = "event_image";
         public const string ContentTypeUnknown = "unknown";
     }
 }

@@ -14,6 +14,22 @@ public abstract class StigViddController : Controller
 {
     protected ActionResult ToActionResult(Message message)
     {
+        // Coded errors are ProblemDetails like [ApiController]'s 400s; uncoded ones stay plain strings, which shipped apps read. keep-comment: why two shapes remain
+        if (message.Code is not null && message.StatusCode is >= 400 and < 500)
+        {
+            var problem = new ProblemDetails { Status = message.StatusCode, Detail = message.ResultMessage };
+            problem.Extensions["code"] = message.Code;
+
+            foreach (var (key, value) in message.Details ?? new Dictionary<string, object>())
+                problem.Extensions[key] = value;
+
+            return new ObjectResult(problem)
+            {
+                StatusCode = message.StatusCode,
+                ContentTypes = { "application/problem+json" },
+            };
+        }
+
         return message.StatusCode switch
         {
             (int)HttpStatusCode.NotFound => NotFound(message.ResultMessage),

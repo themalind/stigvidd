@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
+using Core.Repositories.Reporting;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
@@ -13,11 +14,13 @@ namespace Core.Repositories;
 public class ContentReportRepository : IContentReportRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
+    private readonly ReportableContentHandlers _handlers;
     private readonly ILogger<ContentReportRepository> _logger;
 
-    public ContentReportRepository(IDbContextFactory<StigViddDbContext> context, ILogger<ContentReportRepository> logger)
+    public ContentReportRepository(IDbContextFactory<StigViddDbContext> context, ReportableContentHandlers handlers, ILogger<ContentReportRepository> logger)
     {
         _context = context;
+        _handlers = handlers;
         _logger = logger;
     }
 
@@ -28,50 +31,14 @@ public class ContentReportRepository : IContentReportRepository
     {
         try
         {
+            var handler = _handlers.For(contentType);
+
+            if (handler is null)
+                return RepositoryResult<ReportableContent>.NotFound();
+
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            ReportableContent? content = contentType switch
-            {
-                ReportedContentType.Review => await context.Reviews
-                    .IgnoreQueryFilters(["Moderation"])
-                    .AsNoTracking()
-                    .Where(r => r.Identifier == contentIdentifier)
-                    .Select(r => new ReportableContent(
-                        r.Id, r.Identifier, r.UserId, r.User != null ? r.User.NickName : null,
-                        r.TrailId, r.Trail!.Identifier, r.TrailReview, r.ModerationState))
-                    .FirstOrDefaultAsync(ctoken),
-
-                ReportedContentType.TrailObstacle => await context.TrailObstacles
-                    .IgnoreQueryFilters(["Moderation"])
-                    .AsNoTracking()
-                    .Where(to => to.Identifier == contentIdentifier)
-                    .Select(to => new ReportableContent(
-                        to.Id, to.Identifier, to.UserId, to.User != null ? to.User.NickName : null,
-                        to.TrailId, to.Trail!.Identifier, to.Description, to.ModerationState))
-                    .FirstOrDefaultAsync(ctoken),
-
-                // Only the owner or an accepted recipient finds it; the owner then gets the service's "own content" 400. keep-comment: privacy rule a reader cannot infer
-                ReportedContentType.HikeImage => await context.HikeImages
-                    .AsNoTracking()
-                    .Where(hi => hi.Identifier == contentIdentifier
-                        && hi.Hike != null
-                        && (hi.Hike.UserId == reporterUserId
-                            || context.HikeShares.Any(s => s.HikeId == hi.HikeId
-                                && s.SharedWithId == reporterUserId
-                                && s.Status == HikeShareStatus.Accepted)))
-                    .Select(hi => new ReportableContent(
-                        hi.Id,
-                        hi.Identifier,
-                        hi.Hike != null ? hi.Hike.UserId : null,
-                        hi.Hike != null ? hi.Hike.CreatedByNickName : null,
-                        null,
-                        null,
-                        hi.ImageUrl,
-                        hi.ModerationState))
-                    .FirstOrDefaultAsync(ctoken),
-
-                _ => null,
-            };
+            var content = await handler.FindAsync(context, contentIdentifier, reporterUserId, ctoken);
 
             return content is null
                 ? RepositoryResult<ReportableContent>.NotFound()
@@ -153,7 +120,7 @@ public class ContentReportRepository : IContentReportRepository
 
             context.ContentReports.Add(report);
 
-            if (hideContent && !await HideContentAsync(context, report, ctoken))
+            if (hideContent && !await SetModerationStateAsync(context, report.ContentType, report.ContentId, ModerationState.HiddenPendingReview, ctoken))
                 return RepositoryResult<ContentReport>.NotFound();
 
             await context.SaveChangesAsync(ctoken);
@@ -207,7 +174,7 @@ public class ContentReportRepository : IContentReportRepository
 
             var total = await query.CountAsync(ctoken);
 
-            var items = await query
+            var rows = await query
                 .OrderBy(r => r.Status)
                 .ThenBy(r => r.CreatedAt)
                 .ThenBy(r => r.Id)
@@ -215,6 +182,8 @@ public class ContentReportRepository : IContentReportRepository
                 .Take(pageSize)
                 .Select(Summary(context))
                 .ToListAsync(ctoken);
+
+            var items = await WithContentExistenceAsync(context, rows, ctoken);
 
             return RepositoryResult<PagedResult<ContentReportSummary>>.Success(
                 new PagedResult<ContentReportSummary>(items, page, (page * pageSize) < total, total));
@@ -233,14 +202,17 @@ public class ContentReportRepository : IContentReportRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var summary = await Queue(context)
+            var row = await Queue(context)
                 .Where(r => r.Identifier == identifier)
                 .Select(Summary(context))
                 .FirstOrDefaultAsync(ctoken);
 
-            return summary is null
-                ? RepositoryResult<ContentReportSummary>.NotFound()
-                : RepositoryResult<ContentReportSummary>.Success(summary);
+            if (row is null)
+                return RepositoryResult<ContentReportSummary>.NotFound();
+
+            var summaries = await WithContentExistenceAsync(context, [row], ctoken);
+
+            return RepositoryResult<ContentReportSummary>.Success(summaries[0]);
         }
         catch (Exception ex)
         {
@@ -513,12 +485,13 @@ public class ContentReportRepository : IContentReportRepository
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
-            var imageUrls = new List<string>();
+            var effects = new ContentDeletionEffects();
             var applied = decision;
 
             if (decision == ReportStatus.Upheld)
             {
-                var deleted = await DeleteContentAsync(context, contentType, contentId, imageUrls, ctoken);
+                var handler = _handlers.For(contentType);
+                var deleted = handler is not null && await handler.DeleteAsync(context, contentId, effects, ctoken);
 
                 // Retention may already have taken an obstacle, or the author may have
                 // deleted their account. The strike still lands, so this is not a failure.
@@ -527,7 +500,7 @@ public class ContentReportRepository : IContentReportRepository
             }
             else if (decision == ReportStatus.Dismissed)
             {
-                applied = await RestoreByIdAsync(context, contentType, contentId, ctoken)
+                applied = await SetModerationStateAsync(context, contentType, contentId, ModerationState.Visible, ctoken)
                     ? ReportStatus.Dismissed
                     : ReportStatus.ContentExpired;
             }
@@ -550,13 +523,13 @@ public class ContentReportRepository : IContentReportRepository
 
             var unreferencedUrls = new List<string>();
 
-            foreach (var url in imageUrls)
+            foreach (var url in effects.ImageUrls)
             {
                 if (!await ImageReferences.IsReferencedAsync(context, url, ctoken))
                     unreferencedUrls.Add(url);
             }
 
-            return RepositoryResult<DecisionOutcome>.Success(new DecisionOutcome(applied, unreferencedUrls, pending.Count));
+            return RepositoryResult<DecisionOutcome>.Success(new DecisionOutcome(applied, unreferencedUrls, pending.Count, effects.Pushes));
         }
         catch (Exception ex)
         {
@@ -565,16 +538,15 @@ public class ContentReportRepository : IContentReportRepository
         }
     }
 
-    // Reports are never filtered; the queue always sees everything. IgnoreQueryFilters sits
-    // on the outer query so the existence subqueries in Summary see hidden content too.
+    // Reports are never filtered; the queue always sees everything. keep-comment: whether content still exists is each handler's ExistingIdsAsync
     private static IQueryable<ContentReport> Queue(StigViddDbContext context) =>
         context.ContentReports.IgnoreQueryFilters(["Moderation"]).AsNoTracking();
 
     // The nickname is looked up on the id first: the snapshot is what the name was when the
     // report was written, and it is nulled outright once the author deletes their account.
     // The strike list is what decides whether to remove someone, so it must not be vague.
-    private static System.Linq.Expressions.Expression<Func<ContentReport, ContentReportSummary>> Summary(StigViddDbContext context) =>
-        r => new ContentReportSummary(
+    private static System.Linq.Expressions.Expression<Func<ContentReport, QueueRow>> Summary(StigViddDbContext context) =>
+        r => new QueueRow(r.ContentType, r.ContentId, new ContentReportSummary(
             r.Identifier,
             r.ContentType,
             r.ContentIdentifier,
@@ -589,152 +561,44 @@ public class ContentReportRepository : IContentReportRepository
             context.Users.Where(u => u.Id == r.ContentAuthorUserId).Select(u => u.Identifier).FirstOrDefault(),
             context.UserBans.Where(b => b.UserId == r.ContentAuthorUserId && b.LiftedAt == null).Select(b => (DateTime?)b.BannedAt).FirstOrDefault(),
             r.ContentSnapshot,
-            r.ContentType == ReportedContentType.Review
-                ? context.Reviews.Any(x => x.Id == r.ContentId)
-                : r.ContentType == ReportedContentType.HikeImage
-                    ? context.HikeImages.Any(x => x.Id == r.ContentId)
-                    : context.TrailObstacles.Any(x => x.Id == r.ContentId),
+            false,
             r.DecidedBy,
             r.DecidedAt,
             r.DecisionNote,
-            r.CreatedAt);
+            r.CreatedAt));
 
-    private static async Task<bool> DeleteContentAsync(
-        StigViddDbContext context,
-        ReportedContentType contentType,
-        int contentId,
-        List<string> imageUrls,
-        CancellationToken ctoken)
+    private record QueueRow(ReportedContentType ContentType, int ContentId, ContentReportSummary Summary);
+
+    // One existence query per content type on the page, through that type's handler. keep-comment: why it is not in the projection
+    private async Task<List<ContentReportSummary>> WithContentExistenceAsync(
+        StigViddDbContext context, IReadOnlyList<QueueRow> rows, CancellationToken ctoken)
     {
-        switch (contentType)
+        var existing = new HashSet<(ReportedContentType, int)>();
+
+        foreach (var group in rows.GroupBy(r => r.ContentType))
         {
-            case ReportedContentType.Review:
-                // Loaded with its images: deleting only the row leaves the files on the
-                // media server forever, which is the worst version of the mistake when a
-                // moderator has just judged the content unacceptable.
-                var review = await context.Reviews
-                    .IgnoreQueryFilters(["Moderation"])
-                    .Include(r => r.ReviewImages)
-                    .FirstOrDefaultAsync(r => r.Id == contentId, ctoken);
+            var handler = _handlers.For(group.Key);
 
-                if (review is null)
-                    return false;
+            if (handler is null)
+                continue;
 
-                imageUrls.AddRange(review.ReviewImages?.Select(i => i.ImageUrl) ?? []);
-                context.Reviews.Remove(review);
-                return true;
+            var ids = await handler.ExistingIdsAsync(context, group.Select(r => r.ContentId).Distinct().ToList(), ctoken);
 
-            case ReportedContentType.TrailObstacle:
-                // No image column, so this is a plain delete; the votes cascade.
-                var obstacle = await context.TrailObstacles
-                    .IgnoreQueryFilters(["Moderation"])
-                    .Include(o => o.SolvedVotes)
-                    .FirstOrDefaultAsync(o => o.Id == contentId, ctoken);
-
-                if (obstacle is null)
-                    return false;
-
-                context.TrailObstacleSolvedVotes.RemoveRange(obstacle.SolvedVotes);
-                context.TrailObstacles.Remove(obstacle);
-                return true;
-
-            case ReportedContentType.HikeImage:
-                var hikeImage = await context.HikeImages
-                    .FirstOrDefaultAsync(hi => hi.Id == contentId, ctoken);
-
-                if (hikeImage is null)
-                    return false;
-
-                imageUrls.Add(hikeImage.ImageUrl);
-                context.HikeImages.Remove(hikeImage);
-                return true;
-
-            default:
-                return false;
+            foreach (var id in ids)
+                existing.Add((group.Key, id));
         }
+
+        return rows
+            .Select(r => r.Summary with { ContentStillExists = existing.Contains((r.ContentType, r.ContentId)) })
+            .ToList();
     }
 
-    private static async Task<bool> RestoreByIdAsync(
-        StigViddDbContext context, ReportedContentType contentType, int contentId, CancellationToken ctoken)
+    private async Task<bool> SetModerationStateAsync(
+        StigViddDbContext context, ReportedContentType contentType, int contentId, ModerationState state, CancellationToken ctoken)
     {
-        switch (contentType)
-        {
-            case ReportedContentType.Review:
-                var review = await context.Reviews
-                    .IgnoreQueryFilters(["Moderation"])
-                    .FirstOrDefaultAsync(r => r.Id == contentId, ctoken);
+        var handler = _handlers.For(contentType);
 
-                if (review is null)
-                    return false;
-
-                review.ModerationState = ModerationState.Visible;
-                return true;
-
-            case ReportedContentType.TrailObstacle:
-                var obstacle = await context.TrailObstacles
-                    .IgnoreQueryFilters(["Moderation"])
-                    .FirstOrDefaultAsync(o => o.Id == contentId, ctoken);
-
-                if (obstacle is null)
-                    return false;
-
-                obstacle.ModerationState = ModerationState.Visible;
-                return true;
-
-            case ReportedContentType.HikeImage:
-                var hikeImage = await context.HikeImages
-                    .FirstOrDefaultAsync(hi => hi.Id == contentId, ctoken);
-
-                if (hikeImage is null)
-                    return false;
-
-                hikeImage.ModerationState = ModerationState.Visible;
-                return true;
-
-            default:
-                return false;
-        }
-    }
-
-    private static async Task<bool> HideContentAsync(StigViddDbContext context, ContentReport report, CancellationToken ctoken)
-    {
-        switch (report.ContentType)
-        {
-            case ReportedContentType.Review:
-                var review = await context.Reviews
-                    .IgnoreQueryFilters(["Moderation"])
-                    .FirstOrDefaultAsync(r => r.Id == report.ContentId, ctoken);
-
-                if (review is null)
-                    return false;
-
-                review.ModerationState = ModerationState.HiddenPendingReview;
-                return true;
-
-            case ReportedContentType.TrailObstacle:
-                var obstacle = await context.TrailObstacles
-                    .IgnoreQueryFilters(["Moderation"])
-                    .FirstOrDefaultAsync(to => to.Id == report.ContentId, ctoken);
-
-                if (obstacle is null)
-                    return false;
-
-                obstacle.ModerationState = ModerationState.HiddenPendingReview;
-                return true;
-
-            case ReportedContentType.HikeImage:
-                var hikeImage = await context.HikeImages
-                    .FirstOrDefaultAsync(hi => hi.Id == report.ContentId, ctoken);
-
-                if (hikeImage is null)
-                    return false;
-
-                hikeImage.ModerationState = ModerationState.HiddenPendingReview;
-                return true;
-
-            default:
-                return false;
-        }
+        return handler is not null && await handler.SetModerationStateAsync(context, contentId, state, ctoken);
     }
 
     private async Task<bool> IsDuplicateAsync(ContentReport report, CancellationToken ctoken)

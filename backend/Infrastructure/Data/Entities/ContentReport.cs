@@ -19,7 +19,7 @@ public class ContentReport : BaseEntity
     public string? TrailIdentifier { get; set; }
 
     // The snapshot. Clipped to ContentReports:SnapshotMaxLength when the report is created,
-    // and nulled when the author deletes their account.
+    // and nulled when the author deletes their account, unless it is pending on content that outlives them. keep-comment: corrects the old rule
     public string? ContentSnapshot { get; set; }
     public string? AuthorNickNameSnapshot { get; set; }
     public int? ContentAuthorUserId { get; set; }

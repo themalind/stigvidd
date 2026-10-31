@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
+using Core.Repositories.Events;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +34,8 @@ public class UserBlockRepository : IUserBlockRepository
             if (exists)
                 return RepositoryResult.Success();
 
+            await using var transaction = await context.Database.BeginTransactionAsync(ctoken);
+
             context.UserBlocks.Add(new UserBlock
             {
                 BlockerUserId = blockerUserId,
@@ -40,6 +43,8 @@ public class UserBlockRepository : IUserBlockRepository
             });
 
             await context.SaveChangesAsync(ctoken);
+            await EventBlockedOrganizer.LeaveAsync(context, blockerUserId, blockedUserId, ctoken);
+            await transaction.CommitAsync(ctoken);
 
             return RepositoryResult.Success();
         }

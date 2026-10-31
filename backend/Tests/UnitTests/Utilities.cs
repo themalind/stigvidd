@@ -740,6 +740,18 @@ public static class Utilities
         }
     }
 
+    public static Core.Repositories.Reporting.ReportableContentHandlers ReportHandlers()
+    {
+        return new Core.Repositories.Reporting.ReportableContentHandlers([
+            new Core.Repositories.Reporting.ReviewReportHandler(),
+            new Core.Repositories.Reporting.TrailObstacleReportHandler(),
+            new Core.Repositories.Reporting.HikeImageReportHandler(),
+            new Core.Repositories.Reporting.EventReportHandler(),
+            new Core.Repositories.Reporting.EventPostReportHandler(),
+            new Core.Repositories.Reporting.EventImageReportHandler(),
+        ]);
+    }
+
     public static class MockFactory
     {
         public static Mock<IUserService> UserServiceFoundByIdentifier()
@@ -830,6 +842,8 @@ public static class Utilities
         {
             var mock = new Mock<IUserBlockService>();
             mock.Setup(s => s.GetHiddenUserIdsForReadAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(hiddenUserIds);
+            mock.Setup(s => s.GetHiddenUserIdsForReadAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(hiddenUserIds);
             return mock;
         }

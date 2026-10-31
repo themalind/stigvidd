@@ -3,6 +3,7 @@
 
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
+using Core.Services.Push;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -15,20 +16,20 @@ public class HikeShareDistributor
     private readonly IUserRepository _userRepository;
     private readonly IFriendRepository _friendRepository;
     private readonly IHikeShareRepository _hikeShareRepository;
-    private readonly IPushNotificationService _pushNotificationService;
+    private readonly IPushQueue _pushQueue;
     private readonly ILogger<HikeShareDistributor> _logger;
 
     public HikeShareDistributor(
         IUserRepository userRepository,
         IFriendRepository friendRepository,
         IHikeShareRepository hikeShareRepository,
-        IPushNotificationService pushNotificationService,
+        IPushQueue pushQueue,
         ILogger<HikeShareDistributor> logger)
     {
         _userRepository = userRepository;
         _friendRepository = friendRepository;
         _hikeShareRepository = hikeShareRepository;
-        _pushNotificationService = pushNotificationService;
+        _pushQueue = pushQueue;
         _logger = logger;
     }
 
@@ -39,7 +40,7 @@ public class HikeShareDistributor
 
         foreach (var name in names)
         {
-            var recipientResult = await _userRepository.GetUserByNickNameAsync(name, u => new ReceiverProjection(u.Id, u.Identifier), ctoken);
+            var recipientResult = await _userRepository.GetUserByNickNameAsync(name, u => new ReceiverProjection(u.Id), ctoken);
 
             if (recipientResult.Status == RepositoryResultStatus.Error)
                 return Result.Fail<int>(new Message(500, "Something went wrong when fetching the recipient."));
@@ -100,11 +101,11 @@ public class HikeShareDistributor
         if (!insertResult.IsSuccess)
             return Result.Fail<int>(new Message(500, "Something went wrong when sharing the hike."));
 
-        await _pushNotificationService.SendToUsersAsync(
+        _pushQueue.Enqueue(new PushMessage(
             newRecipients.Select(r => r.Id).ToList(), "Ny delad vandring",
             $"{senderNickName} vill dela en vandring med dig",
-            new Dictionary<string, object> { ["type"] = "hike_share" }, ctoken,
-            fromUserId: senderId);
+            new Dictionary<string, object> { ["type"] = PushTypes.HikeShare },
+            FromUserId: senderId));
 
         return Result.Ok(newRecipients.Count);
     }

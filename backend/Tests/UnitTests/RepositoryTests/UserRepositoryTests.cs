@@ -7,6 +7,8 @@ using Core.Interfaces.Repositories;
 using Core.Repositories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.RepositoryTests;
@@ -48,6 +50,43 @@ public class UserRepositoryTests : TestBase
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task BanUser_HandsTheOrganizersUpcomingEventsOver()
+    {
+        // Arrange
+        const int banned = 1;
+        var factory = CreateSeededFactory(db =>
+        {
+            var withCoHost = EventRepositoryTests.NewEvent(1, organizerId: banned);
+            withCoHost.Participants.Add(new EventParticipant { UserId = 2, Role = EventParticipantRole.CoHost });
+            withCoHost.ParticipantCount = 2;
+            var alone = EventRepositoryTests.NewEvent(2, organizerId: banned);
+            alone.Participants.Add(new EventParticipant { UserId = 3 });
+            alone.ParticipantCount = 2;
+            var past = EventRepositoryTests.NewEvent(3, organizerId: banned, startsInDays: -5);
+            db.Events.AddRange(withCoHost, alone, past);
+        });
+        var repo = new UserRepository(factory, NullLogger<UserRepository>.Instance);
+
+        // Act
+        var result = await repo.BanUserAsync(NaturElskarenIdentifier, "moderator", "spam", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Should().NotBeNull();
+        result.Value.Select(o => (o.EventIdentifier, o.NewOrganizerUserId, o.CancelNotifyUserIds.SingleOrDefault())).Should().BeEquivalentTo(new[]
+        {
+            ("event-1", (int?)2, 0),
+            ("event-2", (int?)null, 3),
+        });
+        await using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var organizers = await context.EventParticipants
+            .Where(p => p.Role == EventParticipantRole.Organizer)
+            .ToDictionaryAsync(p => p.EventId, p => p.UserId, TestContext.Current.CancellationToken);
+        organizers.Should().BeEquivalentTo(new Dictionary<int, int> { [1] = 2, [3] = banned });
+        var statuses = await context.Events.ToDictionaryAsync(e => e.Id, e => e.Status, TestContext.Current.CancellationToken);
+        statuses[2].Should().Be(EventStatus.Cancelled);
     }
 
     [Fact]

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
+using Core.Interfaces.Services;
+using Core.Repositories.Reporting;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
@@ -14,12 +16,16 @@ public class AccountDeletionRepository : IAccountDeletionRepository
 {
     private readonly IDbContextFactory<StigViddDbContext> _context;
     private readonly IKeycloakAdminRepository _keycloakAdminRepository;
+    private readonly ReportableContentHandlers _reportHandlers;
+    private readonly IEnumerable<IAccountDeletionStep> _steps;
     private readonly ILogger<AccountDeletionRepository> _logger;
 
-    public AccountDeletionRepository(IDbContextFactory<StigViddDbContext> context, IKeycloakAdminRepository keycloakAdminRepository, ILogger<AccountDeletionRepository> logger)
+    public AccountDeletionRepository(IDbContextFactory<StigViddDbContext> context, IKeycloakAdminRepository keycloakAdminRepository, ReportableContentHandlers reportHandlers, IEnumerable<IAccountDeletionStep> steps, ILogger<AccountDeletionRepository> logger)
     {
         _context = context;
         _keycloakAdminRepository = keycloakAdminRepository;
+        _reportHandlers = reportHandlers;
+        _steps = steps;
         _logger = logger;
     }
 
@@ -51,10 +57,19 @@ public class AccountDeletionRepository : IAccountDeletionRepository
             await DeleteFriendRequestsAsync(context, user.Id, ctoken);
             await EraseOutboxMailAsync(context, user.Email, ctoken);
 
+            var pushes = new List<PushMessage>();
+            foreach (var step in _steps)
+            {
+                var effects = await step.RunAsync(context, user.Id, ctoken);
+                fileUrls.AddRange(effects.FileUrls);
+                pushes.AddRange(effects.Pushes);
+            }
+
             context.UserBlocks.RemoveRange(context.UserBlocks
                 .Where(ub => ub.BlockerUserId == user.Id || ub.BlockedUserId == user.Id));
             context.FriendNotes.RemoveRange(context.FriendNotes
                 .Where(fn => fn.OwnerUserId == user.Id || fn.FriendUserId == user.Id));
+            context.UserActionLogs.RemoveRange(context.UserActionLogs.Where(l => l.UserId == user.Id));
             // No foreign key to Users, and the row carries the email and nickname. keep-comment: why it is not cascaded
             context.UserKeycloakMappings.RemoveRange(context.UserKeycloakMappings
                 .Where(m => m.PackageUserId == user.Id || m.KeycloakSubjectId == user.SubjectId));
@@ -70,7 +85,7 @@ public class AccountDeletionRepository : IAccountDeletionRepository
 
             await transaction.CommitAsync(ctoken);
 
-            return RepositoryResult<DeletedAccount>.Success(new DeletedAccount(user.Id, fileUrls));
+            return RepositoryResult<DeletedAccount>.Success(new DeletedAccount(user.Id, fileUrls, pushes));
         }
         catch (Exception ex)
         {
@@ -187,15 +202,7 @@ public class AccountDeletionRepository : IAccountDeletionRepository
             .ToListAsync(ctoken);
 
         foreach (var report in aboutThem)
-        {
-            report.ContentSnapshot = null;
-            report.AuthorNickNameSnapshot = null;
-
-            if (report.Status == ReportStatus.Pending)
-                report.Status = ReportStatus.ContentExpired;
-
-            await RestoreReportedContentAsync(context, report, ctoken);
-        }
+            await SettleReportAboutAuthorAsync(context, report, ctoken);
 
         // As the reporter: the content still exists and still needs a decision, so only the free text goes. keep-comment: why the report stays pending
         var byThem = await context.ContentReports
@@ -208,34 +215,25 @@ public class AccountDeletionRepository : IAccountDeletionRepository
         await context.SaveChangesAsync(ctoken);
     }
 
-    private async Task RestoreReportedContentAsync(StigViddDbContext context, ContentReport report, CancellationToken ctoken)
+    private async Task SettleReportAboutAuthorAsync(StigViddDbContext context, ContentReport report, CancellationToken ctoken)
     {
-        switch (report.ContentType)
-        {
-            case ReportedContentType.Review:
-                var review = await context.Reviews
-                    .IgnoreQueryFilters(["Moderation"])
-                    .FirstOrDefaultAsync(r => r.Id == report.ContentId, ctoken);
+        var handler = _reportHandlers.For(report.ContentType);
+        var outcome = handler?.WhenAuthorDeletesAccount ?? AuthorDeletionOutcome.Expire;
 
-                if (review is not null)
-                    review.ModerationState = ModerationState.Visible;
+        report.AuthorNickNameSnapshot = null;
+        report.ContentAuthorUserId = null;
 
-                break;
+        // The snapshot stays while the content it copies still exists and awaits a decision. keep-comment: KeepPending needs it to be judged
+        if (outcome == AuthorDeletionOutcome.KeepPending && report.Status == ReportStatus.Pending)
+            return;
 
-            case ReportedContentType.TrailObstacle:
-                var obstacle = await context.TrailObstacles
-                    .IgnoreQueryFilters(["Moderation"])
-                    .FirstOrDefaultAsync(to => to.Id == report.ContentId, ctoken);
+        report.ContentSnapshot = null;
 
-                if (obstacle is not null)
-                    obstacle.ModerationState = ModerationState.Visible;
+        if (report.Status == ReportStatus.Pending)
+            report.Status = ReportStatus.ContentExpired;
 
-                break;
-
-            // Stays hidden: there is no rating to keep, and a shared hike outlives its owner. keep-comment: deliberate asymmetry with reviews
-            case ReportedContentType.HikeImage:
-                break;
-        }
+        if (handler is not null && outcome == AuthorDeletionOutcome.Restore)
+            await handler.SetModerationStateAsync(context, report.ContentId, ModerationState.Visible, ctoken);
     }
 
     // keep-comment: FriendRequests are NoAction to avoid multiple cascade paths.

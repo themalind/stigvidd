@@ -22,7 +22,7 @@ public class HikeShareDistributorTests
         Mock<IUserRepository> userRepo,
         Mock<IFriendRepository>? friendRepo = null,
         Mock<IHikeShareRepository>? shareRepo = null,
-        Mock<IPushNotificationService>? push = null) =>
+        Mock<IPushQueue>? push = null) =>
         new(
             userRepo.Object,
             (friendRepo ?? Friends()).Object,
@@ -32,7 +32,7 @@ public class HikeShareDistributorTests
 
     internal static void FriendNamed(Mock<IUserRepository> userRepo, string nickName, int id) =>
         userRepo.Setup(r => r.GetUserByNickNameAsync(nickName, It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(id, $"identifier-{id}")));
+            .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(id)));
 
     internal static Mock<IFriendRepository> Friends(bool areFriends = true)
     {
@@ -52,14 +52,9 @@ public class HikeShareDistributorTests
         return shareRepo;
     }
 
-    private static Mock<IPushNotificationService> Push()
+    private static Mock<IPushQueue> Push()
     {
-        var push = new Mock<IPushNotificationService>();
-        push.Setup(p => p.SendToUsersAsync(
-                It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(), It.IsAny<int?>()))
-            .ReturnsAsync(Result.Ok());
-        return push;
+        return new Mock<IPushQueue>();
     }
 
     private static Hike OwnedHike() => new()
@@ -78,12 +73,10 @@ public class HikeShareDistributorTests
     private static Task<Result<int>> Distribute(HikeShareDistributor distributor, IReadOnlyCollection<string> names, bool allowResharing = false) =>
         distributor.DistributeAsync(SenderId, SenderNickName, OwnedHike(), names, allowResharing, TestContext.Current.CancellationToken);
 
-    private static void VerifyNothingShared(Mock<IHikeShareRepository> shareRepo, Mock<IPushNotificationService> push)
+    private static void VerifyNothingShared(Mock<IHikeShareRepository> shareRepo, Mock<IPushQueue> push)
     {
         shareRepo.Verify(r => r.ShareHikesAsync(It.IsAny<IReadOnlyCollection<HikeShare>>(), It.IsAny<CancellationToken>()), Times.Never);
-        push.Verify(p => p.SendToUsersAsync(
-            It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(), It.IsAny<int?>()), Times.Never);
+        push.Verify(p => p.Enqueue(It.IsAny<PushMessage>()), Times.Never);
     }
 
     [Fact]
@@ -258,13 +251,11 @@ public class HikeShareDistributorTests
         saved.Should().NotBeNull();
         saved.Select(s => s.SharedWithId).Should().BeEquivalentTo([2, 4]);
         saved.Should().OnlyContain(s => s.HikeId == 10 && s.SharedById == SenderId && s.AllowResharing);
-        push.Verify(p => p.SendToUsersAsync(
-            It.Is<IReadOnlyCollection<int>>(ids => ids.OrderBy(i => i).SequenceEqual(new[] { 2, 4 })),
-            It.IsAny<string>(),
-            It.Is<string>(body => body.Contains(SenderNickName)),
-            It.Is<IReadOnlyDictionary<string, object>>(d => d["type"].ToString() == "hike_share"),
-            It.IsAny<CancellationToken>(),
-            SenderId), Times.Once);
+        push.Verify(p => p.Enqueue(It.Is<PushMessage>(m =>
+            m.UserIds.OrderBy(i => i).SequenceEqual(new[] { 2, 4 })
+            && m.Body.Contains(SenderNickName)
+            && m.Data["type"].ToString() == "hike_share"
+            && m.FromUserId == SenderId)), Times.Once);
     }
 
     [Fact]
@@ -284,28 +275,6 @@ public class HikeShareDistributorTests
         // Assert
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(500);
-        push.Verify(p => p.SendToUsersAsync(
-            It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(), It.IsAny<int?>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task WhenThePushFails_TheShareStillSucceeds()
-    {
-        // Arrange — the rows are committed before anyone is notified
-        var userRepo = new Mock<IUserRepository>();
-        FriendNamed(userRepo, "Vän", 2);
-        var push = Push();
-        push.Setup(p => p.SendToUsersAsync(
-                It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<string>(), It.IsAny<string>(),
-                It.IsAny<IReadOnlyDictionary<string, object>>(), It.IsAny<CancellationToken>(), It.IsAny<int?>()))
-            .ReturnsAsync(Result.Fail(new Message(500, "Push failed")));
-
-        // Act
-        var result = await Distribute(Distributor(userRepo, push: push), ["Vän"]);
-
-        // Assert
-        result.Success.Should().BeTrue();
-        result.Value.Should().Be(1);
+        push.Verify(p => p.Enqueue(It.IsAny<PushMessage>()), Times.Never);
     }
 }

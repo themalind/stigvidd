@@ -3,6 +3,9 @@
 
 using Core.Repositories;
 using AwesomeAssertions;
+using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.RepositoryTests;
@@ -44,6 +47,76 @@ public class UserBlockRepositoryTests : TestBase
 
         // Assert
         result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task BlockAsync_LeavesTheBlockedOrganizersEvents_ButNotOthers()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db =>
+        {
+            var theirs = EventRepositoryTests.NewEvent(1, organizerId: BlockedUserId);
+            theirs.Participants.Add(new EventParticipant { UserId = BlockerUserId });
+            theirs.ParticipantCount = 2;
+            var interested = EventRepositoryTests.NewEvent(2, organizerId: BlockedUserId);
+            interested.Participants.Add(new EventParticipant { UserId = BlockerUserId, Status = EventParticipantStatus.Interested });
+            var removed = EventRepositoryTests.NewEvent(3, organizerId: BlockedUserId);
+            removed.Participants.Add(new EventParticipant { UserId = BlockerUserId, Status = EventParticipantStatus.Removed });
+            var someoneElses = EventRepositoryTests.NewEvent(4, organizerId: ThirdUserId);
+            someoneElses.Participants.Add(new EventParticipant { UserId = BlockerUserId });
+            someoneElses.Participants.Add(new EventParticipant { UserId = BlockedUserId, Role = EventParticipantRole.CoHost });
+            someoneElses.ParticipantCount = 3;
+            db.Events.AddRange(theirs, interested, removed, someoneElses);
+        });
+
+        // Act
+        var result = await Build(factory).BlockAsync(BlockerUserId, BlockedUserId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        await using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var rows = await context.EventParticipants
+            .Where(p => p.UserId == BlockerUserId)
+            .ToDictionaryAsync(p => p.EventId, p => p.Status, TestContext.Current.CancellationToken);
+        rows.Should().BeEquivalentTo(new Dictionary<int, EventParticipantStatus>
+        {
+            [3] = EventParticipantStatus.Removed,
+            [4] = EventParticipantStatus.Joined,
+        });
+        var counts = await context.Events.ToDictionaryAsync(e => e.Id, e => e.ParticipantCount, TestContext.Current.CancellationToken);
+        counts[1].Should().Be(1);
+        counts[4].Should().Be(3);
+    }
+
+    [Fact]
+    public async Task BlockAsync_DropsPendingInvitationsToTheBlockedOrganizersEvents_ButNotOthers()
+    {
+        // Arrange
+        var factory = CreateSeededFactory(db =>
+        {
+            var theirs = EventRepositoryTests.NewEvent(1, organizerId: BlockedUserId, visibility: EventVisibility.Private);
+            theirs.Invitations.Add(new EventInvitation { InvitedUserId = BlockerUserId, InvitedByUserId = BlockedUserId });
+            var declined = EventRepositoryTests.NewEvent(2, organizerId: BlockedUserId, visibility: EventVisibility.Private);
+            declined.Invitations.Add(new EventInvitation { InvitedUserId = BlockerUserId, Status = EventInvitationStatus.Declined });
+            var someoneElses = EventRepositoryTests.NewEvent(3, organizerId: ThirdUserId, visibility: EventVisibility.Private);
+            someoneElses.Invitations.Add(new EventInvitation { InvitedUserId = BlockerUserId, InvitedByUserId = BlockedUserId });
+            db.Events.AddRange(theirs, declined, someoneElses);
+        });
+
+        // Act
+        var result = await Build(factory).BlockAsync(BlockerUserId, BlockedUserId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        await using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var invitations = await context.EventInvitations
+            .Where(i => i.InvitedUserId == BlockerUserId)
+            .ToDictionaryAsync(i => i.EventId, i => i.Status, TestContext.Current.CancellationToken);
+        invitations.Should().BeEquivalentTo(new Dictionary<int, EventInvitationStatus>
+        {
+            [2] = EventInvitationStatus.Declined,
+            [3] = EventInvitationStatus.Pending,
+        });
     }
 
     // One-way: the blocked person's view is untouched.

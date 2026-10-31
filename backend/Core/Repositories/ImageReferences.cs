@@ -19,6 +19,7 @@ internal static class ImageReferences
             || await context.ReviewImages.AnyAsync(ri => paths.Contains(ri.ImageUrl), ctoken)
             || await context.TrailImages.AnyAsync(ti => paths.Contains(ti.ImageUrl), ctoken)
             || await context.FacilityImages.AnyAsync(fi => paths.Contains(fi.ImageUrl), ctoken)
+            || await context.EventImages.AnyAsync(ei => paths.Contains(ei.ImageUrl), ctoken)
             || await context.CityAreas.AnyAsync(ca => ca.ImageUrl != null && paths.Contains(ca.ImageUrl), ctoken)
             || await context.Trails.AnyAsync(t => paths.Contains(t.TrailSymbolImage), ctoken);
     }

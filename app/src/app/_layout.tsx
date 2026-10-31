@@ -25,8 +25,7 @@ import { initTelemetry } from "@/services/telemetry";
 import { logger } from "@/services/logger";
 import {
   claimNotificationResponse,
-  NOTIFICATION_QUERY_KEYS,
-  NOTIFICATION_ROUTES,
+  notificationHandlerFor,
   registerForPushNotificationsAsync,
   releaseNotificationResponse,
 } from "@/services/notifications";
@@ -64,9 +63,8 @@ function NotificationHandler() {
   // Foreground: notification arrives while app is open — just refresh data, no navigation.
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener((notification) => {
-      const type = notification.request.content.data?.type as string | undefined;
-      const keys = type ? NOTIFICATION_QUERY_KEYS[type] : undefined;
-      if (keys) queryClient.invalidateQueries({ queryKey: keys });
+      const handler = notificationHandlerFor(notification.request.content.data);
+      if (handler) queryClient.invalidateQueries({ queryKey: handler.queryKeys });
     });
     return () => subscription.remove();
   }, [queryClient]);
@@ -77,7 +75,8 @@ function NotificationHandler() {
     const notifId = lastResponse.notification.request.identifier;
     if (notifId === handledNotificationId.current) return;
     handledNotificationId.current = notifId;
-    const type = lastResponse.notification.request.content.data?.type as string | undefined;
+    const data = lastResponse.notification.request.content.data;
+    const type = data?.type;
     if (!type) return;
     const userId = user.id;
     void claimNotificationResponse(notifId)
@@ -87,10 +86,12 @@ function NotificationHandler() {
           if (handledNotificationId.current === notifId) handledNotificationId.current = null;
           return releaseNotificationResponse(notifId);
         }
-        const keys = NOTIFICATION_QUERY_KEYS[type];
-        if (keys) queryClient.invalidateQueries({ queryKey: keys });
-        const route = NOTIFICATION_ROUTES[type];
-        if (route) router.navigate(route as never, { withAnchor: true });
+        const handler = notificationHandlerFor(data);
+        if (handler) {
+          queryClient.invalidateQueries({ queryKey: handler.queryKeys });
+          const route = handler.route(data);
+          if (route) router.navigate(route as never, { withAnchor: true });
+        }
         Notifications.clearLastNotificationResponse();
       })
       .catch((error: unknown) => {

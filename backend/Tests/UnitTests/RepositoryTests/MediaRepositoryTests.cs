@@ -181,7 +181,7 @@ public class MediaRepositoryTests : TestBase
 
         // Act
         var kept = Matching(filter, item);
-        var normalised = MediaRepository.ToUtc(filter.CreatedFrom);
+        var normalised = Core.Services.UtcDates.ToUtc(filter.CreatedFrom);
 
         // Assert
         kept.Should().ContainSingle();

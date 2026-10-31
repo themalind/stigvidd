@@ -38,6 +38,7 @@ public class ServiceMetricsTests
             new Mock<IHikeService>().Object,
             new Mock<IWebDavService>().Object,
             new Mock<IUserBlockService>().Object,
+            new Mock<IPushQueue>().Object,
             metrics,
             NullLogger<UserService>.Instance);
     }

@@ -23,7 +23,7 @@ public static class DataAnonymizer
     public static readonly IReadOnlySet<string> EmptiedTables = new HashSet<string>
     {
         "UserPushTokens", "EmailVerificationTokens", "PasswordResetTokens", "OutboxEmails", "UserKeycloakMappings",
-        "FriendNotes",
+        "FriendNotes", "UserActionLogs",
     };
 
     // Every column of every other table. ClassificationTests fails on any column missing here, so a new personal column cannot reach an anonymized export unreviewed. keep-comment: the guard this list exists for
@@ -83,6 +83,17 @@ public static class DataAnonymizer
             ["MailTemplates"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt BodyHtml BodyText Description Key Language Subject"),
             ["MediaReprocessJobs"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt OptionsJson"),
             ["MediaReprocessItems"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt JobId LastError MediaIdentifier OwnerType Status"),
+            ["Events"] = Table(
+                kept: "Id Identifier CreatedAt LastUpdatedAt TrailId MeetingPoint Location StartsAt EndsAt PastAfter RegistrationDeadline MaxParticipants ParticipantCount Visibility AllowParticipantInvites Status CancelledAt ModerationState",
+                replaced: "Title Description",
+                cleared: "LocationName MeetingPointName"),
+            ["EventParticipants"] = Table(kept: "EventId UserId Role Status JoinedAt MutePosts LastPostPushAt LastReadPostAt"),
+            ["EventInvitations"] = Table(kept: "EventId InvitedUserId InvitedByUserId Status CreatedAt"),
+            ["EventImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt EventId ImageUrl ModerationState"),
+            ["EventRoutes"] = Table(kept: "EventId Path LengthMetres"),
+            ["EventPosts"] = Table(
+                kept: "Id Identifier CreatedAt LastUpdatedAt EventId UserId IsPinned EditedAt ModerationState",
+                replaced: "Body"),
         };
 
     public static async Task AnonymizeAsync(StigViddDbContext db, CancellationToken ctoken)
@@ -137,6 +148,16 @@ public static class DataAnonymizer
 
         await db.HikeSubmissions.Where(s => s.DecidedBy != null)
             .ExecuteUpdateAsync(s => s.SetProperty(x => x.DecidedBy, Moderator), ctoken);
+
+        await db.Events.ExecuteUpdateAsync(s => s
+            .SetProperty(e => e.Title, e => "event-" + e.Id)
+            .SetProperty(e => e.Description, "")
+            .SetProperty(e => e.LocationName, (string?)null)
+            .SetProperty(e => e.MeetingPointName, (string?)null), ctoken);
+
+        // Hidden posts too: the moderation filter would otherwise leave them unscrubbed. keep-comment: why the filter is bypassed
+        await db.EventPosts.IgnoreQueryFilters(["Moderation"])
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Body, p => "post-" + p.Id), ctoken);
 
         await db.TrailImportSessions.Where(t => t.UploadedBy != null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.UploadedBy, Moderator), ctoken);

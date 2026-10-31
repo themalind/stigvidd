@@ -22,6 +22,7 @@ public class UserService : IUserService
     private readonly IHikeService _hikeService;
     private readonly IWebDavService _webDavService;
     private readonly IUserBlockService _userBlockService;
+    private readonly IPushQueue _pushQueue;
     private readonly StigviddMetrics _metrics;
     private readonly ILogger<UserService> _logger;
 
@@ -31,9 +32,11 @@ public class UserService : IUserService
     IHikeService hikeService,
     IWebDavService webDavService,
     IUserBlockService userBlockService,
+    IPushQueue pushQueue,
     StigviddMetrics metrics,
     ILogger<UserService> logger)
     {
+        _pushQueue = pushQueue;
         _userRepository = userResponseRepository;
         _accountDeletionRepository = accountDeletionRepository;
         _userResponseFactory = userResponseFactory;
@@ -319,6 +322,9 @@ public class UserService : IUserService
             return Result.Fail(new Message(500, $"Error deleting user with identifier {identifier}"));
 
         _logger.LogInformation("UserService: DeleteUserAsync -> deleted user {UserIdentifier}.", identifier);
+
+        foreach (var push in result.Value.Pushes)
+            _pushQueue.Enqueue(push);
 
         await DeleteFilesAsync(result.Value.FileUrls, $"Account deletion. UserId: {result.Value.UserId}");
         await _hikeService.CleanUpOrphanedHikesAsync(ctoken);

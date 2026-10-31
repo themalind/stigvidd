@@ -25,7 +25,8 @@ public class UserServiceTests
         Mock<IHikeService>? hikeService = null,
         Mock<IWebDavService>? webDav = null,
         StigviddMetrics? metrics = null,
-        Mock<IUserBlockService>? userBlockService = null)
+        Mock<IUserBlockService>? userBlockService = null,
+        Mock<IPushQueue>? pushQueue = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -35,14 +36,14 @@ public class UserServiceTests
         webDav ??= Utilities.MockFactory.WebDavService();
         var userResponseFactory = new UserResponseFactory(cfg.Object);
 
-        return new UserService(repo.Object, accountDeletionRepo.Object, userResponseFactory, hikeService.Object, webDav.Object, (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object, metrics ?? new StigviddMetrics(), NullLogger<UserService>.Instance);
+        return new UserService(repo.Object, accountDeletionRepo.Object, userResponseFactory, hikeService.Object, webDav.Object, (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object, (pushQueue ?? new Mock<IPushQueue>()).Object, metrics ?? new StigviddMetrics(), NullLogger<UserService>.Instance);
     }
 
     private static Mock<IAccountDeletionRepository> DeletesAccount(params string[] fileUrls)
     {
         var repo = new Mock<IAccountDeletionRepository>();
         repo.Setup(r => r.DeleteAccountAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(RepositoryResult<DeletedAccount>.Success(new DeletedAccount(1, fileUrls)));
+            .ReturnsAsync(RepositoryResult<DeletedAccount>.Success(new DeletedAccount(1, fileUrls, [])));
         return repo;
     }
 
@@ -527,7 +528,7 @@ public class UserServiceTests
         var accountDeletionRepo = new Mock<IAccountDeletionRepository>();
         accountDeletionRepo.Setup(r => r.DeleteAccountAsync(Utilities.Identifiers.User, It.IsAny<CancellationToken>()))
             .Callback(() => order.Add("rows"))
-            .ReturnsAsync(RepositoryResult<DeletedAccount>.Success(new DeletedAccount(1, ["hikes/a.jpeg", "reviews/b.jpeg"])));
+            .ReturnsAsync(RepositoryResult<DeletedAccount>.Success(new DeletedAccount(1, ["hikes/a.jpeg", "reviews/b.jpeg"], [])));
         var webDav = Utilities.MockFactory.WebDavService();
         webDav.Setup(w => w.DeleteFileAsync(It.IsAny<string>()))
             .Callback<string>(url => order.Add(url))

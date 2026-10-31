@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
+using Core.Services;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -35,8 +36,8 @@ public class MediaRepository : IMediaRepository
         var maxHeight = filter.MaxHeight;
         var minSize = filter.MinSizeBytes;
         var maxSize = filter.MaxSizeBytes;
-        var createdFrom = ToUtc(filter.CreatedFrom);
-        var createdTo = ToUtc(filter.CreatedTo);
+        var createdFrom = UtcDates.ToUtc(filter.CreatedFrom);
+        var createdTo = UtcDates.ToUtc(filter.CreatedTo);
 
         return m =>
             (formatSuffix == null
@@ -57,15 +58,6 @@ public class MediaRepository : IMediaRepository
                     && !m.ImageUrl.ToLower().EndsWith(targetSuffix)
                     && (targetAlt == null || !m.ImageUrl.ToLower().EndsWith(targetAlt))));
     }
-
-    // keep-comment: Npgsql refuses a DateTime whose Kind is Unspecified against timestamptz, and a date bound off the query string is always Unspecified - SQLite takes it either way, so without this every test is green and every filtered request 500s in production
-    public static DateTime? ToUtc(DateTime? value) => value switch
-    {
-        null => null,
-        { Kind: DateTimeKind.Utc } => value,
-        { Kind: DateTimeKind.Local } => value.Value.ToUniversalTime(),
-        _ => DateTime.SpecifyKind(value.Value, DateTimeKind.Utc)
-    };
 
     // keep-comment: a trail symbol stores no width/height/size, so its 0 sentinels would satisfy every "smaller than" bound; under any of these it is left out rather than answered for wrongly
     public static bool HasMetadataFilter(MediaFilter filter) =>
@@ -180,8 +172,8 @@ public class MediaRepository : IMediaRepository
     {
         var ownerType = MediaOwnerTypes.Canonical(filter.OwnerType);
         var ownerIdentifier = Trimmed(filter.OwnerIdentifier);
-        var createdFrom = ToUtc(filter.CreatedFrom);
-        var createdTo = ToUtc(filter.CreatedTo);
+        var createdFrom = UtcDates.ToUtc(filter.CreatedFrom);
+        var createdTo = UtcDates.ToUtc(filter.CreatedTo);
 
         // keep-comment: an owner type the validator would have rejected matches nothing rather than every source - widening an unrecognised filter is the one outcome an operator cannot see is wrong
         if (ownerType is null && !string.IsNullOrWhiteSpace(filter.OwnerType))

@@ -15,4 +15,6 @@ public interface IUserBlockService
 
     /// <summary>The users this viewer blocked; empty when signed out or when the lookup fails.</summary>
     Task<int[]> GetHiddenUserIdsForReadAsync(string? viewerIdentifier, CancellationToken ctoken);
+
+    Task<int[]> GetHiddenUserIdsForReadAsync(int viewerId, CancellationToken ctoken);
 }

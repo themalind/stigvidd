@@ -7,4 +7,4 @@ internal record UserProjection(int Id, string NickName);
 
 internal record SenderProjection(int Id, string NickName);
 
-internal record ReceiverProjection(int Id, string Identifier);
+internal record ReceiverProjection(int Id);

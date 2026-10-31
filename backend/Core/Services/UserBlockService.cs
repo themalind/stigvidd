@@ -95,11 +95,16 @@ public class UserBlockService : IUserBlockService
             return [];
         }
 
-        var hiddenResult = await _userBlockRepository.GetHiddenUserIdsAsync(viewerIdResult.Value, ctoken);
+        return await GetHiddenUserIdsForReadAsync(viewerIdResult.Value, ctoken);
+    }
+
+    public async Task<int[]> GetHiddenUserIdsForReadAsync(int viewerId, CancellationToken ctoken)
+    {
+        var hiddenResult = await _userBlockRepository.GetHiddenUserIdsAsync(viewerId, ctoken);
 
         if (!hiddenResult.IsSuccess)
         {
-            _logger.LogWarning("UserBlockService: GetHiddenUserIdsForReadAsync -> could not read blocks for user {UserId}; hiding no one.", viewerIdResult.Value);
+            _logger.LogWarning("UserBlockService: GetHiddenUserIdsForReadAsync -> could not read blocks for user {UserId}; hiding no one.", viewerId);
             return [];
         }
 

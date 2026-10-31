@@ -5,6 +5,7 @@ using AwesomeAssertions;
 using Core;
 using Core.Interfaces.Repositories;
 using Core.Repositories;
+using Core.Repositories.Events;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -17,7 +18,7 @@ public class AccountDeletionRepositoryTests : TestBase
     {
         // Arrange
         var keycloak = new Mock<IKeycloakAdminRepository>();
-        var repo = new AccountDeletionRepository(CreateSeededFactory(), keycloak.Object, NullLogger<AccountDeletionRepository>.Instance);
+        var repo = new AccountDeletionRepository(CreateSeededFactory(), keycloak.Object, Utilities.ReportHandlers(), [new EventAccountDeletionStep()], NullLogger<AccountDeletionRepository>.Instance);
 
         // Act
         var result = await repo.DeleteAccountAsync("no-such-user", TestContext.Current.CancellationToken);

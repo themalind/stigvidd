@@ -34,7 +34,9 @@ stack    docker compose up -d, then /healthz and /readyz (checks the DB)
 `Controllers + WebDataContracts --NSwag--> web/openapi.json (gitignored) --orval--> web/src/api/generated`.
 After a controller or DTO change, `dotnet build` (which exports openapi.json and warns `SV0001` if the client
 is stale), then commit `src/api/generated`. `generate:api` needs a backend build first, or run `npm run build`,
-which does both. Never hand-edit generated/EF-owned files (the guard denies it); a migration's own `.cs` body is
+which does both. Any `[ProducesResponseType]` on an action or controller drops the inferred 200, and orval then
+types the success as `unknown`. Errors with a `Message.Code` are ProblemDetails + `code`; without one they're plain strings (shipped apps read those).
+Never hand-edit generated/EF-owned files (the guard denies it); a migration's own `.cs` body is
 editable while unapplied. Migrations: `cd backend && dotnet ef migrations add <Name> --project Infrastructure`.
 
 ## Backend rules
@@ -52,6 +54,8 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 - `"AdminOnly"` is an unchecked string; `EndpointAuthorizationTests` pins it and every route behind it.
 - Nullable warnings are errors. **Never use the null-forgiving `!`** in C# or TS, tests included. C# tests:
   `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`.
+- A `DateTime` from a request or query string goes through `UtcDates.ToUtc` before it reaches a timestamptz
+  column or a comparison: Npgsql refuses a non-UTC Kind (500), and the SQLite tests never show it.
 - Geometry is SRID 4326, built only via `GeoPointFactory.FromLonLat(lon, lat)`. Any other
   `WithSRID(...)` is a bug. Lat/long travel as a pair ([note](docs/notes/srid-4326.md)).
 - Tests: xunit.v3 + **AwesomeAssertions** (never FluentAssertions) + Moq. Every token is

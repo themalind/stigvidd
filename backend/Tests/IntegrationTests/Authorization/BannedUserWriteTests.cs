@@ -57,6 +57,15 @@ public class BannedUserWriteTests : IClassFixture<StigViddWebApplicationFactory<
         "DELETE /api/v1/HikeShareRecipient/{hikeIdentifier}",
         "PUT /api/v1/HikeShareRecipient/accept/{hikeIdentifier}",
 
+        // Leaving an event, as with dropping a share, and muting its board, which only quiets their own pushes. keep-comment: groups the entries like its neighbours
+        "DELETE /api/v1/events/{identifier}/interested",
+        "DELETE /api/v1/events/{identifier}/leave",
+        "PUT /api/v1/events/{identifier}/mute",
+
+        // Answering no to an invitation, and taking back one they sent. keep-comment: groups the entries like its neighbours
+        "DELETE /api/v1/events/invitations/{identifier}",
+        "DELETE /api/v1/events/{identifier}/invitations/{inviteeIdentifier}",
+
         // Reporting reaches a moderator rather than the public, and a banned account is as
         // likely as any other to be the one seeing something that needs reporting.
         "POST /api/v1/ContentReports",
