@@ -61,6 +61,17 @@ public class DataAnonymizerIntegrationTests : IClassFixture<StigViddWebApplicati
             NickName = "StagingPerson", Email = "staging.person@example.local",
         });
 
+        db.DomainEvents.AddRange(
+            new DomainEventRecord
+            {
+                EventType = "test.ping", Payload = $"{{\"userId\":{user.Id}}}", Status = DomainEventStatus.Pending, NextAttemptAt = DateTime.UtcNow,
+            },
+            new DomainEventRecord
+            {
+                EventType = "test.ping", Payload = $"{{\"userId\":{user.Id}}}", Status = DomainEventStatus.Handled,
+                NextAttemptAt = DateTime.UtcNow, SettledAt = DateTime.UtcNow,
+            });
+
         var session = new TrailImportSession
         {
             Source = "boras-stad", FileName = "leder.geojson", FileHash = "hash", StoredPath = "/tmp/leder.geojson", UploadedBy = ModeratorName,
@@ -133,6 +144,7 @@ public class DataAnonymizerIntegrationTests : IClassFixture<StigViddWebApplicati
         (await db.PasswordResetTokens.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
         (await db.OutboxEmails.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
         (await db.UserKeycloakMappings.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
+        (await db.DomainEvents.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
     }
 
     [Fact]
@@ -218,6 +230,8 @@ public class DataAnonymizerIntegrationTests : IClassFixture<StigViddWebApplicati
         (await db.PasswordResetTokens.CountAsync(TestContext.Current.CancellationToken)).Should().Be(0);
         (await db.OutboxEmails.Select(m => m.Status).ToListAsync(TestContext.Current.CancellationToken))
             .Should().Equal(OutboxEmailStatus.Sent);
+        (await db.DomainEvents.Select(e => e.Status).ToListAsync(TestContext.Current.CancellationToken))
+            .Should().Equal(DomainEventStatus.Handled);
         var user = await db.Users.SingleAsync(u => u.Id == userId, TestContext.Current.CancellationToken);
         user.Email.Should().Be("natur@example.local");
     }

@@ -52,6 +52,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<EventPost> EventPosts { get; set; }
     public DbSet<EventRoute> EventRoutes { get; set; }
     public DbSet<UserActionLog> UserActionLogs { get; set; }
+    public DbSet<DomainEventRecord> DomainEvents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

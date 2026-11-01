@@ -174,6 +174,10 @@ public class Program
         // and settled rows past their windows. Configured under MailOutbox in appsettings.json.
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MailOutboxRetentionService>();
 
+        // Both must also be listed in WebApplicationFactory.cs's exclusion list. keep-comment: an unlisted hosted service races SeedDatabase
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.DomainEventDispatcher>();
+        builder.Services.AddHostedService<StigviddAPI.BackgroundServices.DomainEventRetentionService>();
+
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessDispatcher>();
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.MediaReprocessRetentionService>();
         builder.Services.AddHostedService<StigviddAPI.BackgroundServices.PushDispatcher>();

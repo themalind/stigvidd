@@ -925,3 +925,16 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   `docker push`) with `writing blob: Patch "...": write tcp ...: write: broken pipe`, build/tests all green, Deploy skipped.
   Hit staging first, then main (#92, 2026-10-27) — same `buildAndPush` closure in Jenkinsfile, no retry existed. Fix:
   `push_with_retry` shell function (3 attempts, backoff) around both push calls; retries only the push, not the build.
+- [A SaveChanges interceptor is the wrong place to poke the domain-event dispatcher, because the test host drops it and it fires before the commit](a-save-changes-interceptor-is-the-wrong-outbox-signal-here.md) —
+  Domain event outbox (docs/events.md, IDomainEventSignal.Poke, DomainEventDispatcher): a SaveChangesInterceptor looks tidier but
+  WebApplicationFactory.cs removes IDbContextOptionsConfiguration so it is silently absent in every integration test, and
+  SavedChangesAsync fires before CommitAsync under BeginTransactionAsync (AccountDeletionRepository), breaking write-then-signal.
+  Built instead: explicit Poke after the commit plus a PollIntervalSeconds tick.
+- [ValidateOnBuild does not run constructors, so a registry that must reject bad input has to be built eagerly in AddStigVidd](validateonbuild-does-not-run-constructors-so-a-registry-must-scan-eagerly.md) —
+  Program.cs ValidateOnBuild and ValidateScopes check descriptors, never instantiate, so a duplicate-name check in the constructor of
+  DomainEventRegistry would only throw on first resolve in production. Fix: DomainEventRegistry.Scan inside AddStigVidd, registered as
+  an instance; FromTypes for tests because Assembly.GetTypes returns nested broken fixtures.
+- [DataAnonymizer.EmptiedTables only exempts a table from column classification; the delete is a separate line, and FriendNotes never got one](anonymizer-emptiedtables-is-only-an-exemption-the-delete-is-written-separately.md) —
+  Adding a table to EmptiedTables satisfies ClassificationTests but deletes nothing: EmptyContactTablesAsync and NeutralizeOutboundAsync
+  must each get the ExecuteDeleteAsync, with count assertions in DataAnonymizerIntegrationTests. Measured gap: FriendNotes is listed
+  but never deleted, so friend notes survive an anonymised export. Add a migration table checklist.

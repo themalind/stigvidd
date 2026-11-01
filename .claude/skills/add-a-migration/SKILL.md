@@ -97,6 +97,11 @@ empties the table outright (`EmptiedTables`). `ClassificationTests` fails on any
 there, so add each new column as Kept, Replaced or Cleared in the same change. Free text a user
 wrote, and anything naming a person, is Replaced or Cleared.
 
+`EmptiedTables` is only an exemption from that check and deletes nothing. A table you put there also
+needs its `ExecuteDeleteAsync` in `EmptyContactTablesAsync`, and in `NeutralizeOutboundAsync` if it
+holds anything outbound, plus count assertions in `DataAnonymizerIntegrationTests`. See
+[anonymizer-emptiedtables-is-only-an-exemption](../../../docs/notes/anonymizer-emptiedtables-is-only-an-exemption-the-delete-is-written-separately.md).
+
 A new reportable content type also goes in `ReportedContentType` (next free value, never
 renumber) and in every `switch` in `Core/Repositories/ContentReportRepository.cs`.
 
