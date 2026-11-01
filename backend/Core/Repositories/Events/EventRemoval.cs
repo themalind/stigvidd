@@ -27,7 +27,7 @@ public static class EventRemoval
             return null;
 
         var notify = existing.Status == EventStatus.Published && existing.PastAfter > now
-            ? ToNotifyOnCancel(existing.Participants, actingUserId)
+            ? EventAudience.ToNotify(existing.Participants, actingUserId)
             : [];
 
         context.EventPosts.RemoveRange(await context.EventPosts.IgnoreQueryFilters(["Moderation"]).Where(p => p.EventId == existing.Id).ToListAsync(ctoken));
@@ -41,15 +41,5 @@ public static class EventRemoval
         context.Events.Remove(existing);
 
         return new DeletedEvent(existing.Identifier, existing.Title, existing.StartsAt, existing.Image?.ImageUrl, notify);
-    }
-
-    // Joined and Interested hear about a cancellation; whoever caused it does not. keep-comment: shared by cancel, delete and hand-over
-    public static List<int> ToNotifyOnCancel(IEnumerable<EventParticipant> participants, int? actingUserId)
-    {
-        return participants
-            .Where(p => p.UserId != actingUserId
-                && p.Status is EventParticipantStatus.Joined or EventParticipantStatus.Interested)
-            .Select(p => p.UserId)
-            .ToList();
     }
 }

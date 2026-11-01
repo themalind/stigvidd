@@ -302,6 +302,36 @@ it("names a hike image in the deletion warning", async () => {
   expect(await screen.findByTestId("confirm-body")).toHaveTextContent("hike image for good");
 });
 
+it("shows a reported event cover as a picture and names it in the deletion warning", async () => {
+  const user = userEvent.setup();
+  renderPage([
+    summary({
+      contentType: "EventImage",
+      contentSnapshot: "events/abc.jpg",
+      contentImageUrl: "https://media.stigvidd.se/events/abc.jpg",
+    }),
+  ]);
+
+  const image = await screen.findByTestId("content-image");
+  expect(image).toHaveAttribute("alt", "The reported event cover image");
+  await user.click(screen.getByTestId("mark-read"));
+  await user.click(screen.getByTestId("uphold"));
+
+  expect(await screen.findByTestId("confirm-body")).toHaveTextContent("event cover image for good");
+});
+
+it("filters the queue on event board posts", async () => {
+  const user = userEvent.setup();
+  renderPage([summary()]);
+  await screen.findByTestId("content-snapshot");
+
+  await user.click(screen.getByRole("button", { name: "EventPost" }));
+
+  await waitFor(() =>
+    expect(api.getReports).toHaveBeenLastCalledWith(expect.objectContaining({ contentType: "EventPost" })),
+  );
+});
+
 it("filters the queue on hike images", async () => {
   const user = userEvent.setup();
   renderPage([summary()]);

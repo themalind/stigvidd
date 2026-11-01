@@ -153,6 +153,19 @@ public class EventService : IEventService
         return Result.Ok(Page(cards.Value, query.Limit, origin: null));
     }
 
+    public async Task<Result<EventPreviewResponse>> GetPreviewAsync(string identifier, CancellationToken ctoken)
+    {
+        var card = await _eventRepository.GetPublicCardAsync(identifier, DateTime.UtcNow, ctoken);
+
+        if (card.Status == RepositoryResultStatus.NotFound)
+            return Result.Fail<EventPreviewResponse>(EventErrors.Gone());
+
+        if (!card.IsSuccess)
+            return Result.Fail<EventPreviewResponse>(new Message(500, "An error occurred while fetching the event."));
+
+        return Result.Ok(_factory.CreatePreview(card.Value));
+    }
+
     public async Task<Result<EventResponse>> GetAsync(string userIdentifier, string identifier, CancellationToken ctoken)
     {
         var loaded = await _loader.LoadAsync(userIdentifier, identifier, ctoken);
@@ -222,7 +235,7 @@ public class EventService : IEventService
 
         var resolved = place.Value;
         var togglesInvites = loaded.Value.Membership.CanToggleParticipantInvites();
-        var updated = await _eventRepository.UpdateAsync(identifier, e =>
+        var updated = await _eventRepository.UpdateAsync(identifier, loaded.Value.ViewerId, e =>
         {
             e.Title = request.Title.Trim();
             e.Description = request.Description.Trim();
@@ -238,10 +251,26 @@ public class EventService : IEventService
         if (updated.Status == RepositoryResultStatus.Conflict)
             return Result.Fail<EventResponse>(await EditConflictAsync(userIdentifier, identifier, request.MaxParticipants, ctoken));
 
-        if (!updated.IsSuccess)
+        if (!updated.IsSuccess || updated.Value is null)
             return Result.Fail<EventResponse>(new Message(500, "An error occurred while updating the event."));
 
+        var change = new EventChange(
+            Moved(startsAt, current.StartsAt) ? startsAt : null,
+            Moved(UtcDates.ToUtc(request.EndsAt), current.EndsAt),
+            MetresBetween(current.Location, resolved.Location) >= MovedPlaceMetres);
+
+        if (change.Any() && updated.Value.NotifyUserIds.Count > 0)
+            _pushQueue.Enqueue(EventPushes.Updated(identifier, request.Title.Trim(), change, updated.Value.NotifyUserIds, loaded.Value.ViewerId));
+
         return await GetAsync(userIdentifier, identifier, ctoken);
+    }
+
+    // Closer than this counts as the same place: coordinates lose digits on their way through the form. keep-comment: why not exact equality
+    private const double MovedPlaceMetres = 25;
+
+    private static double MetresBetween(Point from, Point to)
+    {
+        return LocalMetricProjection.CentredOn(from.Coordinate).MetresTo(to.Coordinate);
     }
 
     private static readonly TimeSpan SameTimeTolerance = TimeSpan.FromMinutes(1);
@@ -337,7 +366,7 @@ public class EventService : IEventService
             _pushQueue.Enqueue(EventPushes.Cancelled(identifier, deleted.Value.Title, deleted.Value.StartsAt, deleted.Value.NotifyUserIds, loaded.Value.ViewerId));
 
         if (deleted.Value.ImageUrl is not null)
-            await DeleteImageFileAsync(deleted.Value.ImageUrl, identifier);
+            await EventImageFiles.DeleteAsync(_webDavService, _logger, deleted.Value.ImageUrl, identifier, "EventService: DeleteAsync");
 
         return Result.Ok();
     }
@@ -462,22 +491,6 @@ public class EventService : IEventService
         if (projection is null)
             return null;
 
-        var projected = projection.Project(new Coordinate(card.Longitude, card.Latitude));
-        return Math.Round(Math.Sqrt((projected.X * projected.X) + (projected.Y * projected.Y)));
-    }
-
-    private async Task DeleteImageFileAsync(string url, string eventIdentifier)
-    {
-        try
-        {
-            var result = await _webDavService.DeleteFileAsync(url);
-
-            if (result.IsFailure)
-                _logger.LogError("EventService: DeleteAsync -> WebDAV refused to delete image {Url} of event {EventIdentifier}.", url, eventIdentifier);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "EventService: DeleteAsync -> Failed to delete image {Url} of event {EventIdentifier}.", url, eventIdentifier);
-        }
+        return Math.Round(projection.MetresTo(new Coordinate(card.Longitude, card.Latitude)));
     }
 }

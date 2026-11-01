@@ -503,7 +503,7 @@ public class EventServiceTests : TestBase
         var factory = CreateSeededFactory(db => db.Events.Add(EventRepositoryTests.NewEvent(1, organizerId: 1)));
         var repository = new Mock<IEventRepository>();
         repository
-            .Setup(r => r.UpdateAsync("event-1", It.IsAny<Action<Event>>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.UpdateAsync("event-1", It.IsAny<int>(), It.IsAny<Action<Event>>(), It.IsAny<CancellationToken>()))
             .Returns(async () =>
             {
                 using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
@@ -513,7 +513,7 @@ public class EventServiceTests : TestBase
                 else
                     stored.ParticipantCount = 3;
                 await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-                return RepositoryResult.Conflict();
+                return RepositoryResult<UpdatedEvent>.Conflict();
             });
         var request = UpdateOf(EventRepositoryTests.NewEvent(1, organizerId: 1));
         request.MaxParticipants = 2;
@@ -554,6 +554,69 @@ public class EventServiceTests : TestBase
         sent.Data["type"].Should().Be(PushTypes.EventCancelled);
     }
 
+    // User 1 organizes, 2 has joined, 3 is interested. keep-comment: the audience of every edit push test
+    private static Event WithAudience()
+    {
+        var e = Joined(EventRepositoryTests.NewEvent(1, organizerId: 1), 2);
+        e.Participants.Add(new EventParticipant { UserId = 3, Status = EventParticipantStatus.Interested });
+        return e;
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MovingTheStart_PushesTheNewTimeToJoinedAndInterestedFromTheEditor()
+    {
+        var e = WithAudience();
+        var factory = CreateSeededFactory(db => db.Events.Add(e));
+        PushMessage? sent = null;
+        _pushQueue.Setup(q => q.Enqueue(It.IsAny<PushMessage>())).Callback<PushMessage>(m => sent = m);
+        var request = UpdateOf(e);
+        request.StartsAt = new DateTime(2099, 11, 5, 17, 0, 0, DateTimeKind.Utc);
+
+        var result = await Service(factory).UpdateAsync(User1, "event-1", request, TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        sent.Should().NotBeNull();
+        sent.UserIds.Should().BeEquivalentTo([2, 3]);
+        sent.FromUserId.Should().Be(1);
+        sent.Title.Should().Be("Ändrat: Ny titel");
+        sent.Body.Should().Be("Ny starttid 5 november kl. 18:00.");
+        sent.Data["type"].Should().Be(PushTypes.EventUpdated);
+        sent.Data["eventIdentifier"].Should().Be("event-1");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MovingTheMeetingPoint_PushesTheNewPlace()
+    {
+        var e = WithAudience();
+        var factory = CreateSeededFactory(db => db.Events.Add(e));
+        PushMessage? sent = null;
+        _pushQueue.Setup(q => q.Enqueue(It.IsAny<PushMessage>())).Callback<PushMessage>(m => sent = m);
+        var request = UpdateOf(e);
+        request.MeetingPointLatitude = 57.73m;
+        request.EndsAt = e.StartsAt.AddHours(3);
+
+        await Service(factory).UpdateAsync(User1, "event-1", request, TestContext.Current.CancellationToken);
+
+        sent.Should().NotBeNull();
+        sent.Body.Should().Be("Ny sluttid och ny mötesplats.");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ChangingOnlyTextOrMovingByASlip_PushesNothing()
+    {
+        var e = WithAudience();
+        var factory = CreateSeededFactory(db => db.Events.Add(e));
+        var request = UpdateOf(e);
+        request.Description = "Ny beskrivning";
+        request.StartsAt = e.StartsAt.AddSeconds(-30);
+        request.MeetingPointLatitude = 57.72005m;
+
+        var result = await Service(factory).UpdateAsync(User1, "event-1", request, TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        _pushQueue.Verify(q => q.Enqueue(It.IsAny<PushMessage>()), Times.Never);
+    }
+
     [Fact]
     public async Task CancelAsync_OfAPastEvent_Is409EventPastAndPushesNothing()
     {
@@ -590,6 +653,22 @@ public class EventServiceTests : TestBase
 
         result.Success.Should().BeTrue();
         _webDav.Verify(w => w.DeleteFileAsync("events/a.jpeg"), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(ModerationState.Visible, true)]
+    [InlineData(ModerationState.HiddenPendingReview, false)]
+    public async Task GetAsync_GivesTheImageIdentifierOnlyWithAVisibleImage(ModerationState moderation, bool shown)
+    {
+        var withImage = EventRepositoryTests.NewEvent(1, organizerId: 1);
+        withImage.Image = new EventImage { Identifier = "image-1", ImageUrl = "events/a.jpeg", ModerationState = moderation };
+        var factory = CreateSeededFactory(db => db.Events.Add(withImage));
+
+        var result = await Service(factory).GetAsync(User1, "event-1", TestContext.Current.CancellationToken);
+
+        result.Value.Should().NotBeNull();
+        result.Value.ImageIdentifier.Should().Be(shown ? "image-1" : null);
+        result.Value.ImageUrl.Should().Be(shown ? $"{Utilities.Stubs.PresentableBaseUrl}events/a.jpeg" : null);
     }
 
     [Fact]

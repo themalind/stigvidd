@@ -1,0 +1,52 @@
+@* SPDX-FileCopyrightText: 2026 The Stigvidd Authors *@
+@* SPDX-License-Identifier: AGPL-3.0-or-later *@
+
+<Document Title="@Event.Title"
+          Description="@Summary"
+          SiteUrl="@Options.SiteUrl"
+          CanonicalUrl="@CanonicalUrl"
+          ImageUrl="@Event.ImageUrl"
+          Texts="@Texts"
+          CurrentPath="@EventPath">
+    @if (Event.ImageUrl is not null)
+    {
+        <img class="hero" src="@Event.ImageUrl" alt="@Event.Title" />
+    }
+    <div class="content">
+        <h1>@Event.Title</h1>
+        <p class="facts">@When</p>
+        @if (Facts.Length > 0)
+        {
+            <p class="facts">@Facts</p>
+        }
+        <p class="description">@Texts.JoinInApp</p>
+        <AppActions AppUrl="@AppUrl" Options="@Options" Texts="@Texts" IsAndroid="@IsAndroid" />
+    </div>
+</Document>
+
+@code {
+    [Parameter, EditorRequired] public required EventPreviewResponse Event { get; set; }
+    [Parameter, EditorRequired] public required AppLinksOptions Options { get; set; }
+    [Parameter, EditorRequired] public required PageTexts Texts { get; set; }
+    [Parameter] public bool IsAndroid { get; set; }
+
+    private string EventPath => $"/event/{Uri.EscapeDataString(Event.Identifier)}";
+
+    private string CanonicalUrl =>
+        $"{Options.PublicBaseUrl.TrimEnd('/')}{EventPath}{(Texts == PageTexts.Swedish ? "" : $"?lang={Texts.Code}")}";
+
+    private string AppUrl => $"{Options.AppScheme}://event/{Uri.EscapeDataString(Event.Identifier)}";
+
+    private string When => EventTime.Stockholm(Event.StartsAt).ToString(Texts.EventTimeFormat, Texts.Culture);
+
+    private string Facts => string.Join(" · ", new[]
+    {
+        Event.PlaceName,
+        Event.RouteLengthMeters is { } metres ? $"{(metres / 1000.0).ToString("0.#", Texts.Culture)} km" : null,
+        Event.MaxParticipants is { } max
+            ? string.Format(Texts.Culture, Texts.ParticipantsOfMaxFormat, Event.ParticipantCount, max)
+            : string.Format(Texts.Culture, Texts.ParticipantsFormat, Event.ParticipantCount),
+    }.Where(part => !string.IsNullOrWhiteSpace(part)));
+
+    private string Summary => $"{When} · {Facts}";
+}

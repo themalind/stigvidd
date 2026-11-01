@@ -347,7 +347,7 @@ public class EventRepositoryTests : TestBase
     {
         var factory = CreateSeededFactory(db => db.Events.Add(NewEvent(1, organizerId: 1, status: EventStatus.Cancelled)));
 
-        var result = await Repository(factory).UpdateAsync("event-1", e => e.Title = "Ny titel", TestContext.Current.CancellationToken);
+        var result = await Repository(factory).UpdateAsync("event-1", 1, e => e.Title = "Ny titel", TestContext.Current.CancellationToken);
 
         result.Status.Should().Be(RepositoryResultStatus.Conflict);
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
@@ -364,11 +364,29 @@ public class EventRepositoryTests : TestBase
             db.Events.Add(e);
         });
 
-        var result = await Repository(factory).UpdateAsync("event-1", e => e.MaxParticipants = 2, TestContext.Current.CancellationToken);
+        var result = await Repository(factory).UpdateAsync("event-1", 1, e => e.MaxParticipants = 2, TestContext.Current.CancellationToken);
 
         result.Status.Should().Be(RepositoryResultStatus.Conflict);
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         (await context.Events.SingleAsync(TestContext.Current.CancellationToken)).MaxParticipants.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_NamesJoinedAndInterestedButNotTheEditorOrTheRemoved()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            var e = NewEvent(1, organizerId: 1);
+            e.Participants.Add(new EventParticipant { UserId = 2, Role = EventParticipantRole.CoHost });
+            e.Participants.Add(new EventParticipant { UserId = 3, Status = EventParticipantStatus.Interested });
+            e.Participants.Add(new EventParticipant { UserId = 4, Status = EventParticipantStatus.Removed });
+            db.Events.Add(e);
+        });
+
+        var result = await Repository(factory).UpdateAsync("event-1", 2, e => e.Title = "Ny titel", TestContext.Current.CancellationToken);
+
+        result.Value.Should().NotBeNull();
+        result.Value.NotifyUserIds.Should().BeEquivalentTo([1, 3]);
     }
 
     [Fact]

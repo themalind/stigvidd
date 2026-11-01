@@ -6,7 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getTrailObstaclesByTrailIdentifier } from "@/api/trail-obstacles";
-import { getCoordinatesByTrailIdentifier, getTrailByIdentifier } from "@/api/trails";
+import { getTrailByIdentifier } from "@/api/trails";
+import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
 import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
 import ImageGallery from "@/components/trail/image-gallery";
@@ -40,13 +41,15 @@ export type FollowRoute =
   | "/(tabs)/(map)/follow/[identifier]"
   | "/(tabs)/trails/follow/[identifier]"
   | "/(tabs)/(profile-stack)/follow/[identifier]"
-  | "/(tabs)/(home)/follow/[identifier]";
+  | "/(tabs)/(home)/follow/[identifier]"
+  | "/(tabs)/events/follow/[identifier]";
 
 export type GuideRoute =
   | "/(tabs)/(map)/guide"
   | "/(tabs)/trails/guide"
   | "/(tabs)/(profile-stack)/guide"
-  | "/(tabs)/(home)/guide";
+  | "/(tabs)/(home)/guide"
+  | "/(tabs)/events/guide";
 
 interface Props {
   followRoute: FollowRoute;
@@ -96,12 +99,7 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
     staleTime: TRAIL_DETAIL_STALE_TIME,
   });
 
-  const { data: coords } = useQuery({
-    queryKey: ["cords", normalizedIdentifier],
-    queryFn: () => getCoordinatesByTrailIdentifier(normalizedIdentifier),
-    enabled: !!normalizedIdentifier,
-    staleTime: TRAIL_DETAIL_STALE_TIME,
-  });
+  const { data: coords } = useTrailCoordinates(normalizedIdentifier, { staleTime: TRAIL_DETAIL_STALE_TIME });
 
   if (isLoading) {
     return <LoadingIndicator />;

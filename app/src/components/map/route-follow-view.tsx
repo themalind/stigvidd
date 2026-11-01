@@ -15,7 +15,7 @@ import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { useLiveUserLocation } from "@/hooks/useLiveUserLocation";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
-import { openDirectionsToStart } from "@/utils/open-directions";
+import { MeetingPoint, openDirectionsToStart } from "@/utils/open-directions";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useRouter } from "expo-router";
@@ -42,9 +42,10 @@ interface Props {
   isLoading?: boolean;
   // Shown centred when the route could not be loaded. Mutually exclusive with isLoading.
   errorMessage?: string;
+  meetingPoint?: MeetingPoint;
 }
 
-export default function RouteFollowView({ idPrefix, path, title, isLoading, errorMessage }: Props) {
+export default function RouteFollowView({ idPrefix, path, title, isLoading, errorMessage, meetingPoint }: Props) {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -57,7 +58,8 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
   const userLocation = useLiveUserLocation();
 
   const lineShape = useMemo(() => lineStringFromPositions(path), [path]);
-  const bounds = useMemo(() => getBoundsFromTrail(path), [path]);
+  const shown = useMemo(() => (meetingPoint ? [...path, meetingPoint.position] : path), [path, meetingPoint]);
+  const bounds = useMemo(() => getBoundsFromTrail(shown), [shown]);
 
   const lineLayerId = `${idPrefix}-route-line`;
   // The layer the puck is pinned above — but only once that layer actually exists. The
@@ -82,9 +84,10 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
     if (!mapReadyRef.current) return;
     // A single point has a zero-area bounding box, which fitBounds resolves to maximum
     // zoom; centre on it at a sane level instead.
-    if (path.length === 1) cameraRef.current?.jumpTo({ center: path[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
+    if (shown.length === 1)
+      cameraRef.current?.jumpTo({ center: shown[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
     else if (bounds) cameraRef.current?.fitBounds(bounds, { padding: FIT_PADDING, duration: 0 });
-  }, [bounds, path]);
+  }, [bounds, shown]);
 
   const handleMapReady = useCallback(() => {
     mapReadyRef.current = true;
@@ -117,6 +120,14 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
         )}
         {path.length > 0 && (
           <StartMarker id={`${idPrefix}-start`} position={path[0]} label={t("map.start")} onPress={openDirections} />
+        )}
+        {meetingPoint && (
+          <StartMarker
+            id={`${idPrefix}-meeting`}
+            position={meetingPoint.position}
+            label={meetingPoint.label}
+            onPress={() => openDirectionsToStart(meetingPoint.position, t, meetingPoint.directionsMessage)}
+          />
         )}
         {userLocation && (
           <UserLocationMarker

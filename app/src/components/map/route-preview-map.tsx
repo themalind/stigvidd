@@ -12,7 +12,7 @@ import StartMarker from "@/components/map/start-marker";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
-import { openDirectionsToStart } from "@/utils/open-directions";
+import { MeetingPoint, openDirectionsToStart } from "@/utils/open-directions";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useCallback, useMemo, useRef } from "react";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
@@ -48,6 +48,7 @@ interface Props {
   // their own affordance over the map. The full-cover Pressable stays either way — the
   // map swallows touches, so without it the parent never sees the tap.
   showBadge?: boolean;
+  meetingPoint?: MeetingPoint;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -61,25 +62,29 @@ export default function RoutePreviewMap({
   label,
   showDirections = true,
   showBadge = true,
+  meetingPoint,
   style,
 }: Props) {
   const cameraRef = useRef<CameraRef>(null);
   const { t } = useTranslation();
 
   const routeShape = useMemo(() => lineStringFromPositions(path), [path]);
-  const bounds = useMemo(() => getBoundsFromTrail(path), [path]);
+  const shown = useMemo(() => (meetingPoint ? [...path, meetingPoint.position] : path), [path, meetingPoint]);
+  const bounds = useMemo(() => getBoundsFromTrail(shown), [shown]);
+  const target = meetingPoint?.position ?? path[0];
 
   const handleMapReady = useCallback(() => {
     // A single point has a zero-area bounding box, which fitBounds resolves to maximum
     // zoom; centre on it at a sane level instead.
-    if (path.length === 1) cameraRef.current?.jumpTo({ center: path[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
+    if (shown.length === 1)
+      cameraRef.current?.jumpTo({ center: shown[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
     else if (bounds)
       cameraRef.current?.fitBounds(bounds, { padding: { top: 20, right: 20, bottom: 20, left: 20 }, duration: 0 });
-  }, [bounds, path]);
+  }, [bounds, shown]);
 
   return (
     <View testID="route-preview" style={style}>
-      {path.length > 0 && (
+      {shown.length > 0 && (
         <Map
           style={s.map}
           showsUserLocation={false}
@@ -106,23 +111,38 @@ export default function RoutePreviewMap({
               />
             </GeoJSONSource>
           )}
-          <StartMarker
-            id={`${idPrefix}-start`}
-            position={path[0]}
-            label={t("map.start")}
-            // With the overlay mounted its pill owns directions instead — the
-            // full-cover Pressable would swallow this tap anyway.
-            onPress={onOpen ? undefined : () => openDirectionsToStart(path[0], t)}
-          />
+          {path.length > 0 && (
+            <StartMarker
+              id={`${idPrefix}-start`}
+              position={path[0]}
+              label={t("map.start")}
+              // With the overlay mounted its pill owns directions instead — the
+              // full-cover Pressable would swallow this tap anyway.
+              onPress={onOpen ? undefined : () => openDirectionsToStart(path[0], t)}
+            />
+          )}
+          {meetingPoint && (
+            <StartMarker
+              id={`${idPrefix}-meeting`}
+              position={meetingPoint.position}
+              label={meetingPoint.label}
+              onPress={
+                onOpen
+                  ? undefined
+                  : () => openDirectionsToStart(meetingPoint.position, t, meetingPoint.directionsMessage)
+              }
+            />
+          )}
         </Map>
       )}
       {onOpen &&
-        path.length > 0 &&
+        shown.length > 0 &&
         (showBadge ? (
           <MapPreviewOverlay
             label={label ?? t("map.showMapView")}
             onPress={onOpen}
-            startPosition={showDirections ? path[0] : undefined}
+            startPosition={showDirections ? target : undefined}
+            directionsMessage={meetingPoint?.directionsMessage}
           />
         ) : (
           <Pressable

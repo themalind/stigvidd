@@ -55,6 +55,11 @@
               "scheme": "https",
               "host": "link.stigvidd.se",
               "pathPrefix": "/trail/"
+            },
+            {
+              "scheme": "https",
+              "host": "link.stigvidd.se",
+              "pathPrefix": "/event/"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]

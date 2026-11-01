@@ -52,6 +52,8 @@ public class EventLimitsTests
     [InlineData("Events:CreatedPerDayWindow", "00:00:00")]
     [InlineData("Events:InvitedPerDay", "0")]
     [InlineData("Events:InvitedPerDayWindow", "00:00:00")]
+    [InlineData("Events:PostsPerMinute", "0")]
+    [InlineData("Events:PostPushThrottle", "-00:01:00")]
     public void Register_WithAValueThatIsNotAboveZero_Throws(string key, string value)
     {
         var act = () => Resolve(new Dictionary<string, string?> { [key] = value });

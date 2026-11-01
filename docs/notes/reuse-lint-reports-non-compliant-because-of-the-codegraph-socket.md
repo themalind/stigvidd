@@ -60,6 +60,10 @@ Measured: the same tree that reported *not compliant* in place reported
 does the work — it applies `.gitignore`, so `.codegraph/` and every other local artefact drop
 out while a genuinely new, uncommitted source file stays in and is still checked.
 
+From Git Bash on Windows two changes are needed: tar aborts on a tracked file deleted in the working
+tree, so filter the list with `while read -r f; do [ -e "$f" ] && echo "$f"; done`, and run docker as
+`MSYS_NO_PATHCONV=1 docker run --volume "$(cygpath -w "$DEST"):/data" …` or the mount arrives empty.
+
 Do not reach for `reuse lint --skip-existing` or an exclusion flag instead: those change what
 is being checked, and the thing you want is the unmodified CI check on a clean set of inputs.
 

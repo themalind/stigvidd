@@ -76,6 +76,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEventRepository, Core.Repositories.Events.EventRepository>();
         services.AddTransient<IEventParticipantRepository, Core.Repositories.Events.EventParticipantRepository>();
         services.AddTransient<IEventInvitationRepository, Core.Repositories.Events.EventInvitationRepository>();
+        services.AddTransient<IEventPostRepository, Core.Repositories.Events.EventPostRepository>();
+        services.AddTransient<IEventImageRepository, Core.Repositories.Events.EventImageRepository>();
         services.AddTransient<IAccountDeletionStep, Core.Repositories.Events.EventAccountDeletionStep>();
 
         // Services
@@ -87,6 +89,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEventService, Core.Services.Events.EventService>();
         services.AddTransient<IEventParticipationService, Core.Services.Events.EventParticipationService>();
         services.AddTransient<IEventInvitationService, Core.Services.Events.EventInvitationService>();
+        services.AddTransient<IEventBoardService, Core.Services.Events.EventBoardService>();
+        services.AddTransient<IEventImageService, Core.Services.Events.EventImageService>();
         services.AddTransient<IWebDavService, WebDavService>();
         services.AddTransient<IImageProcessingService, ImageProcessingService>();
         services.AddTransient<IMediaUploadService, MediaUploadService>();

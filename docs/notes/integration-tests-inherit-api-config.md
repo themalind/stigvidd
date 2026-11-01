@@ -52,6 +52,13 @@ the worst possible way — measured, it still fails 337/337, looking exactly lik
 `WebApplicationFactory` reaches a `Program.Main` through `DeferredHostBuilder`, whose
 configuration callbacks run *after* the `builder.Configuration` reads inside `Program.Main`.
 
+That holds only for values `Program.Main` reads at startup. A value read **per request** through
+`IOptions<T>` (e.g. `Events:PostsPerMinute`, read by the `"event-posts"` rate limiter policy) *is* reached
+by `ConfigureAppConfiguration` in a factory subclass's `ConfigureWebHost` override. Mutation-proved: drop it
+from `PostRateLimitWebApplicationFactory` and `EventPostRateLimitTests` goes red. A rate limiter outlives every
+test that shares its host, so give tests a subclassed factory with a limit of their own, as in
+[EventPostsControllerTests.cs](../../backend/Tests/IntegrationTests/EventsController/EventPostsControllerTests.cs).
+
 Environment variables were the right lever for a second reason: they rank **above** user
 secrets, so they close divergence (2) as well as (1) — every box now behaves like Jenkins.
 

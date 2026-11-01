@@ -6,6 +6,7 @@ namespace StigviddLinks;
 public static class WellKnown
 {
     public const string TrailPathPattern = "/trail/*";
+    public const string EventPathPattern = "/event/*";
 
     public static object? AppleAppSiteAssociation(AppLinksOptions options)
     {
@@ -21,7 +22,11 @@ public static class WellKnown
                     new
                     {
                         appIDs = new[] { $"{options.AppleTeamId}.{options.IosBundleId}" },
-                        components = new[] { new Dictionary<string, string> { ["/"] = TrailPathPattern } },
+                        components = new[]
+                        {
+                            new Dictionary<string, string> { ["/"] = TrailPathPattern },
+                            new Dictionary<string, string> { ["/"] = EventPathPattern },
+                        },
                     },
                 },
             },

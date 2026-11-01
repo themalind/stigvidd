@@ -7,7 +7,7 @@ using Infrastructure.Enums;
 
 namespace Core.Services.Events;
 
-public sealed record LoadedEvent(int ViewerId, EventDetail Detail, EventMembership Membership, bool ShowOrganizer);
+public sealed record LoadedEvent(int ViewerId, EventDetail Detail, EventMembership Membership, bool ShowOrganizer, int[] HiddenUserIds);
 
 // Loads an event with the caller's membership and applies the visibility rules every event action starts with. keep-comment: one entry point for EventService and EventParticipationService
 public class EventLoader
@@ -52,7 +52,7 @@ public class EventLoader
         if (organizerHidden && !isInside)
             return Result.Fail<LoadedEvent>(new Message(404, "The event is arranged by someone you have blocked.", EventErrorCodes.OrganizerBlocked));
 
-        return Result.Ok(new LoadedEvent(viewer.Value, detail.Value, membership, !organizerHidden));
+        return Result.Ok(new LoadedEvent(viewer.Value, detail.Value, membership, !organizerHidden, hidden));
     }
 
     public async Task<Result<int>> ResolveUserAsync(string userIdentifier, CancellationToken ctoken)

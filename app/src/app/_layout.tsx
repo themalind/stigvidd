@@ -25,6 +25,7 @@ import { initTelemetry } from "@/services/telemetry";
 import { logger } from "@/services/logger";
 import {
   claimNotificationResponse,
+  invalidateForPush,
   notificationHandlerFor,
   registerForPushNotificationsAsync,
   releaseNotificationResponse,
@@ -63,8 +64,9 @@ function NotificationHandler() {
   // Foreground: notification arrives while app is open — just refresh data, no navigation.
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener((notification) => {
-      const handler = notificationHandlerFor(notification.request.content.data);
-      if (handler) queryClient.invalidateQueries({ queryKey: handler.queryKeys });
+      const data = notification.request.content.data;
+      const handler = notificationHandlerFor(data);
+      if (handler) invalidateForPush(queryClient, handler, data);
     });
     return () => subscription.remove();
   }, [queryClient]);
@@ -88,7 +90,7 @@ function NotificationHandler() {
         }
         const handler = notificationHandlerFor(data);
         if (handler) {
-          queryClient.invalidateQueries({ queryKey: handler.queryKeys });
+          invalidateForPush(queryClient, handler, data);
           const route = handler.route(data);
           if (route) router.navigate(route as never, { withAnchor: true });
         }

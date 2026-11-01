@@ -23,12 +23,13 @@ interface Props {
   // full-cover Pressable below swallows map touches, so the start marker's own tap
   // handler can't be reached while this overlay is mounted.
   startPosition?: GeoJSON.Position;
+  directionsMessage?: string;
 }
 
 // The chrome that turns a static map preview into a button: the whole surface opens the
 // fullscreen follow view, with a corner badge saying so. Shared by the trail detail
 // preview and the hike/shared-hike detail modals so the affordance is identical.
-export default function MapPreviewOverlay({ label, onPress, startPosition }: Props) {
+export default function MapPreviewOverlay({ label, onPress, startPosition, directionsMessage }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
 
@@ -45,7 +46,7 @@ export default function MapPreviewOverlay({ label, onPress, startPosition }: Pro
       {startPosition && (
         <Pressable
           style={[s.directions, { backgroundColor: theme.colors.surface }]}
-          onPress={() => openDirectionsToStart(startPosition, t)}
+          onPress={() => openDirectionsToStart(startPosition, t, directionsMessage)}
           hitSlop={6}
           accessibilityLabel={t("map.directions")}
         >

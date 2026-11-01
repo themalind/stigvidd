@@ -7,6 +7,9 @@
 
 import { friendsAtom } from "@/atoms/friends-atoms";
 import AlertDialog from "@/components/alert-dialog";
+import EventCard from "@/components/event/event-card";
+import { openEvent, PROFILE_STACK_EVENT_ROUTES } from "@/components/event/event-routes";
+import { useOrganizerEvents } from "@/hooks/events/useEventQueries";
 import BackButton from "@/components/back-button";
 import ErrorView from "@/components/error-view";
 import BlockUserDialog, { UserRef } from "@/components/friends/block-user-dialog";
@@ -62,6 +65,7 @@ export default function FriendProfileScreen() {
   const selectSent = useCallback((hikes: OutgoingSharedHike[]) => sharesTo(hikes, identifier), [identifier]);
   const sent = useOutgoingShares(selectSent);
   const profile = useFriendProfile(friends?.some((f) => f.identifier === identifier) ? identifier : undefined);
+  const organized = useOrganizerEvents(identifier);
   const [direction, setDirection] = useState<ShareDirection>("from");
   const [pickingHike, setPickingHike] = useState(false);
   const { removeFriendMutation, setNoteMutation } = useFriendMutations();
@@ -181,6 +185,24 @@ export default function FriendProfileScreen() {
               isError={profile.isError && !profile.data}
               errorText={t("friends.profileError")}
               onRetry={() => profile.refetch()}
+            />
+
+            <ListSection
+              testID="friend-events"
+              title={t("events.arranges", { name: friend.nickName })}
+              icon="calendar-month-outline"
+              items={organized.data}
+              keyOf={(event) => event.identifier}
+              renderItem={(event) => (
+                <EventCard
+                  event={event}
+                  onPress={(eventIdentifier) => openEvent(PROFILE_STACK_EVENT_ROUTES, eventIdentifier)}
+                />
+              )}
+              isPending={organized.isLoading}
+              isError={organized.isError && !organized.data}
+              errorText={t("events.loadError")}
+              onRetry={() => organized.refetch()}
             />
 
             <ListSection

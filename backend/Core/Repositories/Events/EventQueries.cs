@@ -19,6 +19,15 @@ public static class EventQueries
             || e.Invitations.Any(i => i.InvitedUserId == userId && i.Status == EventInvitationStatus.Pending);
     }
 
+    // What the public feed lists to anyone; the share page shows the same set. keep-comment: one rule for feed and share preview
+    public static Expression<Func<Event, bool>> PubliclyListed(DateTime now)
+    {
+        return e => e.Visibility == EventVisibility.Open
+            && e.Status == EventStatus.Published
+            && e.ModerationState == ModerationState.Visible
+            && e.PastAfter > now;
+    }
+
     public static Expression<Func<Event, bool>> OrganizerNotHidden(int[] hiddenUserIds)
     {
         return e => !e.Participants.Any(p => p.Role == EventParticipantRole.Organizer && hiddenUserIds.Contains(p.UserId));

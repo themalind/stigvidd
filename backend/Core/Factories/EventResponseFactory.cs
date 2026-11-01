@@ -19,6 +19,52 @@ public class EventResponseFactory
         _presentableBaseUrl = configuration["PresentableBaseUrl"] ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
     }
 
+    public EventImageResponse CreateImage(string identifier, string relativeUrl)
+    {
+        return new EventImageResponse
+        {
+            Identifier = identifier,
+            ImageUrl = $"{_presentableBaseUrl}{relativeUrl}",
+        };
+    }
+
+    public static EventPostResponse CreatePost(EventPostRow post, int viewerId, EventMembership membership)
+    {
+        var isMine = post.UserId == viewerId;
+
+        return new EventPostResponse
+        {
+            Identifier = post.Identifier,
+            AuthorIdentifier = post.UserIdentifier,
+            AuthorNickName = post.NickName,
+            Body = post.Body,
+            IsPinned = post.IsPinned,
+            CreatedAt = post.CreatedAt,
+            EditedAt = post.EditedAt,
+            IsMine = isMine,
+            CanEdit = isMine && membership.CanPost(),
+            CanDelete = isMine || membership.CanPinOrDeletePosts(),
+        };
+    }
+
+    public EventPreviewResponse CreatePreview(EventCard card)
+    {
+        var route = Route(card.TrailLengthKm, card.RouteLengthMetres, routePath: null);
+
+        return new EventPreviewResponse
+        {
+            Identifier = card.Identifier,
+            Title = card.Title,
+            StartsAt = card.StartsAt,
+            EndsAt = card.EndsAt,
+            PlaceName = card.TrailName ?? card.LocationName ?? card.MeetingPointName,
+            RouteLengthMeters = route?.LengthMeters,
+            ParticipantCount = card.ParticipantCount,
+            MaxParticipants = card.MaxParticipants,
+            ImageUrl = ImageUrl(card.ImageUrl, card.ImageModerationState),
+        };
+    }
+
     public EventSummaryResponse CreateSummary(EventCard card, double? distanceMeters)
     {
         var route = Route(card.TrailLengthKm, card.RouteLengthMetres, routePath: null);
@@ -48,6 +94,7 @@ public class EventResponseFactory
     public EventResponse Create(EventDetail detail, EventMembership membership, bool showOrganizer, LineString? routePath)
     {
         var e = detail.Event;
+        var imageUrl = ImageUrl(detail.ImageUrl, detail.ImageModerationState);
 
         return new EventResponse
         {
@@ -72,7 +119,8 @@ public class EventResponseFactory
             Status = e.Status.ToString(),
             CancelledAt = e.CancelledAt,
             IsPast = membership.IsPast,
-            ImageUrl = ImageUrl(detail.ImageUrl, detail.ImageModerationState),
+            ImageUrl = imageUrl,
+            ImageIdentifier = imageUrl is null ? null : detail.ImageIdentifier,
             OrganizerNickName = showOrganizer ? detail.OrganizerNickName : null,
             MyRole = detail.MyRole?.ToString(),
             MyStatus = detail.MyStatus?.ToString(),
@@ -89,6 +137,7 @@ public class EventResponseFactory
                 CanRemoveParticipants = membership.CanRemove(EventParticipantRole.Participant),
                 CanPinOrDeletePosts = membership.CanPinOrDeletePosts(),
                 CanReadBoard = membership.CanReadBoard(),
+                CanPost = membership.CanPost(),
             },
         };
     }

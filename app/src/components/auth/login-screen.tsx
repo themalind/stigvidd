@@ -12,7 +12,9 @@ import BackButton from "@/components/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link, router } from "expo-router";
+import { loginReturnPathAtom } from "@/atoms/auth-atoms";
+import { Href, Link, router } from "expo-router";
+import { useStore } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -49,6 +51,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
     ? require("../../assets/images/darkmode_login.jpg")
     : require("../../assets/images/lightmode_login.jpg");
   const { login } = useAuth();
+  const store = useStore();
 
   const {
     control,
@@ -74,6 +77,12 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
         error instanceof InvalidCredentialsError ? t("auth.invalidCredentials") : t("auth.oidcLoginFailed"),
       );
       return;
+    }
+
+    const returnPath = store.get(loginReturnPathAtom);
+    if (returnPath) {
+      store.set(loginReturnPathAtom, null);
+      router.navigate(returnPath as Href);
     }
   };
 

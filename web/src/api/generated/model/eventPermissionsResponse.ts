@@ -17,4 +17,5 @@ export interface EventPermissionsResponse {
   canRemoveParticipants?: boolean;
   canPinOrDeletePosts?: boolean;
   canReadBoard?: boolean;
+  canPost?: boolean;
 }

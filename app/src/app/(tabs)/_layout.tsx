@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { pendingEventInvitationsCountAtom } from "@/atoms/event-atoms";
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import Header from "@/components/header";
 import OfflineBanner from "@/components/offline-banner";
@@ -23,6 +24,7 @@ export default function TabsLayout() {
   const segments = useSegments() as string[];
   const { isAuthenticated } = useAuth();
   const incomingCount = useAtomValue(pendingNotificationsCountAtom);
+  const invitationCount = useAtomValue(pendingEventInvitationsCountAtom);
 
   // On the profile tab, login/register live inside the stack and Stack.Protected
   // swaps them in/out imperatively when auth flips — usePathname() lags one
@@ -90,6 +92,20 @@ export default function TabsLayout() {
               ) : (
                 <Ionicons name="trail-sign-outline" size={30} color={theme.colors.onBackground} />
               ),
+          }}
+        />
+        <Tabs.Screen
+          name="events"
+          options={{
+            title: t("tabs.events"),
+            tabBarIcon: ({ focused }) =>
+              focused ? (
+                <MaterialCommunityIcons name="calendar-month" size={29} color={theme.colors.onTertiaryContainer} />
+              ) : (
+                <MaterialCommunityIcons name="calendar-month-outline" size={29} color={theme.colors.onBackground} />
+              ),
+            tabBarBadge: invitationCount > 0 ? invitationCount : undefined,
+            tabBarBadgeStyle: { color: theme.colors.onTertiary, backgroundColor: theme.colors.tertiary },
           }}
         />
         <Tabs.Screen

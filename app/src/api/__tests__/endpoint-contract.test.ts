@@ -23,7 +23,7 @@ jest.mock("@/services/logger", () => ({
 jest.mock("@/services/keycloak-auth", () => ({ getValidAccessToken: jest.fn() }));
 
 import { getValidAccessToken } from "@/services/keycloak-auth";
-import { ApiError } from "../api-error";
+import { ApiError, problemStrings } from "../api-error";
 import { getAreaByIdentifier, getAreas } from "../areas";
 import {
   acceptFriendRequest,
@@ -47,6 +47,36 @@ import {
   updateHike,
   uploadHikeImage,
 } from "../hikes";
+import {
+  acceptEventInvitation,
+  cancelEvent,
+  createEvent,
+  createEventPost,
+  declineEventInvitation,
+  deleteEvent,
+  deleteEventImage,
+  deleteEventPost,
+  getEvent,
+  getEventInvitations,
+  getEventParticipants,
+  getEventPosts,
+  getEvents,
+  getMyEvents,
+  inviteToEvent,
+  joinEvent,
+  leaveEvent,
+  markEventInterested,
+  markEventPostsRead,
+  removeEventParticipant,
+  revokeEventInvitation,
+  setEventImage,
+  setEventMuted,
+  setEventParticipantRole,
+  setEventPostPinned,
+  unmarkEventInterested,
+  updateEvent,
+  updateEventPost,
+} from "../events";
 import { getFacilityMarkers, getTrailMarkers } from "../map-markers";
 import { registerPushToken, unregisterPushToken } from "../notifications";
 import { createReview, deleteReview, getReviewsByTrailIdentifier, hasReviewedTrail } from "../reviews";
@@ -145,6 +175,23 @@ const updateHikeRequest = {
   parkingInfo: "Vid vandplanen",
   gettingThere: "Buss 100",
   description: "Fin runda",
+};
+
+const createEventRequest = {
+  title: "Kvällsvandring",
+  description: "Runt sjön",
+  trailIdentifier: "t1",
+  startsAt: "2026-11-05T17:00:00.000Z",
+  allowParticipantInvites: false,
+  visibility: "Open" as const,
+};
+
+const updateEventRequest = {
+  title: "Kvällsvandring",
+  description: "Runt sjön",
+  startsAt: "2026-11-05T17:00:00.000Z",
+  allowParticipantInvites: true,
+  removeRoute: true,
 };
 
 const shareHikeRequest = { hikeIdentifier: "h1", sharedWithNames: ["stigvandraren"], allowResharing: true };
@@ -705,6 +752,240 @@ const endpoints: Endpoint[] = [
     auth: "required",
     carriesStatus: true,
   },
+
+  {
+    name: "getEvents",
+    call: () => getEvents({ lat: 57.72, lon: 12.94, radiusKm: 25, cursor: "a+b/c" }),
+    method: "GET",
+    path: "/events?lat=57.72&lon=12.94&radiusKm=25&cursor=a%2Bb%2Fc",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "getMyEvents",
+    call: () => getMyEvents({ past: true }),
+    method: "GET",
+    path: "/events/mine?past=true",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "getEvent",
+    call: () => getEvent("e1"),
+    method: "GET",
+    path: "/events/e1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "createEvent",
+    call: () => createEvent(createEventRequest),
+    method: "POST",
+    path: "/events",
+    auth: "required",
+    carriesStatus: true,
+    body: createEventRequest,
+  },
+  {
+    name: "updateEvent",
+    call: () => updateEvent("e1", updateEventRequest),
+    method: "PUT",
+    path: "/events/e1",
+    auth: "required",
+    carriesStatus: true,
+    body: updateEventRequest,
+  },
+  {
+    name: "cancelEvent",
+    call: () => cancelEvent("e1"),
+    method: "POST",
+    path: "/events/e1/cancel",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "deleteEvent",
+    call: () => deleteEvent("e1"),
+    method: "DELETE",
+    path: "/events/e1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "joinEvent",
+    call: () => joinEvent("e1"),
+    method: "POST",
+    path: "/events/e1/join",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "leaveEvent",
+    call: () => leaveEvent("e1"),
+    method: "DELETE",
+    path: "/events/e1/leave",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "markEventInterested",
+    call: () => markEventInterested("e1"),
+    method: "POST",
+    path: "/events/e1/interested",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "unmarkEventInterested",
+    call: () => unmarkEventInterested("e1"),
+    method: "DELETE",
+    path: "/events/e1/interested",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "getEventParticipants",
+    call: () => getEventParticipants("e1"),
+    method: "GET",
+    path: "/events/e1/participants",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "removeEventParticipant",
+    call: () => removeEventParticipant("e1", "u1"),
+    method: "DELETE",
+    path: "/events/e1/participants/u1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "setEventParticipantRole",
+    call: () => setEventParticipantRole("e1", "u1", "CoHost"),
+    method: "PUT",
+    path: "/events/e1/participants/u1/role",
+    auth: "required",
+    carriesStatus: true,
+    body: { role: "CoHost" },
+  },
+  {
+    name: "setEventMuted",
+    call: () => setEventMuted("e1", true),
+    method: "PUT",
+    path: "/events/e1/mute",
+    auth: "required",
+    carriesStatus: true,
+    body: { muted: true },
+  },
+  {
+    name: "inviteToEvent",
+    call: () => inviteToEvent("e1", ["stigvandraren"]),
+    method: "POST",
+    path: "/events/e1/invite",
+    auth: "required",
+    carriesStatus: true,
+    body: { nickNames: ["stigvandraren"] },
+  },
+  {
+    name: "revokeEventInvitation",
+    call: () => revokeEventInvitation("e1", "u1"),
+    method: "DELETE",
+    path: "/events/e1/invitations/u1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "getEventInvitations",
+    call: () => getEventInvitations(),
+    method: "GET",
+    path: "/events/invitations",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "acceptEventInvitation",
+    call: () => acceptEventInvitation("e1"),
+    method: "POST",
+    path: "/events/invitations/e1/accept",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "declineEventInvitation",
+    call: () => declineEventInvitation("e1"),
+    method: "DELETE",
+    path: "/events/invitations/e1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "getEventPosts",
+    call: () => getEventPosts("e1", "c1"),
+    method: "GET",
+    path: "/events/e1/posts?cursor=c1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "createEventPost",
+    call: () => createEventPost("e1", "Vi ses vid parkeringen"),
+    method: "POST",
+    path: "/events/e1/posts",
+    auth: "required",
+    carriesStatus: true,
+    body: { body: "Vi ses vid parkeringen" },
+  },
+  {
+    name: "markEventPostsRead",
+    call: () => markEventPostsRead("e1", "2026-11-01T09:00:00.000Z"),
+    method: "PUT",
+    path: "/events/e1/posts/read",
+    auth: "required",
+    carriesStatus: true,
+    body: { readUpTo: "2026-11-01T09:00:00.000Z" },
+  },
+  {
+    name: "updateEventPost",
+    call: () => updateEventPost("p1", "Ändrad tid"),
+    method: "PUT",
+    path: "/events/posts/p1",
+    auth: "required",
+    carriesStatus: true,
+    body: { body: "Ändrad tid" },
+  },
+  {
+    name: "deleteEventPost",
+    call: () => deleteEventPost("p1"),
+    method: "DELETE",
+    path: "/events/posts/p1",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "setEventPostPinned",
+    call: () => setEventPostPinned("p1", true),
+    method: "PUT",
+    path: "/events/posts/p1/pin",
+    auth: "required",
+    carriesStatus: true,
+    body: { pinned: true },
+  },
+  {
+    name: "setEventImage",
+    call: () => setEventImage("e1", "file://cover"),
+    method: "POST",
+    path: "/events/e1/image",
+    auth: "required",
+    carriesStatus: true,
+  },
+  {
+    name: "deleteEventImage",
+    call: () => deleteEventImage("e1"),
+    method: "DELETE",
+    path: "/events/e1/image",
+    auth: "required",
+    carriesStatus: true,
+  },
 ];
 
 // React Native's FormData keeps an appended {uri, type, name} object as-is; the standard
@@ -734,7 +1015,7 @@ beforeEach(() => {
 
 describe("api endpoint contract", () => {
   it("covers every exported endpoint in the table", () => {
-    expect(endpoints).toHaveLength(64);
+    expect(endpoints).toHaveLength(92);
     expect(new Set(endpoints.map((e) => e.name)).size).toBe(endpoints.length);
   });
 
@@ -870,6 +1151,45 @@ describe("endpoints that are not plain JSON", () => {
     const headers = fetchMock.mock.calls[0][1].headers as Record<string, string>;
     expect(headers["Content-Type"]).toBeUndefined();
     expect(headers.Authorization).toBe("Bearer bearer-token");
+  });
+
+  it("setEventImage posts the cover as one multipart image part", async () => {
+    const fetchMock = mockFetch(true);
+    await setEventImage("e1", "file://cover");
+
+    const init = fetchMock.mock.calls[0][1];
+    const body = init.body as unknown as RecordingFormData;
+    expect(body.parts).toHaveLength(1);
+    const [key, part] = body.parts[0] as [string, { uri: string; type: string }];
+    expect(key).toBe("image");
+    expect(part).toMatchObject({ uri: "file://cover", type: "image/jpeg" });
+    expect((init.headers as Record<string, string>)["Content-Type"]).toBeUndefined();
+  });
+
+  it("an event error carries the ProblemDetails code", async () => {
+    mockFetch(false, 409, { title: "Conflict", status: 409, code: "event_full" });
+
+    await expect(joinEvent("e1")).rejects.toMatchObject({ status: 409, code: "event_full" });
+  });
+
+  it("an invite naming unknown nicknames carries them on the error", async () => {
+    mockFetch(false, 404, { status: 404, code: "unknown_nicknames", nickNames: ["borta", 7] });
+
+    const error = await inviteToEvent("e1", ["borta", "kvar"]).catch((caught: unknown) => caught);
+    expect(problemStrings(error, "nickNames")).toEqual(["borta"]);
+  });
+
+  it("an uncoded event error carries no code", async () => {
+    mockFetch(false, 400, "Titel saknas");
+
+    await expect(createEventPost("e1", "")).rejects.toMatchObject({ status: 400, code: undefined });
+  });
+
+  it("getEvents leaves out what the caller did not set", async () => {
+    const fetchMock = mockFetch(true);
+    await getEvents();
+
+    expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/events`);
   });
 
   it("getPopularTrails appends the position when it has one", async () => {

@@ -38,7 +38,9 @@ public class LinkServiceFactory : WebApplicationFactory<Program>
             builder.UseSetting(key, value);
 
         builder.ConfigureTestServices(services =>
-            services.AddHttpClient<TrailClient>().ConfigurePrimaryHttpMessageHandler(() => Api));
+        {
+            services.AddHttpClient<ApiClient>().ConfigurePrimaryHttpMessageHandler(() => Api);
+        });
     }
 
     public HttpClient CreateNonRedirectingClient() =>

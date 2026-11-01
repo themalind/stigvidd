@@ -55,4 +55,6 @@ export const SHARED_HIKES_STALE_TIME = 5 * 60 * 1000; // accepted shared hikes, 
 export const BLOCKS_STALE_TIME = 5 * 60 * 1000; // blocked users
 export const USER_SEARCH_STALE_TIME = 10 * 1000; // nickname search results
 // keep-comment: short because Android push does not always arrive, so the tab badge relies on refetching
-export const REQUESTS_STALE_TIME = 30 * 1000; // incoming and outgoing friend requests, incoming shared hikes
+export const REQUESTS_STALE_TIME = 30 * 1000; // incoming and outgoing friend requests, incoming shared hikes, event invitations
+export const EVENTS_STALE_TIME = 60 * 1000; // event lists, one event's detail and participants
+export const EVENT_BOARD_STALE_TIME = 15 * 1000; // an event's board

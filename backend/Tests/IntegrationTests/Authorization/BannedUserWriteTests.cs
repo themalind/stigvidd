@@ -66,6 +66,10 @@ public class BannedUserWriteTests : IClassFixture<StigViddWebApplicationFactory<
         "DELETE /api/v1/events/invitations/{identifier}",
         "DELETE /api/v1/events/{identifier}/invitations/{inviteeIdentifier}",
 
+        // Deleting their own board post, and the read marker, which publishes nothing. keep-comment: groups the entries like its neighbours
+        "DELETE /api/v1/events/posts/{postIdentifier}",
+        "PUT /api/v1/events/{identifier}/posts/read",
+
         // Reporting reaches a moderator rather than the public, and a banned account is as
         // likely as any other to be the one seeing something that needs reporting.
         "POST /api/v1/ContentReports",

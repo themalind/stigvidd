@@ -84,6 +84,41 @@ public class EventsControllerTests : IClassFixture<StigViddWebApplicationFactory
     }
 
     [Fact]
+    public async Task Preview_OfAnOpenEvent_IsServedWithoutSignInAndNamesNobody()
+    {
+        var created = await CreateAsync(NaturElskaren, Request());
+
+        var response = await _factory.CreateClient().GetAsync($"{BASE_URL}/{created.Identifier}/preview", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        body.Should().Contain("Kvällsvandring");
+        body.Should().NotContain("NaturElskaren");
+    }
+
+    [Fact]
+    public async Task Preview_OfAPrivateEvent_Is404()
+    {
+        var created = await CreateAsync(NaturElskaren, Request("Private"));
+
+        var response = await _factory.CreateClient().GetAsync($"{BASE_URL}/{created.Identifier}/preview", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Preview_OfACancelledEvent_Is404()
+    {
+        var created = await CreateAsync(NaturElskaren, Request());
+        var cancelled = await Client(NaturElskaren).PostAsync($"{BASE_URL}/{created.Identifier}/cancel", null, TestContext.Current.CancellationToken);
+        cancelled.IsSuccessStatusCode.Should().BeTrue();
+
+        var response = await _factory.CreateClient().GetAsync($"{BASE_URL}/{created.Identifier}/preview", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
     public async Task Create_ThenGet_RoundTripsTheMeetingPointAndRole()
     {
         var created = await CreateAsync(NaturElskaren, Request());

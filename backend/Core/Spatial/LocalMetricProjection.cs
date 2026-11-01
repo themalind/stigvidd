@@ -63,6 +63,12 @@ public sealed class LocalMetricProjection
         (coordinate.X - _originLongitude) * _metresPerDegreeLongitude,
         (coordinate.Y - _originLatitude) * _metresPerDegreeLatitude);
 
+    public double MetresTo(Coordinate coordinate)
+    {
+        var projected = Project(coordinate);
+        return Math.Sqrt((projected.X * projected.X) + (projected.Y * projected.Y));
+    }
+
     public LineString Project(LineString line)
     {
         ArgumentNullException.ThrowIfNull(line);

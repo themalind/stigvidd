@@ -43,6 +43,8 @@ export interface EventResponse {
   /** @nullable */
   imageUrl?: string | null;
   /** @nullable */
+  imageIdentifier?: string | null;
+  /** @nullable */
   organizerNickName?: string | null;
   /** @nullable */
   myRole?: string | null;

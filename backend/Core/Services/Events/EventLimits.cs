@@ -17,6 +17,12 @@ public sealed class EventLimits
     public int InvitedPerDay { get; set; } = 50;
     public TimeSpan InvitedPerDayWindow { get; set; } = TimeSpan.FromDays(1);
 
+    // Read per request by the "event-posts" rate limiter policy; a restart resets the window. keep-comment: in memory, one API instance
+    public int PostsPerMinute { get; set; } = 5;
+
+    // A participant gets at most one board push per event in this window, however busy the board is. keep-comment: the push throttle
+    public TimeSpan PostPushThrottle { get; set; } = TimeSpan.FromMinutes(5);
+
     // A bad value stops the API at start instead of falling back silently. keep-comment: a typo in .env must be seen
     public static OptionsBuilder<EventLimits> Register(IServiceCollection services)
     {
@@ -27,6 +33,8 @@ public sealed class EventLimits
             .Validate(l => l.CreatedPerDayWindow > TimeSpan.Zero, $"{Section}:CreatedPerDayWindow must be above 0.")
             .Validate(l => l.InvitedPerDay > 0, $"{Section}:InvitedPerDay must be above 0.")
             .Validate(l => l.InvitedPerDayWindow > TimeSpan.Zero, $"{Section}:InvitedPerDayWindow must be above 0.")
+            .Validate(l => l.PostsPerMinute > 0, $"{Section}:PostsPerMinute must be above 0.")
+            .Validate(l => l.PostPushThrottle >= TimeSpan.Zero, $"{Section}:PostPushThrottle must not be negative.")
             .ValidateOnStart();
     }
 }

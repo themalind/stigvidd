@@ -156,6 +156,31 @@ public class EventRepository : IEventRepository
         }
     }
 
+    // Only what the feed would show anyone: open, published, visible and upcoming. keep-comment: the share page is anonymous
+    public async Task<RepositoryResult<EventCard>> GetPublicCardAsync(string identifier, DateTime now, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var card = await context.Events
+                .AsNoTracking()
+                .Where(e => e.Identifier == identifier)
+                .Where(EventQueries.PubliclyListed(now))
+                .Select(EventQueries.Card(0, []))
+                .FirstOrDefaultAsync(ctoken);
+
+            return card is null
+                ? RepositoryResult<EventCard>.NotFound()
+                : RepositoryResult<EventCard>.Success(card);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "EventRepository: GetPublicCardAsync -> Something went wrong when reading event {Identifier}.", identifier);
+            return RepositoryResult<EventCard>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<EventDetail>> GetDetailAsync(string identifier, int viewerId, CancellationToken ctoken)
     {
         try
@@ -173,6 +198,7 @@ public class EventRepository : IEventRepository
                     e.Route == null ? null : e.Route.LengthMetres,
                     e.Image == null ? null : e.Image.ImageUrl,
                     e.Image == null ? null : e.Image.ModerationState,
+                    e.Image == null ? null : e.Image.Identifier,
                     e.Participants.Where(p => p.Role == EventParticipantRole.Organizer).Select(p => (int?)p.UserId).FirstOrDefault(),
                     e.Participants.Where(p => p.Role == EventParticipantRole.Organizer).Select(p => p.User == null ? null : p.User.NickName).FirstOrDefault(),
                     e.Participants.Count(p => p.Status == EventParticipantStatus.Interested),
@@ -201,10 +227,7 @@ public class EventRepository : IEventRepository
             var now = query.Now;
             var events = context.Events
                 .AsNoTracking()
-                .Where(e => e.Visibility == EventVisibility.Open
-                    && e.Status == EventStatus.Published
-                    && e.ModerationState == ModerationState.Visible
-                    && e.PastAfter > now)
+                .Where(EventQueries.PubliclyListed(now))
                 .Where(EventQueries.OrganizerNotHidden(query.HiddenUserIds));
 
             if (query.TrailIdentifier is not null)
@@ -278,7 +301,7 @@ public class EventRepository : IEventRepository
         }
     }
 
-    public async Task<RepositoryResult> UpdateAsync(string identifier, Action<Event> apply, CancellationToken ctoken)
+    public async Task<RepositoryResult<UpdatedEvent>> UpdateAsync(string identifier, int editedByUserId, Action<Event> apply, CancellationToken ctoken)
     {
         try
         {
@@ -288,7 +311,7 @@ public class EventRepository : IEventRepository
             var eventId = await IdOfAsync(context, identifier, ctoken);
 
             if (eventId is null)
-                return RepositoryResult.NotFound();
+                return RepositoryResult<UpdatedEvent>.NotFound();
 
             await EventCounts.LockAsync(context, eventId.Value, ctoken);
 
@@ -297,27 +320,28 @@ public class EventRepository : IEventRepository
                 .FirstOrDefaultAsync(e => e.Id == eventId.Value, ctoken);
 
             if (existing is null)
-                return RepositoryResult.NotFound();
+                return RepositoryResult<UpdatedEvent>.NotFound();
 
             if (existing.Status == EventStatus.Cancelled)
-                return RepositoryResult.Conflict();
+                return RepositoryResult<UpdatedEvent>.Conflict();
 
             apply(existing);
 
             // Read under the row lock, so no join can land between this check and the save. keep-comment: the race this closes
             if (existing.MaxParticipants < existing.ParticipantCount)
-                return RepositoryResult.Conflict();
+                return RepositoryResult<UpdatedEvent>.Conflict();
 
             existing.LastUpdatedAt = DateTime.UtcNow;
             await context.SaveChangesAsync(ctoken);
+            var notify = await EventAudience.ToNotifyAsync(context, existing.Id, editedByUserId, ctoken);
             await transaction.CommitAsync(ctoken);
 
-            return RepositoryResult.Success();
+            return RepositoryResult<UpdatedEvent>.Success(new UpdatedEvent(notify));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "EventRepository: UpdateAsync -> Something went wrong when updating event {Identifier}.", identifier);
-            return RepositoryResult.Error();
+            return RepositoryResult<UpdatedEvent>.Error();
         }
     }
 
@@ -352,7 +376,7 @@ public class EventRepository : IEventRepository
             existing.LastUpdatedAt = now;
             context.EventInvitations.RemoveRange(existing.Invitations);
 
-            var notify = EventRemoval.ToNotifyOnCancel(existing.Participants, cancelledByUserId);
+            var notify = EventAudience.ToNotify(existing.Participants, cancelledByUserId);
 
             await context.SaveChangesAsync(ctoken);
             await transaction.CommitAsync(ctoken);
@@ -443,7 +467,7 @@ public class EventRepository : IEventRepository
         if (key is null)
             return events;
 
-        var startsAt = key.StartsAt;
+        var startsAt = key.At;
         var id = key.Id;
 
         return descending

@@ -57,12 +57,14 @@ those 1300-odd tests run in seconds, and SQLite here drags in the SpatiaLite loa
 
 ## The same limit decides how to take a row lock
 
-A lock-first `ExecuteUpdateAsync` would break every InMemory test of the method that takes it, so a
-row lock here is Npgsql-only raw SQL that does nothing on the other providers:
-`EventCounts.LockAsync` (`SELECT 1 … FOR UPDATE`, gated on `ProviderName` like `SwedishCollation`).
-Every event transaction that recounts `ParticipantCount` or checks capacity calls it first; without
-it a recount under Read Committed overwrites a concurrent join's `+1`. No suite can show that race,
-so a change to the SQL needs a run against PostGIS ([[raw-sql-needs-a-postgres-check-the-sqlite-tests-cannot-give]]).
+`EventCounts.LockAsync` takes its row lock with a no-op `ExecuteUpdateAsync`
+(`SET "ParticipantCount" = "ParticipantCount"`), gated on `Database.IsRelational()` so the InMemory
+tests skip it and the SQLite integration tests still run the statement. An `UPDATE` row lock conflicts
+with the join's conditional increment, the same as `FOR UPDATE` would, and needs no raw SQL (the
+earlier `ExecuteSqlRawAsync` version drew EF1003). Every event transaction that recounts
+`ParticipantCount` or checks capacity calls it first; without it a recount under Read Committed
+overwrites a concurrent join's `+1`. No suite can show that race, so a change to it needs a run against
+PostGIS ([[raw-sql-needs-a-postgres-check-the-sqlite-tests-cannot-give]]).
 
 Related: [[in-memory-queue-in-front-of-a-database-journal]] for the outbox this came from, and
 [[sqlite-foreign-keys-off-on-linux]] for the other place the two providers disagree.

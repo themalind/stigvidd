@@ -7,7 +7,8 @@
 
 import { ApiError } from "@/api/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
-import PublishHikeModal, { lengthOfPath, PUBLISH_CONSENT_VERSION } from "@/components/hike/publish-hike-modal";
+import PublishHikeModal, { PUBLISH_CONSENT_VERSION } from "@/components/hike/publish-hike-modal";
+import { lengthOfPath } from "@/components/map/route-trimmer";
 import { Hike } from "@/data/types";
 import { HIKE_SUBMISSIONS_QUERY_ROOT } from "@/hooks/hike/useMyHikeSubmissions";
 import en from "@/i18n/locales/en.json";

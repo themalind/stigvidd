@@ -9,7 +9,8 @@ namespace Core.Interfaces.Repositories;
 
 public record TrailAnchor(int TrailId, Point Start);
 
-public record EventPageKey(DateTime StartsAt, int Id);
+// At is StartsAt for events and CreatedAt for board posts. keep-comment: one cursor shape for both
+public record EventPageKey(DateTime At, int Id);
 
 public record EventArea(double Longitude, double Latitude, double RadiusMeters);
 
@@ -57,12 +58,15 @@ public record EventDetail(
     int? RouteLengthMetres,
     string? ImageUrl,
     ModerationState? ImageModerationState,
+    string? ImageIdentifier,
     int? OrganizerUserId,
     string? OrganizerNickName,
     int InterestedCount,
     EventParticipantRole? MyRole,
     EventParticipantStatus? MyStatus,
     bool HasPendingInvite);
+
+public record UpdatedEvent(IReadOnlyCollection<int> NotifyUserIds);
 
 public record CancelledEvent(string Title, DateTime StartsAt, IReadOnlyCollection<int> NotifyUserIds);
 
@@ -81,11 +85,12 @@ public interface IEventRepository
     Task<RepositoryResult<int>> CountCreatedSinceAsync(int userId, DateTime since, CancellationToken ctoken);
     // Records EventCreated in the same save and prunes the creator's log rows older than createdLogWindow. keep-comment: the window belongs to EventLimits, not the repository
     Task<RepositoryResult<string>> CreateAsync(Event newEvent, int organizerUserId, TimeSpan createdLogWindow, CancellationToken ctoken);
+    Task<RepositoryResult<EventCard>> GetPublicCardAsync(string identifier, DateTime now, CancellationToken ctoken);
     Task<RepositoryResult<EventDetail>> GetDetailAsync(string identifier, int viewerId, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyList<EventCard>>> GetFeedAsync(EventFeedFilter query, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyList<EventCard>>> GetMineAsync(EventMineFilter query, CancellationToken ctoken);
     // Conflict, with nothing saved, when the event is cancelled or apply leaves MaxParticipants below ParticipantCount. keep-comment: guards the service's check cannot hold
-    Task<RepositoryResult> UpdateAsync(string identifier, Action<Event> apply, CancellationToken ctoken);
+    Task<RepositoryResult<UpdatedEvent>> UpdateAsync(string identifier, int editedByUserId, Action<Event> apply, CancellationToken ctoken);
     Task<RepositoryResult<CancelledEvent>> CancelAsync(string identifier, int cancelledByUserId, DateTime now, CancellationToken ctoken);
     Task<RepositoryResult<DeletedEvent>> DeleteAsync(string identifier, int deletedByUserId, DateTime now, CancellationToken ctoken);
 }

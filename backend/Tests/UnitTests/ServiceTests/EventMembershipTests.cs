@@ -346,6 +346,32 @@ public class EventMembershipTests
         (Joined(Organizer) with { ModerationState = ModerationState.HiddenPendingReview }).CanInvite().Should().BeFalse();
     }
 
+    public static TheoryData<string, EventMembership, int?, string?> PostRefusals()
+    {
+        return new TheoryData<string, EventMembership, int?, string?>
+        {
+            { "a participant", Joined(Participant), null, null },
+            { "a participant of a past event", Joined(Participant) with { IsPast = true }, null, null },
+            { "a participant of a cancelled event", Joined(Participant) with { Status = EventStatus.Cancelled }, null, null },
+            { "a participant of a reported event", Joined(Participant) with { ModerationState = ModerationState.HiddenPendingReview }, null, null },
+            { "an interested user", Outsider(participantStatus: EventParticipantStatus.Interested), 403, EventErrorCodes.NotAllowed },
+            { "an invitee", Outsider(visibility: EventVisibility.Private, hasPendingInvite: true), 403, EventErrorCodes.NotAllowed },
+            { "a removed participant", Outsider(participantStatus: EventParticipantStatus.Removed), 403, EventErrorCodes.RemovedFromEvent },
+        };
+    }
+
+    [Theory]
+    [MemberData(nameof(PostRefusals))]
+    public void PostRefusal_NamesTheReason(string because, EventMembership membership, int? status, string? code)
+    {
+        var refusal = membership.PostRefusal();
+
+        refusal?.StatusCode.Should().Be(status, because);
+        refusal?.Code.Should().Be(code, because);
+        (refusal is null).Should().Be(status is null, because);
+        membership.CanPost().Should().Be(status is null, because);
+    }
+
     [Fact]
     public void ARemovedParticipant_HasNoParticipantRights()
     {

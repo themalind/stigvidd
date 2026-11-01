@@ -27,6 +27,8 @@ public class EventResponse
     public DateTime? CancelledAt { get; set; }
     public bool IsPast { get; set; }
     public string? ImageUrl { get; set; }
+    // For reporting the cover; null whenever ImageUrl is. keep-comment: the report endpoint takes the image's own identifier
+    public string? ImageIdentifier { get; set; }
     public string? OrganizerNickName { get; set; }
 
     public string? MyRole { get; set; }

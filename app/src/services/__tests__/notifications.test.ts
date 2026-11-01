@@ -80,21 +80,21 @@ describe("notificationHandlerFor", () => {
   it("maps friend_request to the incoming friends query and the friends screen", () => {
     const handler = notificationHandlerFor({ type: "friend_request" });
     if (!handler) throw new Error("expected a handler");
-    expect(handler.queryKeys).toEqual(["friends", "incoming"]);
+    expect(handler.queryKeys({})).toEqual([["friends", "incoming"]]);
     expect(handler.route({ type: "friend_request" })).toContain("friends");
   });
 
   it("maps friend_request_accepted to the friends query and the friends screen", () => {
     const handler = notificationHandlerFor({ type: "friend_request_accepted" });
     if (!handler) throw new Error("expected a handler");
-    expect(handler.queryKeys).toEqual(["friends"]);
+    expect(handler.queryKeys({})).toEqual([["friends"]]);
     expect(handler.route({ type: "friend_request_accepted" })).toContain("friends");
   });
 
   it("maps hike_share to the shared-hikes query and screen", () => {
     const handler = notificationHandlerFor({ type: "hike_share" });
     if (!handler) throw new Error("expected a handler");
-    expect(handler.queryKeys).toEqual(["shared-hikes"]);
+    expect(handler.queryKeys({})).toEqual([["shared-hikes"]]);
     expect(handler.route({ type: "hike_share" })).toContain("shared-hikes");
   });
 
@@ -105,10 +105,57 @@ describe("notificationHandlerFor", () => {
     }
   });
 
-  it.each(["event_cancelled", "event_promoted", "event_invite"])("refreshes the events query on %s", (type) => {
-    const handler = notificationHandlerFor({ type, eventIdentifier: "event-id" });
+  it.each(["event_cancelled", "event_updated", "event_promoted"])("refreshes every event query on %s", (type) => {
+    const handler = notificationHandlerFor({ type });
     if (!handler) throw new Error("expected a handler");
-    expect(handler.queryKeys).toEqual(["events"]);
+    expect(handler.queryKeys({ type, eventIdentifier: "event-id" })).toEqual([["events"]]);
+  });
+
+  it("refreshes the invitations and that event's detail on event_invite", () => {
+    const handler = notificationHandlerFor({ type: "event_invite" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.queryKeys({ type: "event_invite", eventIdentifier: "event-id" })).toEqual([
+      ["events", "invitations"],
+      ["events", "detail", "event-id"],
+    ]);
+  });
+
+  it("refreshes that board and the unread counts on event_post", () => {
+    const handler = notificationHandlerFor({ type: "event_post" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.queryKeys({ type: "event_post", eventIdentifier: "event-id" })).toEqual([
+      ["events", "board", "event-id"],
+      ["events", "mine"],
+      ["events", "feed"],
+    ]);
+  });
+
+  it.each(["event_invite", "event_post"])("refreshes every event query on %s without an identifier", (type) => {
+    const handler = notificationHandlerFor({ type });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.queryKeys({ type })).toEqual([["events"]]);
+  });
+
+  it.each(["event_cancelled", "event_updated", "event_promoted", "event_invite"])(
+    "opens the event detail on %s",
+    (type) => {
+      const handler = notificationHandlerFor({ type });
+      if (!handler) throw new Error("expected a handler");
+      expect(handler.route({ type, eventIdentifier: "event-id" })).toBe("/(tabs)/events/event/event-id");
+    },
+  );
+
+  it("opens the board on event_post", () => {
+    const handler = notificationHandlerFor({ type: "event_post" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.route({ type: "event_post", eventIdentifier: "event-id" })).toBe("/(tabs)/events/board/event-id");
+  });
+
+  it("opens nothing for an event push without an identifier", () => {
+    const handler = notificationHandlerFor({ type: "event_invite" });
+    if (!handler) throw new Error("expected a handler");
+    expect(handler.route({ type: "event_invite" })).toBeUndefined();
+    expect(handler.route({ type: "event_invite", eventIdentifier: 7 })).toBeUndefined();
   });
 
   it.each([

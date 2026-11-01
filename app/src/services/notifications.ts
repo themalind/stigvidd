@@ -7,6 +7,7 @@
 
 import { registerPushToken, unregisterPushToken } from "@/api/notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import type { QueryClient } from "@tanstack/react-query";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
@@ -28,43 +29,83 @@ export type PushType =
   | "friend_request_accepted"
   | "hike_share"
   | "event_cancelled"
+  | "event_updated"
   | "event_promoted"
-  | "event_invite";
+  | "event_invite"
+  | "event_post";
 
 export type PushData = Record<string, unknown>;
 
 export interface NotificationHandler {
-  queryKeys: unknown[];
+  queryKeys: (data: PushData) => unknown[][];
   route: (data: PushData) => string | undefined;
 }
 
 export const NOTIFICATION_HANDLERS: Record<PushType, NotificationHandler> = {
   friend_request: {
-    queryKeys: ["friends", "incoming"],
+    queryKeys: () => [["friends", "incoming"]],
     route: () => "/(tabs)/(profile-stack)/user/friends",
   },
   friend_request_accepted: {
-    queryKeys: ["friends"],
+    queryKeys: () => [["friends"]],
     route: () => "/(tabs)/(profile-stack)/user/friends",
   },
   hike_share: {
-    queryKeys: ["shared-hikes"],
+    queryKeys: () => [["shared-hikes"]],
     route: () => "/(tabs)/(profile-stack)/user/shared-hikes",
   },
-  // No event screen yet, so a tap only refreshes; give these a route with the event detail. keep-comment: deliberate gap until the events tab ships
   event_cancelled: {
-    queryKeys: ["events"],
-    route: () => undefined,
+    queryKeys: () => [["events"]],
+    route: (data) => eventRoute(data, "event"),
+  },
+  event_updated: {
+    queryKeys: () => [["events"]],
+    route: (data) => eventRoute(data, "event"),
   },
   event_promoted: {
-    queryKeys: ["events"],
-    route: () => undefined,
+    queryKeys: () => [["events"]],
+    route: (data) => eventRoute(data, "event"),
   },
   event_invite: {
-    queryKeys: ["events"],
-    route: () => undefined,
+    queryKeys: (data) =>
+      forEvent(data, (id) => [
+        ["events", "invitations"],
+        ["events", "detail", id],
+      ]),
+    route: (data) => eventRoute(data, "event"),
+  },
+  // A post changes one board and the unread counts on the event cards. keep-comment: why not every event query
+  event_post: {
+    queryKeys: (data) =>
+      forEvent(data, (id) => [
+        ["events", "board", id],
+        ["events", "mine"],
+        ["events", "feed"],
+      ]),
+    route: (data) => eventRoute(data, "board"),
   },
 };
+
+function eventIdentifier(data: PushData): string | undefined {
+  const identifier = data.eventIdentifier;
+  return typeof identifier === "string" && identifier !== "" ? identifier : undefined;
+}
+
+// Without an identifier every event query is refreshed. keep-comment: a malformed push still redraws what it may have changed
+function forEvent(data: PushData, keys: (identifier: string) => unknown[][]): unknown[][] {
+  const identifier = eventIdentifier(data);
+  return identifier ? keys(identifier) : [["events"]];
+}
+
+function eventRoute(data: PushData, screen: "event" | "board"): string | undefined {
+  const identifier = eventIdentifier(data);
+  if (!identifier) return undefined;
+  return `/(tabs)/events/${screen}/${encodeURIComponent(identifier)}`;
+}
+
+export function invalidateForPush(queryClient: QueryClient, handler: NotificationHandler, data: PushData): void {
+  for (const queryKey of handler.queryKeys(data)) void queryClient.invalidateQueries({ queryKey });
+}
 
 export function notificationHandlerFor(data: PushData | undefined): NotificationHandler | undefined {
   const type = data?.type;

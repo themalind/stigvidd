@@ -16,6 +16,8 @@ public static class EventRequestLimits
     // An invitation can come from a stranger, so one request reaches only a few. keep-comment: per-request half of the invite cap; the daily half is EventLimits
     public const int InvitesPerRequest = 20;
 
+    public const int PostBody = 1000;
+
     // Bounds PastAfter, so an event cannot sit in the feed for years or escape retention. keep-comment: why times have an upper limit
     public static readonly TimeSpan MaxLeadTime = TimeSpan.FromDays(365);
     public static readonly TimeSpan MaxDuration = TimeSpan.FromDays(14);

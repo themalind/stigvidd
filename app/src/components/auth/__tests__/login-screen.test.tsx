@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { loginReturnPathAtom } from "@/atoms/auth-atoms";
 import LoginScreen from "@/components/auth/login-screen";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDefaultTheme } from "@/constants/theme";
@@ -14,13 +15,17 @@ import { Dimensions } from "react-native";
 
 const mockLogin = jest.fn();
 const mockPush = jest.fn();
+const mockNavigate = jest.fn();
 
 jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ login: mockLogin }),
 }));
 
 jest.mock("expo-router", () => ({
-  router: { push: (...args: unknown[]) => mockPush(...args) },
+  router: {
+    push: (...args: unknown[]) => mockPush(...args),
+    navigate: (...args: unknown[]) => mockNavigate(...args),
+  },
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
 
@@ -190,4 +195,38 @@ it("sizes the card and its button against the screen width", () => {
   // Paper's Surface splits the style: layout on the outer layer, colour and radius on the inner.
   expect(screen.getByTestId("login-submit-container-outer-layer")).toHaveStyle({ width: WIDTH * 0.5 });
   expect(screen.getByTestId("login-submit-container")).toHaveStyle({ borderRadius: BORDER_RADIUS });
+});
+
+it("returns to the screen whose sign-in prompt led here, once", async () => {
+  const { store } = renderWithProviders(<LoginScreen />, {
+    initialAtoms: [[loginReturnPathAtom, "/events/event/ev1"]],
+  });
+
+  fillForm();
+  await submit();
+
+  expect(mockNavigate).toHaveBeenCalledWith("/events/event/ev1");
+  expect(store.get(loginReturnPathAtom)).toBeNull();
+});
+
+it("keeps the return for the next try when the login fails", async () => {
+  mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
+  const { store } = renderWithProviders(<LoginScreen />, {
+    initialAtoms: [[loginReturnPathAtom, "/events/event/ev1"]],
+  });
+
+  fillForm();
+  await submit();
+
+  expect(mockNavigate).not.toHaveBeenCalled();
+  expect(store.get(loginReturnPathAtom)).toBe("/events/event/ev1");
+});
+
+it("stays put after a login that no prompt asked to return from", async () => {
+  renderWithProviders(<LoginScreen />);
+
+  fillForm();
+  await submit();
+
+  expect(mockNavigate).not.toHaveBeenCalled();
 });

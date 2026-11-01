@@ -41,12 +41,15 @@ const EditableTargets =
   '[role="combobox"], [role="listbox"], [role="searchbox"]';
 
 const statusFilters = ["Pending", "Dismissed", "Upheld", "ContentExpired", "All"] as const;
-const contentTypeFilters = ["All", "Review", "TrailObstacle", "HikeImage"] as const;
+const contentTypeFilters = ["All", "Review", "TrailObstacle", "HikeImage", "Event", "EventPost", "EventImage"] as const;
 
 const contentTypeNoun: Record<string, string> = {
   Review: "review",
   TrailObstacle: "obstacle report",
   HikeImage: "hike image",
+  Event: "event",
+  EventPost: "event board post",
+  EventImage: "event cover image",
 };
 const hideOutcomeFilters = ["All", "Hidden", "AlreadyHidden", "WithheldReporterDismissed"] as const;
 
@@ -357,7 +360,7 @@ export default function ModerationPage() {
                     <img
                       data-testid="content-image"
                       src={report.contentImageUrl}
-                      alt="The reported hike image"
+                      alt={`The reported ${contentTypeNoun[report.contentType] ?? "image"}`}
                       className="max-h-80 rounded-md border object-contain"
                     />
                   </a>

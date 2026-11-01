@@ -79,6 +79,16 @@ jest.mock("@/hooks/hike/useMyHikes", () => ({
   }),
 }));
 
+let mockOrganized: unknown[] = [];
+const mockOrganizerRequestedFor = jest.fn();
+
+jest.mock("@/hooks/events/useEventQueries", () => ({
+  useOrganizerEvents: (identifier: string | undefined) => {
+    mockOrganizerRequestedFor(identifier);
+    return { data: mockOrganized, isLoading: false, isError: false, refetch: jest.fn() };
+  },
+}));
+
 jest.mock("@/hooks/friends/useFriendMutations", () => ({
   useFriendMutations: () => ({
     removeFriendMutation: { mutate: mockRemoveFriend, isPending: false },
@@ -124,6 +134,7 @@ beforeEach(() => {
   mockProfile = { publishedTrails: [], reviews: [] };
   mockProfileFailed = false;
   mockMyHikes = [];
+  mockOrganized = [];
   // keep-comment: guardedNavigate debounces on module state, so the clock only ever moves on, across tests too
   jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
 });
@@ -305,6 +316,35 @@ it("hides published trails when there are none, but says there are no reviews", 
 
   expect(screen.queryByTestId("published-trails")).toBeNull();
   expect(screen.getByText("anna har inte recenserat någon led än.")).toBeTruthy();
+});
+
+it("lists the events the friend arranges and opens one in the profile tab's own stack", async () => {
+  mockOrganized = [
+    {
+      identifier: "ev-rya",
+      title: "Kvällsvandring Rya åsar",
+      startsAt: "2026-11-05T17:30:00Z",
+      visibility: "Open",
+      status: "Published",
+      participantCount: 3,
+      unreadPostCount: 0,
+    },
+  ];
+  await show();
+
+  expect(mockOrganizerRequestedFor).toHaveBeenCalledWith("id-anna");
+  expect(screen.getByText("anna arrangerar")).toBeTruthy();
+  fireEvent.press(screen.getByTestId("event-card-ev-rya"));
+  expect(mockNavigate).toHaveBeenLastCalledWith({
+    pathname: "/(tabs)/(profile-stack)/event/[identifier]",
+    params: { identifier: "ev-rya" },
+  });
+});
+
+it("hides the arranged events when there are none", async () => {
+  await show();
+
+  expect(screen.queryByTestId("friend-events")).toBeNull();
 });
 
 it("picks one of your hikes and opens it ready to share with the friend", async () => {

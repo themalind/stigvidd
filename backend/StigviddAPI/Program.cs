@@ -153,6 +153,7 @@ public class Program
             ?? throw new InvalidOperationException("Connection string 'StigVidd' not found.");
 
         builder.Services.AddStigVidd(connectionString);
+        builder.Services.AddStigviddRateLimiting();
 
         // Logs, traces and metrics over OTLP. Registers nothing at all unless
         // Otlp:Endpoint is configured — see Extensions/TelemetryExtensions.cs.
@@ -324,6 +325,7 @@ public class Program
         app.UseAuthentication();
         app.UseMiddleware<RequestLoggingMiddleware>();
         app.UseAuthorization();
+        app.UseRateLimiter();
 
         app.MapControllers();
 

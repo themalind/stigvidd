@@ -6,12 +6,12 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import CountedTextInput from "@/components/counted-text-input";
-import { BORDER_RADIUS } from "@/constants/constants";
+import FieldErrorBadge from "@/components/field-error-badge";
 import { asTranslationKey } from "@/i18n";
 import { Control, Controller, FieldError, FieldPathByValue, FieldValues } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 interface Props<T extends FieldValues> {
   name: FieldPathByValue<T, string>;
@@ -58,14 +58,10 @@ export default function FormTextField<T extends FieldValues>({
           />
         )}
       />
-      {error?.message && (
-        <Text
-          testID={`${testID}-error`}
-          style={[s.errorBadge, { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer }]}
-        >
-          {t(asTranslationKey(error.message))}
-        </Text>
-      )}
+      <FieldErrorBadge
+        testID={`${testID}-error`}
+        text={error?.message ? t(asTranslationKey(error.message)) : undefined}
+      />
     </View>
   );
 }
@@ -76,13 +72,5 @@ const s = StyleSheet.create({
   },
   textInput: {
     width: "100%",
-  },
-  errorBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS,
-    fontSize: 13,
-    lineHeight: 17,
-    fontWeight: "600",
   },
 });

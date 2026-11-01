@@ -240,8 +240,19 @@ public sealed record EventMembership(
         return IsJoined;
     }
 
+    // The board stays open on a past, cancelled or reported event: it is the participants' own conversation. keep-comment: plan decision, the board keeps working
+    public Message? PostRefusal()
+    {
+        if (IsJoined)
+            return null;
+
+        return ParticipantStatus == EventParticipantStatus.Removed
+            ? new Message(403, "You have been removed from this event.", EventErrorCodes.RemovedFromEvent)
+            : EventErrors.NotAllowed();
+    }
+
     public bool CanPost()
     {
-        return IsJoined;
+        return PostRefusal() is null;
     }
 }

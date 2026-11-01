@@ -7,6 +7,15 @@ using System.Globalization;
 
 namespace Core.Services.Push;
 
+// StartsAt is the new start when it moved, else null. keep-comment: an empty change sends no push
+public sealed record EventChange(DateTime? StartsAt, bool EndsAt, bool Place)
+{
+    public bool Any()
+    {
+        return StartsAt is not null || EndsAt || Place;
+    }
+}
+
 public static class EventPushes
 {
     private static readonly CultureInfo Swedish = CultureInfo.GetCultureInfo("sv-SE");
@@ -38,6 +47,32 @@ public static class EventPushes
             pushes.Add(Cancelled(outcome.EventIdentifier, outcome.Title, outcome.StartsAt, outcome.CancelNotifyUserIds, cancelledByUserId: null));
 
         return pushes;
+    }
+
+    public static PushMessage Updated(string eventIdentifier, string title, EventChange change, IReadOnlyCollection<int> userIds, int editedByUserId)
+    {
+        var parts = new List<string>();
+
+        if (change.StartsAt is DateTime startsAt)
+            parts.Add($"ny starttid {SwedishDateTime(startsAt)}");
+        else if (change.EndsAt)
+            parts.Add("ny sluttid");
+
+        if (change.Place)
+            parts.Add("ny mötesplats");
+
+        var text = string.Join(" och ", parts);
+
+        return new PushMessage(
+            userIds,
+            $"Ändrat: {title}",
+            $"{char.ToUpper(text[0], Swedish)}{text[1..]}.",
+            new Dictionary<string, object>
+            {
+                ["type"] = PushTypes.EventUpdated,
+                ["eventIdentifier"] = eventIdentifier,
+            },
+            editedByUserId);
     }
 
     public static PushMessage Promoted(string eventIdentifier, string title, int userId)
@@ -81,9 +116,39 @@ public static class EventPushes
             inviterUserId);
     }
 
+    public const int PostSnippetLength = 80;
+
+    public static PushMessage Post(string eventIdentifier, string title, string authorNickName, string body, IReadOnlyCollection<int> userIds, int authorUserId)
+    {
+        var text = body.Trim().ReplaceLineEndings(" ");
+        var cut = PostSnippetLength;
+
+        // Never between the two halves of an emoji. keep-comment: a lone surrogate turns into a replacement character
+        if (text.Length > cut && char.IsHighSurrogate(text[cut - 1]))
+            cut--;
+
+        var snippet = text.Length > PostSnippetLength ? $"{text[..cut].TrimEnd()}…" : text;
+
+        return new PushMessage(
+            userIds,
+            title,
+            $"{authorNickName}: {snippet}",
+            new Dictionary<string, object>
+            {
+                ["type"] = PushTypes.EventPost,
+                ["eventIdentifier"] = eventIdentifier,
+            },
+            authorUserId);
+    }
+
     public static string SwedishDate(DateTime utc)
     {
         return ToStockholm(utc).ToString("d MMMM", Swedish);
+    }
+
+    public static string SwedishDateTime(DateTime utc)
+    {
+        return ToStockholm(utc).ToString("d MMMM 'kl.' HH:mm", Swedish);
     }
 
     private static DateTime ToStockholm(DateTime utc)

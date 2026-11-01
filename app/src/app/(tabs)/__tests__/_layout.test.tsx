@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { pendingEventInvitationsCountAtom } from "@/atoms/event-atoms";
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
@@ -56,6 +57,11 @@ jest.mock("@/atoms/friends-atoms", () => {
   return { pendingNotificationsCountAtom: atom(0) };
 });
 
+jest.mock("@/atoms/event-atoms", () => {
+  const { atom } = jest.requireActual("jotai");
+  return { pendingEventInvitationsCountAtom: atom(0) };
+});
+
 const router = jest.requireMock("expo-router");
 
 beforeEach(() => {
@@ -87,14 +93,37 @@ function icon(name: string, focused: boolean): ReactElement<Record<string, any>>
   return tab(name).tabBarIcon({ focused }) as ReactElement<Record<string, any>>;
 }
 
-it("carries the four tabs a walker navigates by, in order", () => {
+it("carries the five tabs a walker navigates by, in order", () => {
   show();
 
-  expect(Object.keys(router.__screens)).toEqual(["(home)", "(map)", "trails", "(profile-stack)", "(settings)"]);
+  expect(Object.keys(router.__screens)).toEqual([
+    "(home)",
+    "(map)",
+    "trails",
+    "events",
+    "(profile-stack)",
+    "(settings)",
+  ]);
   expect(tab("(home)").title).toBe("Start");
   expect(tab("(map)").title).toBe("Karta");
   expect(tab("trails").title).toBe("Vandring");
+  expect(tab("events").title).toBe("Evenemang");
   expect(tab("(profile-stack)").title).toBe("Profil");
+});
+
+it("counts pending event invitations on the events tab, not the profile tab", () => {
+  renderWithProviders(<TabsLayout />, {
+    initialAtoms: [[pendingEventInvitationsCountAtom, 2] as [typeof pendingEventInvitationsCountAtom, unknown]],
+  });
+
+  expect(tab("events").tabBarBadge).toBe(2);
+  expect(tab("(profile-stack)").tabBarBadge).toBeUndefined();
+});
+
+it("shows no events badge without invitations", () => {
+  show();
+
+  expect(tab("events").tabBarBadge).toBeUndefined();
 });
 
 // Settings is reached from the drawer, so it is registered without a tab of its own.

@@ -84,6 +84,22 @@ public class EventsController : StigViddController
         return Ok(result.Value);
     }
 
+    // The link.stigvidd.se share page reads this without a token. keep-comment: why one event route is anonymous
+    [HttpGet]
+    [AllowAnonymous]
+    [Route("{identifier}/preview")]
+    public async Task<ActionResult<EventPreviewResponse>> GetEventPreview([FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var result = await _eventService.GetPreviewAsync(identifier, ctoken);
+
+        if (!result.Success || result.Value is null)
+        {
+            return ToActionResult(result.Message ?? new Message(500));
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpGet]
     [Route("{identifier}")]
     public async Task<ActionResult<EventResponse>> GetEvent([FromRoute] string identifier, CancellationToken ctoken)

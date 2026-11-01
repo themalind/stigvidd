@@ -10,6 +10,8 @@ public static class PushTypes
     public const string FriendRequestAccepted = "friend_request_accepted";
     public const string HikeShare = "hike_share";
     public const string EventCancelled = "event_cancelled";
+    public const string EventUpdated = "event_updated";
     public const string EventPromoted = "event_promoted";
     public const string EventInvite = "event_invite";
+    public const string EventPost = "event_post";
 }

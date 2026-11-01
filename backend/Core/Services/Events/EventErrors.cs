@@ -26,6 +26,11 @@ public static class EventErrors
         return new Message(404, "The invitation is no longer valid.", EventErrorCodes.InvitationGone);
     }
 
+    public static Message PostGone()
+    {
+        return new Message(404, "The post no longer exists.", EventErrorCodes.PostGone);
+    }
+
     public static Message NotAllowed()
     {
         return new Message(403, "You are not allowed to do that.", EventErrorCodes.NotAllowed);

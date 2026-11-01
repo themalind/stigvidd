@@ -93,7 +93,7 @@ public static class EventHandOver
             existing.LastUpdatedAt = now;
             context.EventInvitations.RemoveRange(existing.Invitations);
 
-            cancelNotifyUserIds = EventRemoval.ToNotifyOnCancel(existing.Participants, leavingUserId);
+            cancelNotifyUserIds = EventAudience.ToNotify(existing.Participants, leavingUserId);
         }
 
         await context.SaveChangesAsync(ctoken);

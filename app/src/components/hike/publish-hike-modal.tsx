@@ -8,8 +8,7 @@
 import { ApiError } from "@/api/api-error";
 import { createHikeSubmission } from "@/api/hike-submissions";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
-import Map from "@/components/map/map";
-import { routeCasingPaint } from "@/components/map/marker-styles";
+import RouteTrimmer, { fullRange, TrimRange, trimIndices, trimmedPath } from "@/components/map/route-trimmer";
 import DialogSection, { DialogListItem } from "@/components/dialog/dialog-section";
 import FormTextField from "@/components/form-text-field";
 import InfoButton from "@/components/info-button";
@@ -23,18 +22,12 @@ import { HIKE_SUBMISSIONS_QUERY_ROOT } from "@/hooks/hike/useMyHikeSubmissions";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { asTranslationKey } from "@/i18n";
 import CoordinateParser from "@/utils/coordinate-parser";
-import { formatDistanceKm } from "@/utils/format-distance";
-import { lineStringFromPositions } from "@/utils/geojson";
-import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
-import { haversineDistance } from "@/utils/haversine";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
-import { Slider } from "@miblanchard/react-native-slider";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { ParseKeys } from "i18next";
 import { useSetAtom } from "jotai";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
@@ -76,14 +69,6 @@ const ABOUT_INFO: { heading: ParseKeys; text: ParseKeys; example?: ParseKeys }[]
   { heading: "publish.aboutInfo.parking.heading", text: "publish.aboutInfo.parking.text" },
 ];
 
-export function lengthOfPath(path: GeoJSON.Position[]): number {
-  let metres = 0;
-  for (let i = 1; i < path.length; i++) {
-    metres += haversineDistance(path[i - 1][1], path[i - 1][0], path[i][1], path[i][0]);
-  }
-  return metres;
-}
-
 interface Props {
   hike: Hike;
   nickName: string;
@@ -101,26 +86,13 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
   const queryClient = useQueryClient();
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);
-  const cameraRef = useRef<CameraRef>(null);
 
   const path = useMemo(
     () => CoordinateParser({ data: hike.coordinates ?? "", identifier: hike.identifier }),
     [hike.coordinates, hike.identifier],
   );
-  const lastIndex = Math.max(0, path.length - 1);
-  const [trim, setTrim] = useState<[number, number]>([0, lastIndex]);
-  const kept = useMemo(() => path.slice(trim[0], trim[1] + 1), [path, trim]);
-  const keptMetres = useMemo(() => lengthOfPath(kept), [kept]);
-  const canTrim = path.length > 2;
-  const trimLeavesPath = kept.length >= 2;
-
-  const fullShape = useMemo(() => lineStringFromPositions(path), [path]);
-  const keptShape = useMemo(() => lineStringFromPositions(kept), [kept]);
-  const bounds = useMemo(() => getBoundsFromTrail(path), [path]);
-  const fitToRoute = useCallback(() => {
-    if (bounds)
-      cameraRef.current?.fitBounds(bounds, { padding: { top: 30, right: 30, bottom: 30, left: 30 }, duration: 0 });
-  }, [bounds]);
+  const [trim, setTrim] = useState<TrimRange>(() => fullRange(path));
+  const trimLeavesPath = trimmedPath(path, trim).length >= 2;
 
   const images = hike.images ?? [];
   const [selectedImages, setSelectedImages] = useState<string[]>(() => images.map((i) => i.identifier));
@@ -171,7 +143,8 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
       current.includes(identifier) ? current.filter((id) => id !== identifier) : [...current, identifier],
     );
 
-  const submit = handleSubmit((data) =>
+  const submit = handleSubmit((data) => {
+    const { start, end } = trimIndices(path, trim);
     mutation.mutate({
       hikeIdentifier: hike.identifier,
       name: data.name.trim(),
@@ -186,11 +159,11 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
       acceptTransfer: consent,
       consentVersion: PUBLISH_CONSENT_VERSION,
       consentLocale: i18n.language,
-      trimStartIndex: trim[0] > 0 ? trim[0] : null,
-      trimEndIndex: trim[1] < lastIndex ? trim[1] : null,
+      trimStartIndex: start,
+      trimEndIndex: end,
       imageIdentifiers: selectedImages,
-    }),
-  );
+    });
+  });
 
   const canSubmit = consent && trimLeavesPath && !mutation.isPending;
 
@@ -222,59 +195,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
               <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
                 {t("publish.trimHint")}
               </Text>
-              {path.length > 1 && (
-                <View style={s.mapContainer}>
-                  {/* keep-comment: a SurfaceView lags behind the keyboard lift and leaves a stale copy of the map */}
-                  <Map style={s.map} androidView="texture" showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
-                    <Camera ref={cameraRef} />
-                    <GeoJSONSource id="publish-route-full" data={fullShape}>
-                      <Layer
-                        type="line"
-                        id="publish-route-full-line"
-                        layout={{ "line-join": "round", "line-cap": "round" }}
-                        paint={{ "line-color": theme.colors.outline, "line-width": 3, "line-dasharray": [2, 2] }}
-                      />
-                    </GeoJSONSource>
-                    {kept.length > 1 && (
-                      <GeoJSONSource id="publish-route-kept" data={keptShape}>
-                        <Layer
-                          type="line"
-                          id="publish-route-kept-casing"
-                          layout={{ "line-join": "round", "line-cap": "round" }}
-                          paint={routeCasingPaint(4)}
-                        />
-                        <Layer
-                          type="line"
-                          id="publish-route-kept-line"
-                          layout={{ "line-join": "round", "line-cap": "round" }}
-                          paint={{ "line-color": theme.colors.primary, "line-width": 4 }}
-                        />
-                      </GeoJSONSource>
-                    )}
-                  </Map>
-                </View>
-              )}
-              {canTrim && (
-                <Slider
-                  value={trim}
-                  minimumValue={0}
-                  maximumValue={lastIndex}
-                  step={1}
-                  minimumTrackTintColor={theme.colors.primary}
-                  maximumTrackTintColor={theme.colors.outline}
-                  thumbTintColor={theme.colors.primary}
-                  onValueChange={(value) => {
-                    const [start, end] = value as number[];
-                    setTrim([Math.round(Math.min(start, end)), Math.round(Math.max(start, end))]);
-                  }}
-                />
-              )}
-              <Text testID="publish-length" variant="bodySmall">
-                {t("publish.newLength", { length: formatDistanceKm(keptMetres / 1000) })}
-              </Text>
-              {!trimLeavesPath && (
-                <Text style={[s.errorText, { color: theme.colors.error }]}>{t("publish.trimTooShort")}</Text>
-              )}
+              <RouteTrimmer idPrefix="publish" path={path} trim={trim} onTrimChange={setTrim} />
             </View>
 
             <View style={s.section}>
@@ -525,14 +446,6 @@ const s = StyleSheet.create({
   },
   section: {
     gap: 8,
-  },
-  mapContainer: {
-    height: 200,
-    borderRadius: BORDER_RADIUS,
-    overflow: "hidden",
-  },
-  map: {
-    flex: 1,
   },
   errorText: {
     fontSize: 12,

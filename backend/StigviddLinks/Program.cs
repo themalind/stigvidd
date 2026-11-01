@@ -22,7 +22,7 @@ var apiBaseUrl = builder.Configuration["Api:BaseUrl"];
 if (!IsAbsoluteUrl(apiBaseUrl))
     throw new InvalidOperationException("Api:BaseUrl must be an absolute URL.");
 
-builder.Services.AddHttpClient<TrailClient>(client =>
+builder.Services.AddHttpClient<ApiClient>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(5);
@@ -41,17 +41,17 @@ app.MapGet("/healthz", () => Results.Ok());
 app.MapGet("/trail/{identifier}", async Task<IResult> (
     string identifier,
     string? lang,
-    TrailClient trails,
+    ApiClient api,
     IOptions<AppLinksOptions> options,
     HttpRequest request,
     HttpResponse response,
     CancellationToken ctoken) =>
 {
-    var lookup = await trails.GetTrailAsync(identifier, ctoken);
+    var lookup = await api.GetTrailAsync(identifier, ctoken);
     var texts = PageTexts.For(lang);
     var siteUrl = options.Value.SiteUrl;
 
-    if (lookup is { Status: TrailLookupStatus.Found, Trail: { } trail })
+    if (lookup is { Status: LookupStatus.Found, Value: { } trail })
     {
         response.Headers.CacheControl = "public, max-age=300";
         response.Headers.Vary = "User-Agent";
@@ -62,7 +62,7 @@ app.MapGet("/trail/{identifier}", async Task<IResult> (
     response.Headers.CacheControl = "no-store";
     var currentPath = request.Path.ToUriComponent();
 
-    return lookup.Status == TrailLookupStatus.NotFound
+    return lookup.Status == LookupStatus.NotFound
         ? new RazorComponentResult<MessagePage>(new
         {
             Heading = texts.NotFoundHeading,
@@ -79,6 +79,40 @@ app.MapGet("/trail/{identifier}", async Task<IResult> (
             Texts = texts,
             CurrentPath = currentPath,
         }) { StatusCode = StatusCodes.Status503ServiceUnavailable };
+});
+
+app.MapGet("/event/{identifier}", async Task<IResult> (
+    string identifier,
+    string? lang,
+    ApiClient api,
+    IOptions<AppLinksOptions> options,
+    HttpRequest request,
+    HttpResponse response,
+    CancellationToken ctoken) =>
+{
+    var lookup = await api.GetEventAsync(identifier, ctoken);
+    var texts = PageTexts.For(lang);
+
+    if (lookup is { Status: LookupStatus.Found, Value: { } preview })
+    {
+        // Shorter than a trail's: a spot count and a cancellation go stale fast. keep-comment: why 60 s
+        response.Headers.CacheControl = "public, max-age=60";
+        response.Headers.Vary = "User-Agent";
+        var isAndroid = request.Headers.UserAgent.ToString().Contains("Android", StringComparison.OrdinalIgnoreCase);
+        return new RazorComponentResult<EventPage>(new { Event = preview, Options = options.Value, Texts = texts, IsAndroid = isAndroid });
+    }
+
+    response.Headers.CacheControl = "no-store";
+    var notFound = lookup.Status == LookupStatus.NotFound;
+
+    return new RazorComponentResult<MessagePage>(new
+    {
+        Heading = notFound ? texts.EventNotFoundHeading : texts.ErrorHeading,
+        Body = notFound ? texts.EventNotFoundBody : texts.EventErrorBody,
+        SiteUrl = options.Value.SiteUrl,
+        Texts = texts,
+        CurrentPath = request.Path.ToUriComponent(),
+    }) { StatusCode = notFound ? StatusCodes.Status404NotFound : StatusCodes.Status503ServiceUnavailable };
 });
 
 app.MapGet("/.well-known/apple-app-site-association", (IOptions<AppLinksOptions> options) =>

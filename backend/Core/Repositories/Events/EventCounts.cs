@@ -4,27 +4,21 @@
 using Infrastructure.Data;
 using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Core.Repositories.Events;
 
-// keep-comment: the tests run LockAsync on SQLite and InMemory only, where it does nothing; check a change against PostgreSQL (docs/notes/raw-sql-needs-a-postgres-check-the-sqlite-tests-cannot-give.md)
+// keep-comment: no suite has row locks (SQLite runs LockAsync without locking, InMemory skips it); check a change against PostgreSQL (docs/notes/raw-sql-needs-a-postgres-check-the-sqlite-tests-cannot-give.md)
 public static class EventCounts
 {
-    private const string NpgsqlProvider = "Npgsql.EntityFrameworkCore.PostgreSQL";
-
-    // Call first in the transaction: a join takes this row lock with its increment, so every read after it sees that join committed. keep-comment: without it a recount overwrites a concurrent join's +1
+    // Call first in the transaction: a no-op UPDATE takes the same row lock as a join's increment, so every read after it sees that join committed. keep-comment: without it a recount overwrites a concurrent join's +1
     public static async Task LockAsync(StigViddDbContext context, int eventId, CancellationToken ctoken)
     {
-        if (context.Database.ProviderName != NpgsqlProvider)
+        if (!context.Database.IsRelational())
             return;
 
-        var sqlHelper = context.GetService<ISqlGenerationHelper>();
-        var table = sqlHelper.DelimitIdentifier("Events", context.Model.GetDefaultSchema());
-        var id = sqlHelper.DelimitIdentifier("Id");
-
-        await context.Database.ExecuteSqlRawAsync("SELECT 1 FROM " + table + " WHERE " + id + " = {0} FOR UPDATE", [eventId], ctoken);
+        await context.Events
+            .Where(e => e.Id == eventId)
+            .ExecuteUpdateAsync(s => s.SetProperty(e => e.ParticipantCount, e => e.ParticipantCount), ctoken);
     }
 
     // Reads saved rows, so call it after SaveChangesAsync. keep-comment: unsaved removals would still be counted

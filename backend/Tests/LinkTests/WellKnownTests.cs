@@ -13,7 +13,7 @@ public class WellKnownTests
     private const string AssetLinks = "/.well-known/assetlinks.json";
 
     [Fact]
-    public async Task The_apple_file_names_the_app_and_claims_only_trail_paths()
+    public async Task The_apple_file_names_the_app_and_claims_only_trail_and_event_paths()
     {
         using var factory = new LinkServiceFactory().With("AppLinks:AppleTeamId", "ABCDE12345");
 
@@ -24,7 +24,8 @@ public class WellKnownTests
         response.Content.Headers.ContentType?.MediaType.Should().Be("application/json");
         var detail = JsonDocument.Parse(json).RootElement.GetProperty("applinks").GetProperty("details")[0];
         detail.GetProperty("appIDs")[0].GetString().Should().Be("ABCDE12345.com.stigvidd.app");
-        detail.GetProperty("components")[0].GetProperty("/").GetString().Should().Be("/trail/*");
+        var paths = detail.GetProperty("components").EnumerateArray().Select(c => c.GetProperty("/").GetString()).ToList();
+        paths.Should().Equal("/trail/*", "/event/*");
     }
 
     [Fact]

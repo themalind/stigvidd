@@ -20,3 +20,5 @@ export const userAtom = atom<AuthUser | null>(null);
  * Gates the first render so there is no auth-resolution blink at startup.
  */
 export const authLoadingAtom = atom<boolean>(true);
+
+export const loginReturnPathAtom = atom<string | null>(null);

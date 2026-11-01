@@ -5,12 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getCoordinatesByTrailIdentifier } from "@/api/trails";
 import RouteFollowView from "@/components/map/route-follow-view";
-import { TRAIL_COORDINATES_STALE_TIME } from "@/constants/cache";
+import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import CoordinateParser from "@/utils/coordinate-parser";
-import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,16 +24,7 @@ export default function TrailFollowScreen() {
 
   const { card } = useTrailCard(normalizedIdentifier ?? null);
 
-  const {
-    data: coords,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["cords", normalizedIdentifier],
-    queryFn: () => getCoordinatesByTrailIdentifier(normalizedIdentifier),
-    enabled: !!normalizedIdentifier,
-    staleTime: TRAIL_COORDINATES_STALE_TIME,
-  });
+  const { data: coords, isLoading, isError } = useTrailCoordinates(normalizedIdentifier);
 
   const path = useMemo(
     () => (coords ? CoordinateParser({ data: coords.coordinates, identifier: normalizedIdentifier }) : []),

@@ -27,6 +27,7 @@ import type {
 import type {
   CreateEventRequest,
   EventPageResponse,
+  EventPreviewResponse,
   EventResponse,
   EventsGetEventsParams,
   EventsGetMyEventsParams,
@@ -290,6 +291,70 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getEventsGetMyEventsMutationOptions(options), queryClient);
+    }
+    export const getEventsGetEventPreviewUrl = (identifier: string,) => {
+
+
+
+
+  return `/api/v1/Events/${identifier}/preview`
+}
+
+export const eventsGetEventPreview = async (identifier: string, options?: RequestInit): Promise<EventPreviewResponse> => {
+
+  return customFetch<EventPreviewResponse>(getEventsGetEventPreviewUrl(identifier),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getEventsGetEventPreviewMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventsGetEventPreview>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventsGetEventPreview>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['eventsGetEventPreview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventsGetEventPreview>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  eventsGetEventPreview(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventsGetEventPreviewMutationResult = NonNullable<Awaited<ReturnType<typeof eventsGetEventPreview>>>
+
+    export type EventsGetEventPreviewMutationError = unknown
+
+    export const useEventsGetEventPreview = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventsGetEventPreview>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventsGetEventPreview>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getEventsGetEventPreviewMutationOptions(options), queryClient);
     }
     export const getEventsGetEventUrl = (identifier: string,) => {
 

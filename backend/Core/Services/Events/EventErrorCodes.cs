@@ -19,4 +19,6 @@ public static class EventErrorCodes
     public const string TooManyToday = "too_many_today";
     public const string TooManyInvites = "too_many_invites";
     public const string UnknownNickNames = "unknown_nicknames";
+    public const string TooManyPosts = "too_many_posts";
+    public const string PostGone = "post_gone";
 }

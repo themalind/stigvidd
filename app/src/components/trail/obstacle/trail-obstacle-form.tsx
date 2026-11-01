@@ -7,7 +7,7 @@
 
 import { createTrailObstacle, getObstacleIssueTypes } from "@/api/trail-obstacles";
 import { asTranslationKey } from "@/i18n";
-import { getCoordinatesByTrailIdentifier } from "@/api/trails";
+import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import CountedTextInput from "@/components/counted-text-input";
 import ModalFormScrollView from "@/components/modal-form-scroll-view";
@@ -21,7 +21,7 @@ import issueTypeParser from "@/utils/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ISSUE_TYPES_STALE_TIME, TRAIL_COORDINATES_STALE_TIME } from "@/constants/cache";
+import { ISSUE_TYPES_STALE_TIME } from "@/constants/cache";
 import ModalScrim from "@/components/dialog/modal-scrim";
 import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
@@ -73,12 +73,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     staleTime: ISSUE_TYPES_STALE_TIME,
   });
 
-  const { data: trailCords } = useQuery({
-    queryKey: ["cords", trailIdentifier],
-    queryFn: () => getCoordinatesByTrailIdentifier(trailIdentifier),
-    enabled: visible && !!trailIdentifier,
-    staleTime: TRAIL_COORDINATES_STALE_TIME,
-  });
+  const { data: trailCords } = useTrailCoordinates(trailIdentifier, { enabled: visible });
 
   const { mutate, isPending } = useMutation({
     mutationFn: (obstacle: CreateTrailObstacleRequest) => createTrailObstacle(obstacle),

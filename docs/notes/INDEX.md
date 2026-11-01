@@ -204,7 +204,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
 - [A repository method using ExecuteDeleteAsync cannot be unit-tested here, because Tests/UnitTests is EF InMemory](executedelete-cannot-be-unit-tested-here.md) —
   `ExecuteDeleteAsync` and `ExecuteUpdateAsync` are relational-only and throw on the EF
   InMemory provider (which is also why a row lock / `FOR UPDATE` / lost-update race on a counter goes through
-  Npgsql-only `EventCounts.LockAsync`), which is what `Tests/UnitTests/TestBase.cs` builds every context with
+  `EventCounts.LockAsync`, a no-op `ExecuteUpdate` skipped when not relational), which is what `Tests/UnitTests/TestBase.cs` builds every context with
   (`UseInMemoryDatabase`) — there is no SQLite under `Tests/UnitTests` at all. So a bulk
   delete in a repository cannot have a unit test beside its neighbours in `RepositoryTests/`,
   and that is why `TrailImportRepository.DeleteSessionAsync` has none. Do not switch the unit

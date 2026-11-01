@@ -11,7 +11,7 @@ public static class EventCursor
 {
     public static string Encode(EventPageKey key)
     {
-        var raw = string.Create(CultureInfo.InvariantCulture, $"{key.StartsAt.Ticks}:{key.Id}");
+        var raw = string.Create(CultureInfo.InvariantCulture, $"{key.At.Ticks}:{key.Id}");
         return Convert.ToBase64String(Encoding.UTF8.GetBytes(raw));
     }
 

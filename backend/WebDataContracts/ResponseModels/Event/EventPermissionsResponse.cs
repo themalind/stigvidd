@@ -16,4 +16,5 @@ public class EventPermissionsResponse
     public bool CanRemoveParticipants { get; set; }
     public bool CanPinOrDeletePosts { get; set; }
     public bool CanReadBoard { get; set; }
+    public bool CanPost { get; set; }
 }
