@@ -136,8 +136,14 @@ stigvidd/
   licence to them (the user keeps the copyright); an admin reviews it before it appears. Published trails are marked on the map,
   can be liked, and the popular ones show on the home screen. Once published, a trail outlives
   the hike it came from and the account that sent it — only the submitter's name is removed
-- Report offensive or incorrect reviews, obstacles and shared hike photos for moderation;
-  a report hides the content until an admin decides
+- Hiking events: organize a walk on a trail, along a route copied from one of your own hikes
+  (trimmed first), or at a meeting point. Open events can be found by anyone signed in, also on
+  the organizer's profile for their friends; private ones only by invitation. Join or mark yourself interested,
+  invite people by nickname, share a link that opens the event in the app (or a preview page
+  without it), and talk on the event's board with push for new posts. Co-hosts can edit and
+  invite, and take over if the organizer leaves
+- Report offensive or incorrect reviews, obstacles, shared hike photos, events, board posts and
+  event cover images for moderation; a report hides the content until an admin decides
 - Block other users; banned accounts keep reading but can no longer post
 - Works offline where it can: an offline banner, cached data, and retry instead of errors
 - Light and dark themes to choose from
@@ -470,6 +476,7 @@ Behavioural references — the *why* behind code that is easy to break:
 | [docs/media-upload.md](docs/media-upload.md) | Image processing and WebDAV storage |
 | [docs/push-notifications.md](docs/push-notifications.md) | Expo push, registration and delivery |
 | [docs/mail.md](docs/mail.md) | Mail templates and the outbox |
+| [docs/events.md](docs/events.md) | Domain events: the event outbox and its dispatcher (not the hiking events feature) |
 | [docs/moderation.md](docs/moderation.md) | Content reports and the moderation queue |
 | [docs/observability.md](docs/observability.md) | Telemetry, retention and GDPR constraints |
 | [DEPLOYMENT.md](DEPLOYMENT.md), [STAGING.md](STAGING.md) | Running the stack on a host |

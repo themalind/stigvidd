@@ -45,6 +45,9 @@
   §4:s "fyra decimaler" är bundet till toFixed(4) i app/src/hooks/useWeather.ts, och
   Expo-raden om appuppdateringar till expo.updates.url i app/app.json.
 
+  2026-11-01: evenemang i §2, §3 och §5, efter EventMembership (vem ser vad),
+  EventAccountDeletionStep (kontoradering) och UserActionLogs (gränsen per dygn). §5 säger
+  att passerade evenemang INTE gallras: ändra det när gallringsjobbet (2 månader) finns.
   Kodändringarna som texten vilade på har landat:
     §3  vidaredelning kräver ägarens tillstånd  → AllowResharing per delning (steg 1-2)
     §3  e-postadressen visas aldrig             → Email borttagen ur FriendResponse
@@ -242,7 +245,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 25 oktober 2026</p>
+        <p class="updated">Senast uppdaterad: 1 november 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -322,6 +325,22 @@
               <td>Avtal (art. 6.1 b)</td>
             </tr>
             <tr>
+              <td>Evenemang</td>
+              <td>
+                Evenemang du skapar (titel, beskrivning, tid, plats, en mötesplats du väljer på
+                kartan, led eller rutt och omslagsbild), vilka evenemang du går med i, är intresserad
+                av eller är inbjuden till och av vem, inlägg du skriver på ett evenemangs anslagstavla,
+                och när du senast skapade evenemang och skickade inbjudningar
+              </td>
+              <td>
+                Evenemangsfunktionen, och att begränsa hur många evenemang och inbjudningar ett konto
+                kan skapa per dygn
+              </td>
+              <td>
+                Avtal (art. 6.1 b); begränsningen per dygn: berättigat intresse (art. 6.1 f)
+              </td>
+            </tr>
+            <tr>
               <td>Vandringar du publicerar</td>
               <td>
                 Rutten, bilderna och texterna du skickar in för publicering som led (namn,
@@ -335,7 +354,7 @@
             <tr>
               <td>Push-token</td>
               <td>En pseudonym enhetsidentifierare från Apple/Google om du tillåter notiser</td>
-              <td>Skicka notiser om vänförfrågningar och delade vandringar</td>
+              <td>Skicka notiser om vänförfrågningar, delade vandringar och evenemang</td>
               <td>Ditt samtycke (kan stängas av i telefonens inställningar)</td>
             </tr>
             <tr>
@@ -426,7 +445,37 @@
           många som gillar en led syns, men inte vilka.
         </li>
         <li>
-          <strong>Anmäler du en recension, en hinderrapport eller en bild på en delad vandring</strong>
+          <strong>Ett öppet evenemang</strong> syns för alla inloggade användare: titel,
+          beskrivning, tid, plats, mötesplats, rutt, omslagsbild, arrangörens användarnamn och hur
+          många som deltar och är intresserade. Vilka som deltar ser bara den som själv har gått
+          med. <strong>Ett privat evenemang</strong> syns bara för dem som är inbjudna eller deltar.
+          Vem som helst kan bjuda in dig med ditt användarnamn, men en inbjudan från någon du
+          blockerat når dig inte.
+        </li>
+        <li>
+          <strong>Ett öppet evenemang kan delas med en länk</strong> som fungerar även utan konto,
+          tills evenemanget har passerat. Den sidan visar titel, tid, plats, ruttens längd, antal
+          deltagare och omslagsbilden – aldrig någons namn.
+        </li>
+        <li>
+          <strong>Dina vänner ser på din profil</strong> de öppna evenemang du arrangerar eller är
+          medarrangör för, men inte vilka evenemang du bara deltar i.
+        </li>
+        <li>
+          <strong>Anslagstavlan</strong> i ett evenemang syns bara för dem som har gått med, och
+          dina inlägg visas med ditt användarnamn.
+        </li>
+        <li>
+          <strong>Väljer du en egen inspelad vandring som rutt för ett evenemang</strong> kopieras
+          linjen till evenemanget och syns för alla som kan se det. Tider, bilder och statistik från
+          vandringen följer inte med, och själva vandringen förblir privat. Du kan trimma bort början
+          och slutet först, till exempel om du startade hemma.
+        </li>
+        <li>
+          <strong
+            >Anmäler du en recension, en hinderrapport, en bild på en delad vandring, ett evenemang,
+            ett inlägg på en anslagstavla eller en omslagsbild</strong
+          >
           sparar vi anmälan:
           anledningen du valt, det du skrivit, en kopia av det anmälda innehållet och namnet på
           den som skrev det. Det behövs för att vi ska kunna bedöma anmälan, och bara vi ser den.
@@ -526,6 +575,22 @@
           står kvar så att andra vet vad som rapporterats. Har du valt kategorin "Övrigt" behålls
           beskrivningen, eftersom rapporten annars inte betyder något.
         </li>
+        <li>
+          <strong>Evenemang:</strong> ett evenemang som arrangören tar bort raderas direkt,
+          tillsammans med anslagstavlan, deltagarlistan, inbjudningarna och omslagsbilden. Ett
+          evenemang som har passerat raderas inte automatiskt, utan finns kvar tills arrangören tar
+          bort det. Ett inlägg du tar bort raderas direkt. Avslutar du kontot tas dina deltaganden
+          och de inbjudningar du fått bort. Evenemang du arrangerar lämnas över till en medarrangör;
+          finns ingen ställs ett kommande evenemang in. Evenemanget finns kvar för deltagarna, men
+          utan koppling till dig. Dina inlägg på anslagstavlorna raderas, och inbjudningar du
+          skickat finns kvar utan uppgift om vem som skickade dem. Vill du att ett evenemang ska
+          försvinna helt, ta bort det i appen innan du avslutar kontot.
+        </li>
+        <li>
+          <strong>När du skapat evenemang och skickat inbjudningar:</strong> sparas bara för
+          gränsen per dygn. Äldre tidpunkter rensas bort nästa gång du gör samma sak, och alla tas
+          bort när du avslutar kontot.
+        </li>
         <li><strong>Användningsstatistik och felrapporter:</strong> 7 dagar.</li>
         <li><strong>Serverloggar:</strong> 7 dagar.</li>
         <li><strong>Säkerhetskopior:</strong> skrivs över inom 49 dagar efter radering.</li>
@@ -579,7 +644,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 25 October 2026</p>
+          <p class="updated">Last updated: 1 November 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -656,6 +721,22 @@
                 <td>Contract (Art. 6(1)(b))</td>
               </tr>
               <tr>
+                <td>Events</td>
+                <td>
+                  Events you create (title, description, time, place, a meeting point you pick on the
+                  map, trail or route, and cover image), which events you join, are interested in or
+                  are invited to and by whom, posts you write on an event's board, and when you last
+                  created events and sent invitations
+                </td>
+                <td>
+                  The events feature, and limiting how many events and invitations an account can
+                  create per day
+                </td>
+                <td>
+                  Contract (Art. 6(1)(b)); the daily limit: legitimate interest (Art. 6(1)(f))
+                </td>
+              </tr>
+              <tr>
                 <td>Walks you publish</td>
                 <td>
                   The route, images and texts you submit for publication as a trail (name,
@@ -669,7 +750,7 @@
               <tr>
                 <td>Push token</td>
                 <td>A pseudonymous device identifier from Apple/Google if you allow notifications</td>
-                <td>Send notifications about friend requests and shared walks</td>
+                <td>Send notifications about friend requests, shared walks and events</td>
                 <td>Your consent (can be turned off in your phone settings)</td>
               </tr>
               <tr>
@@ -764,7 +845,37 @@
             chose that. How many people like a trail is shown, but not who.
           </li>
           <li>
-            <strong>If you report a review, an obstacle report or a photo on a shared walk</strong>
+            <strong>An open event</strong> is visible to every signed-in user: title, description,
+            time, place, meeting point, route, cover image, the organizer's username and how many
+            people are taking part or interested. Who is taking part is shown only to people who
+            have joined themselves. <strong>A private event</strong> is visible only to those
+            invited or taking part. Anyone can invite you by your username, but an invitation from
+            someone you have blocked never reaches you.
+          </li>
+          <li>
+            <strong>An open event can be shared with a link</strong> that works without an account,
+            until the event is over. That page shows the title, time, place, route length, number of
+            participants and the cover image – never anyone's name.
+          </li>
+          <li>
+            <strong>Your friends see on your profile</strong> the open events you organize or
+            co-host, but not the events you only take part in.
+          </li>
+          <li>
+            <strong>An event's board</strong> is visible only to those who have joined, and your
+            posts are shown with your username.
+          </li>
+          <li>
+            <strong>If you pick one of your own recorded walks as an event's route</strong> the line
+            is copied into the event and is visible to everyone who can see it. Times, photos and
+            statistics from the walk are not included, and the walk itself stays private. You can
+            trim away the beginning and the end first, for example if you started at home.
+          </li>
+          <li>
+            <strong
+              >If you report a review, an obstacle report, a photo on a shared walk, an event, a
+              board post or a cover image</strong
+            >
             we keep the report: the
             reason you chose, what you wrote, a copy of the reported content and the name of the
             person who wrote it. We need it to judge the report, and only we see it. If you close
@@ -866,6 +977,22 @@
             category, the location and the date remain so that others know what was reported. If
             you chose the category "Other" the description is kept, since the report would otherwise
             mean nothing.
+          </li>
+          <li>
+            <strong>Events:</strong> an event the organizer deletes is removed immediately, together
+            with its board, participant list, invitations and cover image. An event that is over is
+            not deleted automatically, but remains until the organizer deletes it. A post you delete
+            is removed immediately. If you close your account, your participation and the
+            invitations you received are removed. Events you organize are handed over to a
+            co-host; if there is none, an upcoming event is cancelled. The event remains for its
+            participants, but with no link to you. Your posts on event boards are deleted, and
+            invitations you sent remain without any record of who sent them. If you want an event
+            gone entirely, delete it in the app before you close your account.
+          </li>
+          <li>
+            <strong>When you created events and sent invitations:</strong> kept only for the daily
+            limit. Older timestamps are cleared the next time you do the same thing, and all of them
+            are removed when you close your account.
           </li>
           <li><strong>Usage statistics and error reports:</strong> 7 days.</li>
           <li><strong>Server logs:</strong> 7 days.</li>

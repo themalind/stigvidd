@@ -49,8 +49,7 @@ public class EventAccountDeletionStep : IAccountDeletionStep
         foreach (var invitation in await context.EventInvitations.Where(i => i.InvitedByUserId == userId).ToListAsync(ctoken))
             invitation.InvitedByUserId = null;
 
-        foreach (var post in await context.EventPosts.IgnoreQueryFilters(["Moderation"]).Where(p => p.UserId == userId).ToListAsync(ctoken))
-            post.UserId = null;
+        context.EventPosts.RemoveRange(await context.EventPosts.IgnoreQueryFilters(["Moderation"]).Where(p => p.UserId == userId).ToListAsync(ctoken));
 
         await context.SaveChangesAsync(ctoken);
 

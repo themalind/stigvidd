@@ -57,6 +57,7 @@
     "deleteAccountWarning": "Ditt konto och dina promenader raderas för alltid. Promenader du delat med någon finns kvar hos mottagarna.",
     "deleteAccountKeptData": "Dina recensionsbetyg och hinderrapporter står kvar utan koppling till dig – texten och bilderna raderas.",
     "deleteAccountPublished": "Leder du publicerat finns kvar i Stigvidd, men utan ditt namn. Inskick som inte publicerats raderas.",
+    "deleteAccountEvents": "Evenemang du arrangerar lämnas över till en medarrangör eller ställs in, och finns kvar för deltagarna utan ditt namn. Dina inlägg på anslagstavlorna raderas.",
     "unknownError": "Ett oväntat fel inträffade",
     "couldNotLogout": "Kunde inte logga ut.",
     "notLoggedIn": "Du är inte inloggad",

@@ -66,7 +66,7 @@ public class DeleteUserLeavesNoTraceTests : IClassFixture<StigViddWebApplication
     }
 
     [Fact]
-    public async Task DeleteUser_KeepsAReportOnTheirEventPostPendingAndThePostHidden()
+    public async Task DeleteUser_DeletesTheirEventPostAndExpiresTheReportOnIt()
     {
         // Arrange
         var ctoken = TestContext.Current.CancellationToken;
@@ -106,12 +106,11 @@ public class DeleteUserLeavesNoTraceTests : IClassFixture<StigViddWebApplication
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         using var after = Db();
         var report = await after.ContentReports.SingleAsync(r => r.ContentType == ReportedContentType.EventPost && r.ContentId == postId, ctoken);
-        report.Status.Should().Be(ReportStatus.Pending);
-        report.ContentSnapshot.Should().Be("Kränkande text");
+        report.Status.Should().Be(ReportStatus.ContentExpired);
+        report.ContentSnapshot.Should().BeNull();
         report.AuthorNickNameSnapshot.Should().BeNull();
         report.ContentAuthorUserId.Should().BeNull();
-        (await after.EventPosts.IgnoreQueryFilters(["Moderation"]).SingleAsync(p => p.Id == postId, ctoken))
-            .ModerationState.Should().Be(ModerationState.HiddenPendingReview);
+        (await after.EventPosts.IgnoreQueryFilters(["Moderation"]).AnyAsync(p => p.Id == postId, ctoken)).Should().BeFalse();
     }
 
     private async Task SeedEverythingAsync()

@@ -9,7 +9,8 @@
   data raderas, utan att först installera appen. URL:en skrivs in i Play Console
   under Datasäkerhet. Byt aldrig sökväg eller filnamn.
 
-  Innehållet måste stämma med raderingsmodellen i koden (HikeRepository,
+  Innehållet måste stämma med raderingsmodellen i koden (EventAccountDeletionStep,
+  HikeRepository,
   HikeService, HikeSubmissionService, UserService) och med §5 i integritetspolicyn. Ändras det ena ska
   det andra följa med.
 
@@ -181,7 +182,7 @@
     <main id="top">
       <header>
         <h1>Radera konto och data</h1>
-        <p class="updated">Gäller appen Stigvidd · Senast uppdaterad: 25 oktober 2026</p>
+        <p class="updated">Gäller appen Stigvidd · Senast uppdaterad: 1 november 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -230,6 +231,10 @@
           avslag.
         </li>
         <li>Dina gillamarkeringar på leder.</li>
+        <li>
+          Dina deltaganden i evenemang, dina inlägg på evenemangens anslagstavlor, de inbjudningar
+          du fått och tidpunkterna för när du skapat evenemang och skickat inbjudningar.
+        </li>
         <li>Enhetstoken för push-notiser, så att inga fler notiser kan skickas till dig.</li>
       </ul>
 
@@ -277,6 +282,13 @@
         påverkas inte.
       </p>
       <p>
+        <strong>Evenemang du arrangerar finns kvar för deltagarna.</strong> De lämnas över till en
+        medarrangör, och finns ingen ställs ett kommande evenemang in. Evenemanget – titel,
+        beskrivning, plats, rutt och omslagsbild – står kvar men går inte längre att knyta till dig.
+        Inbjudningar du skickat finns kvar utan uppgift om vem som skickade dem. Vill du att ett
+        evenemang ska försvinna helt, ta bort det i appen innan du avslutar kontot.
+      </p>
+      <p>
         Serverloggar med IP-adress sparas i 7 dagar och säkerhetskopior skrivs över inom 49 dagar
         efter raderingen.
       </p>
@@ -291,7 +303,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Delete account and data</h1>
-          <p class="updated">Applies to the Stigvidd app · Last updated: 25 October 2026</p>
+          <p class="updated">Applies to the Stigvidd app · Last updated: 1 November 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -339,6 +351,10 @@
             that were rejected.
           </li>
           <li>Your likes on trails.</li>
+          <li>
+            Your participation in events, your posts on event boards, the invitations you received,
+            and the timestamps of when you created events and sent invitations.
+          </li>
           <li>Device tokens for push notifications, so no further notifications can be sent to you.</li>
         </ul>
 
@@ -385,6 +401,13 @@
           cannot be withdrawn once the trail is published. The trail therefore stays, but your nickname is removed from it and it can no
           longer be linked to you. The same applies if you delete your own walk – the trail is a
           copy and is not affected.
+        </p>
+        <p>
+          <strong>Events you organize remain for their participants.</strong> They are handed over
+          to a co-host, and if there is none, an upcoming event is cancelled. The event – title,
+          description, place, route and cover image – stays, but can no longer be linked to you.
+          Invitations you sent remain without any record of who sent them. If you want an event
+          gone entirely, delete it in the app before you close your account.
         </p>
         <p>
           Server logs containing IP addresses are kept for 7 days, and backups are overwritten

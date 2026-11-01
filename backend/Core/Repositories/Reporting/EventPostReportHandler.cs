@@ -14,8 +14,8 @@ public class EventPostReportHandler : IReportableContentHandler
 
     public string MetricTag { get; } = Core.Telemetry.MetricTags.Values.ContentTypeEventPost;
 
-    // The post stays on the board as a deleted user's, body and all. keep-comment: plan decision, why not Restore
-    public AuthorDeletionOutcome WhenAuthorDeletesAccount { get; } = AuthorDeletionOutcome.KeepPending;
+    // Account deletion deletes the author's posts, so nothing is left to judge. keep-comment: why Expire, not KeepPending
+    public AuthorDeletionOutcome WhenAuthorDeletesAccount { get; } = AuthorDeletionOutcome.Expire;
 
     // Only a joined participant reads the board, so only they can report a post. keep-comment: privacy rule a reader cannot infer
     public async Task<ReportableContent?> FindAsync(StigViddDbContext context, string contentIdentifier, int reporterUserId, CancellationToken ctoken)

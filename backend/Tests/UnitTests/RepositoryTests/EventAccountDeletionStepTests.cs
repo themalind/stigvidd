@@ -176,7 +176,7 @@ public class EventAccountDeletionStepTests : TestBase
         stored.Invitations.Should().ContainSingle().Which.InvitedByUserId.Should().BeNull();
         (await LoadAsync(factory, 2)).Invitations.Should().BeEmpty();
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
-        (await context.EventPosts.IgnoreQueryFilters().SingleAsync(TestContext.Current.CancellationToken)).UserId.Should().BeNull();
+        (await context.EventPosts.IgnoreQueryFilters().AnyAsync(TestContext.Current.CancellationToken)).Should().BeFalse();
         effects.Pushes.Should().BeEmpty();
     }
 
