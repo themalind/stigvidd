@@ -1,6 +1,7 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Events;
 using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -66,6 +67,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddTransient<IContentReportRepository, ContentReportRepository>();
         services.AddTransient<IAdminDashboardRepository, AdminDashboardRepository>();
+        services.AddTransient<IDomainEventRepository, DomainEventRepository>();
 
         // Services
         services.AddTransient<ITrailService, TrailService>();
@@ -122,6 +124,22 @@ public static class ServiceCollectionExtensions
         // the dispatcher draining it. Unlike the import queue this one is only a hint — the
         // OutboxEmails table is what survives a restart.
         services.AddSingleton<IMailOutboxQueue, MailOutboxQueue>();
+
+        services.AddTransient<IDomainEventPublisher, DomainEventPublisher>();
+        services.AddTransient<IDomainEventProcessor, DomainEventProcessor>();
+        services.AddSingleton<DomainEventDispatchLoop>();
+        services.AddSingleton<IDomainEventSignal, DomainEventSignal>();
+
+        var coreAssembly = typeof(ServiceCollectionExtensions).Assembly;
+
+        foreach (var implementation in coreAssembly.GetTypes().Where(t => t is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }))
+        {
+            foreach (var handlerInterface in implementation.GetInterfaces().Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDomainEventHandler<>)))
+                services.AddTransient(handlerInterface, implementation);
+        }
+
+        // Scanned here, not lazily: ValidateOnBuild never runs a constructor, so only an eager scan fails the host on a duplicate event name. keep-comment: why this is not a factory registration
+        services.AddSingleton(DomainEventRegistry.Scan(coreAssembly));
 
         // Instruments only, and registered unconditionally on purpose: creating a Meter starts no
         // thread and registers nothing with OpenTelemetry, so this costs a laptop, CI and every

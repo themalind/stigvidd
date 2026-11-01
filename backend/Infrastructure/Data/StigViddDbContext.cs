@@ -45,6 +45,7 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<ContentReport> ContentReports { get; set; }
     public DbSet<MediaReprocessJob> MediaReprocessJobs { get; set; }
     public DbSet<MediaReprocessItem> MediaReprocessItems { get; set; }
+    public DbSet<DomainEventRecord> DomainEvents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

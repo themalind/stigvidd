@@ -157,7 +157,9 @@ public class StigViddWebApplicationFactory<TProgram>
                  d.ImplementationType == typeof(MailOutboxDispatcher) ||
                  d.ImplementationType == typeof(MailOutboxRetentionService) ||
                  d.ImplementationType == typeof(MediaReprocessDispatcher) ||
-                 d.ImplementationType == typeof(MediaReprocessRetentionService)))
+                 d.ImplementationType == typeof(MediaReprocessRetentionService) ||
+                 d.ImplementationType == typeof(DomainEventDispatcher) ||
+                 d.ImplementationType == typeof(DomainEventRetentionService)))
                 .ToList();
 
             foreach (var startupService in startupServices)

@@ -23,7 +23,7 @@ public static class DataAnonymizer
     public static readonly IReadOnlySet<string> EmptiedTables = new HashSet<string>
     {
         "UserPushTokens", "EmailVerificationTokens", "PasswordResetTokens", "OutboxEmails", "UserKeycloakMappings",
-        "FriendNotes",
+        "FriendNotes", "DomainEvents",
     };
 
     // Every column of every other table. ClassificationTests fails on any column missing here, so a new personal column cannot reach an anonymized export unreviewed. keep-comment: the guard this list exists for
@@ -156,6 +156,9 @@ public static class DataAnonymizer
         await db.OutboxEmails
             .Where(m => m.Status == OutboxEmailStatus.Pending || m.Status == OutboxEmailStatus.Sending)
             .ExecuteDeleteAsync(ctoken);
+        await db.DomainEvents
+            .Where(e => e.Status == DomainEventStatus.Pending || e.Status == DomainEventStatus.Processing)
+            .ExecuteDeleteAsync(ctoken);
         await db.UserPushTokens.ExecuteDeleteAsync(ctoken);
         await db.EmailVerificationTokens.ExecuteDeleteAsync(ctoken);
         await db.PasswordResetTokens.ExecuteDeleteAsync(ctoken);
@@ -170,6 +173,7 @@ public static class DataAnonymizer
         await db.PasswordResetTokens.ExecuteDeleteAsync(ctoken);
         await db.OutboxEmails.ExecuteDeleteAsync(ctoken);
         await db.UserKeycloakMappings.ExecuteDeleteAsync(ctoken);
+        await db.DomainEvents.ExecuteDeleteAsync(ctoken);
     }
 
     private static IReadOnlyDictionary<string, ColumnTreatment> Table(string kept, string replaced = "", string cleared = "")
