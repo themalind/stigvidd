@@ -14,6 +14,8 @@ services:
       DataTransfer__SharedServices: "true"
       # The API's CORS list is production's admin origin only; add staging's own.
       Cors__AllowedOrigins__0: https://${WEB_DOMAIN}
+      # Production's mail server; MAIL_DOMAIN here is a staging alias that resolves nowhere.
+      Smtp__Host: ${STAGING_SMTP_HOST:-mail.stigvidd.se}
 
   proxy:
     # The slim Caddyfile: no auth/observatory/mail sites. Pinned here so it cannot be

@@ -86,7 +86,7 @@ DNS:
 | --- | --- |
 | `auth.stigvidd.se` | `KEYCLOAK_URL` — the staging realm's issuer |
 | `observatory.stigvidd.se` | `OTLP_ENDPOINT` and `VITE_OO_LOGS_URL` |
-| `mail.stigvidd.se` | Keycloak's staging-realm SMTP host |
+| `mail.stigvidd.se` | the API's `Smtp__Host` (set in `docker-compose.staging.yml`; needs `SMTP_NOREPLY_PASSWORD` in `.env`) and Keycloak's staging-realm SMTP host |
 
 > **`AUTH_DOMAIN`, `OBSERVATORY_DOMAIN` and `MAIL_DOMAIN` must still be set, and must be
 > STAGING names — never production's.**
