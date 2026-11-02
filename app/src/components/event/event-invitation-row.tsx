@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { BORDER_RADIUS } from "@/constants/constants";
 import { EventInvitation } from "@/data/types";
 import { formatEventDate, formatTimeRange } from "@/utils/event-time";
 import { useTranslation } from "react-i18next";
@@ -25,15 +26,26 @@ export default function EventInvitationRow({ invitation, busy, onOpen, onAccept,
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const { event, invitedByNickName } = invitation;
-  const text = invitedByNickName
-    ? t("events.invitedYou", { nickName: invitedByNickName, title: event.title })
-    : t("events.invitedYouAnonymous", { title: event.title });
   const when = `${formatEventDate(event.startsAt, i18n.language)} · ${formatTimeRange(event.startsAt, event.endsAt, i18n.language)}`;
 
   return (
-    <View testID={`event-invitation-${event.identifier}`} style={s.row}>
+    <View testID={`event-invitation-${event.identifier}`} style={[s.row, { backgroundColor: theme.colors.background }]}>
       <Pressable accessibilityRole="button" onPress={() => onOpen(event.identifier)} style={s.text}>
-        <Text style={[s.message, { color: theme.colors.onSurface }]}>{text}</Text>
+        <Text testID="event-invitation-title" style={[s.title, { color: theme.colors.onSurface }]}>
+          {event.title}
+        </Text>
+        <Text style={[s.message, { color: theme.colors.onSurfaceVariant }]}>
+          {invitedByNickName ? (
+            <>
+              {t("events.invitedBy")}{" "}
+              <Text testID="event-invitation-inviter" style={[s.inviter, { color: theme.colors.onSurface }]}>
+                {invitedByNickName}
+              </Text>
+            </>
+          ) : (
+            t("events.invitedYouAnonymous")
+          )}
+        </Text>
         <View style={s.meta}>
           <EventVisibilityChip visibility={event.visibility} />
           <Text style={[s.when, { color: theme.colors.onSurfaceVariant }]}>{when}</Text>
@@ -51,13 +63,23 @@ export default function EventInvitationRow({ invitation, busy, onOpen, onAccept,
 const s = StyleSheet.create({
   row: {
     gap: 8,
+    padding: 12,
+    borderRadius: BORDER_RADIUS,
   },
   text: {
     gap: 6,
   },
+  title: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontFamily: "Inter_600SemiBold",
+  },
   message: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  inviter: {
+    fontFamily: "Inter_600SemiBold",
   },
   meta: {
     flexDirection: "row",

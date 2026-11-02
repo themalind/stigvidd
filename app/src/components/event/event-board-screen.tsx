@@ -29,6 +29,7 @@ import { FlatList, Platform, StyleSheet, View } from "react-native";
 import { IconButton, Text, useTheme } from "react-native-paper";
 import EventGoneView from "./event-gone-view";
 import EventPinnedPosts from "./event-pinned-posts";
+import EventPinsToggle from "./event-pins-toggle";
 import EventPostRow from "./event-post-row";
 
 export default function EventBoardScreen() {
@@ -70,6 +71,7 @@ function EventBoard({ identifier }: { identifier: string }) {
     markRead(newestAt);
   }, [newestAt, lastReadPostAt, markRead]);
 
+  const [pinsOpen, setPinsOpen] = useState(false);
   const listRef = useRef<FlatList<EventPost>>(null);
   const [scrollTarget, setScrollTarget] = useState<string | null>(null);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = board;
@@ -154,6 +156,7 @@ function EventBoard({ identifier }: { identifier: string }) {
         <Text style={[s.title, { color: theme.colors.onBackground }]} numberOfLines={1}>
           {event.data?.title ?? t("events.board")}
         </Text>
+        <EventPinsToggle count={pinned.length} open={pinsOpen} onToggle={() => setPinsOpen((open) => !open)} />
         <IconButton
           testID="event-board-mute"
           icon={muted ? "bell-off-outline" : "bell-outline"}
@@ -163,7 +166,7 @@ function EventBoard({ identifier }: { identifier: string }) {
         />
       </View>
 
-      <EventPinnedPosts pinned={pinned} onSelect={(post) => setScrollTarget(post.identifier)} />
+      {pinsOpen ? <EventPinnedPosts pinned={pinned} onSelect={(post) => setScrollTarget(post.identifier)} /> : null}
 
       <FlatList
         ref={listRef}

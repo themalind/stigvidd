@@ -13,7 +13,10 @@ import { EventInvitee, EventParticipant, EventParticipants, EventPermissions } f
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import { IconButton, Text, useTheme } from "react-native-paper";
+import { Button, IconButton, Text, useTheme } from "react-native-paper";
+
+// The API sends every participant (at most 500), so the list grows here rather than paging the request. keep-comment: why paging is client-side
+export const PARTICIPANTS_PAGE = 10;
 
 type Props = {
   participants: EventParticipants;
@@ -35,7 +38,9 @@ export default function EventParticipantsPanel({
   const theme = useTheme();
   const { t } = useTranslation();
   const [toRemove, setToRemove] = useState<EventParticipant | null>(null);
+  const [shown, setShown] = useState(PARTICIPANTS_PAGE);
   const list = participants.participants ?? [];
+  const hiddenCount = Math.max(0, list.length - shown);
   const invited = participants.invited ?? [];
   const canChangeRole = (participant: EventParticipant) =>
     permissions.canChangeRoles && participant.role !== "Organizer";
@@ -47,7 +52,7 @@ export default function EventParticipantsPanel({
       title={t("events.participantsTitle", { count: participants.participantCount })}
       testID="event-participants"
     >
-      {list.map((participant) => (
+      {list.slice(0, shown).map((participant) => (
         <ParticipantRow
           key={participant.userIdentifier}
           participant={participant}
@@ -57,6 +62,17 @@ export default function EventParticipantsPanel({
           onRemove={setToRemove}
         />
       ))}
+      {hiddenCount > 0 ? (
+        <Button
+          testID="event-participants-more"
+          mode="text"
+          compact
+          onPress={() => setShown((count) => count + PARTICIPANTS_PAGE)}
+          style={s.more}
+        >
+          {t("events.showMoreParticipants", { count: hiddenCount })}
+        </Button>
+      ) : null}
 
       {invited.length > 0 ? (
         <View style={s.invited}>
@@ -161,6 +177,9 @@ const s = StyleSheet.create({
   },
   invited: {
     gap: 2,
+  },
+  more: {
+    alignSelf: "flex-start",
   },
   subheading: {
     fontSize: 13,

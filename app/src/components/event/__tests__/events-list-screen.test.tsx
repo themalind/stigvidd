@@ -10,6 +10,7 @@ import EventsListScreen from "@/components/event/events-list-screen";
 import { EventSummary } from "@/data/types";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { fireEvent, screen } from "@testing-library/react-native";
 
 const mockGetEvents = jest.fn();
@@ -95,6 +96,30 @@ describe("EventsListScreen", () => {
     expect(screen.getByText(/Hemlig tur/)).toBeTruthy();
     expect(screen.getAllByText("Min tur")).toHaveLength(1);
     expect(screen.getByText("Fikapromenad")).toBeTruthy();
+  });
+
+  it("sets every invitation on its own plate", async () => {
+    mockGetInvitations.mockResolvedValue([
+      { event: summary("inv", "Hemlig tur"), invitedByNickName: "maja", invitedAt: "2026-11-01T10:00:00Z" },
+      { event: summary("inv2", "Andra turen"), invitedByNickName: "olle", invitedAt: "2026-11-01T11:00:00Z" },
+    ]);
+    await show();
+    await flushUntil(() => screen.queryByTestId("event-invitation-inv2") !== null);
+
+    for (const id of ["event-invitation-inv", "event-invitation-inv2"]) {
+      expect(screen.getByTestId(id)).toHaveStyle({ padding: 12, borderRadius: BORDER_RADIUS });
+    }
+  });
+
+  it("puts the event's name and the inviter in bold", async () => {
+    await show();
+    await flushUntil(() => screen.queryByTestId("event-invitation-inviter") !== null);
+
+    expect(screen.getByTestId("event-invitation-title")).toHaveTextContent("Hemlig tur");
+    expect(screen.getByTestId("event-invitation-title")).toHaveStyle({ fontFamily: "Inter_600SemiBold" });
+    expect(screen.getByTestId("event-invitation-inviter")).toHaveTextContent("maja");
+    expect(screen.getByTestId("event-invitation-inviter")).toHaveStyle({ fontFamily: "Inter_600SemiBold" });
+    expect(screen.getByText(/Inbjuden av/)).toBeTruthy();
   });
 
   it("opens a feed event in the events tab", async () => {

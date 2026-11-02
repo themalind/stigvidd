@@ -195,6 +195,8 @@ describe("EventBoardScreen", () => {
     renderWithProviders(<EventBoardScreen />, {
       initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
     });
+    await flushUntil(() => screen.queryByTestId("event-board-pins-toggle") !== null);
+    fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
     await flushUntil(() => screen.queryByTestId("event-pinned-p2") !== null);
 
     expect(screen.getByTestId("event-board-pinned")).toHaveTextContent(/Fäst/);
@@ -203,6 +205,34 @@ describe("EventBoardScreen", () => {
 
     expect(scrollToIndex).toHaveBeenCalledWith({ index: 1, viewPosition: 0.5 });
     scrollToIndex.mockRestore();
+  });
+
+  it("keeps the pinned box closed behind a counted pin until the pin is pressed, and closes it again", async () => {
+    const pinnedPost = post({ identifier: "p2", body: "Samling 07.45", isPinned: true });
+    mockGetEvent.mockResolvedValue(EVENT);
+    mockGetPosts.mockResolvedValue({ ...board([pinnedPost, post()]), pinned: [pinnedPost] });
+    renderWithProviders(<EventBoardScreen />, {
+      initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
+    });
+    await flushUntil(() => screen.queryByTestId("event-board-pins-toggle") !== null);
+
+    const toggle = screen.getByTestId("event-board-pins-toggle");
+    expect(screen.queryByTestId("event-board-pinned")).toBeNull();
+    expect(toggle.props.accessibilityLabel).toBe("Visa fästa inlägg (1)");
+
+    fireEvent.press(toggle);
+    await flushUntil(() => screen.queryByTestId("event-board-pinned") !== null);
+    expect(screen.getByTestId("event-board-pinned")).toHaveTextContent(/Samling 07.45/);
+
+    fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
+    await flushUntil(() => screen.queryByTestId("event-board-pinned") === null);
+    expect(screen.queryByTestId("event-board-pinned")).toBeNull();
+  });
+
+  it("shows no pin in the top bar when nothing is pinned", async () => {
+    await show([post()]);
+
+    expect(screen.queryByTestId("event-board-pins-toggle")).toBeNull();
   });
 
   it("loads older pages until a pressed pin that is not loaded yet appears", async () => {
@@ -215,6 +245,8 @@ describe("EventBoardScreen", () => {
     renderWithProviders(<EventBoardScreen />, {
       initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
     });
+    await flushUntil(() => screen.queryByTestId("event-board-pins-toggle") !== null);
+    fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
     await flushUntil(() => screen.queryByTestId("event-pinned-old") !== null);
 
     fireEvent.press(screen.getByTestId("event-pinned-old"));

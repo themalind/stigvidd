@@ -11,20 +11,23 @@ type Props = {
   count: number | undefined;
   accessibilityLabel?: string;
   testID?: string;
+  size?: number;
+  // "attention" is for something new; "neutral" just counts. keep-comment: when to pick which tone
+  tone?: "attention" | "neutral";
 };
 
-export default function CountBadge({ count, accessibilityLabel, testID }: Props) {
+export default function CountBadge({ count, accessibilityLabel, testID, size = 24, tone = "attention" }: Props) {
   const theme = useTheme();
 
   if (count === undefined || count <= 0) return null;
 
+  const colors =
+    tone === "neutral"
+      ? { backgroundColor: theme.colors.secondary, color: theme.colors.onSecondary }
+      : { backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary };
+
   return (
-    <Badge
-      testID={testID}
-      size={24}
-      accessibilityLabel={accessibilityLabel}
-      style={{ backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary }}
-    >
+    <Badge testID={testID} size={size} accessibilityLabel={accessibilityLabel} style={colors}>
       {count}
     </Badge>
   );
