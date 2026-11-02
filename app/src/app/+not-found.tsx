@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { BORDER_RADIUS } from "@/constants/constants";
 import { router, Stack } from "expo-router";
 import { useTheme, Button } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -53,5 +54,6 @@ const s = StyleSheet.create({
   },
   button: {
     marginTop: 16,
+    borderRadius: BORDER_RADIUS,
   },
 });

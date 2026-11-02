@@ -164,6 +164,7 @@ export default function FriendsScreen() {
                     <Button
                       mode="contained"
                       compact
+                      style={s.answerButton}
                       accessibilityLabel={t("friends.accept")}
                       onPress={() => unlessBanned(() => acceptMutation.mutate(req.requesterIdentifier))}
                       disabled={answering}
@@ -173,6 +174,7 @@ export default function FriendsScreen() {
                     <Button
                       mode="outlined"
                       compact
+                      style={s.answerButton}
                       accessibilityLabel={t("friends.reject")}
                       onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
                       disabled={answering}
@@ -357,5 +359,8 @@ const s = StyleSheet.create({
   },
   iconButton: {
     margin: 0,
+  },
+  answerButton: {
+    borderRadius: BORDER_RADIUS,
   },
 });

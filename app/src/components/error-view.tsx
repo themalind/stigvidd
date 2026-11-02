@@ -8,6 +8,7 @@
 import { ApiError } from "@/api/api-error";
 import { isUnauthorized } from "@/api/unauthorized";
 import { useAuth } from "@/components/auth/auth-provider";
+import { BORDER_RADIUS } from "@/constants/constants";
 import { useIsOnline } from "@/hooks/useIsOnline";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -41,7 +42,7 @@ function useErrorInfo(error: unknown): ErrorInfo {
         return { title: t("error.500.title"), message: t("error.500.message"), icon: "cloud-off" };
     }
   }
-  // The request never reached the server; the reconnect refetches it.
+  // The request never reached the server; the reconnect refetches it. keep-comment: why offline gets no retry button of its own
   if (!isOnline) return { title: t("error.offline.title"), message: t("error.offline.message"), icon: "cloud-off" };
   return { title: t("error.default.title"), message: t("error.default.message"), icon: "wifi-off" };
 }
@@ -99,5 +100,6 @@ const s = StyleSheet.create({
   },
   button: {
     marginTop: 16,
+    borderRadius: BORDER_RADIUS,
   },
 });

@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { BORDER_RADIUS } from "@/constants/constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { leaveEventScreen } from "./event-routes";
 import { useTranslation } from "react-i18next";
@@ -47,5 +48,6 @@ const s = StyleSheet.create({
   },
   button: {
     marginTop: 8,
+    borderRadius: BORDER_RADIUS,
   },
 });

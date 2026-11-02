@@ -128,6 +128,7 @@ export default function FriendProfileScreen() {
               mode="contained"
               icon="share-variant-outline"
               onPress={() => setPickingHike(true)}
+              style={s.shareButton}
             >
               {t("friends.shareHikeWith", { name: friend.nickName })}
             </Button>
@@ -326,6 +327,9 @@ const s = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  shareButton: {
+    borderRadius: BORDER_RADIUS,
   },
   notFriend: {
     textAlign: "center",
