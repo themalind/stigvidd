@@ -214,7 +214,7 @@ organization or data — you are adding a second one alongside.
 
 ### a. The staging realm in production Keycloak
 
-At `https://auth.stigvidd.se`, create realm **`stigvidd-staging`** with the same three
+At `https://auth.stigvidd.se`, create realm **`stigvidd-staging`** with the same four
 clients production uses:
 
 | client | type | purpose |
@@ -222,6 +222,11 @@ clients production uses:
 | `stigvidd-api` | public | the API's audience; token `aud` is validated against it |
 | `stigvidd-admin-api` | **confidential** | its Credentials-tab secret becomes `KEYCLOAK_ADMIN_CLIENT_SECRET` |
 | `stigvidd-admin` | public | the admin web SPA; `VITE_CLIENT_ID` |
+| `stigvidd-app` | public, **Direct access grants** on | the mobile app; `EXPO_PUBLIC_CLIENT_ID`. Copy its mappers from production's, so its tokens carry the same `aud` |
+
+Without `stigvidd-app`, an app pointed at staging answers every login with wrong email or
+password: Keycloak returns `invalid_client`, and the app reads any 400/401 from the token
+endpoint as bad credentials.
 
 Then:
 
