@@ -43,17 +43,14 @@ public class EventsController : StigViddController
         return CreatedAtAction(nameof(GetEvent), new { identifier = result.Value.Identifier }, result.Value);
     }
 
+    // Signed out sees the open feed; signed in also gets their blocks and own status. keep-comment: AllowAnonymous still authenticates a sent token
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<EventPageResponse>> GetEvents([FromQuery] EventFeedQuery query, CancellationToken ctoken)
     {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        var viewer = await GetAuthenticatedUserAsync(_userService, ctoken);
 
-        if (userResponse == null)
-        {
-            return Unauthorized("User not found");
-        }
-
-        var result = await _eventService.GetFeedAsync(userResponse.Identifier, query, ctoken);
+        var result = await _eventService.GetFeedAsync(viewer?.Identifier, query, ctoken);
 
         if (!result.Success || result.Value is null)
         {
@@ -101,17 +98,13 @@ public class EventsController : StigViddController
     }
 
     [HttpGet]
+    [AllowAnonymous]
     [Route("{identifier}")]
     public async Task<ActionResult<EventResponse>> GetEvent([FromRoute] string identifier, CancellationToken ctoken)
     {
-        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+        var viewer = await GetAuthenticatedUserAsync(_userService, ctoken);
 
-        if (userResponse == null)
-        {
-            return Unauthorized("User not found");
-        }
-
-        var result = await _eventService.GetAsync(userResponse.Identifier, identifier, ctoken);
+        var result = await _eventService.GetAsync(viewer?.Identifier, identifier, ctoken);
 
         if (!result.Success || result.Value is null)
         {

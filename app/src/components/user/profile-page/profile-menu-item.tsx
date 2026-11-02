@@ -5,12 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import CountBadge from "@/components/count-badge";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Href, router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Badge, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 
 interface MenuItemProps {
   text: string;
@@ -33,11 +34,7 @@ export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemPr
           <Text style={s.choiceText}>{text}</Text>
         </View>
         <View testID="menu-item-actions" style={s.right}>
-          {badge !== undefined && badge > 0 && (
-            <Badge size={24} style={{ backgroundColor: theme.colors.tertiary, color: theme.colors.onTertiary }}>
-              {badge}
-            </Badge>
-          )}
+          <CountBadge count={badge} />
           <MaterialIcons name="chevron-right" size={24} color={theme.colors.outline} />
         </View>
       </View>

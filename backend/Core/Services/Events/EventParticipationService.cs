@@ -124,6 +124,9 @@ public class EventParticipationService : IEventParticipationService
         if (loaded.Message is not null || loaded.Value is null)
             return Result.Fail(loaded.Message ?? EventErrors.Gone());
 
+        if (loaded.Value.Membership.LeaveRefusal() is Message refusal)
+            return Result.Fail(refusal);
+
         var left = await _participantRepository.LeaveAsync(loaded.Value.Detail.Event.Id, loaded.Value.ViewerId, ctoken);
 
         if (!left.IsSuccess)

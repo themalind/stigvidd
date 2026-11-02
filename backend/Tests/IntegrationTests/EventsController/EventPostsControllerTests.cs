@@ -174,6 +174,34 @@ public class EventPostsControllerTests : IClassFixture<BoardWebApplicationFactor
     }
 
     [Fact]
+    public async Task GetEvent_CountsOthersUnreadPostsUntilTheyAreRead()
+    {
+        var identifier = await BoardRequests.CreateBoardAsync(_factory);
+        await PostAsync(BoardRequests.VandrarVennen, identifier, "Mitt eget");
+        await PostAsync(BoardRequests.NaturElskaren, identifier, "Hej!");
+        var latest = await PostAsync(BoardRequests.NaturElskaren, identifier, "Ta med fika");
+
+        (await EventAsync(BoardRequests.VandrarVennen, identifier)).UnreadPostCount.Should().Be(2);
+
+        await Client(BoardRequests.VandrarVennen).PutAsJsonAsync(
+            $"{BoardRequests.BASE_URL}/{identifier}/posts/read",
+            new EventPostsReadRequest { ReadUpTo = latest.CreatedAt },
+            TestContext.Current.CancellationToken);
+
+        (await EventAsync(BoardRequests.VandrarVennen, identifier)).UnreadPostCount.Should().Be(0);
+        (await EventAsync(BoardRequests.SkogsGreven, identifier)).UnreadPostCount.Should().Be(0);
+    }
+
+    private async Task<EventResponse> EventAsync(string subject, string identifier)
+    {
+        var response = await Client(subject).GetAsync($"{BoardRequests.BASE_URL}/{identifier}", TestContext.Current.CancellationToken);
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var fetched = await response.Content.ReadFromJsonAsync<EventResponse>(TestContext.Current.CancellationToken);
+        fetched.Should().NotBeNull();
+        return fetched;
+    }
+
+    [Fact]
     public async Task PostRoutes_ReachThePostNotAnEvent()
     {
         var identifier = await BoardRequests.CreateBoardAsync(_factory);

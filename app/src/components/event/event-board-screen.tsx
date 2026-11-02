@@ -23,11 +23,12 @@ import { eventErrorCode } from "@/utils/event-errors";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { FlatList, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { FlatList, Platform, StyleSheet, View } from "react-native";
 import { IconButton, Text, useTheme } from "react-native-paper";
 import EventGoneView from "./event-gone-view";
+import EventPinnedPosts from "./event-pinned-posts";
 import EventPostRow from "./event-post-row";
 
 export default function EventBoardScreen() {
@@ -68,6 +69,23 @@ function EventBoard({ identifier }: { identifier: string }) {
     if (lastReadPostAt !== null && Date.parse(newestAt) <= Date.parse(lastReadPostAt)) return;
     markRead(newestAt);
   }, [newestAt, lastReadPostAt, markRead]);
+
+  const listRef = useRef<FlatList<EventPost>>(null);
+  const [scrollTarget, setScrollTarget] = useState<string | null>(null);
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = board;
+  // An older pin may lie beyond the loaded pages, so pages are fetched until it appears. keep-comment: why the effect pages
+  useEffect(() => {
+    if (scrollTarget === null) return;
+    const index = posts.findIndex((post) => post.identifier === scrollTarget);
+    if (index >= 0) {
+      setScrollTarget(null);
+      listRef.current?.scrollToIndex({ index, viewPosition: 0.5 });
+    } else if (hasNextPage) {
+      if (!isFetchingNextPage) void fetchNextPage();
+    } else {
+      setScrollTarget(null);
+    }
+  }, [scrollTarget, posts, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const canModerate = event.data?.permissions.canPinOrDeletePosts ?? false;
   const pin = pinMutation.mutate;
@@ -145,23 +163,15 @@ function EventBoard({ identifier }: { identifier: string }) {
         />
       </View>
 
-      {pinned.length > 0 ? (
-        <ScrollView
-          testID="event-board-pinned"
-          style={[s.pinned, { backgroundColor: theme.colors.surface }]}
-          contentContainerStyle={s.pinnedContent}
-        >
-          {pinned.map((post) => (
-            <Text key={post.identifier} style={{ color: theme.colors.onSurface }} numberOfLines={3}>
-              <Text style={s.pinnedAuthor}>{post.authorNickName ?? t("events.deletedUser")}: </Text>
-              {post.body}
-            </Text>
-          ))}
-        </ScrollView>
-      ) : null}
+      <EventPinnedPosts pinned={pinned} onSelect={(post) => setScrollTarget(post.identifier)} />
 
       <FlatList
+        ref={listRef}
         testID="event-board-posts"
+        onScrollToIndexFailed={(info) => {
+          listRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: false });
+          setTimeout(() => listRef.current?.scrollToIndex({ index: info.index, viewPosition: 0.5 }), 100);
+        }}
         inverted
         data={posts}
         keyExtractor={(item) => item.identifier}
@@ -207,6 +217,7 @@ function EventBoard({ identifier }: { identifier: string }) {
               onChangeText={editing ? setEdited : setDraft}
               placeholder={t("events.writePost")}
               maxLength={EVENT_REQUEST_LIMITS.postBody}
+              contentStyle={s.inputText}
             />
           </View>
           <IconButton
@@ -266,21 +277,6 @@ const s = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Inter_600SemiBold",
   },
-  // Pins are uncapped, so the box scrolls rather than pushing the board off screen. keep-comment: why maxHeight
-  pinned: {
-    flexGrow: 0,
-    maxHeight: 160,
-    marginHorizontal: SCREEN_PADDING,
-    marginBottom: 8,
-    borderRadius: BORDER_RADIUS,
-  },
-  pinnedContent: {
-    padding: 10,
-    gap: 6,
-  },
-  pinnedAuthor: {
-    fontFamily: "Inter_600SemiBold",
-  },
   list: {
     paddingHorizontal: SCREEN_PADDING,
     paddingVertical: 8,
@@ -290,7 +286,6 @@ const s = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     paddingVertical: 24,
-    transform: [{ scaleY: -1 }],
   },
   composer: {
     flexDirection: "row",
@@ -301,6 +296,10 @@ const s = StyleSheet.create({
   },
   input: {
     flex: 1,
+  },
+  // Paper pins multiline text to the top of its 48 px minimum, so one line sat high. keep-comment: why the override
+  inputText: {
+    textAlignVertical: "center",
   },
   editingBar: {
     flexDirection: "row",

@@ -34,5 +34,6 @@ public class EventResponse
     public string? MyRole { get; set; }
     public string? MyStatus { get; set; }
     public bool HasPendingInvite { get; set; }
+    public int UnreadPostCount { get; set; }
     public required EventPermissionsResponse Permissions { get; set; }
 }

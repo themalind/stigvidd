@@ -6,13 +6,15 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { useAuth } from "@/components/auth/auth-provider";
-import SignInPrompt from "@/components/auth/sign-in-prompt";
+import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import BackButton from "@/components/back-button";
+import NoticeBanner from "@/components/notice-banner";
 import SectionPanel from "@/components/section-panel";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { HikingEvent } from "@/data/types";
 import { useEventMutations } from "@/hooks/events/useEventMutations";
 import { useEventManageMutations, useEventParticipants } from "@/hooks/events/useEventManage";
+import { useReturnHereAfterLogin } from "@/hooks/useReturnHereAfterLogin";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
@@ -40,15 +42,7 @@ type Props = {
   routes: EventStackRoutes;
 };
 
-export default function EventDetailsScreen(props: Props) {
-  const { isAuthenticated } = useAuth();
-  const { t } = useTranslation();
-
-  if (!isAuthenticated) return <SignInPrompt message={t("events.signInToSee")} />;
-  return <EventDetails {...props} />;
-}
-
-function EventDetails({ routes }: Props) {
+export default function EventDetailsScreen({ routes }: Props) {
   const theme = useTheme();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   return (
@@ -133,6 +127,7 @@ function EventBody({ event, routes }: { event: HikingEvent } & Props) {
   const place = event.meetingPointName ?? event.locationName;
   const trailIdentifier = event.trailIdentifier;
   const length = event.route?.lengthMeters == null ? undefined : formatDistanceKm(event.route.lengthMeters / 1000);
+  const unread = event.unreadPostCount ?? 0;
 
   const spots =
     event.maxParticipants == null
@@ -160,9 +155,17 @@ function EventBody({ event, routes }: { event: HikingEvent } & Props) {
       </View>
 
       {isCancelled ? (
-        <View testID="event-cancelled-banner" style={[s.banner, { backgroundColor: theme.colors.errorContainer }]}>
-          <Text style={[s.bannerText, { color: theme.colors.onErrorContainer }]}>{t("events.cancelledBanner")}</Text>
-        </View>
+        <NoticeBanner
+          testID="event-cancelled-banner"
+          tone="error"
+          icon="event-busy"
+          title={t("events.cancelledBanner")}
+          style={s.notice}
+        />
+      ) : null}
+
+      {event.isPast && !isCancelled ? (
+        <NoticeBanner testID="event-past-banner" icon="history" title={t("events.pastBanner")} style={s.notice} />
       ) : null}
 
       {event.hasPendingInvite && !isCancelled ? <InviteBanner identifier={event.identifier} /> : null}
@@ -180,6 +183,7 @@ function EventBody({ event, routes }: { event: HikingEvent } & Props) {
             icon="sign-direction"
             primary={event.trailName}
             secondary={length}
+            actionLabel={t("events.showTrail")}
             onPress={() =>
               guardedNavigate(() =>
                 router.navigate({ pathname: routes.trail, params: { identifier: trailIdentifier } }),
@@ -205,6 +209,8 @@ function EventBody({ event, routes }: { event: HikingEvent } & Props) {
           icon={event.permissions.canReadBoard ? "message-text-outline" : "lock-outline"}
           primary={t("events.board")}
           secondary={event.permissions.canReadBoard ? undefined : t("events.boardJoinToRead")}
+          badge={unread}
+          badgeLabel={t("events.unreadPosts", { count: unread })}
           onPress={
             event.permissions.canReadBoard
               ? () =>
@@ -238,20 +244,36 @@ function InviteBanner({ identifier }: { identifier: string }) {
 }
 
 function EventFooter({ event }: { event: HikingEvent }) {
+  const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
+  const [showAuthDialog, setAuthDialog] = useState(false);
+  const returnHere = useReturnHereAfterLogin();
   const { joinMutation, leaveMutation, interestedMutation } = useEventMutations();
   const busy = joinMutation.isPending || leaveMutation.isPending || interestedMutation.isPending;
 
   // An invitee answers in the banner instead. keep-comment: accepting is the invitee's join
   if (event.hasPendingInvite) return null;
 
+  const signedIn = (action: () => void) => () => (isAuthenticated ? action() : setAuthDialog(true));
+
   return (
-    <EventActionBar
-      event={event}
-      busy={busy}
-      onJoin={() => joinMutation.mutate(event.identifier)}
-      onLeave={() => leaveMutation.mutate(event.identifier)}
-      onInterested={(interested) => interestedMutation.mutate({ identifier: event.identifier, interested })}
-    />
+    <>
+      <EventActionBar
+        event={event}
+        busy={busy}
+        onJoin={signedIn(() => joinMutation.mutate(event.identifier))}
+        onLeave={() => leaveMutation.mutate(event.identifier)}
+        onInterested={(interested) =>
+          signedIn(() => interestedMutation.mutate({ identifier: event.identifier, interested }))()
+        }
+      />
+      <NotAuthenticatedDialog
+        visible={showAuthDialog}
+        onDissmiss={() => setAuthDialog(false)}
+        infoMessage={t("events.signInToJoin")}
+        onBeforeNavigate={returnHere}
+      />
+    </>
   );
 }
 
@@ -298,6 +320,9 @@ const s = StyleSheet.create({
     padding: 12,
     borderRadius: BORDER_RADIUS,
     gap: 8,
+  },
+  notice: {
+    marginHorizontal: SCREEN_PADDING,
   },
   bannerText: {
     fontSize: 14,

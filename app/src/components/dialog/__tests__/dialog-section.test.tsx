@@ -78,7 +78,8 @@ it("outlines, fills and badges the selected card", () => {
     borderColor: AppDefaultTheme.colors.primary,
     backgroundColor: AppDefaultTheme.colors.surfaceVariant,
   });
-  expect(screen.getByText("Den här leden")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primary });
+  expect(screen.getByTestId("section-badge")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primaryContainer });
+  expect(screen.getByText("Den här leden")).toHaveStyle({ color: AppDefaultTheme.colors.onPrimaryContainer });
 });
 
 it("turns into a warning in the error container colours", () => {

@@ -32,6 +32,7 @@ export function getEvents(feed: EventFeedQuery = {}): Promise<EventPage> {
     method: "GET",
     path: `/events${query({ ...feed })}`,
     endpoint: "/events",
+    anonymousAllowed: true,
   });
 }
 
@@ -50,6 +51,7 @@ export function getEvent(identifier: string): Promise<HikingEvent> {
     method: "GET",
     path: eventPath(identifier),
     endpoint: "/events/{param}",
+    anonymousAllowed: true,
   });
 }
 

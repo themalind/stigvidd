@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { ApiError } from "@/api/api-error";
-import { userAtom } from "@/atoms/auth-atoms";
+import { loginReturnPathAtom, userAtom } from "@/atoms/auth-atoms";
 import EventDetailsScreen from "@/components/event/event-details-screen";
 import { EVENTS_TAB_ROUTES } from "@/components/event/event-routes";
 import { EventParticipants, HikingEvent } from "@/data/types";
@@ -60,10 +60,12 @@ jest.mock("expo-router", () => ({
     back: mockBack,
     canGoBack: () => true,
   },
+  usePathname: () => "/events/event/e1",
 }));
 
+let mockSignedIn = true;
 jest.mock("@/components/auth/auth-provider", () => ({
-  useAuth: () => ({ isAuthenticated: true, logout: jest.fn() }),
+  useAuth: () => ({ isAuthenticated: mockSignedIn, logout: jest.fn() }),
 }));
 
 jest.mock("@/atoms/user-atoms", () => {
@@ -116,7 +118,7 @@ async function show(event: HikingEvent | Error, participants: EventParticipants 
   else mockGetEvent.mockResolvedValue(event);
   mockGetParticipants.mockResolvedValue(participants);
   const rendered = renderWithProviders(<EventDetailsScreen routes={EVENTS_TAB_ROUTES} />, {
-    initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
+    initialAtoms: mockSignedIn ? [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]] : [],
   });
   await flushUntil(() => mockGetEvent.mock.calls.length > 0 && !screen.queryByTestId("loading-indicator"));
   return rendered;
@@ -124,6 +126,7 @@ async function show(event: HikingEvent | Error, participants: EventParticipants 
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSignedIn = true;
   mockJoin.mockResolvedValue(undefined);
   mockAccept.mockResolvedValue(undefined);
   mockRemove.mockResolvedValue(undefined);
@@ -153,6 +156,35 @@ describe("EventDetailsScreen", () => {
     expect(mockJoin).toHaveBeenCalledWith("e1");
   });
 
+  it("shows an open event signed out, and asks for a login on join, returning here after it", async () => {
+    mockSignedIn = false;
+    const { store } = await show(
+      hikingEvent({ permissions: { ...NO_PERMISSIONS, canJoin: true, canMarkInterested: true } }),
+    );
+    await flushUntil(() => screen.queryByText("Gå med") !== null);
+
+    expect(screen.getByText("Kvällsvandring Rya åsar")).toBeTruthy();
+    expect(mockGetParticipants).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getByText("Gå med"));
+    expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
+    fireEvent.press(screen.getByText("Logga in"));
+
+    expect(mockJoin).not.toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
+    expect(store.get(loginReturnPathAtom)).toBe("/events/event/e1");
+  });
+
+  it("asks a signed-out user for a login on interested too", async () => {
+    mockSignedIn = false;
+    await show(hikingEvent({ permissions: { ...NO_PERMISSIONS, canJoin: true, canMarkInterested: true } }));
+    await flushUntil(() => screen.queryByText("Intresserad") !== null);
+
+    fireEvent.press(screen.getByText("Intresserad"));
+
+    expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
+  });
+
   it("puts Accept in place of Join for an invitee", async () => {
     await show(
       hikingEvent({ visibility: "Private", hasPendingInvite: true, permissions: { ...NO_PERMISSIONS, canJoin: true } }),
@@ -163,6 +195,86 @@ describe("EventDetailsScreen", () => {
     fireEvent.press(screen.getByText("Tacka ja"));
     await flushUntil(() => mockAccept.mock.calls.length > 0);
     expect(mockAccept).toHaveBeenCalledWith("e1");
+  });
+
+  it("shows a disabled Full in place of Join on a full event, keeping Interested", async () => {
+    await show(
+      hikingEvent({
+        participantCount: 15,
+        maxParticipants: 15,
+        permissions: { ...NO_PERMISSIONS, canMarkInterested: true },
+      }),
+    );
+    await flushUntil(() => screen.queryByTestId("event-action-bar") !== null);
+
+    expect(screen.getByTestId("event-full")).toBeDisabled();
+    expect(screen.queryByText("Gå med")).toBeNull();
+    expect(screen.getByText("Intresserad")).toBeTruthy();
+  });
+
+  it("shows no Full to someone who already joined a full event", async () => {
+    await show(hikingEvent({ participantCount: 15, maxParticipants: 15, myStatus: "Joined" }));
+    await flushUntil(() => screen.queryByTestId("event-action-bar") !== null);
+
+    expect(screen.queryByTestId("event-full")).toBeNull();
+    expect(screen.getByText("Lämna")).toBeTruthy();
+  });
+
+  it("shows the unread count on the board link once joined", async () => {
+    await show(
+      hikingEvent({
+        myStatus: "Joined",
+        unreadPostCount: 3,
+        permissions: { ...NO_PERMISSIONS, canReadBoard: true },
+      }),
+    );
+    await flushUntil(() => screen.queryByTestId("event-board-link") !== null);
+
+    const badge = screen.getByTestId("event-board-link-badge");
+    expect(badge).toHaveTextContent("3");
+    expect(badge.props.accessibilityLabel).toBe("3 nya inlägg");
+  });
+
+  it("shows no unread badge when everything is read", async () => {
+    await show(
+      hikingEvent({ myStatus: "Joined", unreadPostCount: 0, permissions: { ...NO_PERMISSIONS, canReadBoard: true } }),
+    );
+    await flushUntil(() => screen.queryByTestId("event-board-link") !== null);
+
+    expect(screen.queryByTestId("event-board-link-badge")).toBeNull();
+  });
+
+  it("labels the trail row as a link to the trail", async () => {
+    await show(hikingEvent());
+    await flushUntil(() => screen.queryByTestId("event-trail-link") !== null);
+
+    expect(screen.getByTestId("event-trail-link")).toHaveTextContent(/Visa leden/);
+  });
+
+  it("shows the past banner on an event that has taken place", async () => {
+    await show(hikingEvent({ isPast: true }));
+    await flushUntil(() => screen.queryByText("Kvällsvandring Rya åsar") !== null);
+    expect(screen.getByTestId("event-past-banner")).toHaveTextContent("Evenemanget är avslutat.");
+  });
+
+  it("offers no Leave on an event that has ended, so the action bar goes", async () => {
+    await show(hikingEvent({ isPast: true, myStatus: "Joined" }));
+    await flushUntil(() => screen.queryByTestId("event-past-banner") !== null);
+
+    expect(screen.queryByText("Lämna")).toBeNull();
+    expect(screen.queryByTestId("event-action-bar")).toBeNull();
+  });
+
+  it("leaves a past cancelled event to its cancelled banner", async () => {
+    await show(hikingEvent({ isPast: true, status: "Cancelled" }));
+    await flushUntil(() => screen.queryByTestId("event-cancelled-banner") !== null);
+    expect(screen.queryByTestId("event-past-banner")).toBeNull();
+  });
+
+  it("shows no past banner on an upcoming event", async () => {
+    await show(hikingEvent());
+    await flushUntil(() => screen.queryByText("Kvällsvandring Rya åsar") !== null);
+    expect(screen.queryByTestId("event-past-banner")).toBeNull();
   });
 
   it("shows the cancelled banner and no join", async () => {

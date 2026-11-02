@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AlertDialog from "@/components/alert-dialog";
+import EventRoleChip from "@/components/event/event-role-chip";
 import OverflowMenu from "@/components/overflow-menu";
 import SectionPanel from "@/components/section-panel";
 import { EventInvitee, EventParticipant, EventParticipants, EventPermissions } from "@/data/types";
@@ -36,6 +37,10 @@ export default function EventParticipantsPanel({
   const [toRemove, setToRemove] = useState<EventParticipant | null>(null);
   const list = participants.participants ?? [];
   const invited = participants.invited ?? [];
+  const canChangeRole = (participant: EventParticipant) =>
+    permissions.canChangeRoles && participant.role !== "Organizer";
+  const canRemove = (participant: EventParticipant) =>
+    permissions.canRemoveParticipants && participant.role !== "Organizer" && participant.nickName !== myNickName;
 
   return (
     <SectionPanel
@@ -46,10 +51,8 @@ export default function EventParticipantsPanel({
         <ParticipantRow
           key={participant.userIdentifier}
           participant={participant}
-          canChangeRole={permissions.canChangeRoles && participant.role !== "Organizer"}
-          canRemove={
-            permissions.canRemoveParticipants && participant.role !== "Organizer" && participant.nickName !== myNickName
-          }
+          canChangeRole={canChangeRole(participant)}
+          canRemove={canRemove(participant)}
           onSetRole={onSetRole}
           onRemove={setToRemove}
         />
@@ -105,17 +108,13 @@ type RowProps = {
 function ParticipantRow({ participant, canChangeRole, canRemove, onSetRole, onRemove }: RowProps) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const roleLabel =
-    participant.role === "Organizer"
-      ? t("events.roleOrganizer")
-      : participant.role === "CoHost"
-        ? t("events.roleCoHost")
-        : undefined;
 
   return (
     <View testID={`event-participant-${participant.nickName}`} style={s.row}>
-      <Text style={[s.name, { color: theme.colors.onSurface }]}>{participant.nickName}</Text>
-      {roleLabel ? <Text style={[s.role, { color: theme.colors.primary }]}>{roleLabel}</Text> : null}
+      <View style={s.identity}>
+        <Text style={[s.name, { color: theme.colors.onSurface }]}>{participant.nickName}</Text>
+        <EventRoleChip role={participant.role} testID={`event-participant-role-${participant.nickName}`} />
+      </View>
       <OverflowMenu
         testID={`event-participant-menu-${participant.nickName}`}
         size={18}
@@ -152,13 +151,13 @@ const s = StyleSheet.create({
     gap: 8,
     minHeight: 40,
   },
-  name: {
+  identity: {
     flex: 1,
-    fontSize: 14,
+    gap: 3,
+    paddingVertical: 4,
   },
-  role: {
-    fontSize: 12,
-    fontFamily: "Inter_600SemiBold",
+  name: {
+    fontSize: 14,
   },
   invited: {
     gap: 2,

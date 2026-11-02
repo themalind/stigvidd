@@ -137,11 +137,12 @@ stigvidd/
   can be liked, and the popular ones show on the home screen. Once published, a trail outlives
   the hike it came from and the account that sent it — only the submitter's name is removed
 - Hiking events: organize a walk on a trail, along a route copied from one of your own hikes
-  (trimmed first), or at a meeting point. Open events can be found by anyone signed in, also on
-  the organizer's profile for their friends; private ones only by invitation. Join or mark yourself interested,
-  invite people by nickname, share a link that opens the event in the app (or a preview page
-  without it), and talk on the event's board with push for new posts. Co-hosts can edit and
-  invite, and take over if the organizer leaves
+  (trimmed first), or at a meeting point. Open events can be browsed by anyone, signed in or not,
+  also on the organizer's profile for their friends; private ones only by invitation. Join or mark
+  yourself interested, invite people by nickname, share a link that opens the event in the app (or
+  a preview page without it), and talk on the event's board with push for new posts and an unread
+  count on the event. A full event cannot be joined, and an ended one can be neither joined nor
+  left. Co-hosts can edit and invite, and take over if the organizer leaves
 - Report offensive or incorrect reviews, obstacles, shared hike photos, events, board posts and
   event cover images for moderation; a report hides the content until an admin decides
 - Block other users; banned accounts keep reading but can no longer post

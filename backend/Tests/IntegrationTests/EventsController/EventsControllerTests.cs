@@ -186,6 +186,58 @@ public class EventsControllerTests : IClassFixture<StigViddWebApplicationFactory
     }
 
     [Fact]
+    public async Task Feed_SignedOut_ListsOpenEventsButNotPrivateOnes()
+    {
+        var open = await CreateAsync(NaturElskaren, Request());
+        var hidden = await CreateAsync(NaturElskaren, Request("Private"));
+
+        var feed = await _factory.CreateClient().GetFromJsonAsync<EventPageResponse>(BASE_URL, TestContext.Current.CancellationToken);
+
+        feed.Should().NotBeNull();
+        var identifiers = feed.Items.Select(i => i.Identifier).ToList();
+        identifiers.Should().Contain(open.Identifier);
+        identifiers.Should().NotContain(hidden.Identifier);
+        feed.Items.Single(i => i.Identifier == open.Identifier).MyRole.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Get_AnOpenEventSignedOut_ShowsItAsJoinableWithoutMembership()
+    {
+        var created = await CreateAsync(NaturElskaren, Request());
+
+        var fetched = await _factory.CreateClient().GetFromJsonAsync<EventResponse>($"{BASE_URL}/{created.Identifier}", TestContext.Current.CancellationToken);
+
+        fetched.Should().NotBeNull();
+        fetched.Title.Should().Be("Kvällsvandring");
+        fetched.MyRole.Should().BeNull();
+        fetched.MyStatus.Should().BeNull();
+        fetched.Permissions.CanJoin.Should().BeTrue();
+        fetched.Permissions.CanEdit.Should().BeFalse();
+        fetched.Permissions.CanReadBoard.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Get_APrivateEventSignedOut_Is404WithEventGone()
+    {
+        var created = await CreateAsync(NaturElskaren, Request("Private"));
+
+        var response = await _factory.CreateClient().GetAsync($"{BASE_URL}/{created.Identifier}", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await CodeOf(response)).Should().Be("event_gone");
+    }
+
+    [Fact]
+    public async Task Join_SignedOut_Is401()
+    {
+        var created = await CreateAsync(NaturElskaren, Request());
+
+        var response = await _factory.CreateClient().PostAsync($"{BASE_URL}/{created.Identifier}/join", null, TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task Get_APrivateEventIAmNotIn_Is404WithEventGone()
     {
         var created = await CreateAsync(NaturElskaren, Request("Private"));

@@ -23,7 +23,6 @@ public class EventLoader
         _userBlockService = userBlockService;
     }
 
-    // Hidden means blocked by the viewer, so naming the reason tells them nothing new. keep-comment: why organizer_blocked is safe to return
     public async Task<Result<LoadedEvent>> LoadAsync(string userIdentifier, string identifier, CancellationToken ctoken)
     {
         var viewer = await ResolveUserAsync(userIdentifier, ctoken);
@@ -31,7 +30,24 @@ public class EventLoader
         if (viewer.Message is not null)
             return Result.Fail<LoadedEvent>(viewer.Message);
 
-        var detail = await _eventRepository.GetDetailAsync(identifier, viewer.Value, ctoken);
+        return await LoadForViewerAsync(viewer.Value, identifier, ctoken);
+    }
+
+    // A signed-out reader is viewer 0, who matches no participant or invitation, so only an open event shows. keep-comment: same as the anonymous share page
+    public async Task<Result<LoadedEvent>> LoadForReadAsync(string? userIdentifier, string identifier, CancellationToken ctoken)
+    {
+        if (userIdentifier is null)
+            return await LoadForViewerAsync(AnonymousViewerId, identifier, ctoken);
+
+        return await LoadAsync(userIdentifier, identifier, ctoken);
+    }
+
+    public const int AnonymousViewerId = 0;
+
+    // Hidden means blocked by the viewer, so naming the reason tells them nothing new. keep-comment: why organizer_blocked is safe to return
+    private async Task<Result<LoadedEvent>> LoadForViewerAsync(int viewerId, string identifier, CancellationToken ctoken)
+    {
+        var detail = await _eventRepository.GetDetailAsync(identifier, viewerId, ctoken);
 
         if (detail.Status == RepositoryResultStatus.NotFound)
             return Result.Fail<LoadedEvent>(EventErrors.Gone());
@@ -44,7 +60,9 @@ public class EventLoader
         if (!membership.CanView())
             return Result.Fail<LoadedEvent>(EventErrors.Gone());
 
-        var hidden = await _userBlockService.GetHiddenUserIdsForReadAsync(viewer.Value, ctoken);
+        var hidden = viewerId == AnonymousViewerId
+            ? []
+            : await _userBlockService.GetHiddenUserIdsForReadAsync(viewerId, ctoken);
         var organizerHidden = detail.Value.OrganizerUserId is int organizerId && hidden.Contains(organizerId);
         var isInside = detail.Value.MyStatus is EventParticipantStatus.Joined or EventParticipantStatus.Interested
             || detail.Value.HasPendingInvite;
@@ -52,7 +70,7 @@ public class EventLoader
         if (organizerHidden && !isInside)
             return Result.Fail<LoadedEvent>(new Message(404, "The event is arranged by someone you have blocked.", EventErrorCodes.OrganizerBlocked));
 
-        return Result.Ok(new LoadedEvent(viewer.Value, detail.Value, membership, !organizerHidden, hidden));
+        return Result.Ok(new LoadedEvent(viewerId, detail.Value, membership, !organizerHidden, hidden));
     }
 
     public async Task<Result<int>> ResolveUserAsync(string userIdentifier, CancellationToken ctoken)

@@ -8,16 +8,15 @@
 import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
+import ScreenTitleBar from "@/components/screen-title-bar";
 import SegmentedControl from "@/components/segmented-control";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
 import TrailItem from "@/components/trail/trail-list/trail-item";
-import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
 import { useRealUserLocation } from "@/hooks/useUserLocation";
 import { guardedNavigate } from "@/utils/navigation";
-import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAtom } from "jotai";
@@ -99,18 +98,17 @@ export default function TrailsScreen() {
   return (
     <View testID="trails-screen" style={[s.container, { backgroundColor: theme.colors.background }]}>
       <View style={[s.stickyHeader, { backgroundColor: theme.colors.background }]}>
-        <View style={s.headerRow}>
-          <View style={s.titleRow}>
-            <Image contentFit="contain" source={hikers} style={s.hikers} />
-            <Text style={[s.titleText, { color: theme.colors.onBackground }]}>{t("trailList.title")}</Text>
-          </View>
-          <Pressable testID="trails-filter-button" onPress={() => setFilterModalVisible(true)}>
-            <View style={[s.filterButtonInner, { backgroundColor: theme.colors.secondary }]}>
-              <MaterialIcons name="filter-list" size={24} color={theme.colors.onSecondary} />
-              <Text style={[s.filterButtonText, { color: theme.colors.onSecondary }]}>{t("trailList.filter")}</Text>
-            </View>
-          </Pressable>
-        </View>
+        <ScreenTitleBar
+          title={t("trailList.title")}
+          leading={<Image contentFit="contain" source={hikers} style={s.hikers} />}
+          action={{
+            testID: "trails-filter-button",
+            label: t("trailList.filter"),
+            icon: "filter-list",
+            onPress: () => setFilterModalVisible(true),
+          }}
+          style={s.headerRow}
+        />
         {hasContributions && (
           <SegmentedControl
             testID="trails-source"
@@ -220,35 +218,10 @@ const s = StyleSheet.create({
     width: 25,
   },
   headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     paddingBottom: 20,
   },
   sourceToggle: {
     marginBottom: 10,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  titleText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
-  },
-  filterButtonInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    padding: 5,
-    paddingRight: 10,
-    borderRadius: BORDER_RADIUS,
-  },
-  filterButtonText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
   },
   emptyContainer: {
     alignItems: "center",

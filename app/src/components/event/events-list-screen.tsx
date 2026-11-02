@@ -7,38 +7,37 @@
 
 import { incomingEventInvitationsAtom } from "@/atoms/event-atoms";
 import { useAuth } from "@/components/auth/auth-provider";
-import SignInPrompt from "@/components/auth/sign-in-prompt";
+import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import InlineError from "@/components/inline-error";
 import LoadingIndicator from "@/components/loading-indicator";
+import ScreenTitleBar from "@/components/screen-title-bar";
 import SectionPanel from "@/components/section-panel";
-import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
+import { SCREEN_PADDING } from "@/constants/constants";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { EventSummary } from "@/data/types";
 import { useEventMutations } from "@/hooks/events/useEventMutations";
 import { useEventFeed, useMyEvents } from "@/hooks/events/useEventQueries";
+import { useReturnHereAfterLogin } from "@/hooks/useReturnHereAfterLogin";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { useAtomValue } from "jotai";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
-import { Button, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import EventCard from "./event-card";
 import EventInvitationRow from "./event-invitation-row";
+import EventsPastSection from "./events-past-section";
 import { EVENTS_TAB_ROUTES, openEvent as openEventIn } from "./event-routes";
 
 const openEvent = (identifier: string) => openEventIn(EVENTS_TAB_ROUTES, identifier);
 
 export default function EventsListScreen() {
-  const { isAuthenticated } = useAuth();
-  const { t } = useTranslation();
-
-  if (!isAuthenticated) return <SignInPrompt message={t("events.signInToSee")} />;
-  return <EventsList />;
-}
-
-function EventsList() {
   const theme = useTheme();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
+  const [showAuthDialog, setAuthDialog] = useState(false);
+  const returnHere = useReturnHereAfterLogin();
   const invitations = useAtomValue(incomingEventInvitationsAtom);
   const mine = useMyEvents(false);
   const feed = useEventFeed();
@@ -53,8 +52,11 @@ function EventsList() {
   );
 
   const refresh = () => {
-    void invitations.refetch();
-    void mine.refetch();
+    // refetch ignores enabled, so a signed-out refresh would ask for invitations and own events. keep-comment: why the guard
+    if (isAuthenticated) {
+      void invitations.refetch();
+      void mine.refetch();
+    }
     void feed.refetch();
   };
 
@@ -65,20 +67,6 @@ function EventsList() {
 
   const header = (
     <View style={s.header}>
-      <View style={s.titleRow}>
-        <Text style={[s.title, { color: theme.colors.onBackground }]}>{t("events.title")}</Text>
-        <Button
-          testID="events-create"
-          mode="contained"
-          icon="plus"
-          compact
-          onPress={() => guardedNavigate(() => router.navigate("/(tabs)/events/create"))}
-          style={{ borderRadius: BORDER_RADIUS }}
-        >
-          {t("events.form.create")}
-        </Button>
-      </View>
-
       {invitations.data && invitations.data.length > 0 ? (
         <SectionPanel title={t("events.invitations")} testID="event-invitations">
           {invitations.data.map((invitation) => (
@@ -118,57 +106,69 @@ function EventsList() {
   };
 
   return (
-    <FlatList
-      testID="events-list"
-      style={{ backgroundColor: theme.colors.background }}
-      contentContainerStyle={s.content}
-      data={feedEvents}
-      keyExtractor={(item) => item.identifier}
-      renderItem={renderItem}
-      ListHeaderComponent={header}
-      ListEmptyComponent={empty}
-      ListFooterComponent={
-        feed.isFetchingNextPage ? (
-          <LoadingIndicator />
-        ) : (
-          <Button
-            testID="events-past-link"
-            mode="text"
-            icon="history"
-            onPress={() => guardedNavigate(() => router.navigate("/(tabs)/events/past"))}
-          >
-            {t("events.pastTitle")}
-          </Button>
-        )
-      }
-      onEndReachedThreshold={0.5}
-      onEndReached={() => {
-        if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
-      }}
-      refreshControl={<RefreshControl refreshing={feed.isRefetching && !feed.isFetchingNextPage} onRefresh={refresh} />}
-    />
+    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
+      <ScreenTitleBar
+        title={t("events.title")}
+        leading={<MaterialCommunityIcons name="calendar-month-outline" size={25} color={theme.colors.onBackground} />}
+        action={{
+          testID: "events-create",
+          label: t("events.form.create"),
+          icon: "add",
+          onPress: () =>
+            isAuthenticated ? guardedNavigate(() => router.navigate("/(tabs)/events/create")) : setAuthDialog(true),
+        }}
+        style={s.titleBar}
+      />
+      <FlatList
+        testID="events-list"
+        contentContainerStyle={s.content}
+        data={feedEvents}
+        keyExtractor={(item) => item.identifier}
+        renderItem={renderItem}
+        ListHeaderComponent={header}
+        ListEmptyComponent={empty}
+        ListFooterComponent={
+          feed.isFetchingNextPage ? (
+            <LoadingIndicator />
+          ) : isAuthenticated ? (
+            <EventsPastSection onOpen={openEvent} />
+          ) : null
+        }
+        onEndReachedThreshold={0.5}
+        onEndReached={() => {
+          if (feed.hasNextPage && !feed.isFetchingNextPage) void feed.fetchNextPage();
+        }}
+        refreshControl={
+          <RefreshControl refreshing={feed.isRefetching && !feed.isFetchingNextPage} onRefresh={refresh} />
+        }
+      />
+      <NotAuthenticatedDialog
+        visible={showAuthDialog}
+        onDissmiss={() => setAuthDialog(false)}
+        infoMessage={t("events.signInToCreate")}
+        onBeforeNavigate={returnHere}
+      />
+    </View>
   );
 }
 
 const s = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  titleBar: {
+    paddingHorizontal: SCREEN_PADDING,
+    paddingVertical: 10,
+  },
   content: {
     paddingHorizontal: SCREEN_PADDING,
+    paddingTop: 4,
     paddingBottom: 24,
     gap: 12,
   },
   header: {
     gap: 12,
     marginHorizontal: -SCREEN_PADDING,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginHorizontal: SCREEN_PADDING,
-  },
-  title: {
-    fontSize: 22,
-    fontFamily: "Inter_600SemiBold",
   },
   group: {
     gap: 12,

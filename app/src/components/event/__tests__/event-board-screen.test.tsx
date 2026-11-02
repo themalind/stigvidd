@@ -12,6 +12,7 @@ import { EventBoard, EventPost, HikingEvent } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { FlatList } from "react-native";
 
 const mockGetEvent = jest.fn();
 const mockGetPosts = jest.fn();
@@ -179,6 +180,49 @@ describe("EventBoardScreen", () => {
 
     await flushUntil(() => screen.queryByTestId("event-post-editing") === null);
     expect(screen.queryByTestId("event-post-editing")).toBeNull();
+  });
+
+  it("labels the pinned box and scrolls to the pinned post when it is pressed", async () => {
+    const scrollToIndex = jest.spyOn(FlatList.prototype, "scrollToIndex").mockImplementation(() => undefined);
+    const pinnedPost = post({
+      identifier: "p2",
+      body: "Samling 07.45",
+      isPinned: true,
+      createdAt: "2026-11-01T09:00:00Z",
+    });
+    mockGetEvent.mockResolvedValue(EVENT);
+    mockGetPosts.mockResolvedValue({ ...board([pinnedPost, post()]), pinned: [pinnedPost] });
+    renderWithProviders(<EventBoardScreen />, {
+      initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
+    });
+    await flushUntil(() => screen.queryByTestId("event-pinned-p2") !== null);
+
+    expect(screen.getByTestId("event-board-pinned")).toHaveTextContent(/Fäst/);
+    fireEvent.press(screen.getByTestId("event-pinned-p2"));
+    await flushUntil(() => scrollToIndex.mock.calls.length > 0);
+
+    expect(scrollToIndex).toHaveBeenCalledWith({ index: 1, viewPosition: 0.5 });
+    scrollToIndex.mockRestore();
+  });
+
+  it("loads older pages until a pressed pin that is not loaded yet appears", async () => {
+    const scrollToIndex = jest.spyOn(FlatList.prototype, "scrollToIndex").mockImplementation(() => undefined);
+    const oldPin = post({ identifier: "old", body: "Gammal info", isPinned: true, createdAt: "2026-10-30T09:00:00Z" });
+    mockGetEvent.mockResolvedValue(EVENT);
+    mockGetPosts
+      .mockResolvedValueOnce({ ...board([post()]), pinned: [oldPin], nextCursor: "c1" })
+      .mockResolvedValueOnce({ ...board([oldPin]), pinned: [oldPin] });
+    renderWithProviders(<EventBoardScreen />, {
+      initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
+    });
+    await flushUntil(() => screen.queryByTestId("event-pinned-old") !== null);
+
+    fireEvent.press(screen.getByTestId("event-pinned-old"));
+    await flushUntil(() => scrollToIndex.mock.calls.length > 0);
+
+    expect(mockGetPosts).toHaveBeenCalledTimes(2);
+    expect(scrollToIndex).toHaveBeenCalledWith({ index: 1, viewPosition: 0.5 });
+    scrollToIndex.mockRestore();
   });
 
   it("offers no edit on someone else's post", async () => {

@@ -14,7 +14,6 @@ export default function EventsStackLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="past" />
       <Stack.Screen name="event/[identifier]" />
       <Stack.Screen name="board/[identifier]" />
       <Stack.Screen name="trail/[identifier]" />

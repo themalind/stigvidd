@@ -96,17 +96,25 @@ public class EventService : IEventService
         return await GetAsync(userIdentifier, created.Value, ctoken);
     }
 
-    public async Task<Result<EventPageResponse>> GetFeedAsync(string userIdentifier, EventFeedQuery query, CancellationToken ctoken)
+    public async Task<Result<EventPageResponse>> GetFeedAsync(string? userIdentifier, EventFeedQuery query, CancellationToken ctoken)
     {
         if (!EventCursor.TryDecode(query.Cursor, out var after))
             return Result.Fail<EventPageResponse>(new Message(400, "Invalid cursor."));
 
-        var viewer = await _loader.ResolveUserAsync(userIdentifier, ctoken);
+        var viewerId = EventLoader.AnonymousViewerId;
+        int[] hidden = [];
 
-        if (viewer.Message is not null)
-            return Result.Fail<EventPageResponse>(viewer.Message);
+        if (userIdentifier is not null)
+        {
+            var viewer = await _loader.ResolveUserAsync(userIdentifier, ctoken);
 
-        var hidden = await _userBlockService.GetHiddenUserIdsForReadAsync(viewer.Value, ctoken);
+            if (viewer.Message is not null)
+                return Result.Fail<EventPageResponse>(viewer.Message);
+
+            viewerId = viewer.Value;
+            hidden = await _userBlockService.GetHiddenUserIdsForReadAsync(viewerId, ctoken);
+        }
+
         var origin = query.Lat.HasValue && query.Lon.HasValue
             ? new Coordinate((double)query.Lon.Value, (double)query.Lat.Value)
             : null;
@@ -115,7 +123,7 @@ public class EventService : IEventService
             : null;
 
         var filter = new EventFeedFilter(
-            viewer.Value,
+            viewerId,
             hidden,
             DateTime.UtcNow,
             query.Trail,
@@ -166,9 +174,9 @@ public class EventService : IEventService
         return Result.Ok(_factory.CreatePreview(card.Value));
     }
 
-    public async Task<Result<EventResponse>> GetAsync(string userIdentifier, string identifier, CancellationToken ctoken)
+    public async Task<Result<EventResponse>> GetAsync(string? userIdentifier, string identifier, CancellationToken ctoken)
     {
-        var loaded = await _loader.LoadAsync(userIdentifier, identifier, ctoken);
+        var loaded = await _loader.LoadForReadAsync(userIdentifier, identifier, ctoken);
 
         if (loaded.Message is not null || loaded.Value is null)
             return Result.Fail<EventResponse>(loaded.Message ?? EventErrors.Gone());
@@ -186,7 +194,19 @@ public class EventService : IEventService
             routePath = route.Value;
         }
 
-        return Result.Ok(_factory.Create(detail, loaded.Value.Membership, loaded.Value.ShowOrganizer, routePath));
+        var response = _factory.Create(detail, loaded.Value.Membership, loaded.Value.ShowOrganizer, routePath);
+
+        if (detail.MyStatus == EventParticipantStatus.Joined)
+        {
+            var unread = await _eventRepository.CountUnreadPostsAsync(detail.Event.Id, loaded.Value.ViewerId, loaded.Value.HiddenUserIds, ctoken);
+
+            if (!unread.IsSuccess)
+                return Result.Fail<EventResponse>(new Message(500, "An error occurred while counting unread posts."));
+
+            response.UnreadPostCount = unread.Value;
+        }
+
+        return Result.Ok(response);
     }
 
     public async Task<Result<EventResponse>> UpdateAsync(string userIdentifier, string identifier, UpdateEventRequest request, CancellationToken ctoken)

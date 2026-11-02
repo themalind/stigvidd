@@ -758,7 +758,7 @@ const endpoints: Endpoint[] = [
     call: () => getEvents({ lat: 57.72, lon: 12.94, radiusKm: 25, cursor: "a+b/c" }),
     method: "GET",
     path: "/events?lat=57.72&lon=12.94&radiusKm=25&cursor=a%2Bb%2Fc",
-    auth: "required",
+    auth: "optional",
     carriesStatus: true,
   },
   {
@@ -774,7 +774,7 @@ const endpoints: Endpoint[] = [
     call: () => getEvent("e1"),
     method: "GET",
     path: "/events/e1",
-    auth: "required",
+    auth: "optional",
     carriesStatus: true,
   },
   {

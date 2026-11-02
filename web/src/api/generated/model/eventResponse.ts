@@ -51,5 +51,6 @@ export interface EventResponse {
   /** @nullable */
   myStatus?: string | null;
   hasPendingInvite?: boolean;
+  unreadPostCount?: number;
   permissions: EventPermissionsResponse;
 }

@@ -60,6 +60,7 @@ export interface HikingEvent {
   myRole?: EventRole | null;
   myStatus?: EventParticipantStatus | null;
   hasPendingInvite: boolean;
+  unreadPostCount?: number;
   permissions: EventPermissions;
 }
 

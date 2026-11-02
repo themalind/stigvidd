@@ -230,6 +230,30 @@ public class EventParticipationServiceTests : TestBase
     }
 
     [Fact]
+    public async Task LeaveAsync_APastEvent_IsRefusedAndKeepsTheRow()
+    {
+        var factory = Seeded(With(EventRepositoryTests.NewEvent(1, organizerId: 2, startsInDays: -5), 1));
+
+        var result = await Service(factory).LeaveAsync(User1, "event-1", TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.Code.Should().Be(EventErrorCodes.EventPast);
+        (await RowOf(factory, 1)).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task LeaveAsync_ACancelledUpcomingEvent_IsAllowed()
+    {
+        var factory = Seeded(With(EventRepositoryTests.NewEvent(1, organizerId: 2, status: EventStatus.Cancelled), 1));
+
+        var result = await Service(factory).LeaveAsync(User1, "event-1", TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        (await RowOf(factory, 1)).Should().BeNull();
+    }
+
+    [Fact]
     public async Task LeaveAsync_AnEventThatIsGone_IsOk()
     {
         var result = await Service(CreateSeededFactory()).LeaveAsync(User1, "no-such-event", TestContext.Current.CancellationToken);

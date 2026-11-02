@@ -25,7 +25,6 @@ export function useEventFeed() {
     queryFn: ({ pageParam }) => getEvents({ cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: nextCursor,
-    enabled: !!user?.id,
     staleTime: EVENTS_STALE_TIME,
   });
 }
@@ -42,14 +41,14 @@ export function useOrganizerEvents(organizerIdentifier: string | undefined) {
   });
 }
 
-export function useMyEvents(past: boolean) {
+export function useMyEvents(past: boolean, enabled = true) {
   const user = useAtomValue(userAtom);
   return useInfiniteQuery({
     queryKey: ["events", "mine", user?.id, past],
     queryFn: ({ pageParam }) => getMyEvents({ past, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: nextCursor,
-    enabled: !!user?.id,
+    enabled: enabled && !!user?.id,
     staleTime: EVENTS_STALE_TIME,
   });
 }
@@ -62,7 +61,7 @@ export function useEvent(identifier: string | undefined) {
       if (!identifier) throw new Error("expected an event identifier");
       return getEvent(identifier);
     },
-    enabled: !!user?.id && !!identifier,
+    enabled: !!identifier,
     staleTime: EVENTS_STALE_TIME,
     retry: (failureCount, error) => !isApiStatus(error, 404) && retryUnlessAuthFailure(failureCount, error),
   });

@@ -28,11 +28,12 @@ public class EventMembershipTests
         bool isPast = false,
         bool registrationClosed = false,
         EventParticipantStatus? participantStatus = null,
-        bool hasPendingInvite = false)
+        bool hasPendingInvite = false,
+        bool isFull = false)
     {
         return new EventMembership(
             visibility, status, moderation, isPast, registrationClosed, AllowParticipantInvites: false,
-            participantStatus is null ? null : Participant, participantStatus, hasPendingInvite);
+            participantStatus is null ? null : Participant, participantStatus, hasPendingInvite, isFull);
     }
 
     public static TheoryData<string, EventParticipantRole, bool> RightsTable()
@@ -183,6 +184,7 @@ public class EventMembershipTests
             { "a past event", Outsider(isPast: true), false },
             { "an event past its deadline", Outsider(registrationClosed: true), false },
             { "a reported event", Outsider(moderation: ModerationState.HiddenPendingReview), false },
+            { "a full event", Outsider(isFull: true), false },
         };
     }
 
@@ -204,6 +206,7 @@ public class EventMembershipTests
             { "a private event you were invited to", Outsider(visibility: EventVisibility.Private, hasPendingInvite: true), 403, EventErrorCodes.NotAllowed },
             { "a reported event you are interested in", Outsider(moderation: ModerationState.HiddenPendingReview, participantStatus: EventParticipantStatus.Interested), 403, EventErrorCodes.NotAllowed },
             { "an event past its deadline", Outsider(registrationClosed: true), 409, EventErrorCodes.RegistrationClosed },
+            { "a full event", Outsider(isFull: true), 409, EventErrorCodes.EventFull },
         };
     }
 

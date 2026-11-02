@@ -15,6 +15,7 @@ const mockCreatePost = jest.fn();
 
 jest.mock("@/api/events", () => ({
   createEventPost: (...args: unknown[]) => mockCreatePost(...args),
+  markEventPostsRead: () => Promise.resolve(),
 }));
 
 const BOARD = ["events", "board", "e1", "u1"];
@@ -36,6 +37,15 @@ function render() {
   }
 
   return {
+    queryClient: rendered.queryClient,
+    markRead: async () => {
+      const current = () => {
+        if (!hook) throw new Error("expected the hook to have rendered");
+        return hook.markReadMutation;
+      };
+      act(() => current().mutate("2026-11-01T10:00:00Z"));
+      await flushUntil(() => current().isError || current().isSuccess);
+    },
     post: async () => {
       const current = () => {
         if (!hook) throw new Error("expected the hook to have rendered");
@@ -62,6 +72,22 @@ describe("useEventBoardMutations", () => {
     expect(invalidated(BOARD)).toBe(true);
     expect(invalidated(OTHER_BOARD)).toBe(false);
     expect(invalidated(FEED)).toBe(false);
+  });
+
+  it("clears the unread count on this event's detail once the board is read", async () => {
+    const { queryClient, markRead } = render();
+    const detail = ["events", "detail", "e1", "u1"];
+    const otherDetail = ["events", "detail", "e2", "u1"];
+    for (const key of [detail, otherDetail]) {
+      queryClient.setQueryDefaults(key, { gcTime: Infinity });
+      queryClient.setQueryData(key, { identifier: key[2], unreadPostCount: 3 });
+    }
+    queryClient.setQueryData(FEED, { pages: [], pageParams: [] });
+
+    await markRead();
+
+    expect(queryClient.getQueryData(detail)).toEqual({ identifier: "e1", unreadPostCount: 0 });
+    expect(queryClient.getQueryData(otherDetail)).toEqual({ identifier: "e2", unreadPostCount: 3 });
   });
 
   it("refreshes every event query when a post is refused", async () => {

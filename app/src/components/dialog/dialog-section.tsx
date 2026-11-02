@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import Tag from "@/components/tag";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
@@ -50,9 +51,9 @@ export default function DialogSection({
         {icon}
         <Text style={[s.heading, { color: headingColor }]}>{heading}</Text>
         {badge && (
-          <Text style={[s.badge, { color: theme.colors.onPrimary, backgroundColor: theme.colors.primary }]}>
-            {badge}
-          </Text>
+          <View style={s.badge}>
+            <Tag testID={testID ? `${testID}-badge` : undefined} label={badge} />
+          </View>
         )}
       </View>
       {text && <Text style={[s.text, { color: textColor }]}>{text}</Text>}
@@ -108,14 +109,6 @@ const s = StyleSheet.create({
   },
   badge: {
     marginLeft: "auto",
-    fontSize: 11,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BORDER_RADIUS,
-    overflow: "hidden",
   },
   text: {
     fontSize: 13,

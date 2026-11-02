@@ -18,7 +18,7 @@ import {
 import { retryUnlessAuthFailure } from "@/api/unauthorized";
 import { userAtom } from "@/atoms/auth-atoms";
 import { EVENT_BOARD_STALE_TIME } from "@/constants/cache";
-import { EventBoard, EventPage, EventPost } from "@/data/types";
+import { EventBoard, EventPage, EventPost, HikingEvent } from "@/data/types";
 import { InfiniteData, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
@@ -138,6 +138,10 @@ export function useEventBoardMutations(identifier: string) {
         };
       queryClient.setQueriesData<InfiniteData<EventPage>>({ queryKey: ["events", "mine"] }, clearUnread);
       queryClient.setQueriesData<InfiniteData<EventPage>>({ queryKey: ["events", "feed"] }, clearUnread);
+      queryClient.setQueriesData<HikingEvent>(
+        { queryKey: ["events", "detail", identifier] },
+        (event) => event && { ...event, unreadPostCount: 0 },
+      );
     },
   });
 

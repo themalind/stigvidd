@@ -35,6 +35,8 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/Trails/markers",
         "GET /api/v1/Trails/popular",
         "GET /api/v1/Trails/popular-contributions",
+        "GET /api/v1/Events",
+        "GET /api/v1/Events/{identifier}",
         "GET /api/v1/Events/{identifier}/preview",
         "GET /api/v1/Trails/{identifier}",
         "GET /api/v1/Trails/{identifier}/card",

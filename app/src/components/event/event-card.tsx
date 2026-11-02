@@ -16,11 +16,12 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import EventDateBadge from "./event-date-badge";
-import EventVisibilityChip from "./event-visibility-chip";
+import EventTags from "./event-tags";
 
 type Props = {
   event: EventSummary;
   onPress: (identifier: string) => void;
+  isPast?: boolean;
 };
 
 function useStatusText(event: EventSummary): string | undefined {
@@ -32,7 +33,7 @@ function useStatusText(event: EventSummary): string | undefined {
   return undefined;
 }
 
-function EventCard({ event, onPress }: Props) {
+function EventCard({ event, onPress, isPast = false }: Props) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
   const status = useStatusText(event);
@@ -63,9 +64,9 @@ function EventCard({ event, onPress }: Props) {
     >
       {event.imageUrl ? <Image source={{ uri: event.imageUrl }} style={s.cover} contentFit="cover" /> : null}
       <View style={s.body}>
-        <EventDateBadge startsAt={event.startsAt} muted={isCancelled} />
+        <EventDateBadge startsAt={event.startsAt} muted={isCancelled || isPast} />
         <View style={s.text}>
-          <EventVisibilityChip visibility={event.visibility} />
+          <EventTags visibility={event.visibility} isPast={isPast && !isCancelled} />
           <Text style={[s.title, { color: theme.colors.onSurface }, isCancelled && s.struck]} numberOfLines={2}>
             {event.title}
           </Text>
@@ -139,5 +140,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+    marginLeft: "auto",
   },
 });

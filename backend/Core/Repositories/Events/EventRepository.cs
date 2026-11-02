@@ -218,6 +218,31 @@ public class EventRepository : IEventRepository
         }
     }
 
+    public async Task<RepositoryResult<int>> CountUnreadPostsAsync(int eventId, int viewerId, int[] hiddenUserIds, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var count = await context.EventParticipants
+                .AsNoTracking()
+                .Where(p => p.EventId == eventId && p.UserId == viewerId && p.Status == EventParticipantStatus.Joined)
+                .Select(p => context.EventPosts.Count(post =>
+                    post.EventId == eventId
+                    && post.UserId != viewerId
+                    && (post.UserId == null || !hiddenUserIds.Contains(post.UserId.Value))
+                    && (p.LastReadPostAt == null || post.CreatedAt > p.LastReadPostAt)))
+                .FirstOrDefaultAsync(ctoken);
+
+            return RepositoryResult<int>.Success(count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "EventRepository: CountUnreadPostsAsync -> Something went wrong when counting unread posts on event {EventId}.", eventId);
+            return RepositoryResult<int>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<IReadOnlyList<EventCard>>> GetFeedAsync(EventFeedFilter query, CancellationToken ctoken)
     {
         try

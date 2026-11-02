@@ -16,7 +16,8 @@ public sealed record EventMembership(
     bool AllowParticipantInvites,
     EventParticipantRole? Role,
     EventParticipantStatus? ParticipantStatus,
-    bool HasPendingInvite)
+    bool HasPendingInvite,
+    bool IsFull = false)
 {
     public static EventMembership Of(EventDetail detail, DateTime now)
     {
@@ -31,7 +32,8 @@ public sealed record EventMembership(
             e.AllowParticipantInvites,
             detail.MyRole,
             detail.MyStatus,
-            detail.HasPendingInvite);
+            detail.HasPendingInvite,
+            IsFull: e.MaxParticipants.HasValue && e.ParticipantCount >= e.MaxParticipants.Value);
     }
 
     private bool IsJoined
@@ -63,7 +65,7 @@ public sealed record EventMembership(
         return Visibility == EventVisibility.Open && ModerationState == ModerationState.Visible;
     }
 
-    // A past or cancelled event is frozen except for delete and leave, so moving StartsAt cannot revive it. keep-comment: closes reuse of an old event past the per-day cap
+    // A past or cancelled event is frozen except for delete, and leave while only cancelled, so moving StartsAt cannot revive it. keep-comment: closes reuse of an old event past the per-day cap
     // A reported event is not edited until an admin has looked, so the report is judged on the text it was made about. keep-comment: as with reviews, which the query filter hides from their author
     public Message? EditRefusal()
     {
@@ -164,6 +166,12 @@ public sealed record EventMembership(
         return IsHost;
     }
 
+    // Who took part in a past event is history, so it can no longer be left. keep-comment: a cancelled upcoming event can still be left
+    public Message? LeaveRefusal()
+    {
+        return IsPast ? EventErrors.Past() : null;
+    }
+
     public bool CanJoin()
     {
         return JoinRefusal() is null;
@@ -175,7 +183,12 @@ public sealed record EventMembership(
         if (ModerationState != ModerationState.Visible && ParticipantStatus is null)
             return EventErrors.Gone();
 
-        return ClosedRefusal() ?? AccessRefusal() ?? DeadlineRefusal();
+        return ClosedRefusal() ?? AccessRefusal() ?? DeadlineRefusal() ?? CapacityRefusal();
+    }
+
+    private Message? CapacityRefusal()
+    {
+        return IsFull ? new Message(409, "The event is full.", EventErrorCodes.EventFull) : null;
     }
 
     // The event's own state only, not who is asking: the part an invitation's accept shares with join. keep-comment: accept skips the open-event and moderation checks

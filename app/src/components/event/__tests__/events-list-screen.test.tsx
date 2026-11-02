@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { userAtom } from "@/atoms/auth-atoms";
+import { loginReturnPathAtom, userAtom } from "@/atoms/auth-atoms";
 import EventsListScreen from "@/components/event/events-list-screen";
 import { EventSummary } from "@/data/types";
 import { flushUntil } from "@/test/flush";
@@ -32,12 +32,14 @@ jest.mock("@/api/events", () => ({
 
 jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn(), canGoBack: () => true },
+  usePathname: () => "/events",
 }));
 
 jest.mock("@/utils/navigation", () => ({ guardedNavigate: (fn: () => void) => fn() }));
 
+let mockSignedIn = true;
 jest.mock("@/components/auth/auth-provider", () => ({
-  useAuth: () => ({ isAuthenticated: true, logout: jest.fn() }),
+  useAuth: () => ({ isAuthenticated: mockSignedIn, logout: jest.fn() }),
 }));
 
 function summary(identifier: string, title: string, overrides: Partial<EventSummary> = {}): EventSummary {
@@ -60,8 +62,16 @@ async function show() {
   await flushUntil(() => screen.queryByText("Fikapromenad") !== null);
 }
 
+async function showSignedOut() {
+  mockSignedIn = false;
+  const rendered = renderWithProviders(<EventsListScreen />);
+  await flushUntil(() => screen.queryByText("Fikapromenad") !== null);
+  return rendered;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSignedIn = true;
   mockGetInvitations.mockResolvedValue([
     {
       event: summary("inv", "Hemlig tur", { visibility: "Private" }),
@@ -113,5 +123,59 @@ describe("EventsListScreen", () => {
     await flushUntil(() => mockAccept.mock.calls.length > 0);
 
     expect(mockAccept).toHaveBeenCalledWith("inv");
+  });
+
+  it("loads past events into the list, not a new screen, and pages them on demand", async () => {
+    await show();
+    expect(mockGetMine).not.toHaveBeenCalledWith(expect.objectContaining({ past: true }));
+
+    mockGetMine.mockImplementation(({ past, cursor }: { past: boolean; cursor?: string }) => {
+      if (!past) return Promise.resolve({ items: [], nextCursor: null });
+      return Promise.resolve(
+        cursor
+          ? { items: [summary("old2", "Svampturen")], nextCursor: null }
+          : { items: [summary("old1", "Höstpromenaden")], nextCursor: "c1" },
+      );
+    });
+    fireEvent.press(screen.getByTestId("events-past-link"));
+    await flushUntil(() => screen.queryByText("Höstpromenaden") !== null);
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(screen.getByTestId("events-past")).toBeTruthy();
+    expect(screen.getAllByTestId("event-past-tag")).toHaveLength(1);
+    expect(screen.getByTestId("event-card-old1")).toHaveTextContent(/Avslutat/);
+
+    fireEvent.press(screen.getByTestId("events-past-more"));
+    await flushUntil(() => screen.queryByText("Svampturen") !== null);
+
+    expect(screen.getByText("Höstpromenaden")).toBeTruthy();
+    expect(screen.queryByTestId("events-past-more")).toBeNull();
+  });
+
+  describe("signed out", () => {
+    it("lists the open feed without asking for invitations, own events or past events", async () => {
+      mockGetEvents.mockResolvedValue({ items: [summary("open", "Fikapromenad")], nextCursor: null });
+
+      await showSignedOut();
+
+      expect(screen.getByText("Fikapromenad")).toBeTruthy();
+      expect(screen.queryByTestId("sign-in-prompt")).toBeNull();
+      expect(screen.queryByTestId("events-past-link")).toBeNull();
+      expect(mockGetInvitations).not.toHaveBeenCalled();
+      expect(mockGetMine).not.toHaveBeenCalled();
+    });
+
+    it("asks for a login instead of opening the create form, and returns here after it", async () => {
+      const { store } = await showSignedOut();
+
+      fireEvent.press(screen.getByTestId("events-create"));
+      expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
+      expect(mockNavigate).not.toHaveBeenCalledWith("/(tabs)/events/create");
+
+      fireEvent.press(screen.getByText("Logga in"));
+
+      expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
+      expect(store.get(loginReturnPathAtom)).toBe("/events");
+    });
   });
 });

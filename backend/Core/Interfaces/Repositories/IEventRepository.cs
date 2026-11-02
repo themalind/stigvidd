@@ -87,6 +87,9 @@ public interface IEventRepository
     Task<RepositoryResult<string>> CreateAsync(Event newEvent, int organizerUserId, TimeSpan createdLogWindow, CancellationToken ctoken);
     Task<RepositoryResult<EventCard>> GetPublicCardAsync(string identifier, DateTime now, CancellationToken ctoken);
     Task<RepositoryResult<EventDetail>> GetDetailAsync(string identifier, int viewerId, CancellationToken ctoken);
+
+    // Zero for anyone not joined, as on the event's card. keep-comment: matches EventQueries.Card
+    Task<RepositoryResult<int>> CountUnreadPostsAsync(int eventId, int viewerId, int[] hiddenUserIds, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyList<EventCard>>> GetFeedAsync(EventFeedFilter query, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyList<EventCard>>> GetMineAsync(EventMineFilter query, CancellationToken ctoken);
     // Conflict, with nothing saved, when the event is cancelled or apply leaves MaxParticipants below ParticipantCount. keep-comment: guards the service's check cannot hold

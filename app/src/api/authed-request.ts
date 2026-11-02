@@ -18,6 +18,8 @@ export interface AuthedCall {
   endpoint: string;
   body?: unknown;
   form?: FormData;
+  // Sent without a token when signed out. keep-comment: for reads the server also serves anonymously
+  anonymousAllowed?: boolean;
 }
 
 // A signed-in request: JSON or multipart, a coded ApiError on failure, and one log line. keep-comment: shared by the api modules
@@ -25,11 +27,11 @@ export async function sendAuthed(call: AuthedCall): Promise<Response> {
   try {
     const token = await getUserToken();
 
-    if (!token) {
+    if (!token && !call.anonymousAllowed) {
       throw new Error("User not authenticated");
     }
 
-    const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
     if (call.form === undefined) headers["Content-Type"] = "application/json";
 
     const response = await apiFetch(

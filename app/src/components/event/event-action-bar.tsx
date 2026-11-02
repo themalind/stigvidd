@@ -22,9 +22,11 @@ type Props = {
 // The organizer leaves through cancel or delete, never here. keep-comment: their leave hands the event over
 export function eventActions(event: HikingEvent) {
   const isInterested = event.myStatus === "Interested";
+  const isFull = event.maxParticipants != null && event.participantCount >= event.maxParticipants;
   return {
     join: event.permissions.canJoin,
-    leave: event.myStatus === "Joined" && event.myRole !== "Organizer",
+    full: isFull && event.myStatus !== "Joined" && event.status === "Published" && !event.isPast,
+    leave: event.myStatus === "Joined" && event.myRole !== "Organizer" && !event.isPast,
     markInterested: event.permissions.canMarkInterested && !isInterested,
     unmarkInterested: isInterested,
   };
@@ -60,6 +62,11 @@ export default function EventActionBar({ event, busy, onJoin, onLeave, onInteres
       {actions.join ? (
         <Button mode="contained" disabled={busy} onPress={onJoin} style={s.button}>
           {t("events.join")}
+        </Button>
+      ) : null}
+      {actions.full && !actions.join ? (
+        <Button testID="event-full" mode="contained" disabled style={s.button}>
+          {t("events.full")}
         </Button>
       ) : null}
     </View>
