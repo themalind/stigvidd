@@ -63,6 +63,12 @@ async function show() {
   await flushUntil(() => screen.queryByText("Fikapromenad") !== null);
 }
 
+async function showMine() {
+  await show();
+  fireEvent.press(screen.getByTestId("events-tabs-mine"));
+  await flushUntil(() => screen.queryByTestId("event-invitations") !== null);
+}
+
 async function showSignedOut() {
   mockSignedIn = false;
   const rendered = renderWithProviders(<EventsListScreen />);
@@ -89,13 +95,49 @@ beforeEach(() => {
 });
 
 describe("EventsListScreen", () => {
-  it("lists invitations, one's own events and the open feed, each event once", async () => {
+  it("starts on Utforska with the open feed, leaving out events one is already in", async () => {
     await show();
 
-    expect(screen.getByTestId("event-invitations")).toBeTruthy();
-    expect(screen.getByText(/Hemlig tur/)).toBeTruthy();
-    expect(screen.getAllByText("Min tur")).toHaveLength(1);
+    expect(screen.getByTestId("events-tabs-explore")).toBeSelected();
     expect(screen.getByText("Fikapromenad")).toBeTruthy();
+    expect(screen.queryByText("Min tur")).toBeNull();
+    expect(screen.queryByTestId("event-invitations")).toBeNull();
+  });
+
+  it("counts the invitations on the Mina tab", async () => {
+    await show();
+    await flushUntil(() => screen.queryByTestId("events-tabs-mine-badge") !== null);
+
+    expect(screen.getByTestId("events-tabs-mine-badge")).toHaveTextContent("1");
+  });
+
+  it("lists invitations above one's own events under Mina", async () => {
+    await showMine();
+
+    expect(screen.getByText(/Hemlig tur/)).toBeTruthy();
+    expect(screen.getByText("Dina kommande")).toBeTruthy();
+    expect(screen.getByText("Min tur")).toBeTruthy();
+    expect(screen.queryByText("Fikapromenad")).toBeNull();
+  });
+
+  it("pages one's own events when the Mina list reaches its end", async () => {
+    mockGetMine.mockImplementation(({ past, cursor }: { past: boolean; cursor?: string }) => {
+      if (past) return Promise.resolve({ items: [], nextCursor: null });
+      return Promise.resolve(
+        cursor
+          ? { items: [summary("mine2", "Andra egna")], nextCursor: null }
+          : { items: [summary("mine", "Min tur", { myRole: "Organizer" })], nextCursor: "c1" },
+      );
+    });
+    await showMine();
+    await flushUntil(() => screen.queryByText("Min tur") !== null);
+
+    fireEvent(screen.getByTestId("events-list"), "endReached");
+    await flushUntil(() => screen.queryByText("Andra egna") !== null);
+
+    expect(screen.getByText("Andra egna")).toBeTruthy();
+    expect(screen.getByText("Min tur")).toBeTruthy();
+    expect(mockGetMine).toHaveBeenCalledWith(expect.objectContaining({ past: false, cursor: "c1" }));
   });
 
   it("sets every invitation on its own plate", async () => {
@@ -103,7 +145,7 @@ describe("EventsListScreen", () => {
       { event: summary("inv", "Hemlig tur"), invitedByNickName: "maja", invitedAt: "2026-11-01T10:00:00Z" },
       { event: summary("inv2", "Andra turen"), invitedByNickName: "olle", invitedAt: "2026-11-01T11:00:00Z" },
     ]);
-    await show();
+    await showMine();
     await flushUntil(() => screen.queryByTestId("event-invitation-inv2") !== null);
 
     for (const id of ["event-invitation-inv", "event-invitation-inv2"]) {
@@ -112,7 +154,7 @@ describe("EventsListScreen", () => {
   });
 
   it("puts the event's name and the inviter in bold", async () => {
-    await show();
+    await showMine();
     await flushUntil(() => screen.queryByTestId("event-invitation-inviter") !== null);
 
     expect(screen.getByTestId("event-invitation-title")).toHaveTextContent("Hemlig tur");
@@ -142,7 +184,7 @@ describe("EventsListScreen", () => {
   });
 
   it("accepts an invitation inline", async () => {
-    await show();
+    await showMine();
 
     fireEvent.press(screen.getByText("Tacka ja"));
     await flushUntil(() => mockAccept.mock.calls.length > 0);
@@ -150,7 +192,7 @@ describe("EventsListScreen", () => {
     expect(mockAccept).toHaveBeenCalledWith("inv");
   });
 
-  it("loads past events into the list, not a new screen, and pages them on demand", async () => {
+  it("loads past events only on the Tidigare tab, and pages them at the list's end", async () => {
     await show();
     expect(mockGetMine).not.toHaveBeenCalledWith(expect.objectContaining({ past: true }));
 
@@ -162,19 +204,28 @@ describe("EventsListScreen", () => {
           : { items: [summary("old1", "Höstpromenaden")], nextCursor: "c1" },
       );
     });
-    fireEvent.press(screen.getByTestId("events-past-link"));
+    fireEvent.press(screen.getByTestId("events-tabs-past"));
     await flushUntil(() => screen.queryByText("Höstpromenaden") !== null);
 
-    expect(mockNavigate).not.toHaveBeenCalled();
-    expect(screen.getByTestId("events-past")).toBeTruthy();
+    expect(screen.queryByText("Fikapromenad")).toBeNull();
     expect(screen.getAllByTestId("event-past-tag")).toHaveLength(1);
     expect(screen.getByTestId("event-card-old1")).toHaveTextContent(/Avslutat/);
 
-    fireEvent.press(screen.getByTestId("events-past-more"));
+    fireEvent(screen.getByTestId("events-list"), "endReached");
     await flushUntil(() => screen.queryByText("Svampturen") !== null);
 
+    expect(screen.getByText("Svampturen")).toBeTruthy();
     expect(screen.getByText("Höstpromenaden")).toBeTruthy();
-    expect(screen.queryByTestId("events-past-more")).toBeNull();
+  });
+
+  it("says so when there are no past events", async () => {
+    mockGetMine.mockImplementation(() => Promise.resolve({ items: [], nextCursor: null }));
+    await show();
+
+    fireEvent.press(screen.getByTestId("events-tabs-past"));
+    await flushUntil(() => screen.queryByText("Du har inga tidigare evenemang.") !== null);
+
+    expect(screen.getByText("Du har inga tidigare evenemang.")).toBeTruthy();
   });
 
   describe("signed out", () => {
@@ -185,7 +236,7 @@ describe("EventsListScreen", () => {
 
       expect(screen.getByText("Fikapromenad")).toBeTruthy();
       expect(screen.queryByTestId("sign-in-prompt")).toBeNull();
-      expect(screen.queryByTestId("events-past-link")).toBeNull();
+      expect(screen.queryByTestId("events-tabs")).toBeNull();
       expect(mockGetInvitations).not.toHaveBeenCalled();
       expect(mockGetMine).not.toHaveBeenCalled();
     });

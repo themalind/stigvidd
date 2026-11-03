@@ -35,3 +35,38 @@ it("reports the pressed segment's value", () => {
 
   expect(onChange).toHaveBeenCalledWith("b");
 });
+
+it("shows a segment's badge only when it counts something", () => {
+  renderWithProviders(
+    <SegmentedControl
+      testID="seg"
+      options={[
+        { value: "a", label: "Alfa", badge: 0 },
+        { value: "b", label: "Beta", badge: 3, badgeLabel: "3 nya" },
+      ]}
+      value="a"
+      onChange={jest.fn()}
+    />,
+  );
+
+  expect(screen.queryByTestId("seg-a-badge")).toBeNull();
+  expect(screen.getByTestId("seg-b-badge")).toHaveTextContent("3");
+  expect(screen.getByLabelText("3 nya")).toBeTruthy();
+  expect(screen.getByTestId("seg-b-badge")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.tertiary });
+});
+
+it("lightens the badge on the chosen segment so it stands out from its background", () => {
+  renderWithProviders(
+    <SegmentedControl
+      testID="seg"
+      options={[{ value: "a", label: "Alfa", badge: 8 }]}
+      value="a"
+      onChange={jest.fn()}
+    />,
+  );
+
+  expect(screen.getByTestId("seg-a-badge")).toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.onSecondary,
+    color: AppDefaultTheme.colors.tertiary,
+  });
+});

@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import CountBadge from "@/components/count-badge";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { useTheme } from "react-native-paper";
@@ -12,6 +13,8 @@ import { useTheme } from "react-native-paper";
 export interface SegmentOption<T extends string> {
   value: T;
   label: string;
+  badge?: number;
+  badgeLabel?: string;
 }
 
 interface SegmentedControlProps<T extends string> {
@@ -51,6 +54,13 @@ export default function SegmentedControl<T extends string>({
             <Text style={[s.label, { color: selected ? theme.colors.onSecondary : theme.colors.onSurface }]}>
               {option.label}
             </Text>
+            <CountBadge
+              count={option.badge}
+              size={18}
+              tone={selected ? "inverse" : "attention"}
+              accessibilityLabel={option.badgeLabel}
+              testID={`${testID}-${option.value}-badge`}
+            />
           </Pressable>
         );
       })}
@@ -67,7 +77,10 @@ const s = StyleSheet.create({
   },
   segment: {
     flex: 1,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
+    gap: 6,
     paddingVertical: 7,
     borderRadius: BORDER_RADIUS,
   },
