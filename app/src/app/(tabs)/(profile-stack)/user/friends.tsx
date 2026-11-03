@@ -11,6 +11,7 @@ import AlertDialog from "@/components/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import BackButton from "@/components/back-button";
 import BlockUserDialog, { UserRef } from "@/components/friends/block-user-dialog";
+import FriendRequestCard from "@/components/friends/friend-request-card";
 import PersonRow from "@/components/friends/person-row";
 import ListSection from "@/components/list-section";
 import { BLOCKS_STALE_TIME, REQUESTS_STALE_TIME } from "@/constants/cache";
@@ -148,53 +149,23 @@ export default function FriendsScreen() {
           )}
 
           <ListSection
-            title={t("friends.incomingCount", { count: incoming.data?.length ?? 0 })}
+            testID="friend-requests"
+            title={t("friends.requestsTitle")}
+            badge={incoming.data?.length}
             icon="account-arrow-down"
             items={incoming.data}
             keyOf={(req) => req.requesterIdentifier}
             isError={incoming.isError}
             errorText={t("friends.incomingError")}
             onRetry={() => incoming.refetch()}
+            plates
             renderItem={(req) => (
-              <PersonRow
-                name={req.requesterNickName}
-                identifier={req.requesterIdentifier}
-                actions={
-                  <>
-                    <Button
-                      mode="contained"
-                      compact
-                      style={s.answerButton}
-                      accessibilityLabel={t("friends.accept")}
-                      onPress={() => unlessBanned(() => acceptMutation.mutate(req.requesterIdentifier))}
-                      disabled={answering}
-                    >
-                      {t("friends.acceptShort")}
-                    </Button>
-                    <Button
-                      mode="outlined"
-                      compact
-                      style={s.answerButton}
-                      accessibilityLabel={t("friends.reject")}
-                      onPress={() => rejectMutation.mutate(req.requesterIdentifier)}
-                      disabled={answering}
-                    >
-                      {t("friends.rejectShort")}
-                    </Button>
-                    <Button
-                      testID="block-requester"
-                      mode="text"
-                      compact
-                      textColor={theme.colors.error}
-                      onPress={() =>
-                        setUserToBlock({ identifier: req.requesterIdentifier, nickName: req.requesterNickName })
-                      }
-                      disabled={blockMutation.isPending}
-                    >
-                      {t("friends.block")}
-                    </Button>
-                  </>
-                }
+              <FriendRequestCard
+                request={req}
+                busy={answering}
+                onAccept={(r) => unlessBanned(() => acceptMutation.mutate(r.requesterIdentifier))}
+                onReject={(r) => rejectMutation.mutate(r.requesterIdentifier)}
+                onBlock={(r) => setUserToBlock({ identifier: r.requesterIdentifier, nickName: r.requesterNickName })}
               />
             )}
           />
@@ -359,8 +330,5 @@ const s = StyleSheet.create({
   },
   iconButton: {
     margin: 0,
-  },
-  answerButton: {
-    borderRadius: BORDER_RADIUS,
   },
 });

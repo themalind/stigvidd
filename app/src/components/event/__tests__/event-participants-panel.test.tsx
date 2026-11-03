@@ -91,6 +91,42 @@ describe("EventParticipantsPanel", () => {
     expect(screen.queryByTestId("event-participants-more")).toBeNull();
   });
 
+  describe("invitations", () => {
+    const INVITED: EventParticipants = {
+      ...PARTICIPANTS,
+      invited: [
+        { userIdentifier: "i1", nickName: "dagny", invitedByNickName: "jag", invitedAt: "2026-10-04T10:00:00Z" },
+        { userIdentifier: "i2", nickName: "erik", invitedByNickName: "bertil", invitedAt: "2026-10-04T11:00:00Z" },
+      ],
+    };
+    const revokeButton = (nickName: string) => screen.queryByLabelText(`Dra tillbaka inbjudan till ${nickName}`);
+
+    it("lets a participant who may invite revoke only the invitations they sent", () => {
+      show({ ...NO_PERMISSIONS, canInvite: true }, INVITED);
+
+      expect(screen.getByTestId("event-invitee-erik")).toBeTruthy();
+      expect(revokeButton("dagny")).toBeTruthy();
+      expect(revokeButton("erik")).toBeNull();
+    });
+
+    it("lets a host revoke every invitation", () => {
+      show({ ...NO_PERMISSIONS, canInvite: true, canPinOrDeletePosts: true }, INVITED);
+
+      expect(revokeButton("dagny")).toBeTruthy();
+      expect(revokeButton("erik")).toBeTruthy();
+    });
+  });
+
+  it("tells a host that a removal can be undone by inviting again, with no 'cannot be undone' warning", () => {
+    show({ ...NO_PERMISSIONS, canChangeRoles: true, canRemoveParticipants: true });
+
+    fireEvent.press(screen.getByTestId("event-participant-menu-cissi"));
+    fireEvent.press(screen.getByText("Ta bort från evenemanget"));
+
+    expect(screen.getByText(/du kan bjuda in personen igen/)).toBeTruthy();
+    expect(screen.queryByTestId("event-remove-participant-dialog-warning")).toBeNull();
+  });
+
   it("offers no 'show more' when everyone fits on the first page", () => {
     show(NO_PERMISSIONS);
 

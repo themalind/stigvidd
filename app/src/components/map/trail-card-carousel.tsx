@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ExampleImageOverlay from "@/components/example-image-overlay";
-import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { SCREEN_PADDING, SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailCard } from "@/data/types";
 import { useTrailCards } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
@@ -378,7 +378,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    paddingVertical: 9,
+    height: SLIM_BUTTON_HEIGHT,
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   buttonText: {

@@ -8,7 +8,7 @@
 import ExampleImageOverlay from "@/components/example-image-overlay";
 import { Rating } from "@/components/review/rating";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
-import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
@@ -28,8 +28,8 @@ interface Props {
   onReroll: () => void;
 }
 
-// The drawn trail. Only the photo and the rating wait on the card fetch, so the shimmer
-// covers the image alone.
+// The drawn trail. Only the photo and the rating wait on the card fetch, so the shimmer keep-comment: loading scope
+// covers the image alone. keep-comment: loading scope
 export default function AdventureReveal({ trail, onOpen, onReroll }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -39,7 +39,7 @@ export default function AdventureReveal({ trail, onOpen, onReroll }: Props) {
   const imageSource = card?.image ? { uri: card.image.imageUrl } : require("../../assets/images/noImage.png");
 
   return (
-    // Keyed on the identifier so each draw fades in as its own card.
+    // Keyed on the identifier so each draw fades in as its own card. keep-comment: why the key exists
     <Animated.View key={trail.identifier} entering={FadeIn.duration(220)} testID="adventure-reveal" style={s.wrapper}>
       <Pressable
         testID="adventure-reveal-card"
@@ -154,7 +154,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    paddingVertical: 10,
+    height: SLIM_BUTTON_HEIGHT,
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   actionText: {

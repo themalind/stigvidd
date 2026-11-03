@@ -25,7 +25,9 @@ it("marks only the chosen segment as selected", () => {
 
   expect(screen.getByTestId("seg-a").props.accessibilityState).toMatchObject({ selected: false });
   expect(screen.getByTestId("seg-b").props.accessibilityState).toMatchObject({ selected: true });
-  expect(screen.getByTestId("seg-b")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.secondary });
+  expect(screen.getByTestId("seg-b")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primaryContainer });
+  expect(screen.getByText("Beta")).toHaveStyle({ color: AppDefaultTheme.colors.onPrimaryContainer });
+  expect(screen.getByTestId("seg-a")).not.toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primaryContainer });
 });
 
 it("reports the pressed segment's value", () => {
@@ -52,10 +54,44 @@ it("shows a segment's badge only when it counts something", () => {
   expect(screen.queryByTestId("seg-a-badge")).toBeNull();
   expect(screen.getByTestId("seg-b-badge")).toHaveTextContent("3");
   expect(screen.getByLabelText("3 nya")).toBeTruthy();
-  expect(screen.getByTestId("seg-b-badge")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.tertiary });
 });
 
-it("lightens the badge on the chosen segment so it stands out from its background", () => {
+it("draws the badge large enough to read, orange with bold white digits", () => {
+  renderWithProviders(
+    <SegmentedControl
+      testID="seg"
+      options={[
+        { value: "a", label: "Alfa" },
+        { value: "b", label: "Beta", badge: 8 },
+      ]}
+      value="a"
+      onChange={jest.fn()}
+    />,
+  );
+
+  expect(screen.getByTestId("seg-b-badge")).toHaveStyle({
+    height: 22,
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    backgroundColor: AppDefaultTheme.colors.tertiary,
+    color: AppDefaultTheme.colors.onTertiary,
+  });
+});
+
+it("centres the badge beside the label, not at the bottom where Paper puts it", () => {
+  renderWithProviders(
+    <SegmentedControl
+      testID="seg"
+      options={[{ value: "a", label: "Alfa", badge: 5 }]}
+      value="a"
+      onChange={jest.fn()}
+    />,
+  );
+
+  expect(screen.getByTestId("seg-a-badge")).toHaveStyle({ alignSelf: "center" });
+});
+
+it("keeps the same orange badge, without a ring, on the chosen segment", () => {
   renderWithProviders(
     <SegmentedControl
       testID="seg"
@@ -66,7 +102,8 @@ it("lightens the badge on the chosen segment so it stands out from its backgroun
   );
 
   expect(screen.getByTestId("seg-a-badge")).toHaveStyle({
-    backgroundColor: AppDefaultTheme.colors.onSecondary,
-    color: AppDefaultTheme.colors.tertiary,
+    backgroundColor: AppDefaultTheme.colors.tertiary,
+    color: AppDefaultTheme.colors.onTertiary,
   });
+  expect(screen.getByTestId("seg-a-badge")).not.toHaveStyle({ borderWidth: 2 });
 });

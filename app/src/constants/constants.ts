@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 export const BORDER_RADIUS = 5;
+export const SLIM_BUTTON_HEIGHT = 32;
 export const SURFACE_BORDER_RADIUS = BORDER_RADIUS;
 export const DIALOG_BORDER_RADIUS = BORDER_RADIUS;
 export const SCREEN_PADDING = 10;

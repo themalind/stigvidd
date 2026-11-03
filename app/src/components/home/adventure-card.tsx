@@ -7,7 +7,13 @@
 
 import AdventureReveal from "@/components/home/adventure-reveal";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
-import { BORDER_RADIUS, OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import {
+  BORDER_RADIUS,
+  OVERLAY_TEXT_SHADOW,
+  SCREEN_PADDING,
+  SLIM_BUTTON_HEIGHT,
+  SURFACE_BORDER_RADIUS,
+} from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
@@ -25,11 +31,11 @@ import { Text, useTheme } from "react-native-paper";
 
 const HERO_HEIGHT = 260;
 
-// Draws a random trail. Its own filter state, so narrowing the draw leaves the trails tab alone.
+// Draws a random trail. Its own filter state, so narrowing the draw leaves the trails tab alone. keep-comment: filter state is deliberately not shared
 export default function AdventureCard() {
   const theme = useTheme();
   const { t } = useTranslation();
-  // Null without a real fix, which hides the "near me" filter.
+  // Null without a real fix, which hides the "near me" filter. keep-comment: the hook's null has a UI effect
   const userLocation = useRealUserLocation();
   const { data: trails } = useTrails();
 
@@ -39,14 +45,13 @@ export default function AdventureCard() {
   const [pick, setPick] = useState<TrailShortInfoResponse | null>(null);
   const [filterVisible, setFilterVisible] = useState(false);
 
-  // A length range counts as one filter, not two.
+  // A length range counts as one filter, not two. keep-comment: why min and max are folded
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, maxDistance, ...rest } = filters;
     const hasLengthRange = minLength !== undefined || maxLength !== undefined;
     return Object.values(rest).filter((v) => v !== undefined).length + (hasLengthRange ? 1 : 0);
   }, [filters]);
 
-  // Drops a pick the filters no longer allow.
   useEffect(() => {
     if (pick && !filteredTrails.some((trail) => trail.identifier === pick.identifier)) {
       setPick(null);
@@ -69,7 +74,7 @@ export default function AdventureCard() {
 
   const noMatches = trails !== undefined && filteredTrails.length === 0;
 
-  // Rendered in both states, so the filters stay reachable.
+  // Rendered in both states, so the filters stay reachable. keep-comment: an empty draw must still offer the filters
   const filterRow = (
     <View style={s.filterRow}>
       <View style={s.summaryGroup}>
@@ -148,7 +153,7 @@ export default function AdventureCard() {
                   pressed && { opacity: 0.85 },
                 ]}
               >
-                <MaterialCommunityIcons name="dice-multiple" size={22} color={theme.colors.onPrimary} />
+                <MaterialCommunityIcons name="dice-multiple" size={18} color={theme.colors.onPrimary} />
                 <Text style={[s.rollButtonText, { color: theme.colors.onPrimary }]}>{t("home.adventurousAction")}</Text>
               </Pressable>
             )}
@@ -288,12 +293,12 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    paddingVertical: 14,
+    height: SLIM_BUTTON_HEIGHT,
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   rollButtonText: {
     fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
+    fontSize: 14,
   },
   emptyState: {
     flexDirection: "row",

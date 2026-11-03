@@ -34,7 +34,7 @@ export default function ProfileMenuItem({ text, route, icon, badge }: MenuItemPr
           <Text style={s.choiceText}>{text}</Text>
         </View>
         <View testID="menu-item-actions" style={s.right}>
-          <CountBadge count={badge} />
+          <CountBadge count={badge} centered />
           <MaterialIcons name="chevron-right" size={24} color={theme.colors.outline} />
         </View>
       </View>

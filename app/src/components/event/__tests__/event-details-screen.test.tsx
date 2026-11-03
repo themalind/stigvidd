@@ -19,6 +19,9 @@ const mockGetParticipants = jest.fn();
 const mockJoin = jest.fn();
 const mockAccept = jest.fn();
 const mockRemove = jest.fn();
+const mockLeave = jest.fn();
+const mockMarkInterested = jest.fn();
+const mockUnmarkInterested = jest.fn();
 const mockNavigate = jest.fn();
 const mockBack = jest.fn();
 
@@ -28,9 +31,9 @@ jest.mock("@/api/events", () => ({
   joinEvent: (...args: unknown[]) => mockJoin(...args),
   acceptEventInvitation: (...args: unknown[]) => mockAccept(...args),
   removeEventParticipant: (...args: unknown[]) => mockRemove(...args),
-  leaveEvent: jest.fn(),
-  markEventInterested: jest.fn(),
-  unmarkEventInterested: jest.fn(),
+  leaveEvent: (...args: unknown[]) => mockLeave(...args),
+  markEventInterested: (...args: unknown[]) => mockMarkInterested(...args),
+  unmarkEventInterested: (...args: unknown[]) => mockUnmarkInterested(...args),
   declineEventInvitation: jest.fn(),
   cancelEvent: jest.fn(),
   deleteEvent: jest.fn(),
@@ -130,6 +133,7 @@ beforeEach(() => {
   mockJoin.mockResolvedValue(undefined);
   mockAccept.mockResolvedValue(undefined);
   mockRemove.mockResolvedValue(undefined);
+  mockLeave.mockResolvedValue(undefined);
   mockTrailCoordinates.mockResolvedValue({
     coordinates: JSON.stringify([
       { latitude: 57.72, longitude: 12.94 },
@@ -185,6 +189,34 @@ describe("EventDetailsScreen", () => {
     expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
   });
 
+  it("shows Interested as an empty tree that marks the event", async () => {
+    mockMarkInterested.mockResolvedValue(undefined);
+    await show(hikingEvent({ permissions: { ...NO_PERMISSIONS, canMarkInterested: true } }));
+    await flushUntil(() => screen.queryByTestId("event-interested") !== null);
+
+    expect(screen.getByLabelText("Intresserad")).toBeTruthy();
+    expect(screen.queryByText("Inte intresserad")).toBeNull();
+    expect(screen.queryByTestId("event-interested-on")).toBeNull();
+    fireEvent.press(screen.getByTestId("event-interested"));
+    await flushUntil(() => mockMarkInterested.mock.calls.length > 0);
+    expect(mockMarkInterested).toHaveBeenCalledWith("e1");
+    expect(mockUnmarkInterested).not.toHaveBeenCalled();
+  });
+
+  it("keeps the label once interested, says it is selected, and unmarks on a second press", async () => {
+    mockUnmarkInterested.mockResolvedValue(undefined);
+    await show(hikingEvent({ myStatus: "Interested", permissions: { ...NO_PERMISSIONS, canMarkInterested: true } }));
+    await flushUntil(() => screen.queryByTestId("event-interested") !== null);
+
+    expect(screen.getByText("Intresserad")).toBeTruthy();
+    expect(screen.getByLabelText("Intresserad, vald. Tryck för att ta bort.")).toBeTruthy();
+    expect(screen.getByTestId("event-interested-on")).toBeTruthy();
+    fireEvent.press(screen.getByTestId("event-interested"));
+    await flushUntil(() => mockUnmarkInterested.mock.calls.length > 0);
+    expect(mockUnmarkInterested).toHaveBeenCalledWith("e1");
+    expect(mockMarkInterested).not.toHaveBeenCalled();
+  });
+
   it("puts Accept in place of Join for an invitee", async () => {
     await show(
       hikingEvent({ visibility: "Private", hasPendingInvite: true, permissions: { ...NO_PERMISSIONS, canJoin: true } }),
@@ -218,6 +250,35 @@ describe("EventDetailsScreen", () => {
 
     expect(screen.queryByTestId("event-full")).toBeNull();
     expect(screen.getByText("Lämna")).toBeTruthy();
+  });
+
+  it("leaves an open event at once, since joining again undoes it", async () => {
+    await show(hikingEvent({ myStatus: "Joined" }));
+    await flushUntil(() => screen.queryByText("Lämna") !== null);
+
+    fireEvent.press(screen.getByText("Lämna"));
+    await flushUntil(() => mockLeave.mock.calls.length > 0);
+
+    expect(screen.queryByTestId("event-leave-dialog")).toBeNull();
+    expect(mockLeave).toHaveBeenCalledWith("e1");
+  });
+
+  it("asks before leaving a private event, and stays when the answer is no", async () => {
+    await show(hikingEvent({ visibility: "Private", myStatus: "Joined" }));
+    await flushUntil(() => screen.queryByText("Lämna") !== null);
+
+    fireEvent.press(screen.getByText("Lämna"));
+
+    expect(screen.getByTestId("event-leave-dialog")).toBeTruthy();
+    expect(screen.getByText(/behöver en ny inbjudan/)).toBeTruthy();
+    fireEvent.press(screen.getByTestId("event-leave-dialog-cancel"));
+    expect(mockLeave).not.toHaveBeenCalled();
+
+    fireEvent.press(screen.getAllByText("Lämna")[0]);
+    fireEvent.press(screen.getByTestId("event-leave-dialog-confirm"));
+    await flushUntil(() => mockLeave.mock.calls.length > 0);
+
+    expect(mockLeave).toHaveBeenCalledWith("e1");
   });
 
   it("shows the unread count on the board link once joined", async () => {

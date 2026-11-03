@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ModalFormScrollView from "@/components/modal-form-scroll-view";
+import SlimButton from "@/components/slim-button";
 import FriendPicker from "@/components/shared-hike/friend-picker";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
@@ -15,7 +16,7 @@ import { useState } from "react";
 import { Control, Controller, FieldError, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Checkbox, Divider, Icon, Modal, Portal, Text, TextInput, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 // Limits mirror CreateHikeRequestValidator; the message key follows the limit. keep-comment: links to the backend validator
@@ -183,7 +184,7 @@ export default function ShareHikeModal({
                 />
               </ModalFormScrollView>
               <View style={s.buttonContainer}>
-                <Button
+                <SlimButton
                   mode="contained"
                   icon="arrow-right"
                   style={s.button}
@@ -191,7 +192,7 @@ export default function ShareHikeModal({
                   onPress={handleSubmit(onSubmit)}
                 >
                   {t("common.next")}
-                </Button>
+                </SlimButton>
               </View>
             </>
           ) : (

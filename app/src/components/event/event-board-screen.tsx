@@ -32,6 +32,8 @@ import EventPinnedPosts from "./event-pinned-posts";
 import EventPinsToggle from "./event-pins-toggle";
 import EventPostRow from "./event-post-row";
 
+const COMPOSER_HEIGHT = 48;
+
 export default function EventBoardScreen() {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -230,7 +232,7 @@ function EventBoard({ identifier }: { identifier: string }) {
             accessibilityLabel={editing ? t("common.save") : t("common.send")}
             disabled={value.trim() === "" || busy}
             onPress={editing ? saveEdit : send}
-            style={{ borderRadius: BORDER_RADIUS }}
+            style={s.send}
           />
         </View>
       ) : null}
@@ -299,6 +301,13 @@ const s = StyleSheet.create({
   },
   input: {
     flex: 1,
+  },
+  // keep-comment: matches the 48 px dense outlined input beside it, which Paper draws from its top edge
+  send: {
+    width: COMPOSER_HEIGHT,
+    height: COMPOSER_HEIGHT,
+    margin: 0,
+    borderRadius: BORDER_RADIUS,
   },
   // Paper pins multiline text to the top of its 48 px minimum, so one line sat high. keep-comment: why the override
   inputText: {

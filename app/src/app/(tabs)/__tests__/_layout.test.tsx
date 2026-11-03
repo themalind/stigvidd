@@ -7,6 +7,7 @@
 
 import { pendingEventInvitationsCountAtom } from "@/atoms/event-atoms";
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
+import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/count-badge";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
@@ -305,10 +306,23 @@ it("counts waiting friend requests and shared walks on the profile tab", () => {
   show(AppDefaultTheme, 3);
 
   expect(tab("(profile-stack)").tabBarBadge).toBe(3);
-  expect(tab("(profile-stack)").tabBarBadgeStyle).toEqual({
+  expect(tab("(profile-stack)").tabBarBadgeStyle).toMatchObject({
     color: AppDefaultTheme.colors.onTertiary,
     backgroundColor: AppDefaultTheme.colors.tertiary,
   });
+});
+
+it("draws the tab bar badges at the same size as the badge on the events list's tabs", () => {
+  show(AppDefaultTheme, 3);
+
+  for (const name of ["events", "(profile-stack)"]) {
+    expect(tab(name).tabBarBadgeStyle).toMatchObject({
+      height: BADGE_SIZE,
+      minWidth: BADGE_SIZE,
+      fontSize: BADGE_FONT_SIZE,
+      fontFamily: BADGE_FONT_FAMILY,
+    });
+  }
 });
 
 // A badge reading zero is worse than no badge: it draws the eye to nothing.
@@ -337,7 +351,7 @@ it("carries the dark theme through to the glyphs and the badge", () => {
 
   expect(icon("(home)", true).props.color).toBe(AppDarkTheme.colors.onTertiaryContainer);
   expect(icon("(home)", false).props.color).toBe(AppDarkTheme.colors.onBackground);
-  expect(tab("(profile-stack)").tabBarBadgeStyle).toEqual({
+  expect(tab("(profile-stack)").tabBarBadgeStyle).toMatchObject({
     color: AppDarkTheme.colors.onTertiary,
     backgroundColor: AppDarkTheme.colors.tertiary,
   });

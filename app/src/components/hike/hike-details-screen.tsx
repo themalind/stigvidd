@@ -16,6 +16,7 @@ import HikeDetailLayout, { HikeDetailFallback } from "@/components/hike/hike-det
 import HikeImageSection from "@/components/hike/hike-image-section";
 import ImageViewer from "@/components/review/image-viewer";
 import LoadingIndicator from "@/components/loading-indicator";
+import SlimButton from "@/components/slim-button";
 import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/share-hike-modal";
 import ShareRecipientsDialog from "@/components/shared-hike/share-recipients-dialog";
 import ShareRecipientsRow from "@/components/shared-hike/share-recipients-row";
@@ -41,7 +42,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet } from "react-native";
-import { Button, Icon, useTheme } from "react-native-paper";
+import { Icon, useTheme } from "react-native-paper";
 
 // keep-comment: each tab stack passes its own follow route, so back from the map returns to this screen
 export type HikeFollowRoute =
@@ -277,7 +278,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
       }
       actions={
         <>
-          <Button
+          <SlimButton
             testID="hike-share"
             style={s.button}
             mode="contained"
@@ -285,8 +286,8 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
             onPress={unlessBanned(() => setShowShareModal(true))}
           >
             {t("hike.share")}
-          </Button>
-          <Button
+          </SlimButton>
+          <SlimButton
             testID="hike-delete"
             style={s.button}
             mode="outlined"
@@ -294,7 +295,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
             onPress={() => setShowDeleteDialog(true)}
           >
             {t("hike.delete")}
-          </Button>
+          </SlimButton>
         </>
       }
     >

@@ -5,11 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import SlimButton from "@/components/slim-button";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { HikingEvent } from "@/data/types";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import { Button, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type Props = {
   event: HikingEvent;
@@ -44,30 +46,39 @@ export default function EventActionBar({ event, busy, onJoin, onLeave, onInteres
       testID="event-action-bar"
       style={[s.bar, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}
     >
-      {actions.markInterested ? (
-        <Button mode="outlined" disabled={busy} onPress={() => onInterested(true)} style={s.button}>
+      {actions.markInterested || actions.unmarkInterested ? (
+        <SlimButton
+          testID="event-interested"
+          mode="outlined"
+          icon={({ size, color }) =>
+            actions.unmarkInterested ? (
+              <MaterialCommunityIcons testID="event-interested-on" name="pine-tree-variant" size={size} color={color} />
+            ) : (
+              <MaterialCommunityIcons name="pine-tree-variant-outline" size={size} color={color} />
+            )
+          }
+          accessibilityLabel={actions.unmarkInterested ? t("events.interestedSelected") : t("events.interested")}
+          disabled={busy}
+          onPress={() => onInterested(!actions.unmarkInterested)}
+          style={s.button}
+        >
           {t("events.interested")}
-        </Button>
-      ) : null}
-      {actions.unmarkInterested ? (
-        <Button mode="outlined" disabled={busy} onPress={() => onInterested(false)} style={s.button}>
-          {t("events.notInterested")}
-        </Button>
+        </SlimButton>
       ) : null}
       {actions.leave ? (
-        <Button mode="outlined" disabled={busy} onPress={onLeave} style={s.button}>
+        <SlimButton mode="outlined" disabled={busy} onPress={onLeave} style={s.button}>
           {t("events.leave")}
-        </Button>
+        </SlimButton>
       ) : null}
       {actions.join ? (
-        <Button mode="contained" disabled={busy} onPress={onJoin} style={s.button}>
+        <SlimButton mode="contained" disabled={busy} onPress={onJoin} style={s.button}>
           {t("events.join")}
-        </Button>
+        </SlimButton>
       ) : null}
       {actions.full && !actions.join ? (
-        <Button testID="event-full" mode="contained" disabled style={s.button}>
+        <SlimButton testID="event-full" mode="contained" disabled style={s.button}>
           {t("events.full")}
-        </Button>
+        </SlimButton>
       ) : null}
     </View>
   );

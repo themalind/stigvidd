@@ -7,6 +7,7 @@
 
 import FormTextField from "@/components/form-text-field";
 import ModalFormScrollView from "@/components/modal-form-scroll-view";
+import SlimButton from "@/components/slim-button";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
@@ -14,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Button, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 // keep-comment: limits mirror UpdateHikeRequestValidator; the name rules match the save form
@@ -115,7 +116,7 @@ export default function EditHikeModal({ hike, onDismiss, onSave, isPending }: Pr
             />
           </ModalFormScrollView>
           <View style={s.buttonContainer}>
-            <Button
+            <SlimButton
               style={s.button}
               testID="edit-hike-save"
               mode="contained"
@@ -125,7 +126,7 @@ export default function EditHikeModal({ hike, onDismiss, onSave, isPending }: Pr
               onPress={handleSubmit(submit)}
             >
               {t("common.save")}
-            </Button>
+            </SlimButton>
           </View>
         </View>
       </Modal>

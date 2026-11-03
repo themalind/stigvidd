@@ -10,7 +10,8 @@ import { formatDate } from "@/utils/format-date";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import { Button, Icon, List, Text, useTheme } from "react-native-paper";
+import SlimButton from "@/components/slim-button";
+import { Icon, List, Text, useTheme } from "react-native-paper";
 
 interface Props {
   isPending: boolean;
@@ -86,9 +87,9 @@ export default function PublishHikeCard({ isPending, published, atPendingLimit, 
               </Text>
             </View>
           ))}
-          <Button testID="hike-publish" style={s.button} mode="outlined" onPress={onPublish}>
+          <SlimButton testID="hike-publish" style={s.button} mode="outlined" onPress={onPublish}>
             {t("publish.button")}
-          </Button>
+          </SlimButton>
         </View>
       </List.Accordion>
     </View>

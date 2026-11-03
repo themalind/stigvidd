@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import SelectInput from "@/components/select-input";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SLIM_BUTTON_HEIGHT } from "@/constants/constants";
 import { FilterOptions } from "@/data/types";
 import { SortOption } from "@/hooks/trail/useTrailFilters";
 import { classificationParser } from "@/utils/classification-parser";
@@ -380,7 +380,7 @@ const s = StyleSheet.create({
   },
   filterButton: {
     flex: 1,
-    paddingVertical: 10,
+    height: SLIM_BUTTON_HEIGHT,
     paddingHorizontal: 15,
     borderRadius: BORDER_RADIUS,
     alignItems: "center",

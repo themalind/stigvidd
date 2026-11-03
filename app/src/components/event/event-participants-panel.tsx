@@ -46,6 +46,9 @@ export default function EventParticipantsPanel({
     permissions.canChangeRoles && participant.role !== "Organizer";
   const canRemove = (participant: EventParticipant) =>
     permissions.canRemoveParticipants && participant.role !== "Organizer" && participant.nickName !== myNickName;
+  // The API lets hosts revoke any invitation and others only their own; canPinOrDeletePosts is the host check. keep-comment: mirrors CanRevokeInvitation
+  const canRevoke = (invitee: EventInvitee) =>
+    permissions.canPinOrDeletePosts || (myNickName !== undefined && invitee.invitedByNickName === myNickName);
 
   return (
     <SectionPanel
@@ -80,7 +83,7 @@ export default function EventParticipantsPanel({
           {invited.map((invitee) => (
             <View key={invitee.userIdentifier} testID={`event-invitee-${invitee.nickName}`} style={s.row}>
               <Text style={[s.name, { color: theme.colors.onSurface }]}>{invitee.nickName}</Text>
-              {permissions.canInvite ? (
+              {canRevoke(invitee) ? (
                 <IconButton
                   icon="close"
                   size={18}
@@ -100,7 +103,6 @@ export default function EventParticipantsPanel({
         title={t("events.removeParticipantTitle", { nickName: toRemove?.nickName ?? "" })}
         icon="account-remove-outline"
         tone="danger"
-        irreversible
         infoText={[t("events.removeParticipantBody")]}
         confirmText={t("events.removeParticipant")}
         cancelText={t("common.cancel")}

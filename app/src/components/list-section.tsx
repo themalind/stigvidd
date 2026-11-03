@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import CountBadge, { BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/count-badge";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Fragment, ReactNode, useState } from "react";
@@ -28,6 +29,10 @@ interface Props<T> {
   emptyText?: string;
   previewCount?: number;
   testID?: string;
+  badge?: number;
+  badgeLabel?: string;
+  // Each item is its own card, so the list drops the shared background and dividers. keep-comment: when to pass it
+  plates?: boolean;
 }
 
 export default function ListSection<T>({
@@ -43,6 +48,9 @@ export default function ListSection<T>({
   emptyText,
   previewCount = DEFAULT_PREVIEW_COUNT,
   testID,
+  badge,
+  badgeLabel,
+  plates = false,
 }: Props<T>) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -52,6 +60,7 @@ export default function ListSection<T>({
   if (!isPending && !isError && count === 0 && !emptyText) return null;
 
   const shown = expanded ? items : items?.slice(0, previewCount);
+  const bare = plates && !isPending && !isError && count > 0;
 
   return (
     <View testID={testID} style={s.section}>
@@ -60,8 +69,19 @@ export default function ListSection<T>({
         <Text variant="titleSmall" style={[s.title, { color: theme.colors.onSurfaceVariant }]}>
           {title}
         </Text>
+        <CountBadge
+          count={badge}
+          size={BADGE_SIZE}
+          fontSize={BADGE_FONT_SIZE}
+          centered
+          accessibilityLabel={badgeLabel}
+          testID={testID ? `${testID}-badge` : undefined}
+        />
       </View>
-      <View style={[s.card, { backgroundColor: theme.colors.surface }]}>
+      <View
+        testID={testID ? `${testID}-card` : undefined}
+        style={bare ? s.plateList : [s.card, { backgroundColor: theme.colors.surface }]}
+      >
         {isPending ? (
           <ActivityIndicator style={s.loader} />
         ) : isError ? (
@@ -79,7 +99,7 @@ export default function ListSection<T>({
           <>
             {shown?.map((item, i) => (
               <Fragment key={keyOf(item)}>
-                {i > 0 && <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />}
+                {i > 0 && !plates && <View style={[s.divider, { backgroundColor: theme.colors.outlineVariant }]} />}
                 {renderItem(item)}
               </Fragment>
             ))}
@@ -121,6 +141,9 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
     paddingVertical: 4,
+  },
+  plateList: {
+    gap: 8,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

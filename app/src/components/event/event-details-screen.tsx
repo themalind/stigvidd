@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { stigviddUserAtom } from "@/atoms/user-atoms";
+import AlertDialog from "@/components/alert-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import BackButton from "@/components/back-button";
@@ -12,17 +14,16 @@ import NoticeBanner from "@/components/notice-banner";
 import SectionPanel from "@/components/section-panel";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { HikingEvent } from "@/data/types";
-import { useEventMutations } from "@/hooks/events/useEventMutations";
 import { useEventManageMutations, useEventParticipants } from "@/hooks/events/useEventManage";
+import { useEventMutations } from "@/hooks/events/useEventMutations";
 import { useReturnHereAfterLogin } from "@/hooks/useReturnHereAfterLogin";
-import { stigviddUserAtom } from "@/atoms/user-atoms";
-import { useAtomValue } from "jotai";
-import { useState } from "react";
 import { formatEventDate, formatTimeRange } from "@/utils/event-time";
 import { formatDistanceKm } from "@/utils/format-distance";
 import { guardedNavigate } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
+import { useAtomValue } from "jotai";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -32,9 +33,9 @@ import EventGate from "./event-gate";
 import EventInviteModal from "./event-invite-modal";
 import EventManageMenu from "./event-manage-menu";
 import EventMap from "./event-map";
+import EventParticipantsPanel from "./event-participants-panel";
 import { EventStackRoutes } from "./event-routes";
 import EventShareButton from "./event-share-button";
-import EventParticipantsPanel from "./event-participants-panel";
 import EventVisibilityChip from "./event-visibility-chip";
 import InvitationAnswerButtons from "./invitation-answer-buttons";
 
@@ -247,8 +248,10 @@ function EventFooter({ event }: { event: HikingEvent }) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const [showAuthDialog, setAuthDialog] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const returnHere = useReturnHereAfterLogin();
   const { joinMutation, leaveMutation, interestedMutation } = useEventMutations();
+  const leave = () => leaveMutation.mutate(event.identifier);
   const busy = joinMutation.isPending || leaveMutation.isPending || interestedMutation.isPending;
 
   // An invitee answers in the banner instead. keep-comment: accepting is the invitee's join
@@ -262,7 +265,8 @@ function EventFooter({ event }: { event: HikingEvent }) {
         event={event}
         busy={busy}
         onJoin={signedIn(() => joinMutation.mutate(event.identifier))}
-        onLeave={() => leaveMutation.mutate(event.identifier)}
+        // Leaving a private event needs a new invitation to undo, so it asks first. keep-comment: why only private events confirm
+        onLeave={() => (event.visibility === "Private" ? setConfirmLeave(true) : leave())}
         onInterested={(interested) =>
           signedIn(() => interestedMutation.mutate({ identifier: event.identifier, interested }))()
         }
@@ -272,6 +276,21 @@ function EventFooter({ event }: { event: HikingEvent }) {
         onDissmiss={() => setAuthDialog(false)}
         infoMessage={t("events.signInToJoin")}
         onBeforeNavigate={returnHere}
+      />
+      <AlertDialog
+        testID="event-leave-dialog"
+        visible={confirmLeave}
+        onDismiss={() => setConfirmLeave(false)}
+        title={t("events.leaveTitle")}
+        icon="logout"
+        tone="danger"
+        infoText={[t("events.leavePrivateBody")]}
+        confirmText={t("events.leave")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => {
+          setConfirmLeave(false);
+          leave();
+        }}
       />
     </>
   );
@@ -308,7 +327,7 @@ const s = StyleSheet.create({
     gap: 6,
   },
   title: {
-    fontSize: 24,
+    fontSize: 18,
     lineHeight: 29,
     fontFamily: "Inter_600SemiBold",
   },

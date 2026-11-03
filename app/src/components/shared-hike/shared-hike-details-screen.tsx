@@ -17,6 +17,7 @@ import HikeDetailLayout, { HikeDetailFallback } from "@/components/hike/hike-det
 import HikeImageSection from "@/components/hike/hike-image-section";
 import ImageViewer, { ViewerImage } from "@/components/review/image-viewer";
 import LoadingIndicator from "@/components/loading-indicator";
+import SlimButton from "@/components/slim-button";
 import ReportContentForm from "@/components/report/report-content-form";
 import ReshareHikeModal from "@/components/shared-hike/reshare-hike-modal";
 import { BORDER_RADIUS } from "@/constants/constants";
@@ -34,7 +35,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import { Button, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 
 const trackReshared = (outcome: "success" | ShareFailure, request: ReshareSharedHikeRequest) =>
   track("hike.shared", {
@@ -151,7 +152,7 @@ export default function SharedHikeDetailsScreen() {
             </Text>
           )}
           {sharedHike.allowResharing && (
-            <Button
+            <SlimButton
               testID="shared-hike-share"
               style={s.button}
               mode="contained"
@@ -159,9 +160,9 @@ export default function SharedHikeDetailsScreen() {
               onPress={() => (reason === "banned" ? setShowBannedDialog(true) : setShowShareModal(true))}
             >
               {t("hike.reshare")}
-            </Button>
+            </SlimButton>
           )}
-          <Button
+          <SlimButton
             testID="shared-hike-delete"
             style={s.removeButton}
             mode="text"
@@ -170,7 +171,7 @@ export default function SharedHikeDetailsScreen() {
             onPress={() => setShowDeleteDialog(true)}
           >
             {t("hike.removeShared")}
-          </Button>
+          </SlimButton>
         </View>
       }
     >

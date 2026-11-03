@@ -15,7 +15,8 @@ import ModalScrim from "@/components/dialog/modal-scrim";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import SlimButton from "@/components/slim-button";
+import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import RoutePreviewMap from "../map/route-preview-map";
 
 interface Props {
@@ -93,7 +94,7 @@ export default function IncomingSharedHikeModal({
               <HikeInfoRows {...sharedHike} />
             </ScrollView>
             <View style={s.buttonGroup}>
-              <Button
+              <SlimButton
                 style={s.button}
                 mode="contained"
                 icon="check"
@@ -102,10 +103,10 @@ export default function IncomingSharedHikeModal({
                 loading={isPending}
               >
                 {t("hike.accept")}
-              </Button>
-              <Button style={s.button} mode="outlined" icon="close" onPress={onReject} disabled={isPending}>
+              </SlimButton>
+              <SlimButton style={s.button} mode="outlined" icon="close" onPress={onReject} disabled={isPending}>
                 {t("hike.reject")}
-              </Button>
+              </SlimButton>
             </View>
           </>
         )}

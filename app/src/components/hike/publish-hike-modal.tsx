@@ -14,6 +14,7 @@ import FormTextField from "@/components/form-text-field";
 import InfoButton from "@/components/info-button";
 import InfoHeading from "@/components/info-heading";
 import ModalFormScrollView from "@/components/modal-form-scroll-view";
+import SlimButton from "@/components/slim-button";
 import DifficultyInfoModal from "@/components/trail/difficulty-info-modal";
 import { BORDER_RADIUS, MAX_PENDING_SUBMISSIONS } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
@@ -31,7 +32,7 @@ import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
-import { Button, Checkbox, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
+import { Checkbox, Divider, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
 
 // keep-comment: limits mirror CreateHikeSubmissionRequestValidator
@@ -399,7 +400,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
             </View>
           </ModalFormScrollView>
           <View style={s.footer}>
-            <Button
+            <SlimButton
               testID="publish-submit"
               style={s.button}
               mode="contained"
@@ -409,7 +410,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
               onPress={submit}
             >
               {t("publish.submit")}
-            </Button>
+            </SlimButton>
           </View>
         </View>
       </Modal>

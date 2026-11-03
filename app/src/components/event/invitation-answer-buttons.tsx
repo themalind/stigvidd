@@ -5,10 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import SlimButton from "@/components/slim-button";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import { Button } from "react-native-paper";
 
 type Props = {
   busy: boolean;
@@ -21,12 +21,12 @@ export default function InvitationAnswerButtons({ busy, onAccept, onDecline }: P
 
   return (
     <View style={s.actions}>
-      <Button mode="text" disabled={busy} onPress={onDecline}>
+      <SlimButton mode="text" disabled={busy} onPress={onDecline}>
         {t("events.decline")}
-      </Button>
-      <Button mode="contained" disabled={busy} onPress={onAccept} style={s.accept}>
+      </SlimButton>
+      <SlimButton mode="contained" disabled={busy} onPress={onAccept} style={s.accept}>
         {t("events.accept")}
-      </Button>
+      </SlimButton>
     </View>
   );
 }

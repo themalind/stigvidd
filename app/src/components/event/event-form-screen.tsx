@@ -12,6 +12,7 @@ import FieldErrorBadge from "@/components/field-error-badge";
 import DateTimeField from "@/components/date-time-field";
 import PointPickerMap from "@/components/map/point-picker-map";
 import SectionPanel from "@/components/section-panel";
+import SlimButton from "@/components/slim-button";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";
 import { EventVisibility, HikingEvent } from "@/data/types";
@@ -316,17 +317,16 @@ function EventForm({ original }: { original?: HikingEvent }) {
       </ScrollView>
 
       <View style={[s.footer, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
-        <Button
+        <SlimButton
           testID="event-form-submit"
           mode="contained"
           loading={save.isPending}
           disabled={save.isPending}
           onPress={submit}
           style={{ borderRadius: BORDER_RADIUS }}
-          contentStyle={s.submit}
         >
           {submitLabel}
-        </Button>
+        </SlimButton>
       </View>
 
       <EventRoutePicker
@@ -619,8 +619,5 @@ const s = StyleSheet.create({
   footer: {
     padding: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  submit: {
-    height: 48,
   },
 });

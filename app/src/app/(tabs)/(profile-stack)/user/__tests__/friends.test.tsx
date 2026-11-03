@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { BORDER_RADIUS } from "@/constants/constants";
+import { AppDefaultTheme } from "@/constants/theme";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -92,8 +94,13 @@ function friend(nickName: string, identifier = `id-${nickName}`): Row {
   return { identifier, nickName };
 }
 
-function incomingRequest(nickName: string) {
-  return { requesterIdentifier: `id-${nickName}`, requesterNickName: nickName };
+function incomingRequest(nickName: string, createdAt = "2026-09-18T09:00:00Z") {
+  return { requesterIdentifier: `id-${nickName}`, requesterNickName: nickName, createdAt };
+}
+
+function openBlockFromMenu() {
+  fireEvent.press(screen.getByTestId("block-requester-menu"));
+  fireEvent.press(screen.getByText("Blockera"));
 }
 
 function sharedHike(hikeName: string, sharedByIdentifier: string, sharedAt: string) {
@@ -212,6 +219,29 @@ it("answers an incoming request with the requester's own identifier", async () =
 
   fireEvent.press(actionButton("Avvisa vänförfrågan", 0));
   expect(mockReject).toHaveBeenCalledWith("id-erik");
+});
+
+it("sets each incoming request on its own plate, with who asked and when, and counts them in the heading", async () => {
+  const yesterday = new Date(Date.now() - 86400000).toISOString();
+  mockIncoming = {
+    data: [incomingRequest("erik", yesterday), incomingRequest("frida")],
+    isPending: false,
+    isError: false,
+  };
+  await show();
+
+  expect(screen.getByText("Vänförfrågningar")).toBeTruthy();
+  expect(screen.getByTestId("friend-requests-badge")).toHaveTextContent("2");
+  expect(screen.getByTestId("friend-request-id-erik")).toHaveStyle({
+    paddingHorizontal: 12,
+    borderRadius: BORDER_RADIUS,
+    backgroundColor: AppDefaultTheme.colors.surface,
+  });
+  expect(screen.getByTestId("friend-requests-card")).not.toHaveStyle({
+    backgroundColor: AppDefaultTheme.colors.surface,
+  });
+  expect(screen.getByText("vill bli din vän · igår")).toBeTruthy();
+  expect(screen.getByText("vill bli din vän · 2026-09-18")).toBeTruthy();
 });
 
 describe("a banned account", () => {
@@ -336,7 +366,8 @@ describe("blocking a requester", () => {
     mockIncoming = { data: [incomingRequest("Grima")], isPending: false, isError: false };
     await show();
 
-    fireEvent.press(screen.getByTestId("block-requester"));
+    expect(screen.queryByText("Blockera")).toBeNull();
+    openBlockFromMenu();
 
     expect(screen.getByText("Blockera Grima?")).toBeTruthy();
     expect(mockBlock).not.toHaveBeenCalled();
@@ -346,10 +377,8 @@ describe("blocking a requester", () => {
     mockIncoming = { data: [incomingRequest("Grima")], isPending: false, isError: false };
     await show();
 
-    fireEvent.press(screen.getByTestId("block-requester"));
-    const confirm = screen.getAllByText("Blockera").at(-1);
-    if (!confirm) throw new Error("expected a confirm button");
-    fireEvent.press(confirm);
+    openBlockFromMenu();
+    fireEvent.press(screen.getByTestId("alert-dialog-confirm"));
 
     expect(mockBlock).toHaveBeenCalledWith("id-Grima");
   });

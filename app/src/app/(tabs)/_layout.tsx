@@ -7,6 +7,7 @@
 
 import { pendingEventInvitationsCountAtom } from "@/atoms/event-atoms";
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
+import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/count-badge";
 import Header from "@/components/header";
 import OfflineBanner from "@/components/offline-banner";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -25,6 +26,16 @@ export default function TabsLayout() {
   const { isAuthenticated } = useAuth();
   const incomingCount = useAtomValue(pendingNotificationsCountAtom);
   const invitationCount = useAtomValue(pendingEventInvitationsCountAtom);
+  const badgeStyle = {
+    color: theme.colors.onTertiary,
+    backgroundColor: theme.colors.tertiary,
+    minWidth: BADGE_SIZE,
+    height: BADGE_SIZE,
+    borderRadius: BADGE_SIZE / 2,
+    lineHeight: BADGE_SIZE - 1,
+    fontSize: BADGE_FONT_SIZE,
+    fontFamily: BADGE_FONT_FAMILY,
+  };
 
   // On the profile tab, login/register live inside the stack and Stack.Protected
   // swaps them in/out imperatively when auth flips — usePathname() lags one
@@ -105,7 +116,7 @@ export default function TabsLayout() {
                 <MaterialCommunityIcons name="calendar-month-outline" size={29} color={theme.colors.onBackground} />
               ),
             tabBarBadge: invitationCount > 0 ? invitationCount : undefined,
-            tabBarBadgeStyle: { color: theme.colors.onTertiary, backgroundColor: theme.colors.tertiary },
+            tabBarBadgeStyle: badgeStyle,
           }}
         />
         <Tabs.Screen
@@ -119,7 +130,7 @@ export default function TabsLayout() {
                 <MaterialCommunityIcons name="account-box-outline" size={30} color={theme.colors.onBackground} />
               ),
             tabBarBadge: incomingCount > 0 ? incomingCount : undefined,
-            tabBarBadgeStyle: { color: theme.colors.onTertiary, backgroundColor: theme.colors.tertiary },
+            tabBarBadgeStyle: badgeStyle,
           }}
         />
         <Tabs.Screen

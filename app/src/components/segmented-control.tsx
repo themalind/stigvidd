@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import CountBadge from "@/components/count-badge";
+import CountBadge, { BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/count-badge";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Pressable, StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 import { useTheme } from "react-native-paper";
@@ -49,15 +49,16 @@ export default function SegmentedControl<T extends string>({
             accessibilityRole="tab"
             accessibilityState={{ selected }}
             onPress={() => onChange(option.value)}
-            style={[s.segment, selected && { backgroundColor: theme.colors.secondary }]}
+            style={[s.segment, selected && { backgroundColor: theme.colors.primaryContainer }]}
           >
-            <Text style={[s.label, { color: selected ? theme.colors.onSecondary : theme.colors.onSurface }]}>
+            <Text style={[s.label, { color: selected ? theme.colors.onPrimaryContainer : theme.colors.onSurface }]}>
               {option.label}
             </Text>
             <CountBadge
               count={option.badge}
-              size={18}
-              tone={selected ? "inverse" : "attention"}
+              size={BADGE_SIZE}
+              fontSize={BADGE_FONT_SIZE}
+              centered
               accessibilityLabel={option.badgeLabel}
               testID={`${testID}-${option.value}-badge`}
             />
