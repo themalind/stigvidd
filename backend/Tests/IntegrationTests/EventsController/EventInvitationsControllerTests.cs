@@ -198,6 +198,32 @@ public class EventInvitationsControllerTests : IClassFixture<StigViddWebApplicat
     }
 
     [Fact]
+    public async Task Leave_APrivateEvent_HidesItAndRefusesAJoin_UntilANewInvitationIsAccepted()
+    {
+        var identifier = await CreateAsync("Private");
+        await InviteAsync(identifier, "VandrarVennen");
+        await AcceptAsync(VandrarVennen, identifier);
+
+        var left = await Client(VandrarVennen).DeleteAsync($"{BASE_URL}/{identifier}/leave", TestContext.Current.CancellationToken);
+        var view = await Client(VandrarVennen).GetAsync($"{BASE_URL}/{identifier}", TestContext.Current.CancellationToken);
+        var join = await Client(VandrarVennen).PostAsync($"{BASE_URL}/{identifier}/join", null, TestContext.Current.CancellationToken);
+        var oldInvitation = await AcceptAsync(VandrarVennen, identifier);
+
+        left.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        view.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        join.IsSuccessStatusCode.Should().BeFalse();
+        oldInvitation.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        (await ParticipantCountAsync(identifier)).Should().Be(1);
+
+        var reinvited = await InviteAsync(identifier, "VandrarVennen");
+        var accepted = await AcceptAsync(VandrarVennen, identifier);
+
+        reinvited.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        accepted.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await ParticipantCountAsync(identifier)).Should().Be(2);
+    }
+
+    [Fact]
     public async Task Revoke_ByTheHost_TakesTheInvitationBack_ButNotByAnOutsider()
     {
         var identifier = await CreateAsync("Open");

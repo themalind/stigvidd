@@ -75,6 +75,14 @@ public class EventParticipantRepository : IEventParticipantRepository
                 existing.Status = EventParticipantStatus.Joined;
                 existing.JoinedAt = now;
             }
+            else if (existing.Status == EventParticipantStatus.Removed
+                && invitation is not null
+                && await EventHosts.IsHostAsync(context, eventId, invitation.InvitedByUserId, ctoken))
+            {
+                existing.Status = EventParticipantStatus.Joined;
+                existing.Role = EventParticipantRole.Participant;
+                existing.JoinedAt = now;
+            }
             else
             {
                 // Joined or removed in a race since the service checked; the rollback gives the spot back. keep-comment: the transaction is not committed here

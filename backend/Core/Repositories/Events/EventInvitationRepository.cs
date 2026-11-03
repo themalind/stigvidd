@@ -78,8 +78,12 @@ public class EventInvitationRepository : IEventInvitationRepository
             if (!open)
                 return RepositoryResult<InviteOutcome>.NotFound();
 
+            // Only a host's invitation reaches someone who was removed; accepting it lets them back in. keep-comment: plan decision 2026-11-03, a removal is undone by a host's invite
+            var inviterIsHost = await EventHosts.IsHostAsync(context, eventId, inviterUserId, ctoken);
+
             var participants = await context.EventParticipants
-                .Where(p => p.EventId == eventId && userIds.Contains(p.UserId))
+                .Where(p => p.EventId == eventId && userIds.Contains(p.UserId)
+                    && !(inviterIsHost && p.Status == EventParticipantStatus.Removed))
                 .Select(p => p.UserId)
                 .ToListAsync(ctoken);
 

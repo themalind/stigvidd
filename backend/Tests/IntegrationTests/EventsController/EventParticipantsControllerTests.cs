@@ -234,6 +234,87 @@ public class EventParticipantsControllerTests : IClassFixture<StigViddWebApplica
         await CountMatchesJoinedRows(identifier, 1);
     }
 
+    private async Task<string> RemovedFromAnEventThatAllowsParticipantInvitesAsync()
+    {
+        var request = new CreateEventRequest
+        {
+            Title = "Kvällsvandring",
+            Description = "Runt sjön",
+            Visibility = "Open",
+            MeetingPointLongitude = 12.94m,
+            MeetingPointLatitude = 57.72m,
+            StartsAt = DateTime.UtcNow.AddDays(3),
+            AllowParticipantInvites = true,
+        };
+        var response = await Client(NaturElskaren).PostAsJsonAsync(BASE_URL, request, TestContext.Current.CancellationToken);
+        var created = await response.Content.ReadFromJsonAsync<EventResponse>(TestContext.Current.CancellationToken);
+        created.Should().NotBeNull();
+        await JoinAsync(VandrarVennen, created.Identifier);
+        await JoinAsync(SkogsGreven, created.Identifier);
+        var vandrarVennen = await UserIdentifierAsync("VandrarVennen");
+        var removed = await Client(NaturElskaren).DeleteAsync($"{BASE_URL}/{created.Identifier}/participants/{vandrarVennen}", TestContext.Current.CancellationToken);
+        removed.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        return created.Identifier;
+    }
+
+    private async Task<(int EventId, int UserId)> IdsAsync(string identifier, string nickName)
+    {
+        using var db = Db();
+        var stored = await db.Events.SingleAsync(e => e.Identifier == identifier, TestContext.Current.CancellationToken);
+        var user = await db.Users.SingleAsync(u => u.NickName == nickName, TestContext.Current.CancellationToken);
+        return (stored.Id, user.Id);
+    }
+
+    private Task<HttpResponseMessage> InviteVandrarVennenAsync(string inviter, string identifier)
+    {
+        return Client(inviter).PostAsJsonAsync(
+            $"{BASE_URL}/{identifier}/invite",
+            new EventInviteRequest { NickNames = ["VandrarVennen"] },
+            TestContext.Current.CancellationToken);
+    }
+
+    private Task<HttpResponseMessage> AcceptAsync(string subject, string identifier)
+    {
+        return Client(subject).PostAsync($"{BASE_URL}/invitations/{identifier}/accept", null, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task Remove_ThenAHostInvitesAgain_AcceptingBringsThemBackAsAParticipant()
+    {
+        var identifier = await RemovedFromAnEventThatAllowsParticipantInvitesAsync();
+
+        var invited = await InviteVandrarVennenAsync(NaturElskaren, identifier);
+        var accepted = await AcceptAsync(VandrarVennen, identifier);
+
+        invited.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        accepted.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await CountMatchesJoinedRows(identifier, 3);
+        var (eventId, userId) = await IdsAsync(identifier, "VandrarVennen");
+        using var db = Db();
+        var row = await db.EventParticipants.SingleAsync(p => p.EventId == eventId && p.UserId == userId, TestContext.Current.CancellationToken);
+        row.Status.Should().Be(EventParticipantStatus.Joined);
+        row.Role.Should().Be(EventParticipantRole.Participant);
+    }
+
+    [Fact]
+    public async Task Remove_ThenAParticipantInvites_SendsNoInvitationAndTheyStayOut()
+    {
+        var identifier = await RemovedFromAnEventThatAllowsParticipantInvitesAsync();
+
+        var invited = await InviteVandrarVennenAsync(SkogsGreven, identifier);
+        var accepted = await AcceptAsync(VandrarVennen, identifier);
+        var rejoin = await JoinAsync(VandrarVennen, identifier);
+
+        invited.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        accepted.IsSuccessStatusCode.Should().BeFalse();
+        rejoin.StatusCode.Should().Be(HttpStatusCode.Conflict);
+        await CountMatchesJoinedRows(identifier, 2);
+        var (eventId, userId) = await IdsAsync(identifier, "VandrarVennen");
+        using var db = Db();
+        var pending = await db.EventInvitations.AnyAsync(i => i.EventId == eventId && i.InvitedUserId == userId && i.Status == EventInvitationStatus.Pending, TestContext.Current.CancellationToken);
+        pending.Should().BeFalse();
+    }
+
     [Fact]
     public async Task Participants_ListForAParticipant_CountsForAnOutsider()
     {
