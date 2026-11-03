@@ -36,9 +36,9 @@ export default function ScreenTitleBar({ title, leading, action, style }: Props)
       </View>
       {action ? (
         <Pressable testID={action.testID} accessibilityRole="button" onPress={action.onPress}>
-          <View style={[s.button, { backgroundColor: theme.colors.secondary }]}>
-            <MaterialIcons name={action.icon} size={24} color={theme.colors.onSecondary} />
-            <Text style={[s.buttonText, { color: theme.colors.onSecondary }]}>{action.label}</Text>
+          <View style={[s.button, { backgroundColor: theme.colors.primary }]}>
+            <MaterialIcons name={action.icon} size={24} color={theme.colors.onPrimary} />
+            <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>{action.label}</Text>
           </View>
         </Pressable>
       ) : null}
