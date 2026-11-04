@@ -1,8 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { Session } from "@/features/trail-import/api/trail-import";
-import type { AdminTrailListItemResponse } from "@/api/generated/model";
+import type { AdminTrailListItemResponse, TrailImportSessionResponse } from "@/api/generated/model";
 
 export type TrailStats = {
   total: number;
@@ -22,7 +21,7 @@ export function trailStats(trails: AdminTrailListItemResponse[]): TrailStats {
   };
 }
 
-export function importsAwaitingReview(sessions: Session[]): number {
+export function importsAwaitingReview(sessions: Pick<TrailImportSessionResponse, "status">[]): number {
   return sessions.filter((s) => s.status === "AwaitingReview").length;
 }
 

@@ -10,12 +10,12 @@ export interface AdminDashboardReviewResponse {
   identifier: string;
   trailIdentifier: string;
   trailName: string;
-  rating?: number;
+  rating: number;
   /** @nullable */
-  text?: string | null;
+  text: string | null;
   /** @nullable */
-  authorNickName?: string | null;
-  imageCount?: number;
-  isHidden?: boolean;
-  createdAt?: string;
+  authorNickName: string | null;
+  imageCount: number;
+  isHidden: boolean;
+  createdAt: string;
 }

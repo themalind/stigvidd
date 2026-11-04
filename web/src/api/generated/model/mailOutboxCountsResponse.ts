@@ -7,10 +7,10 @@
  */
 
 export interface MailOutboxCountsResponse {
-  pending?: number;
-  sending?: number;
-  sent?: number;
-  failed?: number;
-  cancelled?: number;
-  total?: number;
+  pending: number;
+  sending: number;
+  sent: number;
+  failed: number;
+  cancelled: number;
+  total: number;
 }

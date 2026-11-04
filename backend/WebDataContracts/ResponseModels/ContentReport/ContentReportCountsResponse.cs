@@ -5,10 +5,10 @@ namespace WebDataContracts.ResponseModels.ContentReport;
 
 public class ContentReportCountsResponse
 {
-    public int Pending { get; set; }
-    public int Dismissed { get; set; }
-    public int Upheld { get; set; }
-    public int ContentExpired { get; set; }
+    public required int Pending { get; set; }
+    public required int Dismissed { get; set; }
+    public required int Upheld { get; set; }
+    public required int ContentExpired { get; set; }
 
     public static ContentReportCountsResponse Create(int pending, int dismissed, int upheld, int contentExpired)
     {

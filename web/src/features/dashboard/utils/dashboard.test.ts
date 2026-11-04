@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import type { Session } from "@/features/trail-import/api/trail-import";
 import type { AdminTrailListItemResponse } from "@/api/generated/model";
 import { importsAwaitingReview, relativeTime, share, trailStats } from "./dashboard";
 
@@ -26,8 +25,8 @@ function trail(overrides: Partial<AdminTrailListItemResponse>): AdminTrailListIt
   };
 }
 
-function session(status: string): Session {
-  return { id: 1, identifier: "s", source: "boras", fileName: "f.geojson", fileHash: "h", status };
+function session(status: string) {
+  return { status };
 }
 
 describe("trailStats", () => {
