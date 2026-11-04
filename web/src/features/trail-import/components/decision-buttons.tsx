@@ -67,7 +67,7 @@ function DecisionHelp() {
             <div key={entry.label}>
               <dt className="flex items-center gap-2 text-sm font-medium">
                 {entry.label}
-                <kbd className="rounded border px-1 text-xs font-normal text-muted-foreground">{entry.key}</kbd>
+                <kbd className="rounded-md border px-1 text-xs font-normal text-muted-foreground">{entry.key}</kbd>
               </dt>
               <dd className="text-xs text-muted-foreground">{entry.text}</dd>
             </div>

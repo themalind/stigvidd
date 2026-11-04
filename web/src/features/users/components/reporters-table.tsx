@@ -56,7 +56,7 @@ export function ReportersTable({ page, onPageChange }: PagedTableProps) {
                     <span
                       data-testid="reports-withheld"
                       title={note}
-                      className="ml-2 rounded bg-yellow-200 px-1.5 py-0.5 text-xs text-yellow-900"
+                      className="ml-2 rounded-md bg-yellow-200 px-1.5 py-0.5 text-xs text-yellow-900"
                     >
                       reports withheld
                     </span>

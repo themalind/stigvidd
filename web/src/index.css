@@ -9,13 +9,15 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  /* keep-comment: one corner radius everywhere: every rounded-* size resolves to --radius, so change it in :root only */
+  --radius-xs: var(--radius);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -50,7 +52,7 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 5px;
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
   --card: oklch(1 0 0);
@@ -184,7 +186,7 @@ body,
 
 .prose-mail [data-token] {
   display: inline-block;
-  border-radius: 9999px;
+  border-radius: var(--radius);
   padding: 0.05em 0.6em;
   margin-inline: 0.1em;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;

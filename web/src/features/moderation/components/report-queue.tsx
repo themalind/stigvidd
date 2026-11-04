@@ -64,7 +64,7 @@ export function ReportQueue({ filters, onPageChange, renderAuthorActions }: Prop
                 <span
                   data-testid="did-not-hide"
                   title={hideOutcomeExplanation(row.hideOutcome) ?? undefined}
-                  className="rounded bg-yellow-200 px-1.5 py-0.5 text-xs text-yellow-900"
+                  className="rounded-md bg-yellow-200 px-1.5 py-0.5 text-xs text-yellow-900"
                 >
                   did not hide
                 </span>

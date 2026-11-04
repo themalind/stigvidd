@@ -156,10 +156,10 @@ function ProposalCanvas({ feature, trail, className }: Props & { trail: Coordina
           type="button"
           aria-pressed={shown.feature}
           title="Show or hide the source feature"
-          className={`flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 hover:bg-accent ${shown.feature ? "" : "opacity-40"}`}
+          className={`flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 hover:bg-accent ${shown.feature ? "" : "opacity-40"}`}
           onClick={() => setShown((current) => ({ ...current, feature: !current.feature }))}
         >
-          <span className="h-0.5 w-4 rounded" style={{ background: FEATURE_COLOR }} />
+          <span className="h-0.5 w-4 rounded-md" style={{ background: FEATURE_COLOR }} />
           Source feature
         </button>
         {trail && trail.length > 1 && (
@@ -167,10 +167,10 @@ function ProposalCanvas({ feature, trail, className }: Props & { trail: Coordina
             type="button"
             aria-pressed={shown.trail}
             title="Show or hide the matched trail"
-            className={`flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 hover:bg-accent ${shown.trail ? "" : "opacity-40"}`}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 hover:bg-accent ${shown.trail ? "" : "opacity-40"}`}
             onClick={() => setShown((current) => ({ ...current, trail: !current.trail }))}
           >
-            <span className="h-1.5 w-4 rounded" style={{ background: TRAIL_COLOR }} />
+            <span className="h-1.5 w-4 rounded-md" style={{ background: TRAIL_COLOR }} />
             Matched trail
           </button>
         )}

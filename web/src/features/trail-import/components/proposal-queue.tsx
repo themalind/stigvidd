@@ -34,7 +34,7 @@ function emptyText(narrowedBy: string[]): string {
   return "This session has no proposals.";
 }
 
-const Key = ({ children }: { children: string }) => <kbd className="rounded border px-1">{children}</kbd>;
+const Key = ({ children }: { children: string }) => <kbd className="rounded-md border px-1">{children}</kbd>;
 
 export function ProposalQueue({
   sessionId,
