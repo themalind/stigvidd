@@ -7,8 +7,8 @@
  */
 
 export type AdminHikeSubmissionsGetSubmissionsParams = {
-/**
- * @nullable
- */
-status?: string | null;
+  /**
+   * @nullable
+   */
+  status?: string | null;
 };

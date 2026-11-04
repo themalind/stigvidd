@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,8 +20,8 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   CreateHikeRequest,
@@ -33,22 +29,19 @@ import type {
   HikeResponse,
   HikesAddHikeImageBody,
   HikesGetHikesParams,
-  UpdateHikeRequest
-} from '../model';
+  UpdateHikeRequest,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -58,630 +51,718 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getHikesGetHikeByIdentifierUrl = (hikeIdentifier: string,) => {
+export const getHikesGetHikeByIdentifierUrl = (hikeIdentifier: string) => {
+  return `/api/v1/Hikes/${hikeIdentifier}`;
+};
 
-
-
-
-  return `/api/v1/Hikes/${hikeIdentifier}`
-}
-
-export const hikesGetHikeByIdentifier = async (hikeIdentifier: string, options?: RequestInit): Promise<HikeResponse> => {
-
-  return customFetch<HikeResponse>(getHikesGetHikeByIdentifierUrl(hikeIdentifier),
-  {
+export const hikesGetHikeByIdentifier = async (
+  hikeIdentifier: string,
+  options?: RequestInit,
+): Promise<HikeResponse> => {
+  return customFetch<HikeResponse>(getHikesGetHikeByIdentifierUrl(hikeIdentifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getHikesGetHikeByIdentifierQueryKey = (hikeIdentifier: string) => {
+  return [`/api/v1/Hikes/${hikeIdentifier}`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getHikesGetHikeByIdentifierQueryKey = (hikeIdentifier: string,) => {
-    return [
-    `/api/v1/Hikes/${hikeIdentifier}`
-    ] as const;
-    }
-
-
-export const getHikesGetHikeByIdentifierQueryOptions = <TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getHikesGetHikeByIdentifierQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getHikesGetHikeByIdentifierQueryKey(hikeIdentifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getHikesGetHikeByIdentifierQueryKey(hikeIdentifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>> = ({ signal }) =>
+    hikesGetHikeByIdentifier(hikeIdentifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: hikeIdentifier !== null && hikeIdentifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type HikesGetHikeByIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>>;
+export type HikesGetHikeByIdentifierQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>> = ({ signal }) => hikesGetHikeByIdentifier(hikeIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: hikeIdentifier !== null && hikeIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikesGetHikeByIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>>
-export type HikesGetHikeByIdentifierQueryError = unknown
-
-
-export function useHikesGetHikeByIdentifier<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>> & Pick<
+export function useHikesGetHikeByIdentifier<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
           TError,
           Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikesGetHikeByIdentifier<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikesGetHikeByIdentifier<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
           TError,
           Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikesGetHikeByIdentifier<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikesGetHikeByIdentifier<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useHikesGetHikeByIdentifier<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useHikesGetHikeByIdentifier<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikesGetHikeByIdentifierQueryOptions(hikeIdentifier, options);
 
-  const queryOptions = getHikesGetHikeByIdentifierQueryOptions(hikeIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getHikesGetHikeByIdentifierSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getHikesGetHikeByIdentifierSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getHikesGetHikeByIdentifierQueryKey(hikeIdentifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getHikesGetHikeByIdentifierQueryKey(hikeIdentifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>> = ({ signal }) =>
+    hikesGetHikeByIdentifier(hikeIdentifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type HikesGetHikeByIdentifierSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>
+>;
+export type HikesGetHikeByIdentifierSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>> = ({ signal }) => hikesGetHikeByIdentifier(hikeIdentifier, { signal, ...requestOptions });
+export function useHikesGetHikeByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikesGetHikeByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikesGetHikeByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useHikesGetHikeByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikesGetHikeByIdentifierSuspenseQueryOptions(hikeIdentifier, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikesGetHikeByIdentifierSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>>
-export type HikesGetHikeByIdentifierSuspenseQueryError = unknown
-
-
-export function useHikesGetHikeByIdentifierSuspense<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikesGetHikeByIdentifierSuspense<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikesGetHikeByIdentifierSuspense<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useHikesGetHikeByIdentifierSuspense<TData = Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikeByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getHikesGetHikeByIdentifierSuspenseQueryOptions(hikeIdentifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getHikesUpdateHikeUrl = (hikeIdentifier: string) => {
+  return `/api/v1/Hikes/${hikeIdentifier}`;
+};
 
-
-
-
-
-export const getHikesUpdateHikeUrl = (hikeIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/Hikes/${hikeIdentifier}`
-}
-
-export const hikesUpdateHike = async (hikeIdentifier: string,
-    updateHikeRequest: UpdateHikeRequest, options?: RequestInit): Promise<HikeResponse> => {
-
-  return customFetch<HikeResponse>(getHikesUpdateHikeUrl(hikeIdentifier),
-  {
+export const hikesUpdateHike = async (
+  hikeIdentifier: string,
+  updateHikeRequest: UpdateHikeRequest,
+  options?: RequestInit,
+): Promise<HikeResponse> => {
+  return customFetch<HikeResponse>(getHikesUpdateHikeUrl(hikeIdentifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(updateHikeRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateHikeRequest),
+  });
+};
 
+export const getHikesUpdateHikeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikesUpdateHike>>,
+    TError,
+    { hikeIdentifier: string; data: UpdateHikeRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hikesUpdateHike>>,
+  TError,
+  { hikeIdentifier: string; data: UpdateHikeRequest },
+  TContext
+> => {
+  const mutationKey = ["hikesUpdateHike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hikesUpdateHike>>,
+    { hikeIdentifier: string; data: UpdateHikeRequest }
+  > = (props) => {
+    const { hikeIdentifier, data } = props ?? {};
 
+    return hikesUpdateHike(hikeIdentifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getHikesUpdateHikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesUpdateHike>>, TError,{hikeIdentifier: string;data: UpdateHikeRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikesUpdateHike>>, TError,{hikeIdentifier: string;data: UpdateHikeRequest}, TContext> => {
+export type HikesUpdateHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikesUpdateHike>>>;
+export type HikesUpdateHikeMutationBody = UpdateHikeRequest;
+export type HikesUpdateHikeMutationError = unknown;
 
-const mutationKey = ['hikesUpdateHike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikesUpdateHike>>, {hikeIdentifier: string;data: UpdateHikeRequest}> = (props) => {
-          const {hikeIdentifier,data} = props ?? {};
-
-          return  hikesUpdateHike(hikeIdentifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikesUpdateHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikesUpdateHike>>>
-    export type HikesUpdateHikeMutationBody = UpdateHikeRequest
-    export type HikesUpdateHikeMutationError = unknown
-
-    export const useHikesUpdateHike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesUpdateHike>>, TError,{hikeIdentifier: string;data: UpdateHikeRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikesUpdateHike>>,
-        TError,
-        {hikeIdentifier: string;data: UpdateHikeRequest},
-        TContext
-      > => {
-      return useMutation(getHikesUpdateHikeMutationOptions(options), queryClient);
-    }
-    export const getHikesDeleteHikeUrl = (hikeIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/Hikes/${hikeIdentifier}`
-}
+export const useHikesUpdateHike = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikesUpdateHike>>,
+      TError,
+      { hikeIdentifier: string; data: UpdateHikeRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hikesUpdateHike>>,
+  TError,
+  { hikeIdentifier: string; data: UpdateHikeRequest },
+  TContext
+> => {
+  return useMutation(getHikesUpdateHikeMutationOptions(options), queryClient);
+};
+export const getHikesDeleteHikeUrl = (hikeIdentifier: string) => {
+  return `/api/v1/Hikes/${hikeIdentifier}`;
+};
 
 export const hikesDeleteHike = async (hikeIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getHikesDeleteHikeUrl(hikeIdentifier),
-  {
+  return customFetch<Blob>(getHikesDeleteHikeUrl(hikeIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getHikesDeleteHikeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikesDeleteHike>>,
+    TError,
+    { hikeIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof hikesDeleteHike>>, TError, { hikeIdentifier: string }, TContext> => {
+  const mutationKey = ["hikesDeleteHike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikesDeleteHike>>, { hikeIdentifier: string }> = (
+    props,
+  ) => {
+    const { hikeIdentifier } = props ?? {};
 
+    return hikesDeleteHike(hikeIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type HikesDeleteHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikesDeleteHike>>>;
 
+export type HikesDeleteHikeMutationError = unknown;
 
-export const getHikesDeleteHikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesDeleteHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikesDeleteHike>>, TError,{hikeIdentifier: string}, TContext> => {
-
-const mutationKey = ['hikesDeleteHike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikesDeleteHike>>, {hikeIdentifier: string}> = (props) => {
-          const {hikeIdentifier} = props ?? {};
-
-          return  hikesDeleteHike(hikeIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikesDeleteHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikesDeleteHike>>>
-
-    export type HikesDeleteHikeMutationError = unknown
-
-    export const useHikesDeleteHike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesDeleteHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikesDeleteHike>>,
-        TError,
-        {hikeIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getHikesDeleteHikeMutationOptions(options), queryClient);
-    }
-    export const getHikesGetHikesUrl = (params?: HikesGetHikesParams,) => {
+export const useHikesDeleteHike = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikesDeleteHike>>,
+      TError,
+      { hikeIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof hikesDeleteHike>>, TError, { hikeIdentifier: string }, TContext> => {
+  return useMutation(getHikesDeleteHikeMutationOptions(options), queryClient);
+};
+export const getHikesGetHikesUrl = (params?: HikesGetHikesParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/Hikes?${stringifiedParams}` : `/api/v1/Hikes`
-}
+  return stringifiedParams.length > 0 ? `/api/v1/Hikes?${stringifiedParams}` : `/api/v1/Hikes`;
+};
 
 export const hikesGetHikes = async (params?: HikesGetHikesParams, options?: RequestInit): Promise<HikeResponse[]> => {
-
-  return customFetch<HikeResponse[]>(getHikesGetHikesUrl(params),
-  {
+  return customFetch<HikeResponse[]>(getHikesGetHikesUrl(params), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getHikesGetHikesQueryKey = (params?: HikesGetHikesParams) => {
+  return [`/api/v1/Hikes`, ...(params ? [params] : [])] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getHikesGetHikesQueryKey = (params?: HikesGetHikesParams,) => {
-    return [
-    `/api/v1/Hikes`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getHikesGetHikesQueryOptions = <TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(params?: HikesGetHikesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getHikesGetHikesQueryOptions = <TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getHikesGetHikesQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getHikesGetHikesQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikes>>> = ({ signal }) =>
+    hikesGetHikes(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof hikesGetHikes>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikes>>> = ({ signal }) => hikesGetHikes(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikesGetHikesQueryResult = NonNullable<Awaited<ReturnType<typeof hikesGetHikes>>>
-export type HikesGetHikesQueryError = unknown
-
+export type HikesGetHikesQueryResult = NonNullable<Awaited<ReturnType<typeof hikesGetHikes>>>;
+export type HikesGetHikesQueryError = unknown;
 
 export function useHikesGetHikes<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params: undefined |  HikesGetHikesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>> & Pick<
+  params: undefined | HikesGetHikesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikesGetHikes>>,
           TError,
           Awaited<ReturnType<typeof hikesGetHikes>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useHikesGetHikes<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params?: HikesGetHikesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>> & Pick<
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikesGetHikes>>,
           TError,
           Awaited<ReturnType<typeof hikesGetHikes>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useHikesGetHikes<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params?: HikesGetHikesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useHikesGetHikes<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params?: HikesGetHikesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikesGetHikesQueryOptions(params, options);
 
-  const queryOptions = getHikesGetHikesQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getHikesGetHikesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(params?: HikesGetHikesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getHikesGetHikesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikesGetHikes>>,
+  TError = unknown,
+>(
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getHikesGetHikesQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getHikesGetHikesQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikes>>> = ({ signal }) =>
+    hikesGetHikes(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof hikesGetHikes>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikesGetHikes>>> = ({ signal }) => hikesGetHikes(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikesGetHikesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof hikesGetHikes>>>
-export type HikesGetHikesSuspenseQueryError = unknown
-
+export type HikesGetHikesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof hikesGetHikes>>>;
+export type HikesGetHikesSuspenseQueryError = unknown;
 
 export function useHikesGetHikesSuspense<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params: undefined |  HikesGetHikesParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  params: undefined | HikesGetHikesParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useHikesGetHikesSuspense<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params?: HikesGetHikesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useHikesGetHikesSuspense<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params?: HikesGetHikesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useHikesGetHikesSuspense<TData = Awaited<ReturnType<typeof hikesGetHikes>>, TError = unknown>(
- params?: HikesGetHikesParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  params?: HikesGetHikesParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikesGetHikes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikesGetHikesSuspenseQueryOptions(params, options);
 
-  const queryOptions = getHikesGetHikesSuspenseQueryOptions(params,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-
-
-
-
 
 export const getHikesCreateHikeUrl = () => {
+  return `/api/v1/Hikes`;
+};
 
-
-
-
-  return `/api/v1/Hikes`
-}
-
-export const hikesCreateHike = async (createHikeRequest: CreateHikeRequest, options?: RequestInit): Promise<HikeResponse> => {
-
-  return customFetch<HikeResponse>(getHikesCreateHikeUrl(),
-  {
+export const hikesCreateHike = async (
+  createHikeRequest: CreateHikeRequest,
+  options?: RequestInit,
+): Promise<HikeResponse> => {
+  return customFetch<HikeResponse>(getHikesCreateHikeUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(createHikeRequest)
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createHikeRequest),
+  });
+};
+
+export const getHikesCreateHikeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikesCreateHike>>,
+    TError,
+    { data: CreateHikeRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof hikesCreateHike>>, TError, { data: CreateHikeRequest }, TContext> => {
+  const mutationKey = ["hikesCreateHike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikesCreateHike>>, { data: CreateHikeRequest }> = (
+    props,
+  ) => {
+    const { data } = props ?? {};
+
+    return hikesCreateHike(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type HikesCreateHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikesCreateHike>>>;
+export type HikesCreateHikeMutationBody = CreateHikeRequest;
+export type HikesCreateHikeMutationError = unknown;
+
+export const useHikesCreateHike = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikesCreateHike>>,
+      TError,
+      { data: CreateHikeRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof hikesCreateHike>>, TError, { data: CreateHikeRequest }, TContext> => {
+  return useMutation(getHikesCreateHikeMutationOptions(options), queryClient);
+};
+export const getHikesAddHikeImageUrl = (hikeIdentifier: string) => {
+  return `/api/v1/Hikes/${hikeIdentifier}/images`;
+};
+
+export const hikesAddHikeImage = async (
+  hikeIdentifier: string,
+  hikesAddHikeImageBody?: HikesAddHikeImageBody,
+  options?: RequestInit,
+): Promise<HikeImageResponse> => {
+  const formData = new FormData();
+  if (hikesAddHikeImageBody?.image !== undefined && hikesAddHikeImageBody.image !== null) {
+    formData.append(`image`, hikesAddHikeImageBody.image);
   }
-);}
 
-
-
-
-
-export const getHikesCreateHikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesCreateHike>>, TError,{data: CreateHikeRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikesCreateHike>>, TError,{data: CreateHikeRequest}, TContext> => {
-
-const mutationKey = ['hikesCreateHike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikesCreateHike>>, {data: CreateHikeRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  hikesCreateHike(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikesCreateHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikesCreateHike>>>
-    export type HikesCreateHikeMutationBody = CreateHikeRequest
-    export type HikesCreateHikeMutationError = unknown
-
-    export const useHikesCreateHike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesCreateHike>>, TError,{data: CreateHikeRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikesCreateHike>>,
-        TError,
-        {data: CreateHikeRequest},
-        TContext
-      > => {
-      return useMutation(getHikesCreateHikeMutationOptions(options), queryClient);
-    }
-    export const getHikesAddHikeImageUrl = (hikeIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/Hikes/${hikeIdentifier}/images`
-}
-
-export const hikesAddHikeImage = async (hikeIdentifier: string,
-    hikesAddHikeImageBody?: HikesAddHikeImageBody, options?: RequestInit): Promise<HikeImageResponse> => {
-    const formData = new FormData();
-if(hikesAddHikeImageBody?.image !== undefined && hikesAddHikeImageBody.image !== null) {
- formData.append(`image`, hikesAddHikeImageBody.image);
- }
-
-  return customFetch<HikeImageResponse>(getHikesAddHikeImageUrl(hikeIdentifier),
-  {
+  return customFetch<HikeImageResponse>(getHikesAddHikeImageUrl(hikeIdentifier), {
     ...options,
-    method: 'POST'
-    ,
-    body: formData
-  }
-);}
+    method: "POST",
+    body: formData,
+  });
+};
 
+export const getHikesAddHikeImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikesAddHikeImage>>,
+    TError,
+    { hikeIdentifier: string; data?: HikesAddHikeImageBody },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hikesAddHikeImage>>,
+  TError,
+  { hikeIdentifier: string; data?: HikesAddHikeImageBody },
+  TContext
+> => {
+  const mutationKey = ["hikesAddHikeImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hikesAddHikeImage>>,
+    { hikeIdentifier: string; data?: HikesAddHikeImageBody }
+  > = (props) => {
+    const { hikeIdentifier, data } = props ?? {};
 
+    return hikesAddHikeImage(hikeIdentifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getHikesAddHikeImageMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError,{hikeIdentifier: string;data?: HikesAddHikeImageBody}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError,{hikeIdentifier: string;data?: HikesAddHikeImageBody}, TContext> => {
+export type HikesAddHikeImageMutationResult = NonNullable<Awaited<ReturnType<typeof hikesAddHikeImage>>>;
+export type HikesAddHikeImageMutationBody = HikesAddHikeImageBody | undefined;
+export type HikesAddHikeImageMutationError = unknown;
 
-const mutationKey = ['hikesAddHikeImage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useHikesAddHikeImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikesAddHikeImage>>,
+      TError,
+      { hikeIdentifier: string; data?: HikesAddHikeImageBody },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hikesAddHikeImage>>,
+  TError,
+  { hikeIdentifier: string; data?: HikesAddHikeImageBody },
+  TContext
+> => {
+  return useMutation(getHikesAddHikeImageMutationOptions(options), queryClient);
+};
+export const getHikesDeleteHikeImageUrl = (hikeIdentifier: string, imageIdentifier: string) => {
+  return `/api/v1/Hikes/${hikeIdentifier}/images/${imageIdentifier}`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikesAddHikeImage>>, {hikeIdentifier: string;data?: HikesAddHikeImageBody}> = (props) => {
-          const {hikeIdentifier,data} = props ?? {};
-
-          return  hikesAddHikeImage(hikeIdentifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikesAddHikeImageMutationResult = NonNullable<Awaited<ReturnType<typeof hikesAddHikeImage>>>
-    export type HikesAddHikeImageMutationBody = HikesAddHikeImageBody | undefined
-    export type HikesAddHikeImageMutationError = unknown
-
-    export const useHikesAddHikeImage = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesAddHikeImage>>, TError,{hikeIdentifier: string;data?: HikesAddHikeImageBody}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikesAddHikeImage>>,
-        TError,
-        {hikeIdentifier: string;data?: HikesAddHikeImageBody},
-        TContext
-      > => {
-      return useMutation(getHikesAddHikeImageMutationOptions(options), queryClient);
-    }
-    export const getHikesDeleteHikeImageUrl = (hikeIdentifier: string,
-    imageIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/Hikes/${hikeIdentifier}/images/${imageIdentifier}`
-}
-
-export const hikesDeleteHikeImage = async (hikeIdentifier: string,
-    imageIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getHikesDeleteHikeImageUrl(hikeIdentifier,imageIdentifier),
-  {
+export const hikesDeleteHikeImage = async (
+  hikeIdentifier: string,
+  imageIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getHikesDeleteHikeImageUrl(hikeIdentifier, imageIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getHikesDeleteHikeImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
+    TError,
+    { hikeIdentifier: string; imageIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
+  TError,
+  { hikeIdentifier: string; imageIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["hikesDeleteHikeImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
+    { hikeIdentifier: string; imageIdentifier: string }
+  > = (props) => {
+    const { hikeIdentifier, imageIdentifier } = props ?? {};
 
+    return hikesDeleteHikeImage(hikeIdentifier, imageIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type HikesDeleteHikeImageMutationResult = NonNullable<Awaited<ReturnType<typeof hikesDeleteHikeImage>>>;
 
+export type HikesDeleteHikeImageMutationError = unknown;
 
-export const getHikesDeleteHikeImageMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError,{hikeIdentifier: string;imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError,{hikeIdentifier: string;imageIdentifier: string}, TContext> => {
-
-const mutationKey = ['hikesDeleteHikeImage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, {hikeIdentifier: string;imageIdentifier: string}> = (props) => {
-          const {hikeIdentifier,imageIdentifier} = props ?? {};
-
-          return  hikesDeleteHikeImage(hikeIdentifier,imageIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikesDeleteHikeImageMutationResult = NonNullable<Awaited<ReturnType<typeof hikesDeleteHikeImage>>>
-
-    export type HikesDeleteHikeImageMutationError = unknown
-
-    export const useHikesDeleteHikeImage = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikesDeleteHikeImage>>, TError,{hikeIdentifier: string;imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
-        TError,
-        {hikeIdentifier: string;imageIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getHikesDeleteHikeImageMutationOptions(options), queryClient);
-    }
+export const useHikesDeleteHikeImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
+      TError,
+      { hikeIdentifier: string; imageIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hikesDeleteHikeImage>>,
+  TError,
+  { hikeIdentifier: string; imageIdentifier: string },
+  TContext
+> => {
+  return useMutation(getHikesDeleteHikeImageMutationOptions(options), queryClient);
+};

@@ -7,5 +7,5 @@
  */
 
 export type TrailImportAnalyzeParams = {
-force?: boolean;
+  force?: boolean;
 };

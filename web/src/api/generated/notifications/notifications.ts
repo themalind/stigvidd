@@ -5,152 +5,147 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation
-} from '@tanstack/react-query';
-import type {
-  MutationFunction,
-  QueryClient,
-  UseMutationOptions,
-  UseMutationResult
-} from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
+import type { MutationFunction, QueryClient, UseMutationOptions, UseMutationResult } from "@tanstack/react-query";
 
-import type {
-  RegisterPushTokenRequest
-} from '../model';
+import type { RegisterPushTokenRequest } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
 export const getNotificationsRegisterTokenUrl = () => {
+  return `/api/v1/Notifications/tokens`;
+};
 
-
-
-
-  return `/api/v1/Notifications/tokens`
-}
-
-export const notificationsRegisterToken = async (registerPushTokenRequest: RegisterPushTokenRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getNotificationsRegisterTokenUrl(),
-  {
+export const notificationsRegisterToken = async (
+  registerPushTokenRequest: RegisterPushTokenRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getNotificationsRegisterTokenUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(registerPushTokenRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(registerPushTokenRequest),
+  });
+};
 
+export const getNotificationsRegisterTokenMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof notificationsRegisterToken>>,
+    TError,
+    { data: RegisterPushTokenRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof notificationsRegisterToken>>,
+  TError,
+  { data: RegisterPushTokenRequest },
+  TContext
+> => {
+  const mutationKey = ["notificationsRegisterToken"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof notificationsRegisterToken>>,
+    { data: RegisterPushTokenRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return notificationsRegisterToken(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getNotificationsRegisterTokenMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError,{data: RegisterPushTokenRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError,{data: RegisterPushTokenRequest}, TContext> => {
+export type NotificationsRegisterTokenMutationResult = NonNullable<
+  Awaited<ReturnType<typeof notificationsRegisterToken>>
+>;
+export type NotificationsRegisterTokenMutationBody = RegisterPushTokenRequest;
+export type NotificationsRegisterTokenMutationError = unknown;
 
-const mutationKey = ['notificationsRegisterToken'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsRegisterToken>>, {data: RegisterPushTokenRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  notificationsRegisterToken(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsRegisterTokenMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsRegisterToken>>>
-    export type NotificationsRegisterTokenMutationBody = RegisterPushTokenRequest
-    export type NotificationsRegisterTokenMutationError = unknown
-
-    export const useNotificationsRegisterToken = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError,{data: RegisterPushTokenRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsRegisterToken>>,
-        TError,
-        {data: RegisterPushTokenRequest},
-        TContext
-      > => {
-      return useMutation(getNotificationsRegisterTokenMutationOptions(options), queryClient);
-    }
-    export const getNotificationsDeleteTokenUrl = (expoToken: string,) => {
-
-
-
-
-  return `/api/v1/Notifications/tokens/${expoToken}`
-}
+export const useNotificationsRegisterToken = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof notificationsRegisterToken>>,
+      TError,
+      { data: RegisterPushTokenRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof notificationsRegisterToken>>,
+  TError,
+  { data: RegisterPushTokenRequest },
+  TContext
+> => {
+  return useMutation(getNotificationsRegisterTokenMutationOptions(options), queryClient);
+};
+export const getNotificationsDeleteTokenUrl = (expoToken: string) => {
+  return `/api/v1/Notifications/tokens/${expoToken}`;
+};
 
 export const notificationsDeleteToken = async (expoToken: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getNotificationsDeleteTokenUrl(expoToken),
-  {
+  return customFetch<Blob>(getNotificationsDeleteTokenUrl(expoToken), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getNotificationsDeleteTokenMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof notificationsDeleteToken>>,
+    TError,
+    { expoToken: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof notificationsDeleteToken>>,
+  TError,
+  { expoToken: string },
+  TContext
+> => {
+  const mutationKey = ["notificationsDeleteToken"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsDeleteToken>>, { expoToken: string }> = (
+    props,
+  ) => {
+    const { expoToken } = props ?? {};
 
+    return notificationsDeleteToken(expoToken, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type NotificationsDeleteTokenMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsDeleteToken>>>;
 
+export type NotificationsDeleteTokenMutationError = unknown;
 
-export const getNotificationsDeleteTokenMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError,{expoToken: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError,{expoToken: string}, TContext> => {
-
-const mutationKey = ['notificationsDeleteToken'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsDeleteToken>>, {expoToken: string}> = (props) => {
-          const {expoToken} = props ?? {};
-
-          return  notificationsDeleteToken(expoToken,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type NotificationsDeleteTokenMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsDeleteToken>>>
-
-    export type NotificationsDeleteTokenMutationError = unknown
-
-    export const useNotificationsDeleteToken = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError,{expoToken: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof notificationsDeleteToken>>,
-        TError,
-        {expoToken: string},
-        TContext
-      > => {
-      return useMutation(getNotificationsDeleteTokenMutationOptions(options), queryClient);
-    }
+export const useNotificationsDeleteToken = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof notificationsDeleteToken>>,
+      TError,
+      { expoToken: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError, { expoToken: string }, TContext> => {
+  return useMutation(getNotificationsDeleteTokenMutationOptions(options), queryClient);
+};

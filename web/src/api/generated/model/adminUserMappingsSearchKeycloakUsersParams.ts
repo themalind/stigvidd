@@ -7,8 +7,8 @@
  */
 
 export type AdminUserMappingsSearchKeycloakUsersParams = {
-/**
- * @nullable
- */
-search?: string | null;
+  /**
+   * @nullable
+   */
+  search?: string | null;
 };

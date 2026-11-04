@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,8 +20,8 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   AdminTrailListItemResponse,
@@ -36,22 +32,19 @@ import type {
   TrailImageResponse,
   TrailResponse,
   TrailSymbolResponse,
-  UpdateTrailRequest
-} from '../model';
+  UpdateTrailRequest,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -62,835 +55,1009 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getAdminTrailsGetAllTrailsUrl = () => {
+  return `/api/v1/admin/trails`;
+};
 
-
-
-
-  return `/api/v1/admin/trails`
-}
-
-export const adminTrailsGetAllTrails = async ( options?: RequestInit): Promise<AdminTrailListItemResponse[]> => {
-
-  return customFetch<AdminTrailListItemResponse[]>(getAdminTrailsGetAllTrailsUrl(),
-  {
+export const adminTrailsGetAllTrails = async (options?: RequestInit): Promise<AdminTrailListItemResponse[]> => {
+  return customFetch<AdminTrailListItemResponse[]>(getAdminTrailsGetAllTrailsUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getAdminTrailsGetAllTrailsQueryKey = () => {
-    return [
-    `/api/v1/admin/trails`
-    ] as const;
-    }
+  return [`/api/v1/admin/trails`] as const;
+};
 
+export const getAdminTrailsGetAllTrailsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getAdminTrailsGetAllTrailsQueryOptions = <TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getAdminTrailsGetAllTrailsQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>> = ({ signal }) =>
+    adminTrailsGetAllTrails({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminTrailsGetAllTrailsQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminTrailsGetAllTrailsQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>>;
+export type AdminTrailsGetAllTrailsQueryError = unknown;
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>> = ({ signal }) => adminTrailsGetAllTrails({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminTrailsGetAllTrailsQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>>
-export type AdminTrailsGetAllTrailsQueryError = unknown
-
-
-export function useAdminTrailsGetAllTrails<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>> & Pick<
+export function useAdminTrailsGetAllTrails<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
           TError,
           Awaited<ReturnType<typeof adminTrailsGetAllTrails>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetAllTrails<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetAllTrails<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
           TError,
           Awaited<ReturnType<typeof adminTrailsGetAllTrails>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetAllTrails<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetAllTrails<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminTrailsGetAllTrails<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminTrailsGetAllTrails<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminTrailsGetAllTrailsQueryOptions(options);
 
-  const queryOptions = getAdminTrailsGetAllTrailsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminTrailsGetAllTrailsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminTrailsGetAllTrailsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>> = ({ signal }) => adminTrailsGetAllTrails({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminTrailsGetAllTrailsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>>
-export type AdminTrailsGetAllTrailsSuspenseQueryError = unknown
-
-
-export function useAdminTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminTrailsGetAllTrailsSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminTrailsGetAllTrailsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getAdminTrailsGetAllTrailsQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>> = ({ signal }) =>
+    adminTrailsGetAllTrails({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminTrailsGetAllTrailsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminTrailsGetAllTrails>>
+>;
+export type AdminTrailsGetAllTrailsSuspenseQueryError = unknown;
 
-export const getAdminTrailsGetTrailUrl = (identifier: string,) => {
+export function useAdminTrailsGetAllTrailsSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetAllTrailsSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetAllTrailsSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminTrailsGetAllTrailsSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetAllTrails>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetAllTrails>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminTrailsGetAllTrailsSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-  return `/api/v1/admin/trails/${identifier}`
+  return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getAdminTrailsGetTrailUrl = (identifier: string) => {
+  return `/api/v1/admin/trails/${identifier}`;
+};
 
 export const adminTrailsGetTrail = async (identifier: string, options?: RequestInit): Promise<TrailResponse> => {
-
-  return customFetch<TrailResponse>(getAdminTrailsGetTrailUrl(identifier),
-  {
+  return customFetch<TrailResponse>(getAdminTrailsGetTrailUrl(identifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAdminTrailsGetTrailQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/trails/${identifier}`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAdminTrailsGetTrailQueryKey = (identifier: string,) => {
-    return [
-    `/api/v1/admin/trails/${identifier}`
-    ] as const;
-    }
-
-
-export const getAdminTrailsGetTrailQueryOptions = <TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminTrailsGetTrailQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminTrailsGetTrailQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminTrailsGetTrailQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrail>>> = ({ signal }) =>
+    adminTrailsGetTrail(identifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrail>>> = ({ signal }) => adminTrailsGetTrail(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminTrailsGetTrailQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrail>>>
-export type AdminTrailsGetTrailQueryError = unknown
-
+export type AdminTrailsGetTrailQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrail>>>;
+export type AdminTrailsGetTrailQueryError = unknown;
 
 export function useAdminTrailsGetTrail<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>> & Pick<
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminTrailsGetTrail>>,
           TError,
           Awaited<ReturnType<typeof adminTrailsGetTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminTrailsGetTrail<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>> & Pick<
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminTrailsGetTrail>>,
           TError,
           Awaited<ReturnType<typeof adminTrailsGetTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminTrailsGetTrail<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useAdminTrailsGetTrail<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminTrailsGetTrailQueryOptions(identifier, options);
 
-  const queryOptions = getAdminTrailsGetTrailQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminTrailsGetTrailSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminTrailsGetTrailSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminTrailsGetTrailQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminTrailsGetTrailQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrail>>> = ({ signal }) =>
+    adminTrailsGetTrail(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminTrailsGetTrail>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminTrailsGetTrailSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrail>>>;
+export type AdminTrailsGetTrailSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrail>>> = ({ signal }) => adminTrailsGetTrail(identifier, { signal, ...requestOptions });
+export function useAdminTrailsGetTrailSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetTrailSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetTrailSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminTrailsGetTrailSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminTrailsGetTrailSuspenseQueryOptions(identifier, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminTrailsGetTrailSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrail>>>
-export type AdminTrailsGetTrailSuspenseQueryError = unknown
-
-
-export function useAdminTrailsGetTrailSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetTrailSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetTrailSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminTrailsGetTrailSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminTrailsGetTrailSuspenseQueryOptions(identifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminTrailsUpdateTrailUrl = (identifier: string) => {
+  return `/api/v1/admin/trails/${identifier}`;
+};
 
-
-
-
-
-export const getAdminTrailsUpdateTrailUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/trails/${identifier}`
-}
-
-export const adminTrailsUpdateTrail = async (identifier: string,
-    updateTrailRequest: UpdateTrailRequest, options?: RequestInit): Promise<TrailResponse> => {
-
-  return customFetch<TrailResponse>(getAdminTrailsUpdateTrailUrl(identifier),
-  {
+export const adminTrailsUpdateTrail = async (
+  identifier: string,
+  updateTrailRequest: UpdateTrailRequest,
+  options?: RequestInit,
+): Promise<TrailResponse> => {
+  return customFetch<TrailResponse>(getAdminTrailsUpdateTrailUrl(identifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(updateTrailRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateTrailRequest),
+  });
+};
 
+export const getAdminTrailsUpdateTrailMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminTrailsUpdateTrail>>,
+    TError,
+    { identifier: string; data: UpdateTrailRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminTrailsUpdateTrail>>,
+  TError,
+  { identifier: string; data: UpdateTrailRequest },
+  TContext
+> => {
+  const mutationKey = ["adminTrailsUpdateTrail"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminTrailsUpdateTrail>>,
+    { identifier: string; data: UpdateTrailRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminTrailsUpdateTrail(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminTrailsUpdateTrailMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsUpdateTrail>>, TError,{identifier: string;data: UpdateTrailRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminTrailsUpdateTrail>>, TError,{identifier: string;data: UpdateTrailRequest}, TContext> => {
+export type AdminTrailsUpdateTrailMutationResult = NonNullable<Awaited<ReturnType<typeof adminTrailsUpdateTrail>>>;
+export type AdminTrailsUpdateTrailMutationBody = UpdateTrailRequest;
+export type AdminTrailsUpdateTrailMutationError = unknown;
 
-const mutationKey = ['adminTrailsUpdateTrail'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useAdminTrailsUpdateTrail = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminTrailsUpdateTrail>>,
+      TError,
+      { identifier: string; data: UpdateTrailRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminTrailsUpdateTrail>>,
+  TError,
+  { identifier: string; data: UpdateTrailRequest },
+  TContext
+> => {
+  return useMutation(getAdminTrailsUpdateTrailMutationOptions(options), queryClient);
+};
+export const getAdminTrailsGetTrailPathUrl = (identifier: string) => {
+  return `/api/v1/admin/trails/${identifier}/path`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminTrailsUpdateTrail>>, {identifier: string;data: UpdateTrailRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminTrailsUpdateTrail(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminTrailsUpdateTrailMutationResult = NonNullable<Awaited<ReturnType<typeof adminTrailsUpdateTrail>>>
-    export type AdminTrailsUpdateTrailMutationBody = UpdateTrailRequest
-    export type AdminTrailsUpdateTrailMutationError = unknown
-
-    export const useAdminTrailsUpdateTrail = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsUpdateTrail>>, TError,{identifier: string;data: UpdateTrailRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminTrailsUpdateTrail>>,
-        TError,
-        {identifier: string;data: UpdateTrailRequest},
-        TContext
-      > => {
-      return useMutation(getAdminTrailsUpdateTrailMutationOptions(options), queryClient);
-    }
-    export const getAdminTrailsGetTrailPathUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/trails/${identifier}/path`
-}
-
-export const adminTrailsGetTrailPath = async (identifier: string, options?: RequestInit): Promise<AdminTrailPathResponse> => {
-
-  return customFetch<AdminTrailPathResponse>(getAdminTrailsGetTrailPathUrl(identifier),
-  {
+export const adminTrailsGetTrailPath = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<AdminTrailPathResponse> => {
+  return customFetch<AdminTrailPathResponse>(getAdminTrailsGetTrailPathUrl(identifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAdminTrailsGetTrailPathQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/trails/${identifier}/path`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAdminTrailsGetTrailPathQueryKey = (identifier: string,) => {
-    return [
-    `/api/v1/admin/trails/${identifier}/path`
-    ] as const;
-    }
-
-
-export const getAdminTrailsGetTrailPathQueryOptions = <TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminTrailsGetTrailPathQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminTrailsGetTrailPathQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminTrailsGetTrailPathQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>> = ({ signal }) =>
+    adminTrailsGetTrailPath(identifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type AdminTrailsGetTrailPathQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>>;
+export type AdminTrailsGetTrailPathQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>> = ({ signal }) => adminTrailsGetTrailPath(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminTrailsGetTrailPathQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>>
-export type AdminTrailsGetTrailPathQueryError = unknown
-
-
-export function useAdminTrailsGetTrailPath<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>> & Pick<
+export function useAdminTrailsGetTrailPath<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
           TError,
           Awaited<ReturnType<typeof adminTrailsGetTrailPath>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetTrailPath<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetTrailPath<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
           TError,
           Awaited<ReturnType<typeof adminTrailsGetTrailPath>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetTrailPath<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetTrailPath<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminTrailsGetTrailPath<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminTrailsGetTrailPath<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminTrailsGetTrailPathQueryOptions(identifier, options);
 
-  const queryOptions = getAdminTrailsGetTrailPathQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminTrailsGetTrailPathSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminTrailsGetTrailPathSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminTrailsGetTrailPathQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminTrailsGetTrailPathQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>> = ({ signal }) =>
+    adminTrailsGetTrailPath(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminTrailsGetTrailPathSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminTrailsGetTrailPath>>
+>;
+export type AdminTrailsGetTrailPathSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>> = ({ signal }) => adminTrailsGetTrailPath(identifier, { signal, ...requestOptions });
+export function useAdminTrailsGetTrailPathSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetTrailPathSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminTrailsGetTrailPathSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminTrailsGetTrailPathSuspense<
+  TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminTrailsGetTrailPathSuspenseQueryOptions(identifier, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminTrailsGetTrailPathSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>>
-export type AdminTrailsGetTrailPathSuspenseQueryError = unknown
-
-
-export function useAdminTrailsGetTrailPathSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetTrailPathSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminTrailsGetTrailPathSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminTrailsGetTrailPathSuspense<TData = Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminTrailsGetTrailPath>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminTrailsGetTrailPathSuspenseQueryOptions(identifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminTrailsSetTrailVerifiedUrl = (identifier: string) => {
+  return `/api/v1/admin/trails/${identifier}/verified`;
+};
 
-
-
-
-
-export const getAdminTrailsSetTrailVerifiedUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/trails/${identifier}/verified`
-}
-
-export const adminTrailsSetTrailVerified = async (identifier: string,
-    setTrailVerifiedRequest: SetTrailVerifiedRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminTrailsSetTrailVerifiedUrl(identifier),
-  {
+export const adminTrailsSetTrailVerified = async (
+  identifier: string,
+  setTrailVerifiedRequest: SetTrailVerifiedRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminTrailsSetTrailVerifiedUrl(identifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(setTrailVerifiedRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setTrailVerifiedRequest),
+  });
+};
 
+export const getAdminTrailsSetTrailVerifiedMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>,
+    TError,
+    { identifier: string; data: SetTrailVerifiedRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>,
+  TError,
+  { identifier: string; data: SetTrailVerifiedRequest },
+  TContext
+> => {
+  const mutationKey = ["adminTrailsSetTrailVerified"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>,
+    { identifier: string; data: SetTrailVerifiedRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminTrailsSetTrailVerified(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminTrailsSetTrailVerifiedMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>, TError,{identifier: string;data: SetTrailVerifiedRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>, TError,{identifier: string;data: SetTrailVerifiedRequest}, TContext> => {
+export type AdminTrailsSetTrailVerifiedMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>
+>;
+export type AdminTrailsSetTrailVerifiedMutationBody = SetTrailVerifiedRequest;
+export type AdminTrailsSetTrailVerifiedMutationError = unknown;
 
-const mutationKey = ['adminTrailsSetTrailVerified'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>, {identifier: string;data: SetTrailVerifiedRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminTrailsSetTrailVerified(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminTrailsSetTrailVerifiedMutationResult = NonNullable<Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>>
-    export type AdminTrailsSetTrailVerifiedMutationBody = SetTrailVerifiedRequest
-    export type AdminTrailsSetTrailVerifiedMutationError = unknown
-
-    export const useAdminTrailsSetTrailVerified = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>, TError,{identifier: string;data: SetTrailVerifiedRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>,
-        TError,
-        {identifier: string;data: SetTrailVerifiedRequest},
-        TContext
-      > => {
-      return useMutation(getAdminTrailsSetTrailVerifiedMutationOptions(options), queryClient);
-    }
-    export const getAdminTrailsDeleteTrailImageUrl = (imageIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/trails/images/${imageIdentifier}`
-}
+export const useAdminTrailsSetTrailVerified = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>,
+      TError,
+      { identifier: string; data: SetTrailVerifiedRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminTrailsSetTrailVerified>>,
+  TError,
+  { identifier: string; data: SetTrailVerifiedRequest },
+  TContext
+> => {
+  return useMutation(getAdminTrailsSetTrailVerifiedMutationOptions(options), queryClient);
+};
+export const getAdminTrailsDeleteTrailImageUrl = (imageIdentifier: string) => {
+  return `/api/v1/admin/trails/images/${imageIdentifier}`;
+};
 
 export const adminTrailsDeleteTrailImage = async (imageIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminTrailsDeleteTrailImageUrl(imageIdentifier),
-  {
+  return customFetch<Blob>(getAdminTrailsDeleteTrailImageUrl(imageIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getAdminTrailsDeleteTrailImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>,
+    TError,
+    { imageIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>,
+  TError,
+  { imageIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminTrailsDeleteTrailImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>,
+    { imageIdentifier: string }
+  > = (props) => {
+    const { imageIdentifier } = props ?? {};
+
+    return adminTrailsDeleteTrailImage(imageIdentifier, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminTrailsDeleteTrailImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>
+>;
+
+export type AdminTrailsDeleteTrailImageMutationError = unknown;
+
+export const useAdminTrailsDeleteTrailImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>,
+      TError,
+      { imageIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>,
+  TError,
+  { imageIdentifier: string },
+  TContext
+> => {
+  return useMutation(getAdminTrailsDeleteTrailImageMutationOptions(options), queryClient);
+};
+export const getAdminTrailsAddTrailImagesUrl = (identifier: string) => {
+  return `/api/v1/admin/trails/${identifier}/images`;
+};
+
+export const adminTrailsAddTrailImages = async (
+  identifier: string,
+  adminTrailsAddTrailImagesBody?: AdminTrailsAddTrailImagesBody,
+  options?: RequestInit,
+): Promise<TrailImageResponse[]> => {
+  const formData = new FormData();
+  if (adminTrailsAddTrailImagesBody?.images !== undefined && adminTrailsAddTrailImagesBody.images !== null) {
+    adminTrailsAddTrailImagesBody?.images.forEach((value) => formData.append(`images`, value));
   }
-);}
+  if (adminTrailsAddTrailImagesBody?.MaxWidth !== undefined && adminTrailsAddTrailImagesBody.MaxWidth !== null) {
+    formData.append(`MaxWidth`, adminTrailsAddTrailImagesBody.MaxWidth.toString());
+  }
+  if (adminTrailsAddTrailImagesBody?.MaxHeight !== undefined && adminTrailsAddTrailImagesBody.MaxHeight !== null) {
+    formData.append(`MaxHeight`, adminTrailsAddTrailImagesBody.MaxHeight.toString());
+  }
+  if (adminTrailsAddTrailImagesBody?.Quality !== undefined && adminTrailsAddTrailImagesBody.Quality !== null) {
+    formData.append(`Quality`, adminTrailsAddTrailImagesBody.Quality.toString());
+  }
+  if (adminTrailsAddTrailImagesBody?.Format !== undefined && adminTrailsAddTrailImagesBody.Format !== null) {
+    formData.append(`Format`, adminTrailsAddTrailImagesBody.Format);
+  }
+  if (adminTrailsAddTrailImagesBody?.CropX !== undefined && adminTrailsAddTrailImagesBody.CropX !== null) {
+    formData.append(`CropX`, adminTrailsAddTrailImagesBody.CropX.toString());
+  }
+  if (adminTrailsAddTrailImagesBody?.CropY !== undefined && adminTrailsAddTrailImagesBody.CropY !== null) {
+    formData.append(`CropY`, adminTrailsAddTrailImagesBody.CropY.toString());
+  }
+  if (adminTrailsAddTrailImagesBody?.CropWidth !== undefined && adminTrailsAddTrailImagesBody.CropWidth !== null) {
+    formData.append(`CropWidth`, adminTrailsAddTrailImagesBody.CropWidth.toString());
+  }
+  if (adminTrailsAddTrailImagesBody?.CropHeight !== undefined && adminTrailsAddTrailImagesBody.CropHeight !== null) {
+    formData.append(`CropHeight`, adminTrailsAddTrailImagesBody.CropHeight.toString());
+  }
 
-
-
-
-
-export const getAdminTrailsDeleteTrailImageMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>, TError,{imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>, TError,{imageIdentifier: string}, TContext> => {
-
-const mutationKey = ['adminTrailsDeleteTrailImage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>, {imageIdentifier: string}> = (props) => {
-          const {imageIdentifier} = props ?? {};
-
-          return  adminTrailsDeleteTrailImage(imageIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminTrailsDeleteTrailImageMutationResult = NonNullable<Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>>
-
-    export type AdminTrailsDeleteTrailImageMutationError = unknown
-
-    export const useAdminTrailsDeleteTrailImage = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>, TError,{imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminTrailsDeleteTrailImage>>,
-        TError,
-        {imageIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminTrailsDeleteTrailImageMutationOptions(options), queryClient);
-    }
-    export const getAdminTrailsAddTrailImagesUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/trails/${identifier}/images`
-}
-
-export const adminTrailsAddTrailImages = async (identifier: string,
-    adminTrailsAddTrailImagesBody?: AdminTrailsAddTrailImagesBody, options?: RequestInit): Promise<TrailImageResponse[]> => {
-    const formData = new FormData();
-if(adminTrailsAddTrailImagesBody?.images !== undefined && adminTrailsAddTrailImagesBody.images !== null) {
- adminTrailsAddTrailImagesBody?.images.forEach(value => formData.append(`images`, value));
- }
-if(adminTrailsAddTrailImagesBody?.MaxWidth !== undefined && adminTrailsAddTrailImagesBody.MaxWidth !== null) {
- formData.append(`MaxWidth`, adminTrailsAddTrailImagesBody.MaxWidth.toString())
- }
-if(adminTrailsAddTrailImagesBody?.MaxHeight !== undefined && adminTrailsAddTrailImagesBody.MaxHeight !== null) {
- formData.append(`MaxHeight`, adminTrailsAddTrailImagesBody.MaxHeight.toString())
- }
-if(adminTrailsAddTrailImagesBody?.Quality !== undefined && adminTrailsAddTrailImagesBody.Quality !== null) {
- formData.append(`Quality`, adminTrailsAddTrailImagesBody.Quality.toString())
- }
-if(adminTrailsAddTrailImagesBody?.Format !== undefined && adminTrailsAddTrailImagesBody.Format !== null) {
- formData.append(`Format`, adminTrailsAddTrailImagesBody.Format);
- }
-if(adminTrailsAddTrailImagesBody?.CropX !== undefined && adminTrailsAddTrailImagesBody.CropX !== null) {
- formData.append(`CropX`, adminTrailsAddTrailImagesBody.CropX.toString())
- }
-if(adminTrailsAddTrailImagesBody?.CropY !== undefined && adminTrailsAddTrailImagesBody.CropY !== null) {
- formData.append(`CropY`, adminTrailsAddTrailImagesBody.CropY.toString())
- }
-if(adminTrailsAddTrailImagesBody?.CropWidth !== undefined && adminTrailsAddTrailImagesBody.CropWidth !== null) {
- formData.append(`CropWidth`, adminTrailsAddTrailImagesBody.CropWidth.toString())
- }
-if(adminTrailsAddTrailImagesBody?.CropHeight !== undefined && adminTrailsAddTrailImagesBody.CropHeight !== null) {
- formData.append(`CropHeight`, adminTrailsAddTrailImagesBody.CropHeight.toString())
- }
-
-  return customFetch<TrailImageResponse[]>(getAdminTrailsAddTrailImagesUrl(identifier),
-  {
+  return customFetch<TrailImageResponse[]>(getAdminTrailsAddTrailImagesUrl(identifier), {
     ...options,
-    method: 'POST'
-    ,
-    body: formData
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getAdminTrailsAddTrailImagesMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminTrailsAddTrailImages>>,
+    TError,
+    { identifier: string; data?: AdminTrailsAddTrailImagesBody },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminTrailsAddTrailImages>>,
+  TError,
+  { identifier: string; data?: AdminTrailsAddTrailImagesBody },
+  TContext
+> => {
+  const mutationKey = ["adminTrailsAddTrailImages"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminTrailsAddTrailImages>>,
+    { identifier: string; data?: AdminTrailsAddTrailImagesBody }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
+
+    return adminTrailsAddTrailImages(identifier, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminTrailsAddTrailImagesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminTrailsAddTrailImages>>
+>;
+export type AdminTrailsAddTrailImagesMutationBody = AdminTrailsAddTrailImagesBody | undefined;
+export type AdminTrailsAddTrailImagesMutationError = unknown;
+
+export const useAdminTrailsAddTrailImages = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminTrailsAddTrailImages>>,
+      TError,
+      { identifier: string; data?: AdminTrailsAddTrailImagesBody },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminTrailsAddTrailImages>>,
+  TError,
+  { identifier: string; data?: AdminTrailsAddTrailImagesBody },
+  TContext
+> => {
+  return useMutation(getAdminTrailsAddTrailImagesMutationOptions(options), queryClient);
+};
+export const getAdminTrailsSetTrailSymbolUrl = (identifier: string) => {
+  return `/api/v1/admin/trails/${identifier}/symbol`;
+};
+
+export const adminTrailsSetTrailSymbol = async (
+  identifier: string,
+  adminTrailsSetTrailSymbolBody?: AdminTrailsSetTrailSymbolBody,
+  options?: RequestInit,
+): Promise<TrailSymbolResponse> => {
+  const formData = new FormData();
+  if (adminTrailsSetTrailSymbolBody?.ContentType !== undefined && adminTrailsSetTrailSymbolBody.ContentType !== null) {
+    formData.append(`ContentType`, adminTrailsSetTrailSymbolBody.ContentType);
   }
-);}
+  if (
+    adminTrailsSetTrailSymbolBody?.ContentDisposition !== undefined &&
+    adminTrailsSetTrailSymbolBody.ContentDisposition !== null
+  ) {
+    formData.append(`ContentDisposition`, adminTrailsSetTrailSymbolBody.ContentDisposition);
+  }
+  if (adminTrailsSetTrailSymbolBody?.Headers !== undefined && adminTrailsSetTrailSymbolBody.Headers !== null) {
+    adminTrailsSetTrailSymbolBody?.Headers.forEach((value) => formData.append(`Headers`, value));
+  }
+  if (adminTrailsSetTrailSymbolBody?.Length !== undefined) {
+    formData.append(`Length`, adminTrailsSetTrailSymbolBody.Length.toString());
+  }
+  if (adminTrailsSetTrailSymbolBody?.Name !== undefined && adminTrailsSetTrailSymbolBody.Name !== null) {
+    formData.append(`Name`, adminTrailsSetTrailSymbolBody.Name);
+  }
+  if (adminTrailsSetTrailSymbolBody?.FileName !== undefined && adminTrailsSetTrailSymbolBody.FileName !== null) {
+    formData.append(`FileName`, adminTrailsSetTrailSymbolBody.FileName);
+  }
+  if (adminTrailsSetTrailSymbolBody?.MaxWidth !== undefined && adminTrailsSetTrailSymbolBody.MaxWidth !== null) {
+    formData.append(`MaxWidth`, adminTrailsSetTrailSymbolBody.MaxWidth.toString());
+  }
+  if (adminTrailsSetTrailSymbolBody?.MaxHeight !== undefined && adminTrailsSetTrailSymbolBody.MaxHeight !== null) {
+    formData.append(`MaxHeight`, adminTrailsSetTrailSymbolBody.MaxHeight.toString());
+  }
+  if (adminTrailsSetTrailSymbolBody?.Quality !== undefined && adminTrailsSetTrailSymbolBody.Quality !== null) {
+    formData.append(`Quality`, adminTrailsSetTrailSymbolBody.Quality.toString());
+  }
+  if (adminTrailsSetTrailSymbolBody?.Format !== undefined && adminTrailsSetTrailSymbolBody.Format !== null) {
+    formData.append(`Format`, adminTrailsSetTrailSymbolBody.Format);
+  }
+  if (adminTrailsSetTrailSymbolBody?.CropX !== undefined && adminTrailsSetTrailSymbolBody.CropX !== null) {
+    formData.append(`CropX`, adminTrailsSetTrailSymbolBody.CropX.toString());
+  }
+  if (adminTrailsSetTrailSymbolBody?.CropY !== undefined && adminTrailsSetTrailSymbolBody.CropY !== null) {
+    formData.append(`CropY`, adminTrailsSetTrailSymbolBody.CropY.toString());
+  }
+  if (adminTrailsSetTrailSymbolBody?.CropWidth !== undefined && adminTrailsSetTrailSymbolBody.CropWidth !== null) {
+    formData.append(`CropWidth`, adminTrailsSetTrailSymbolBody.CropWidth.toString());
+  }
+  if (adminTrailsSetTrailSymbolBody?.CropHeight !== undefined && adminTrailsSetTrailSymbolBody.CropHeight !== null) {
+    formData.append(`CropHeight`, adminTrailsSetTrailSymbolBody.CropHeight.toString());
+  }
 
-
-
-
-
-export const getAdminTrailsAddTrailImagesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsAddTrailImages>>, TError,{identifier: string;data?: AdminTrailsAddTrailImagesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminTrailsAddTrailImages>>, TError,{identifier: string;data?: AdminTrailsAddTrailImagesBody}, TContext> => {
-
-const mutationKey = ['adminTrailsAddTrailImages'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminTrailsAddTrailImages>>, {identifier: string;data?: AdminTrailsAddTrailImagesBody}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminTrailsAddTrailImages(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminTrailsAddTrailImagesMutationResult = NonNullable<Awaited<ReturnType<typeof adminTrailsAddTrailImages>>>
-    export type AdminTrailsAddTrailImagesMutationBody = AdminTrailsAddTrailImagesBody | undefined
-    export type AdminTrailsAddTrailImagesMutationError = unknown
-
-    export const useAdminTrailsAddTrailImages = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsAddTrailImages>>, TError,{identifier: string;data?: AdminTrailsAddTrailImagesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminTrailsAddTrailImages>>,
-        TError,
-        {identifier: string;data?: AdminTrailsAddTrailImagesBody},
-        TContext
-      > => {
-      return useMutation(getAdminTrailsAddTrailImagesMutationOptions(options), queryClient);
-    }
-    export const getAdminTrailsSetTrailSymbolUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/trails/${identifier}/symbol`
-}
-
-export const adminTrailsSetTrailSymbol = async (identifier: string,
-    adminTrailsSetTrailSymbolBody?: AdminTrailsSetTrailSymbolBody, options?: RequestInit): Promise<TrailSymbolResponse> => {
-    const formData = new FormData();
-if(adminTrailsSetTrailSymbolBody?.ContentType !== undefined && adminTrailsSetTrailSymbolBody.ContentType !== null) {
- formData.append(`ContentType`, adminTrailsSetTrailSymbolBody.ContentType);
- }
-if(adminTrailsSetTrailSymbolBody?.ContentDisposition !== undefined && adminTrailsSetTrailSymbolBody.ContentDisposition !== null) {
- formData.append(`ContentDisposition`, adminTrailsSetTrailSymbolBody.ContentDisposition);
- }
-if(adminTrailsSetTrailSymbolBody?.Headers !== undefined && adminTrailsSetTrailSymbolBody.Headers !== null) {
- adminTrailsSetTrailSymbolBody?.Headers.forEach(value => formData.append(`Headers`, value));
- }
-if(adminTrailsSetTrailSymbolBody?.Length !== undefined) {
- formData.append(`Length`, adminTrailsSetTrailSymbolBody.Length.toString())
- }
-if(adminTrailsSetTrailSymbolBody?.Name !== undefined && adminTrailsSetTrailSymbolBody.Name !== null) {
- formData.append(`Name`, adminTrailsSetTrailSymbolBody.Name);
- }
-if(adminTrailsSetTrailSymbolBody?.FileName !== undefined && adminTrailsSetTrailSymbolBody.FileName !== null) {
- formData.append(`FileName`, adminTrailsSetTrailSymbolBody.FileName);
- }
-if(adminTrailsSetTrailSymbolBody?.MaxWidth !== undefined && adminTrailsSetTrailSymbolBody.MaxWidth !== null) {
- formData.append(`MaxWidth`, adminTrailsSetTrailSymbolBody.MaxWidth.toString())
- }
-if(adminTrailsSetTrailSymbolBody?.MaxHeight !== undefined && adminTrailsSetTrailSymbolBody.MaxHeight !== null) {
- formData.append(`MaxHeight`, adminTrailsSetTrailSymbolBody.MaxHeight.toString())
- }
-if(adminTrailsSetTrailSymbolBody?.Quality !== undefined && adminTrailsSetTrailSymbolBody.Quality !== null) {
- formData.append(`Quality`, adminTrailsSetTrailSymbolBody.Quality.toString())
- }
-if(adminTrailsSetTrailSymbolBody?.Format !== undefined && adminTrailsSetTrailSymbolBody.Format !== null) {
- formData.append(`Format`, adminTrailsSetTrailSymbolBody.Format);
- }
-if(adminTrailsSetTrailSymbolBody?.CropX !== undefined && adminTrailsSetTrailSymbolBody.CropX !== null) {
- formData.append(`CropX`, adminTrailsSetTrailSymbolBody.CropX.toString())
- }
-if(adminTrailsSetTrailSymbolBody?.CropY !== undefined && adminTrailsSetTrailSymbolBody.CropY !== null) {
- formData.append(`CropY`, adminTrailsSetTrailSymbolBody.CropY.toString())
- }
-if(adminTrailsSetTrailSymbolBody?.CropWidth !== undefined && adminTrailsSetTrailSymbolBody.CropWidth !== null) {
- formData.append(`CropWidth`, adminTrailsSetTrailSymbolBody.CropWidth.toString())
- }
-if(adminTrailsSetTrailSymbolBody?.CropHeight !== undefined && adminTrailsSetTrailSymbolBody.CropHeight !== null) {
- formData.append(`CropHeight`, adminTrailsSetTrailSymbolBody.CropHeight.toString())
- }
-
-  return customFetch<TrailSymbolResponse>(getAdminTrailsSetTrailSymbolUrl(identifier),
-  {
+  return customFetch<TrailSymbolResponse>(getAdminTrailsSetTrailSymbolUrl(identifier), {
     ...options,
-    method: 'POST'
-    ,
-    body: formData
-  }
-);}
+    method: "POST",
+    body: formData,
+  });
+};
 
+export const getAdminTrailsSetTrailSymbolMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>,
+    TError,
+    { identifier: string; data?: AdminTrailsSetTrailSymbolBody },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>,
+  TError,
+  { identifier: string; data?: AdminTrailsSetTrailSymbolBody },
+  TContext
+> => {
+  const mutationKey = ["adminTrailsSetTrailSymbol"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>,
+    { identifier: string; data?: AdminTrailsSetTrailSymbolBody }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminTrailsSetTrailSymbol(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminTrailsSetTrailSymbolMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>, TError,{identifier: string;data?: AdminTrailsSetTrailSymbolBody}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>, TError,{identifier: string;data?: AdminTrailsSetTrailSymbolBody}, TContext> => {
+export type AdminTrailsSetTrailSymbolMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>
+>;
+export type AdminTrailsSetTrailSymbolMutationBody = AdminTrailsSetTrailSymbolBody | undefined;
+export type AdminTrailsSetTrailSymbolMutationError = unknown;
 
-const mutationKey = ['adminTrailsSetTrailSymbol'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>, {identifier: string;data?: AdminTrailsSetTrailSymbolBody}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminTrailsSetTrailSymbol(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminTrailsSetTrailSymbolMutationResult = NonNullable<Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>>
-    export type AdminTrailsSetTrailSymbolMutationBody = AdminTrailsSetTrailSymbolBody | undefined
-    export type AdminTrailsSetTrailSymbolMutationError = unknown
-
-    export const useAdminTrailsSetTrailSymbol = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>, TError,{identifier: string;data?: AdminTrailsSetTrailSymbolBody}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>,
-        TError,
-        {identifier: string;data?: AdminTrailsSetTrailSymbolBody},
-        TContext
-      > => {
-      return useMutation(getAdminTrailsSetTrailSymbolMutationOptions(options), queryClient);
-    }
+export const useAdminTrailsSetTrailSymbol = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>,
+      TError,
+      { identifier: string; data?: AdminTrailsSetTrailSymbolBody },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminTrailsSetTrailSymbol>>,
+  TError,
+  { identifier: string; data?: AdminTrailsSetTrailSymbolBody },
+  TContext
+> => {
+  return useMutation(getAdminTrailsSetTrailSymbolMutationOptions(options), queryClient);
+};

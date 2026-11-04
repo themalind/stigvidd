@@ -5,10 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -20,26 +17,21 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
-import type {
-  AdminDashboardResponse
-} from '../model';
+import type { AdminDashboardResponse } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -50,148 +42,182 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getAdminDashboardGetDashboardUrl = () => {
+  return `/api/v1/admin/dashboard`;
+};
 
-
-
-
-  return `/api/v1/admin/dashboard`
-}
-
-export const adminDashboardGetDashboard = async ( options?: RequestInit): Promise<AdminDashboardResponse> => {
-
-  return customFetch<AdminDashboardResponse>(getAdminDashboardGetDashboardUrl(),
-  {
+export const adminDashboardGetDashboard = async (options?: RequestInit): Promise<AdminDashboardResponse> => {
+  return customFetch<AdminDashboardResponse>(getAdminDashboardGetDashboardUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getAdminDashboardGetDashboardQueryKey = () => {
-    return [
-    `/api/v1/admin/dashboard`
-    ] as const;
-    }
+  return [`/api/v1/admin/dashboard`] as const;
+};
 
+export const getAdminDashboardGetDashboardQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getAdminDashboardGetDashboardQueryOptions = <TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getAdminDashboardGetDashboardQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminDashboardGetDashboard>>> = ({ signal }) =>
+    adminDashboardGetDashboard({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminDashboardGetDashboardQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminDashboardGetDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof adminDashboardGetDashboard>>>;
+export type AdminDashboardGetDashboardQueryError = unknown;
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminDashboardGetDashboard>>> = ({ signal }) => adminDashboardGetDashboard({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminDashboardGetDashboardQueryResult = NonNullable<Awaited<ReturnType<typeof adminDashboardGetDashboard>>>
-export type AdminDashboardGetDashboardQueryError = unknown
-
-
-export function useAdminDashboardGetDashboard<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>> & Pick<
+export function useAdminDashboardGetDashboard<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
           TError,
           Awaited<ReturnType<typeof adminDashboardGetDashboard>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminDashboardGetDashboard<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetDashboard<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
           TError,
           Awaited<ReturnType<typeof adminDashboardGetDashboard>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminDashboardGetDashboard<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetDashboard<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminDashboardGetDashboard<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminDashboardGetDashboard<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminDashboardGetDashboardQueryOptions(options);
 
-  const queryOptions = getAdminDashboardGetDashboardQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminDashboardGetDashboardSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminDashboardGetDashboardQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminDashboardGetDashboard>>> = ({ signal }) => adminDashboardGetDashboard({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminDashboardGetDashboardSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminDashboardGetDashboard>>>
-export type AdminDashboardGetDashboardSuspenseQueryError = unknown
-
-
-export function useAdminDashboardGetDashboardSuspense<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminDashboardGetDashboardSuspense<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminDashboardGetDashboardSuspense<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminDashboardGetDashboardSuspense<TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminDashboardGetDashboardSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminDashboardGetDashboardSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getAdminDashboardGetDashboardQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminDashboardGetDashboard>>> = ({ signal }) =>
+    adminDashboardGetDashboard({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminDashboardGetDashboardSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminDashboardGetDashboard>>
+>;
+export type AdminDashboardGetDashboardSuspenseQueryError = unknown;
 
+export function useAdminDashboardGetDashboardSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetDashboardSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetDashboardSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useAdminDashboardGetDashboardSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetDashboard>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetDashboard>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminDashboardGetDashboardSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

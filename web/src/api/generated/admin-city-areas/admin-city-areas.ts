@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,26 +20,21 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
-import type {
-  AdminCityAreaResponse
-} from '../model';
+import type { AdminCityAreaResponse } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -54,412 +45,459 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getAdminCityAreasGetAllUrl = () => {
+  return `/api/v1/admin/city-areas`;
+};
 
-
-
-
-  return `/api/v1/admin/city-areas`
-}
-
-export const adminCityAreasGetAll = async ( options?: RequestInit): Promise<AdminCityAreaResponse[]> => {
-
-  return customFetch<AdminCityAreaResponse[]>(getAdminCityAreasGetAllUrl(),
-  {
+export const adminCityAreasGetAll = async (options?: RequestInit): Promise<AdminCityAreaResponse[]> => {
+  return customFetch<AdminCityAreaResponse[]>(getAdminCityAreasGetAllUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getAdminCityAreasGetAllQueryKey = () => {
-    return [
-    `/api/v1/admin/city-areas`
-    ] as const;
-    }
+  return [`/api/v1/admin/city-areas`] as const;
+};
 
+export const getAdminCityAreasGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getAdminCityAreasGetAllQueryOptions = <TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasGetAllQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetAll>>> = ({ signal }) =>
+    adminCityAreasGetAll({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminCityAreasGetAllQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetAll>>> = ({ signal }) => adminCityAreasGetAll({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminCityAreasGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasGetAll>>>
-export type AdminCityAreasGetAllQueryError = unknown
-
+export type AdminCityAreasGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasGetAll>>>;
+export type AdminCityAreasGetAllQueryError = unknown;
 
 export function useAdminCityAreasGetAll<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>> & Pick<
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminCityAreasGetAll>>,
           TError,
           Awaited<ReturnType<typeof adminCityAreasGetAll>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminCityAreasGetAll<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>> & Pick<
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminCityAreasGetAll>>,
           TError,
           Awaited<ReturnType<typeof adminCityAreasGetAll>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminCityAreasGetAll<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useAdminCityAreasGetAll<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasGetAllQueryOptions(options);
 
-  const queryOptions = getAdminCityAreasGetAllQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminCityAreasGetAllSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasGetAllQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetAll>>> = ({ signal }) =>
+    adminCityAreasGetAll({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminCityAreasGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasGetAll>>>;
+export type AdminCityAreasGetAllSuspenseQueryError = unknown;
 
-export const getAdminCityAreasGetAllSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+export function useAdminCityAreasGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+export function useAdminCityAreasGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasGetAllSuspenseQueryOptions(options);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminCityAreasGetAllQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetAll>>> = ({ signal }) => adminCityAreasGetAll({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminCityAreasGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasGetAll>>>
-export type AdminCityAreasGetAllSuspenseQueryError = unknown
-
-
-export function useAdminCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminCityAreasGetAllSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminCityAreasLinkFacilityUrl = (identifier: string, facilityIdentifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/facilities/${facilityIdentifier}`;
+};
 
-
-
-
-
-export const getAdminCityAreasLinkFacilityUrl = (identifier: string,
-    facilityIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/city-areas/${identifier}/facilities/${facilityIdentifier}`
-}
-
-export const adminCityAreasLinkFacility = async (identifier: string,
-    facilityIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminCityAreasLinkFacilityUrl(identifier,facilityIdentifier),
-  {
+export const adminCityAreasLinkFacility = async (
+  identifier: string,
+  facilityIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminCityAreasLinkFacilityUrl(identifier, facilityIdentifier), {
     ...options,
-    method: 'PUT'
+    method: "PUT",
+  });
+};
 
+export const getAdminCityAreasLinkFacilityMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasLinkFacility>>,
+    TError,
+    { identifier: string; facilityIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasLinkFacility>>,
+  TError,
+  { identifier: string; facilityIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminCityAreasLinkFacility"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasLinkFacility>>,
+    { identifier: string; facilityIdentifier: string }
+  > = (props) => {
+    const { identifier, facilityIdentifier } = props ?? {};
 
+    return adminCityAreasLinkFacility(identifier, facilityIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminCityAreasLinkFacilityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasLinkFacility>>
+>;
 
+export type AdminCityAreasLinkFacilityMutationError = unknown;
 
-export const getAdminCityAreasLinkFacilityMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasLinkFacility>>, TError,{identifier: string;facilityIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasLinkFacility>>, TError,{identifier: string;facilityIdentifier: string}, TContext> => {
+export const useAdminCityAreasLinkFacility = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasLinkFacility>>,
+      TError,
+      { identifier: string; facilityIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasLinkFacility>>,
+  TError,
+  { identifier: string; facilityIdentifier: string },
+  TContext
+> => {
+  return useMutation(getAdminCityAreasLinkFacilityMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasUnlinkFacilityUrl = (identifier: string, facilityIdentifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/facilities/${facilityIdentifier}`;
+};
 
-const mutationKey = ['adminCityAreasLinkFacility'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCityAreasLinkFacility>>, {identifier: string;facilityIdentifier: string}> = (props) => {
-          const {identifier,facilityIdentifier} = props ?? {};
-
-          return  adminCityAreasLinkFacility(identifier,facilityIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminCityAreasLinkFacilityMutationResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasLinkFacility>>>
-
-    export type AdminCityAreasLinkFacilityMutationError = unknown
-
-    export const useAdminCityAreasLinkFacility = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasLinkFacility>>, TError,{identifier: string;facilityIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminCityAreasLinkFacility>>,
-        TError,
-        {identifier: string;facilityIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminCityAreasLinkFacilityMutationOptions(options), queryClient);
-    }
-    export const getAdminCityAreasUnlinkFacilityUrl = (identifier: string,
-    facilityIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/city-areas/${identifier}/facilities/${facilityIdentifier}`
-}
-
-export const adminCityAreasUnlinkFacility = async (identifier: string,
-    facilityIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminCityAreasUnlinkFacilityUrl(identifier,facilityIdentifier),
-  {
+export const adminCityAreasUnlinkFacility = async (
+  identifier: string,
+  facilityIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminCityAreasUnlinkFacilityUrl(identifier, facilityIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getAdminCityAreasUnlinkFacilityMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>,
+    TError,
+    { identifier: string; facilityIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>,
+  TError,
+  { identifier: string; facilityIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminCityAreasUnlinkFacility"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>,
+    { identifier: string; facilityIdentifier: string }
+  > = (props) => {
+    const { identifier, facilityIdentifier } = props ?? {};
 
+    return adminCityAreasUnlinkFacility(identifier, facilityIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminCityAreasUnlinkFacilityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>
+>;
 
+export type AdminCityAreasUnlinkFacilityMutationError = unknown;
 
-export const getAdminCityAreasUnlinkFacilityMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>, TError,{identifier: string;facilityIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>, TError,{identifier: string;facilityIdentifier: string}, TContext> => {
+export const useAdminCityAreasUnlinkFacility = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>,
+      TError,
+      { identifier: string; facilityIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>,
+  TError,
+  { identifier: string; facilityIdentifier: string },
+  TContext
+> => {
+  return useMutation(getAdminCityAreasUnlinkFacilityMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasLinkTrailUrl = (identifier: string, trailIdentifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/trails/${trailIdentifier}`;
+};
 
-const mutationKey = ['adminCityAreasUnlinkFacility'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>, {identifier: string;facilityIdentifier: string}> = (props) => {
-          const {identifier,facilityIdentifier} = props ?? {};
-
-          return  adminCityAreasUnlinkFacility(identifier,facilityIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminCityAreasUnlinkFacilityMutationResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>>
-
-    export type AdminCityAreasUnlinkFacilityMutationError = unknown
-
-    export const useAdminCityAreasUnlinkFacility = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>, TError,{identifier: string;facilityIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminCityAreasUnlinkFacility>>,
-        TError,
-        {identifier: string;facilityIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminCityAreasUnlinkFacilityMutationOptions(options), queryClient);
-    }
-    export const getAdminCityAreasLinkTrailUrl = (identifier: string,
-    trailIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/city-areas/${identifier}/trails/${trailIdentifier}`
-}
-
-export const adminCityAreasLinkTrail = async (identifier: string,
-    trailIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminCityAreasLinkTrailUrl(identifier,trailIdentifier),
-  {
+export const adminCityAreasLinkTrail = async (
+  identifier: string,
+  trailIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminCityAreasLinkTrailUrl(identifier, trailIdentifier), {
     ...options,
-    method: 'PUT'
+    method: "PUT",
+  });
+};
 
+export const getAdminCityAreasLinkTrailMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasLinkTrail>>,
+    TError,
+    { identifier: string; trailIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasLinkTrail>>,
+  TError,
+  { identifier: string; trailIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminCityAreasLinkTrail"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasLinkTrail>>,
+    { identifier: string; trailIdentifier: string }
+  > = (props) => {
+    const { identifier, trailIdentifier } = props ?? {};
 
+    return adminCityAreasLinkTrail(identifier, trailIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminCityAreasLinkTrailMutationResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasLinkTrail>>>;
 
+export type AdminCityAreasLinkTrailMutationError = unknown;
 
-export const getAdminCityAreasLinkTrailMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasLinkTrail>>, TError,{identifier: string;trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasLinkTrail>>, TError,{identifier: string;trailIdentifier: string}, TContext> => {
+export const useAdminCityAreasLinkTrail = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasLinkTrail>>,
+      TError,
+      { identifier: string; trailIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasLinkTrail>>,
+  TError,
+  { identifier: string; trailIdentifier: string },
+  TContext
+> => {
+  return useMutation(getAdminCityAreasLinkTrailMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasUnlinkTrailUrl = (identifier: string, trailIdentifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/trails/${trailIdentifier}`;
+};
 
-const mutationKey = ['adminCityAreasLinkTrail'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCityAreasLinkTrail>>, {identifier: string;trailIdentifier: string}> = (props) => {
-          const {identifier,trailIdentifier} = props ?? {};
-
-          return  adminCityAreasLinkTrail(identifier,trailIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminCityAreasLinkTrailMutationResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasLinkTrail>>>
-
-    export type AdminCityAreasLinkTrailMutationError = unknown
-
-    export const useAdminCityAreasLinkTrail = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasLinkTrail>>, TError,{identifier: string;trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminCityAreasLinkTrail>>,
-        TError,
-        {identifier: string;trailIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminCityAreasLinkTrailMutationOptions(options), queryClient);
-    }
-    export const getAdminCityAreasUnlinkTrailUrl = (identifier: string,
-    trailIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/city-areas/${identifier}/trails/${trailIdentifier}`
-}
-
-export const adminCityAreasUnlinkTrail = async (identifier: string,
-    trailIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminCityAreasUnlinkTrailUrl(identifier,trailIdentifier),
-  {
+export const adminCityAreasUnlinkTrail = async (
+  identifier: string,
+  trailIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminCityAreasUnlinkTrailUrl(identifier, trailIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getAdminCityAreasUnlinkTrailMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>,
+    TError,
+    { identifier: string; trailIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>,
+  TError,
+  { identifier: string; trailIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminCityAreasUnlinkTrail"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>,
+    { identifier: string; trailIdentifier: string }
+  > = (props) => {
+    const { identifier, trailIdentifier } = props ?? {};
 
+    return adminCityAreasUnlinkTrail(identifier, trailIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminCityAreasUnlinkTrailMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>
+>;
 
+export type AdminCityAreasUnlinkTrailMutationError = unknown;
 
-export const getAdminCityAreasUnlinkTrailMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>, TError,{identifier: string;trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>, TError,{identifier: string;trailIdentifier: string}, TContext> => {
-
-const mutationKey = ['adminCityAreasUnlinkTrail'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>, {identifier: string;trailIdentifier: string}> = (props) => {
-          const {identifier,trailIdentifier} = props ?? {};
-
-          return  adminCityAreasUnlinkTrail(identifier,trailIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminCityAreasUnlinkTrailMutationResult = NonNullable<Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>>
-
-    export type AdminCityAreasUnlinkTrailMutationError = unknown
-
-    export const useAdminCityAreasUnlinkTrail = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>, TError,{identifier: string;trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>,
-        TError,
-        {identifier: string;trailIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminCityAreasUnlinkTrailMutationOptions(options), queryClient);
-    }
+export const useAdminCityAreasUnlinkTrail = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>,
+      TError,
+      { identifier: string; trailIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasUnlinkTrail>>,
+  TError,
+  { identifier: string; trailIdentifier: string },
+  TContext
+> => {
+  return useMutation(getAdminCityAreasUnlinkTrailMutationOptions(options), queryClient);
+};

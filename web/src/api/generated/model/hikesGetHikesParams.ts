@@ -7,8 +7,8 @@
  */
 
 export type HikesGetHikesParams = {
-/**
- * @nullable
- */
-createdBy?: string | null;
+  /**
+   * @nullable
+   */
+  createdBy?: string | null;
 };

@@ -5,8 +5,8 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import type { UpdateTrailLinkRequest } from './updateTrailLinkRequest';
-import type { UpdateVisitorInformationRequest } from './updateVisitorInformationRequest';
+import type { UpdateTrailLinkRequest } from "./updateTrailLinkRequest";
+import type { UpdateVisitorInformationRequest } from "./updateVisitorInformationRequest";
 
 export interface UpdateTrailRequest {
   name: string;

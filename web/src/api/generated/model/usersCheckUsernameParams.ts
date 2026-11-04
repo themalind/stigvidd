@@ -7,5 +7,5 @@
  */
 
 export type UsersCheckUsernameParams = {
-Username?: string;
+  Username?: string;
 };
