@@ -11,5 +11,5 @@ export interface KeycloakUserResponse {
   username: string;
   /** @nullable */
   email?: string | null;
-  enabled?: boolean;
+  enabled: boolean;
 }

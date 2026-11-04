@@ -7,9 +7,9 @@
  */
 
 export interface MappableUserResponse {
-  id?: number;
+  id: number;
   nickName: string;
   email: string;
-  hikeCount?: number;
-  isMapped?: boolean;
+  hikeCount: number;
+  isMapped: boolean;
 }
