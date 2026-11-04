@@ -5,15 +5,20 @@ import Header from "@/components/header";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
+import { QueryBoundary } from "@/shared/components/query-boundary";
 
 export default function Layout() {
+  const { pathname } = useLocation();
+
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <Outlet />
+        <QueryBoundary resetKeys={[pathname]}>
+          <Outlet />
+        </QueryBoundary>
       </SidebarInset>
       <Toaster />
     </SidebarProvider>
