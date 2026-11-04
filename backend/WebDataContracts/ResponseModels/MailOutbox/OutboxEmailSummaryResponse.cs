@@ -10,31 +10,31 @@ public class OutboxEmailSummaryResponse
 {
     public required string Identifier { get; set; }
     public required string ToAddress { get; set; }
-    public string? ToName { get; set; }
+    public required string? ToName { get; set; }
     public required string Subject { get; set; }
 
     // Which template produced this. Null for a row whose template was not recorded.
-    public string? TemplateKey { get; set; }
+    public required string? TemplateKey { get; set; }
 
     public required string Status { get; set; }
-    public int Attempts { get; set; }
-    public DateTime NextAttemptAt { get; set; }
-    public DateTime? SentAt { get; set; }
+    public required int Attempts { get; set; }
+    public required DateTime NextAttemptAt { get; set; }
+    public required DateTime? SentAt { get; set; }
 
     // Kept on a retried row too: it is the only record of why the last attempt failed, and the
     // retry has not produced a new one yet.
-    public string? LastError { get; set; }
+    public required string? LastError { get; set; }
 
     // When the row reached Failed or Cancelled. Null while it is still moving.
-    public DateTime? SettledAt { get; set; }
+    public required DateTime? SettledAt { get; set; }
 
     // When the rendered bodies were cleared. Non-null means there is no body to fetch and the
     // mail can no longer be retried -- both of which the admin UI has to say rather than
     // present an empty preview.
-    public DateTime? RedactedAt { get; set; }
+    public required DateTime? RedactedAt { get; set; }
 
-    public DateTime CreatedAt { get; set; }
-    public DateTime LastUpdatedAt { get; set; }
+    public required DateTime CreatedAt { get; set; }
+    public required DateTime LastUpdatedAt { get; set; }
 
     public static OutboxEmailSummaryResponse Create(
         string identifier,

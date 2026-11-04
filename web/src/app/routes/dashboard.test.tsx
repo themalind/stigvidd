@@ -103,6 +103,7 @@ describe("DashboardPage", () => {
     expect(card("Reports to moderate")).toHaveAttribute("href", "/moderation");
     expect(card("Reports to moderate")).toHaveTextContent("3");
     expect(card("Failed mails")).toHaveTextContent("All clear");
+    expect(card("Failed mails")).toHaveAttribute("href", "/mail-outbox?status=Failed");
     expect(card("Imports awaiting review")).toHaveTextContent("1");
     expect(card("Trails with example images")).toHaveTextContent("1");
     expect(card("Trails with example images")).toHaveAttribute("href", "/trails?missing=ExampleImages");

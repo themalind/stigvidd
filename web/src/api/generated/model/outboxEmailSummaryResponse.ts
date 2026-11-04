@@ -10,21 +10,21 @@ export interface OutboxEmailSummaryResponse {
   identifier: string;
   toAddress: string;
   /** @nullable */
-  toName?: string | null;
+  toName: string | null;
   subject: string;
   /** @nullable */
-  templateKey?: string | null;
+  templateKey: string | null;
   status: string;
-  attempts?: number;
-  nextAttemptAt?: string;
+  attempts: number;
+  nextAttemptAt: string;
   /** @nullable */
-  sentAt?: string | null;
+  sentAt: string | null;
   /** @nullable */
-  lastError?: string | null;
+  lastError: string | null;
   /** @nullable */
-  settledAt?: string | null;
+  settledAt: string | null;
   /** @nullable */
-  redactedAt?: string | null;
-  createdAt?: string;
-  lastUpdatedAt?: string;
+  redactedAt: string | null;
+  createdAt: string;
+  lastUpdatedAt: string;
 }
