@@ -11,29 +11,29 @@ export interface AdminHikeSubmissionResponse {
   identifier: string;
   name: string;
   description: string;
-  classification?: number;
+  classification: number;
   parking: string;
   gettingThere: string;
   publicTransport: string;
   accessibilityInfo: string;
   city: string;
-  showSubmitterName?: boolean;
+  showSubmitterName: boolean;
   /** @nullable */
-  submitterNickName?: string | null;
-  transferAcceptedAt?: string;
+  submitterNickName: string | null;
+  transferAcceptedAt: string;
   status: string;
   /** @nullable */
-  rejectionReason?: string | null;
+  rejectionReason: string | null;
   /** @nullable */
-  decidedBy?: string | null;
+  decidedBy: string | null;
   /** @nullable */
-  decidedAt?: string | null;
-  createdAt?: string;
-  lastUpdatedAt?: string;
-  trailLength?: number;
+  decidedAt: string | null;
+  createdAt: string;
+  lastUpdatedAt: string;
+  trailLength: number;
   coordinates: string;
   originalCoordinates: string;
   /** @nullable */
-  publishedTrailIdentifier?: string | null;
-  images?: HikeSubmissionImageResponse[];
+  publishedTrailIdentifier: string | null;
+  images: HikeSubmissionImageResponse[];
 }

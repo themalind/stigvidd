@@ -10,7 +10,7 @@ export interface SimilarTrailResponse {
   identifier: string;
   name: string;
   kind: string;
-  walkOnRoute?: number;
-  routeOnWalk?: number;
-  likelyDuplicate?: boolean;
+  walkOnRoute: number;
+  routeOnWalk: number;
+  likelyDuplicate: boolean;
 }

@@ -5,7 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import type { Jump, LngLat } from "@/utils/geometry-edit";
-import { mapStyle } from "@/features/hike-submissions/components/map-style";
+import { mapStyle } from "@/lib/map-style";
 
 type Props = {
   path: LngLat[];

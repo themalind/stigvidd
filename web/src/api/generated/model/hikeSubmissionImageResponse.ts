@@ -9,6 +9,6 @@
 export interface HikeSubmissionImageResponse {
   identifier: string;
   imageUrl: string;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
 }

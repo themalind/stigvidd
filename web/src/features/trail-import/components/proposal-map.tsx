@@ -5,7 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { hasSatellite, mapStyle } from "@/features/hike-submissions/components/map-style";
+import { hasSatellite, mapStyle } from "@/lib/map-style";
 
 type Coordinates = GeoJSON.Position[];
 type LngLat = [number, number];
