@@ -40,8 +40,8 @@ export function SimilarRoutesCard({ identifier }: { identifier: string }) {
               data-testid="similar-route"
               className={
                 route.likelyDuplicate
-                  ? "rounded-[5px] border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm"
-                  : "rounded-[5px] border px-3 py-2 text-sm"
+                  ? "rounded-sm border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm"
+                  : "rounded-sm border px-3 py-2 text-sm"
               }
             >
               {route.likelyDuplicate && <b className="text-destructive">Likely the same route. </b>}

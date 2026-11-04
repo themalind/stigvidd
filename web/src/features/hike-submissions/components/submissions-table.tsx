@@ -25,7 +25,7 @@ export function SubmissionsTable({ status }: { status: SubmissionStatus }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-[5px] border">
+    <div className="overflow-x-auto rounded-sm border">
       <Table>
         <TableHeader>
           <TableRow>

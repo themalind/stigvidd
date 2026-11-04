@@ -343,7 +343,7 @@ function TrailForm({ identifier, trail }: { identifier: string; trail: TrailResp
           {links.map((link, index) => {
             const problem = linkProblem(link);
             return (
-              <div key={link.identifier ?? `new-${index}`} className="flex flex-col gap-2 rounded-xs border p-3">
+              <div key={link.identifier ?? `new-${index}`} className="flex flex-col gap-2 rounded-sm border p-3">
                 <div className="flex items-center gap-2">
                   <Input
                     aria-label={`Link ${index + 1} title`}

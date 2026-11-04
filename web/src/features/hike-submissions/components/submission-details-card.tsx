@@ -82,7 +82,7 @@ export function SubmissionDetailsCard({ fields, editable, dirty, saving, onChang
           <Label htmlFor="review-classification">Difficulty</Label>
           <select
             id="review-classification"
-            className="h-9 w-full rounded-[5px] border bg-background px-2 text-sm"
+            className="h-9 w-full rounded-sm border bg-background px-2 text-sm"
             value={fields.classification}
             disabled={!editable}
             onChange={(e) => set("classification")(Number(e.target.value))}

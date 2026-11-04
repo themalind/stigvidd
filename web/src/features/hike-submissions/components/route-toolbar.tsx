@@ -24,7 +24,7 @@ interface Props {
 
 export function RouteToolbar({ editor, satellite, onToggleSatellite, onResetToOriginal }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-[5px] border p-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-sm border p-2">
       {MODES.map(({ mode, label }) => (
         <Button
           key={mode}
