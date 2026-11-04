@@ -24,6 +24,7 @@ import type {
 } from "@/api/generated/model";
 import { addFacilityImages, addTrailImages, deleteFacilityImage, deleteTrailImage, setTrailSymbol } from "@/api/images";
 import type { ImageProcessingOptions } from "@/api/image-options";
+import { underUrl } from "@/lib/react-query";
 import { groupFailures } from "@/features/media/utils/media-reprocess-failures";
 import type { TargetType } from "@/features/media/utils/media-upload";
 import type { ReprocessTarget } from "@/features/media/utils/media-reprocess-target";
@@ -32,11 +33,6 @@ const ADMIN_MEDIA = getAdminMediaGetAllUrl();
 const REPROCESS_JOBS = getAdminMediaGetReprocessJobsUrl();
 const POLL_MS = 3000;
 const JOBS_PAGE = { page: 1, pageSize: 50 };
-
-const startsWith = (prefix: string) => ({
-  predicate: ({ queryKey }: { queryKey: readonly unknown[] }) =>
-    typeof queryKey[0] === "string" && queryKey[0].startsWith(prefix),
-});
 
 export const mediaLibraryQueryOptions = (params: AdminMediaGetAllParams) =>
   getAdminMediaGetAllQueryOptions(params, { query: { placeholderData: keepPreviousData } });
@@ -67,7 +63,7 @@ export const ownerMediaQueryOptions = (ownerIdentifier: string) =>
 export function useInvalidateMedia() {
   const queryClient = useQueryClient();
 
-  return () => queryClient.invalidateQueries(startsWith(ADMIN_MEDIA));
+  return () => queryClient.invalidateQueries(underUrl(ADMIN_MEDIA));
 }
 
 export type UploadRequest = {
@@ -151,7 +147,7 @@ export const reprocessFailuresQueryOptions = (identifier: string) =>
 function useInvalidateJobs() {
   const queryClient = useQueryClient();
 
-  return () => queryClient.invalidateQueries(startsWith(REPROCESS_JOBS));
+  return () => queryClient.invalidateQueries(underUrl(REPROCESS_JOBS));
 }
 
 export function useEnqueueReprocess() {

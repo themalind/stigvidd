@@ -27,6 +27,7 @@ import type {
   TrailImportSessionResponse,
 } from "@/api/generated/model";
 import { customFetch } from "@/api/mutator";
+import { underUrl } from "@/lib/react-query";
 
 export type Confidence = "Certain" | "High" | "Medium" | "Unmatched";
 export type Decision = "Pending" | "Accept" | "Relink" | "CreateNew" | "Exclude" | "Skip";
@@ -82,12 +83,10 @@ function useInvalidateSession() {
   const queryClient = useQueryClient();
 
   return (sessionId?: number) =>
-    queryClient.invalidateQueries({
-      predicate: ({ queryKey }) =>
-        typeof queryKey[0] === "string" &&
-        (queryKey[0] === SESSIONS_URL ||
-          (sessionId !== undefined && queryKey[0].startsWith(`${SESSIONS_URL}/${sessionId}`))),
-    });
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: [SESSIONS_URL], exact: true }),
+      sessionId !== undefined && queryClient.invalidateQueries(underUrl(`${SESSIONS_URL}/${sessionId}`)),
+    ]);
 }
 
 // keep-comment: the generated multipart function sends IFormFile's properties as fields instead of the file

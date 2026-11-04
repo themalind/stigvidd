@@ -5,9 +5,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   getAdminContentReportsGetAuthorsSuspenseQueryOptions,
+  getAdminContentReportsGetAuthorsUrl,
   getAdminContentReportsGetReportersSuspenseQueryOptions,
 } from "@/api/generated/admin-content-reports/admin-content-reports";
 import { adminUsersBanUser, adminUsersUnbanUser } from "@/api/generated/admin-users/admin-users";
+import { underUrl } from "@/lib/react-query";
 import { displayName } from "@/utils/format";
 
 export const PAGE_SIZE = 25;
@@ -28,15 +30,10 @@ interface BanVariables {
   reason?: string;
 }
 
-const CONTENT_REPORTS = "/api/v1/admin/content-reports/";
-
-// keep-comment: a ban shows on the authors list and on every report about that author
+// keep-comment: reports about the author show the ban too; the page that shows them invalidates those itself
 function useInvalidateAuthors() {
   const queryClient = useQueryClient();
-  return () =>
-    queryClient.invalidateQueries({
-      predicate: ({ queryKey }) => typeof queryKey[0] === "string" && queryKey[0].startsWith(CONTENT_REPORTS),
-    });
+  return () => queryClient.invalidateQueries(underUrl(getAdminContentReportsGetAuthorsUrl()));
 }
 
 // keep-comment: a ban is read-only; the account still signs in and reads, and stops being able to write

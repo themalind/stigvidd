@@ -10,7 +10,9 @@ import {
   getAdminContentReportsGetReportsQueryKey,
   getAdminContentReportsGetReportsSuspenseQueryOptions,
   getAdminContentReportsGetReportSuspenseQueryOptions,
+  getAdminContentReportsGetReportsUrl,
 } from "@/api/generated/admin-content-reports/admin-content-reports";
+import { underUrl } from "@/lib/react-query";
 
 export const REPORTS_PAGE_SIZE = 25;
 
@@ -30,6 +32,11 @@ export const reportQueryOptions = (identifier: string) =>
   getAdminContentReportsGetReportSuspenseQueryOptions(identifier);
 
 export const reportCountsQueryOptions = () => getAdminContentReportsGetCountsSuspenseQueryOptions();
+
+export function useInvalidateReports() {
+  const queryClient = useQueryClient();
+  return () => queryClient.invalidateQueries(underUrl(getAdminContentReportsGetReportsUrl()));
+}
 
 // keep-comment: Dismiss puts the content back; Uphold deletes it permanently and records a strike
 export function useDecideReport(identifier: string) {

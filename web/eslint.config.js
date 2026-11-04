@@ -53,6 +53,11 @@ export default defineConfig([
     files: ["src/{components,config,hooks,utils}/**/*.{ts,tsx}"],
     rules: restrict(noApp, noFeatures, noClient),
   },
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: tests,
+    rules: restrict(noClient),
+  },
   ...features.flatMap((feature) => [
     {
       files: [`src/features/${feature}/**/*.{ts,tsx}`],

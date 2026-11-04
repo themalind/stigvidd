@@ -10,7 +10,11 @@ import { FilterRow } from "@/components/filter-row";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { reportCountsQueryOptions, type QueueFilters } from "@/features/moderation/api/content-reports";
+import {
+  reportCountsQueryOptions,
+  useInvalidateReports,
+  type QueueFilters,
+} from "@/features/moderation/api/content-reports";
 import { ReportQueue } from "@/features/moderation/components/report-queue";
 import { useUnbanUser } from "@/features/users/api/users";
 import { BanSheet } from "@/features/users/components/ban-sheet";
@@ -118,6 +122,7 @@ function AuthorBanControls({ detail }: { detail: ContentReportDetailResponse }) 
   const { report } = detail;
   const [banning, setBanning] = useState(false);
   const unban = useUnbanUser();
+  const invalidateReports = useInvalidateReports();
 
   if (!report.authorIdentifier) return null;
 
@@ -135,7 +140,7 @@ function AuthorBanControls({ detail }: { detail: ContentReportDetailResponse }) 
           className="mt-3"
           data-testid="unban-author"
           disabled={unban.isPending}
-          onClick={() => unban.mutate(author)}
+          onClick={() => unban.mutate(author, { onSuccess: () => void invalidateReports() })}
         >
           {unban.isPending && <Loader2 className="size-4 animate-spin" />}
           Lift the ban
@@ -154,6 +159,7 @@ function AuthorBanControls({ detail }: { detail: ContentReportDetailResponse }) 
           target={{ ...author, strikes: detail.authorStrikes }}
           initialReason={`Moderation: ${report.identifier}`}
           onClose={() => setBanning(false)}
+          onBanned={() => void invalidateReports()}
         />
       )}
     </>
