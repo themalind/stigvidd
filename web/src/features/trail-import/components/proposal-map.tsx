@@ -1,14 +1,16 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { Map as MapLibreMap } from "maplibre-gl";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { hasSatellite, mapStyle } from "@/lib/map-style";
+import { fitTo, upsertSource, useMapLibre } from "@/hooks/use-maplibre";
+import { hasSatellite } from "@/lib/map-style";
 
 type Coordinates = GeoJSON.Position[];
-type LngLat = [number, number];
+type Shown = { feature: boolean; trail: boolean };
+
+const FEATURE_LAYERS = ["feature-line", "feature-line-casing", "feature-start", "feature-end"];
 
 type Props = {
   feature: Coordinates;
@@ -49,13 +51,16 @@ function sources(feature: Coordinates, trail: Coordinates | null): Record<string
   };
 }
 
-function draw(map: MapLibreMap, feature: Coordinates, trail: Coordinates | null) {
-  for (const [id, data] of Object.entries(sources(feature, trail))) {
-    const source = map.getSource(id) as GeoJSONSource | undefined;
-    if (source) source.setData(data);
-    else map.addSource(id, { type: "geojson", data });
-  }
+function draw(map: MapLibreMap, feature: Coordinates, trail: Coordinates | null, shown: Shown) {
+  for (const [id, data] of Object.entries(sources(feature, trail))) upsertSource(map, id, data);
+  ensureLayers(map);
 
+  const visibility = (on: boolean) => (on ? "visible" : "none");
+  for (const layer of FEATURE_LAYERS) map.setLayoutProperty(layer, "visibility", visibility(shown.feature));
+  map.setLayoutProperty("trail-line", "visibility", visibility(shown.trail));
+}
+
+function ensureLayers(map: MapLibreMap) {
   if (map.getLayer("feature-line")) return;
 
   map.addLayer({
@@ -106,83 +111,8 @@ function draw(map: MapLibreMap, feature: Coordinates, trail: Coordinates | null)
   });
 }
 
-function bounds(feature: Coordinates, trail: Coordinates | null): maplibregl.LngLatBounds | null {
-  const points = [...feature, ...(trail ?? [])] as LngLat[];
-  if (points.length === 0) return null;
-
-  const box = new maplibregl.LngLatBounds(points[0], points[0]);
-  for (const point of points) box.extend(point);
-
-  return box;
-}
-
 export function ProposalMap({ feature, trail, className }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  const propsRef = useRef({ feature, trail: trail ?? null });
-  const [satellite, setSatellite] = useState(false);
-  const [shown, setShown] = useState({ feature: true, trail: true });
-
-  useLayoutEffect(() => {
-    propsRef.current = { feature, trail: trail ?? null };
-  });
-
   const hasGeometry = feature.length >= 2 || (trail?.length ?? 0) >= 2;
-
-  useEffect(() => {
-    if (!containerRef.current || !hasGeometry) return;
-
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: mapStyle(satellite),
-      center: (propsRef.current.feature[0] as LngLat | undefined) ?? [12.94, 57.72],
-      zoom: 12,
-    });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
-    mapRef.current = map;
-
-    map.on("style.load", () => {
-      const { feature, trail } = propsRef.current;
-      draw(map, feature, trail);
-
-      const box = bounds(feature, trail);
-      if (box) map.fitBounds(box, { padding: 48, duration: 0 });
-    });
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keep-comment: built once from propsRef; later geometry/style changes go through the effects below, not a remount
-  }, [hasGeometry]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.isStyleLoaded()) return;
-
-    draw(map, feature, trail ?? null);
-
-    const box = bounds(feature, trail ?? null);
-    if (box) map.fitBounds(box, { padding: 48, duration: 0 });
-  }, [feature, trail]);
-
-  useEffect(() => {
-    mapRef.current?.setStyle(mapStyle(satellite));
-  }, [satellite]);
-
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.getLayer("feature-line")) return;
-
-    const visibility = (on: boolean) => (on ? "visible" : "none");
-
-    map.setLayoutProperty("feature-line", "visibility", visibility(shown.feature));
-    map.setLayoutProperty("feature-line-casing", "visibility", visibility(shown.feature));
-    map.setLayoutProperty("feature-start", "visibility", visibility(shown.feature));
-    map.setLayoutProperty("feature-end", "visibility", visibility(shown.feature));
-    map.setLayoutProperty("trail-line", "visibility", visibility(shown.trail));
-  }, [shown]);
 
   if (!hasGeometry) {
     return (
@@ -193,6 +123,29 @@ export function ProposalMap({ feature, trail, className }: Props) {
       </div>
     );
   }
+
+  return <ProposalCanvas feature={feature} trail={trail ?? null} className={className} />;
+}
+
+function ProposalCanvas({ feature, trail, className }: Props & { trail: Coordinates | null }) {
+  const [satellite, setSatellite] = useState(false);
+  const [shown, setShown] = useState<Shown>({ feature: true, trail: true });
+
+  const { containerRef, mapRef, redraw } = useMapLibre({
+    satellite,
+    zoom: 12,
+    draw: (map) => draw(map, feature, trail, shown),
+    fitPoints: () => [...feature, ...(trail ?? [])],
+    fitPadding: 48,
+  });
+
+  useEffect(() => {
+    redraw();
+    const map = mapRef.current;
+    if (map) fitTo(map, [...feature, ...(trail ?? [])], { padding: 48, duration: 0 });
+  }, [redraw, mapRef, feature, trail]);
+
+  useEffect(() => redraw(), [redraw, shown]);
 
   return (
     <div className={`relative overflow-hidden rounded-md border ${className ?? "h-64"}`}>

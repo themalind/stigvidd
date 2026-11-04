@@ -1,11 +1,10 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { type GeoJSONSource, type Map as MapLibreMap, type MapLayerMouseEvent } from "maplibre-gl";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import type { MapLayerMouseEvent, Map as MapLibreMap, MapMouseEvent } from "maplibre-gl";
+import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { type Jump, type LngLat, midpoints } from "@/utils/geometry-edit";
-import { mapStyle } from "@/lib/map-style";
+import { fitTo, upsertSource as setData, useMapLibre } from "@/hooks/use-maplibre";
 
 export type EditMode = "move" | "delete" | "cut" | "redraw" | "extend" | "start";
 
@@ -86,12 +85,6 @@ function jumpsOf(path: LngLat[], jumps: Jump[]): GeoJSON.FeatureCollection {
   };
 }
 
-function setData(map: MapLibreMap, id: string, data: GeoJSON.FeatureCollection) {
-  const source = map.getSource(id) as GeoJSONSource | undefined;
-  if (source) source.setData(data);
-  else map.addSource(id, { type: "geojson", data });
-}
-
 function ensureLayers(map: MapLibreMap) {
   if (map.getLayer("trimmed-line")) return;
 
@@ -164,154 +157,45 @@ function ensureLayers(map: MapLibreMap) {
   });
 }
 
+function drawAll(map: MapLibreMap, { path, keptRange, jumps, redrawAnchors, draft, mode }: Props) {
+  const anchors = redrawAnchors.map((i) => path[i]).filter(Boolean);
+  const draftLine = anchors.length === 2 ? [anchors[0], ...draft, anchors[1]] : [...anchors, ...draft];
+
+  setData(map, "trimmed", line(path));
+  setData(map, "kept", line(path.slice(keptRange[0], keptRange[1] + 1)));
+  setData(map, "jumps", jumpsOf(path, jumps));
+  setData(map, "draft", line(draftLine));
+  setData(map, "handles", handlesOf(path, mode));
+  setData(map, "points", pointsOf(path, keptRange, redrawAnchors));
+  ensureLayers(map);
+}
+
 export function SubmissionMap(props: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
   const propsRef = useRef(props);
   const draggingRef = useRef<{ index: number; insert: boolean } | null>(null);
-  const fittedRef = useRef(false);
-  const styleReadyRef = useRef(false);
 
   useLayoutEffect(() => {
     propsRef.current = props;
   });
 
-  // keep-comment: not isStyleLoaded(), which stays false until every tile has arrived and so skips the first draw
-  const sync = () => {
-    const map = mapRef.current;
-    if (!map || !styleReadyRef.current) return;
-    const { path, keptRange, jumps, redrawAnchors, draft, mode } = propsRef.current;
-    const anchors = redrawAnchors.map((i) => path[i]).filter(Boolean);
-    const draftLine = anchors.length === 2 ? [anchors[0], ...draft, anchors[1]] : [...anchors, ...draft];
-
-    setData(map, "trimmed", line(path));
-    setData(map, "kept", line(path.slice(keptRange[0], keptRange[1] + 1)));
-    setData(map, "jumps", jumpsOf(path, jumps));
-    setData(map, "draft", line(draftLine));
-    setData(map, "handles", handlesOf(path, mode));
-    setData(map, "points", pointsOf(path, keptRange, redrawAnchors));
-    ensureLayers(map);
-  };
+  const { containerRef, mapRef, redraw } = useMapLibre({
+    satellite: props.satellite,
+    zoom: 13,
+    draw: (map) => drawAll(map, props),
+    fitPoints: () => props.path,
+    fitPadding: 60,
+    setup: (map) => wireEditing(map, propsRef, draggingRef),
+  });
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: mapStyle(propsRef.current.satellite),
-      center: propsRef.current.path[0] ?? [12.94, 57.72],
-      zoom: 13,
-    });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
-    mapRef.current = map;
-
-    map.on("style.load", () => {
-      styleReadyRef.current = true;
-      sync();
-      const path = propsRef.current.path;
-      if (!fittedRef.current && path.length > 1) {
-        const bounds = new maplibregl.LngLatBounds(path[0], path[0]);
-        path.forEach((p) => bounds.extend(p));
-        map.fitBounds(bounds, { padding: 60, duration: 0 });
-        fittedRef.current = true;
-      }
-    });
-
-    const pointLayers = ["points", "special-points"];
-
-    const onPointDown = (event: MapLayerMouseEvent) => {
-      const index = event.features?.[0]?.properties?.index;
-      if (typeof index !== "number") return;
-      const { mode } = propsRef.current;
-      if (mode === "move") {
-        event.preventDefault();
-        draggingRef.current = { index, insert: false };
-        map.getCanvas().style.cursor = "grabbing";
-      }
-    };
-
-    const onHandleDown = (event: MapLayerMouseEvent) => {
-      const index = event.features?.[0]?.properties?.index;
-      if (typeof index !== "number" || propsRef.current.mode !== "move") return;
-      event.preventDefault();
-      draggingRef.current = { index, insert: true };
-      map.getCanvas().style.cursor = "grabbing";
-    };
-
-    const onPointClick = (event: MapLayerMouseEvent) => {
-      const index = event.features?.[0]?.properties?.index;
-      if (typeof index !== "number") return;
-      if (propsRef.current.mode !== "move") propsRef.current.onPointClick(index);
-    };
-
-    const onMove = (event: maplibregl.MapMouseEvent) => {
-      const dragging = draggingRef.current;
-      if (dragging === null) return;
-      const at: LngLat = [event.lngLat.lng, event.lngLat.lat];
-      const { path, keptRange, redrawAnchors } = propsRef.current;
-      const live = dragging.insert
-        ? [...path.slice(0, dragging.index + 1), at, ...path.slice(dragging.index + 1)]
-        : path.map((p, i) => (i === dragging.index ? at : p));
-      const shift = (bound: number) => (dragging.insert && dragging.index < bound ? bound + 1 : bound);
-      const start = shift(keptRange[0]);
-      const end = shift(keptRange[1]);
-      setData(map, "points", pointsOf(live, [start, end], redrawAnchors));
-      setData(map, "kept", line(live.slice(start, end + 1)));
-    };
-
-    const onUp = (event: maplibregl.MapMouseEvent) => {
-      const dragging = draggingRef.current;
-      if (dragging === null) return;
-      draggingRef.current = null;
-      map.getCanvas().style.cursor = "";
-      const at: LngLat = [event.lngLat.lng, event.lngLat.lat];
-      if (dragging.insert) propsRef.current.onInsertPoint(dragging.index, at);
-      else propsRef.current.onMovePoint(dragging.index, at);
-    };
-
-    const onClick = (event: maplibregl.MapMouseEvent) => {
-      const { mode } = propsRef.current;
-      if (mode !== "redraw" && mode !== "extend") return;
-      const hit = map.queryRenderedFeatures(event.point, { layers: pointLayers });
-      if (hit.length > 0) return;
-      propsRef.current.onMapClick([event.lngLat.lng, event.lngLat.lat]);
-    };
-
-    for (const layer of pointLayers) {
-      map.on("mousedown", layer, onPointDown);
-      map.on("click", layer, onPointClick);
-      map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
-      map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
-    }
-    map.on("mousedown", "handles", onHandleDown);
-    map.on("mouseenter", "handles", () => (map.getCanvas().style.cursor = "copy"));
-    map.on("mouseleave", "handles", () => (map.getCanvas().style.cursor = ""));
-    map.on("mousemove", onMove);
-    map.on("mouseup", onUp);
-    map.on("click", onClick);
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    styleReadyRef.current = false;
-    mapRef.current?.setStyle(mapStyle(props.satellite), { diff: false });
-  }, [props.satellite]);
-
-  useEffect(() => {
-    sync();
-  }, [props.path, props.keptRange, props.jumps, props.redrawAnchors, props.draft, props.mode]);
+    redraw();
+  }, [redraw, props.path, props.keptRange, props.jumps, props.redrawAnchors, props.draft, props.mode]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !props.focus || props.focus.length === 0) return;
-    const bounds = new maplibregl.LngLatBounds(props.focus[0], props.focus[0]);
-    props.focus.forEach((p) => bounds.extend(p));
-    map.fitBounds(bounds, { padding: 120, maxZoom: 17, duration: 400 });
-  }, [props.focus]);
+    if (!map || !props.focus) return;
+    fitTo(map, props.focus, { padding: 120, maxZoom: 17, duration: 400 });
+  }, [mapRef, props.focus]);
 
   return (
     <div className="relative h-[620px] w-full overflow-hidden rounded-[5px] border">
@@ -337,4 +221,83 @@ export function SubmissionMap(props: Props) {
       </div>
     </div>
   );
+}
+
+function wireEditing(
+  map: MapLibreMap,
+  propsRef: RefObject<Props>,
+  draggingRef: RefObject<{ index: number; insert: boolean } | null>,
+) {
+  const pointLayers = ["points", "special-points"];
+
+  const onPointDown = (event: MapLayerMouseEvent) => {
+    const index = event.features?.[0]?.properties?.index;
+    if (typeof index !== "number") return;
+    const { mode } = propsRef.current;
+    if (mode === "move") {
+      event.preventDefault();
+      draggingRef.current = { index, insert: false };
+      map.getCanvas().style.cursor = "grabbing";
+    }
+  };
+
+  const onHandleDown = (event: MapLayerMouseEvent) => {
+    const index = event.features?.[0]?.properties?.index;
+    if (typeof index !== "number" || propsRef.current.mode !== "move") return;
+    event.preventDefault();
+    draggingRef.current = { index, insert: true };
+    map.getCanvas().style.cursor = "grabbing";
+  };
+
+  const onPointClick = (event: MapLayerMouseEvent) => {
+    const index = event.features?.[0]?.properties?.index;
+    if (typeof index !== "number") return;
+    if (propsRef.current.mode !== "move") propsRef.current.onPointClick(index);
+  };
+
+  const onMove = (event: MapMouseEvent) => {
+    const dragging = draggingRef.current;
+    if (dragging === null) return;
+    const at: LngLat = [event.lngLat.lng, event.lngLat.lat];
+    const { path, keptRange, redrawAnchors } = propsRef.current;
+    const live = dragging.insert
+      ? [...path.slice(0, dragging.index + 1), at, ...path.slice(dragging.index + 1)]
+      : path.map((p, i) => (i === dragging.index ? at : p));
+    const shift = (bound: number) => (dragging.insert && dragging.index < bound ? bound + 1 : bound);
+    const start = shift(keptRange[0]);
+    const end = shift(keptRange[1]);
+    setData(map, "points", pointsOf(live, [start, end], redrawAnchors));
+    setData(map, "kept", line(live.slice(start, end + 1)));
+  };
+
+  const onUp = (event: MapMouseEvent) => {
+    const dragging = draggingRef.current;
+    if (dragging === null) return;
+    draggingRef.current = null;
+    map.getCanvas().style.cursor = "";
+    const at: LngLat = [event.lngLat.lng, event.lngLat.lat];
+    if (dragging.insert) propsRef.current.onInsertPoint(dragging.index, at);
+    else propsRef.current.onMovePoint(dragging.index, at);
+  };
+
+  const onClick = (event: MapMouseEvent) => {
+    const { mode } = propsRef.current;
+    if (mode !== "redraw" && mode !== "extend") return;
+    const hit = map.queryRenderedFeatures(event.point, { layers: pointLayers });
+    if (hit.length > 0) return;
+    propsRef.current.onMapClick([event.lngLat.lng, event.lngLat.lat]);
+  };
+
+  for (const layer of pointLayers) {
+    map.on("mousedown", layer, onPointDown);
+    map.on("click", layer, onPointClick);
+    map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));
+    map.on("mouseleave", layer, () => (map.getCanvas().style.cursor = ""));
+  }
+  map.on("mousedown", "handles", onHandleDown);
+  map.on("mouseenter", "handles", () => (map.getCanvas().style.cursor = "copy"));
+  map.on("mouseleave", "handles", () => (map.getCanvas().style.cursor = ""));
+  map.on("mousemove", onMove);
+  map.on("mouseup", onUp);
+  map.on("click", onClick);
 }
