@@ -20,7 +20,13 @@ import {
   type TargetType,
 } from "@/features/media/utils/media-upload";
 import { formatBytes } from "@/utils/format";
-import { getAllTrails, addTrailImages, deleteTrailImage, setTrailSymbol } from "@/features/trails/api/trail";
+import {
+  getAllTrails,
+  addTrailImages,
+  deleteTrailImage,
+  setTrailSymbol,
+  useInvalidateTrailQueries,
+} from "@/features/trails/api/trail";
 import { getAllFacilities, uploadFacilityImages, deleteFacilityImage } from "@/features/facilities/api/facility";
 import { getMediaForOwner } from "@/features/media/api/media";
 import {
@@ -45,6 +51,7 @@ interface Props {
 }
 
 export default function MediaUpload({ onMediaChanged }: Props) {
+  const invalidateTrails = useInvalidateTrailQueries();
   // Restored synchronously so the first render already has the previous target.
   const [targetType, setTargetType] = useState<TargetType>(() => {
     const stored = loadStagedTarget()?.targetType;
@@ -212,6 +219,7 @@ export default function MediaUpload({ onMediaChanged }: Props) {
         const added = await uploadFacilityImages(targetId, files, options);
         toast.success(`${added.length} image(s) added to facility.`);
       }
+      if (targetType !== "facility") void invalidateTrails();
       setFiles([]);
       setCrop(null);
       await loadMedia();
@@ -229,8 +237,10 @@ export default function MediaUpload({ onMediaChanged }: Props) {
     if (!confirm("Delete this image?")) return;
     setDeletingId(item.identifier);
     try {
-      if (item.ownerType === "Trail") await deleteTrailImage(item.identifier);
-      else await deleteFacilityImage(item.identifier);
+      if (item.ownerType === "Trail") {
+        await deleteTrailImage(item.identifier);
+        void invalidateTrails();
+      } else await deleteFacilityImage(item.identifier);
       setMedia((prev) => prev.filter((m) => m.identifier !== item.identifier));
       toast.success("Image deleted.");
       onMediaChanged();

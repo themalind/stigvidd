@@ -433,6 +433,4 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
-
-    /// <summary>The anonymous shape of AdminTrailsController.SetTrailSymbol's response body.</summary>
 }

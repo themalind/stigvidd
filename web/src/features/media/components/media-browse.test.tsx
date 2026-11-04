@@ -15,7 +15,11 @@ const mediaApi = vi.hoisted(() => ({
 }));
 vi.mock("@/features/media/api/media", () => mediaApi);
 
-const trailApi = vi.hoisted(() => ({ deleteTrailImage: vi.fn() }));
+const trailApi = vi.hoisted(() => ({
+  deleteTrailImage: vi.fn(),
+  invalidateTrails: vi.fn(),
+  useInvalidateTrailQueries: () => trailApi.invalidateTrails,
+}));
 vi.mock("@/features/trails/api/trail", () => trailApi);
 
 const facilityApi = vi.hoisted(() => ({ deleteFacilityImage: vi.fn() }));
@@ -321,6 +325,7 @@ describe("deleting an image", () => {
 
     await waitFor(() => expect(trailApi.deleteTrailImage).toHaveBeenCalledWith("trail-1"));
     await waitFor(() => expect(screen.getByText(/of 1/)).toBeInTheDocument());
+    expect(trailApi.invalidateTrails).toHaveBeenCalled();
   });
 });
 

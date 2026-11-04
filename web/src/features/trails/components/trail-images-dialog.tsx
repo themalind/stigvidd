@@ -3,7 +3,7 @@
 
 import { Dialog } from "radix-ui";
 import { useRef, useState } from "react";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutationState, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Images, X } from "lucide-react";
 import type { AdminTrailListItemResponse, TrailImageResponse } from "@/api/generated/model";
@@ -54,7 +54,7 @@ export default function TrailImagesDialog({ data, selected, label }: Props) {
               <ImageGrid
                 identifier={data.identifier}
                 onEnlarge={setEnlarged}
-                onDeleted={(id) => enlarged?.identifier === id && setEnlarged(null)}
+                onDeleted={(id) => setEnlarged((current) => (current?.identifier === id ? null : current))}
               />
             </QueryBoundary>
 
@@ -99,7 +99,10 @@ function ImageGrid({ identifier, onEnlarge, onDeleted }: GridProps) {
   const remove = useDeleteTrailImage(identifier);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const images = trail.trailImagesResponse ?? [];
-  const deletingId = remove.isPending ? remove.variables : null;
+  const deleting = useMutationState({
+    filters: { mutationKey: ["admin-trails", identifier, "delete-image"], status: "pending" },
+    select: (mutation) => mutation.state.variables,
+  });
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -129,11 +132,11 @@ function ImageGrid({ identifier, onEnlarge, onDeleted }: GridProps) {
           />
           <button
             onClick={() => handleDelete(img)}
-            disabled={deletingId === img.identifier}
+            disabled={deleting.includes(img.identifier)}
             title="Delete image"
             className={cn(
               "bg-background/80 hover:bg-background absolute top-1 right-1 rounded-xs p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
-              deletingId === img.identifier && "cursor-not-allowed opacity-50",
+              deleting.includes(img.identifier) && "cursor-not-allowed opacity-50",
             )}
           >
             <X className="size-3.5" />
