@@ -5,6 +5,7 @@ import { NavLink } from "react-router";
 import { Loader2, Play, Trash2 } from "lucide-react";
 import { useAnalyzeSession, useDeleteSession, type Session } from "@/features/trail-import/api/trail-import";
 import { Button } from "@/components/ui/button";
+import { paths } from "@/config/paths";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatBytes, formatDateTime } from "@/utils/format";
 import { StatusBadge } from "./badges";
@@ -41,7 +42,7 @@ export function SessionCard({ session }: { session: Session }) {
       <CardFooter className="gap-2">
         {session.status === "AwaitingReview" && (
           <Button asChild size="sm">
-            <NavLink to={`/trail-import/${session.id}`}>Review</NavLink>
+            <NavLink to={paths.trailImportSession(session.id)}>Review</NavLink>
           </Button>
         )}
 

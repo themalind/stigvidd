@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { paths } from "@/config/paths";
 import { useAuth } from "@/features/auth/context/auth-context";
 import { InvalidCredentialsError, NotAuthorizedError } from "@/lib/keycloak-auth";
 import { useState } from "react";
@@ -37,7 +38,7 @@ export function LoginCard() {
       return;
     }
 
-    navigate("/dashboard");
+    navigate(paths.dashboard);
   }
 
   return (

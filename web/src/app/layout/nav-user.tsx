@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { paths } from "@/config/paths";
 import { useAuth } from "@/features/auth/context/auth-context";
 import { useNavigate } from "react-router";
 
@@ -26,7 +27,7 @@ export function NavUser() {
 
   async function handleSignOut() {
     await logout();
-    navigate("/");
+    navigate(paths.login);
   }
 
   return (

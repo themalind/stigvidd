@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { paths } from "@/config/paths";
 import { similarRoutesQueryOptions } from "@/features/hike-submissions/api/hike-submissions";
 
 const KIND_LABELS: Record<string, string> = {
@@ -45,7 +46,7 @@ export function SimilarRoutesCard({ identifier }: { identifier: string }) {
             >
               {route.likelyDuplicate && <b className="text-destructive">Likely the same route. </b>}
               {route.kind === "Submission" ? (
-                <Link to={`/hike-submissions/${route.identifier}`} className="font-medium text-primary hover:underline">
+                <Link to={paths.hikeSubmission(route.identifier)} className="font-medium text-primary hover:underline">
                   {route.name}
                 </Link>
               ) : (
