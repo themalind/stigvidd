@@ -4,7 +4,7 @@
 import { useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CLASSIFICATION } from "@/types/types";
+import { CLASSIFICATION } from "@/utils/classification";
 import type { FacilityOption, OwnerList, TargetType, TrailOption } from "@/features/media/utils/media-upload";
 
 // keep-comment: trails can share a name, so the label carries length and city to tell them apart

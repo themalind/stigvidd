@@ -23,7 +23,7 @@ import type {
   UpdateImageMetadataRequest,
 } from "@/api/generated/model";
 import { addFacilityImages, addTrailImages, deleteFacilityImage, deleteTrailImage, setTrailSymbol } from "@/api/images";
-import type { ImageProcessingOptions } from "@/types/types";
+import type { ImageProcessingOptions } from "@/api/image-options";
 import { groupFailures } from "@/features/media/utils/media-reprocess-failures";
 import type { TargetType } from "@/features/media/utils/media-upload";
 import type { ReprocessTarget } from "@/features/media/utils/media-reprocess-target";

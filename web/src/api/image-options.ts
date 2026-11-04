@@ -1,7 +1,16 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { ImageProcessingOptions } from "@/types/types";
+export type ImageProcessingOptions = {
+  maxWidth?: number;
+  maxHeight?: number;
+  quality?: number;
+  format?: string;
+  cropX?: number;
+  cropY?: number;
+  cropWidth?: number;
+  cropHeight?: number;
+};
 
 /**
  * Appends the server-side processing knobs to a multipart FormData as individual

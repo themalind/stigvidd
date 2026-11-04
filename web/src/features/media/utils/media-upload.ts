@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { AdminTrailListItemResponse, FacilityResponse, MediaItemResponse } from "@/api/generated/model";
-import type { ImageProcessingOptions } from "@/types/types";
+import type { ImageProcessingOptions } from "@/api/image-options";
 
 export type TargetType = "trail-gallery" | "trail-symbol" | "facility";
 

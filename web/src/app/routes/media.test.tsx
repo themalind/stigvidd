@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AdminTrailListItemResponse, FacilityResponse, MediaItemResponse } from "@/api/generated/model";
-import MediaPage from "@/app/routes/media";
 import { saveStagedFiles, saveStagedTarget } from "@/features/media/utils/staged-media";
 import { libraryPage, mediaItem } from "@/testing/fixtures/media";
 import { trailListItem } from "@/testing/fixtures/trails";
@@ -42,7 +41,9 @@ const toasts = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasts }));
 
 // Its cropper is pointer maths over an image jsdom never loads.
-vi.mock("./image-crop", () => ({ default: () => <div data-testid="cropper" /> }));
+vi.mock("@/features/media/components/image-crop", () => ({ default: () => <div data-testid="cropper" /> }));
+
+import MediaPage from "./media";
 
 // keep-comment: fake-indexeddb clones through Node's structuredClone, which turns a jsdom Blob into {} - see docs/notes/web-vitest-environment.md
 globalThis.Blob = NodeBlob as unknown as typeof Blob;

@@ -6,7 +6,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./auth-context";
 import { getStigviddUser } from "@/features/auth/api/user";
 import { logger } from "@/lib/telemetry";
-import type { AuthUser, StigviddUser } from "@/types/types";
+import type { AuthUser } from "@/lib/keycloak-auth";
+import type { StigviddUser } from "@/features/auth/api/user";
 import {
   getValidAccessToken,
   logoutKeycloak,

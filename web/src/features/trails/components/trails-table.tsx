@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { AdminTrailListItemResponse } from "@/api/generated/model";
-import { CLASSIFICATION, type TableColumn } from "@/types/types";
+import { CLASSIFICATION } from "@/utils/classification";
+import type { TableColumn } from "./trail-columns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import TrailEditor from "./trail-editor";
 import TrailImagesDialog from "./trail-images-dialog";

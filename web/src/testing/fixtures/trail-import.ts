@@ -1,7 +1,12 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { Diff, Preview, Proposal, Session } from "@/features/trail-import/api/trail-import";
+import type {
+  TrailImportDiffResponse as Diff,
+  TrailImportPreviewResponse as Preview,
+  TrailImportProposalResponse as Proposal,
+  TrailImportSessionResponse as Session,
+} from "@/api/generated/model";
 
 export function proposal(overrides: Partial<Proposal> = {}): Proposal {
   return {
