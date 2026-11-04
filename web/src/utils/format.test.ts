@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import { displayName, formatBytes } from "./format";
+import { displayName, formatBytes, formatDateTime } from "./format";
 
 describe("formatBytes", () => {
   it("switches unit at each threshold", () => {
@@ -30,5 +30,15 @@ describe("displayName", () => {
 
   it.each([null, undefined, "", "   "])("says the account is gone for %p", (value) => {
     expect(displayName(value)).toBe("Account deleted");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("formats a timestamp in the browser's locale", () => {
+    expect(formatDateTime("2026-09-18T11:00:00Z")).toBe(new Date("2026-09-18T11:00:00Z").toLocaleString());
+  });
+
+  it.each([null, undefined, ""])("shows a dash for %p", (value) => {
+    expect(formatDateTime(value)).toBe("—");
   });
 });

@@ -7,7 +7,7 @@
  */
 
 export interface MailOutboxPurgeResponse {
-  deleted?: number;
-  olderThanDays?: number;
-  cutoffUtc?: string;
+  deleted: number;
+  olderThanDays: number;
+  cutoffUtc: string;
 }

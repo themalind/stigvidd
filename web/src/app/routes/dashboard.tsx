@@ -67,7 +67,7 @@ export default function DashboardPage() {
           <AttentionCard
             label="Failed mails"
             value={pick(outbox, (c) => c.failed)}
-            to="/mail-outbox"
+            to="/mail-outbox?status=Failed"
             icon={MailWarning}
           />
           <AttentionCard

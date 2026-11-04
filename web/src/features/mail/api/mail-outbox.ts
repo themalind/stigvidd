@@ -1,83 +1,89 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   adminMailOutboxCancel,
-  adminMailOutboxGetAll,
-  adminMailOutboxGetBody,
-  adminMailOutboxGetByIdentifier,
-  adminMailOutboxGetCounts,
   adminMailOutboxPurge,
   adminMailOutboxRetry,
+  getAdminMailOutboxGetAllQueryKey,
+  getAdminMailOutboxGetAllSuspenseQueryOptions,
+  getAdminMailOutboxGetBodyQueryOptions,
+  getAdminMailOutboxGetByIdentifierQueryKey,
+  getAdminMailOutboxGetByIdentifierSuspenseQueryOptions,
+  getAdminMailOutboxGetCountsQueryKey,
+  getAdminMailOutboxGetCountsSuspenseQueryOptions,
 } from "@/api/generated/admin-mail-outbox/admin-mail-outbox";
-import { getAdminMailOutboxGetCountsSuspenseQueryOptions } from "@/api/generated/admin-mail-outbox/admin-mail-outbox";
-import type {
-  MailOutboxCountsResponse,
-  MailOutboxPurgeResponse,
-  OutboxEmailBodyResponse,
-  OutboxEmailDetailResponse,
-  OutboxEmailSummaryResponse,
-  PagedResultOfOutboxEmailSummaryResponse,
-} from "@/api/generated/model";
 
-// Wrappers over the generated admin client, following the same convention as
-// content-reports.ts. Auth and base URL come from the customFetch mutator.
+export const OUTBOX_PAGE_SIZE = 25;
 
-export type OutboxMailSummary = OutboxEmailSummaryResponse;
-export type OutboxMailDetail = OutboxEmailDetailResponse;
-export type OutboxMailBody = OutboxEmailBodyResponse;
-export type OutboxCounts = MailOutboxCountsResponse;
-export type OutboxPurgeResult = MailOutboxPurgeResponse;
-
-export type OutboxFilters = {
+export interface OutboxFilters {
   status?: string;
-  templateKey?: string;
   recipient?: string;
-  page?: number;
-  pageSize?: number;
-};
-
-export async function getOutboxMails(filters: OutboxFilters): Promise<PagedResultOfOutboxEmailSummaryResponse> {
-  return adminMailOutboxGetAll(filters);
+  page: number;
 }
 
-/** One mail, without its bodies. Neither the list nor this carries them any more. */
-export async function getOutboxMail(identifier: string): Promise<OutboxMailDetail> {
-  return adminMailOutboxGetByIdentifier(identifier);
-}
+export const outboxMailsQueryOptions = ({ status, recipient, page }: OutboxFilters) =>
+  getAdminMailOutboxGetAllSuspenseQueryOptions({ status, recipient, page, pageSize: OUTBOX_PAGE_SIZE });
 
-/**
- * The one call that returns the rendered bodies, and the reason it is separate: a body carries
- * a nickname and, for reset-password, a live link, so the API logs who asked for it. Opening a
- * mail must therefore NOT call this — only an explicit reveal does.
- *
- * 404 once the body has been cleared under the retention policy; `redactedAt` on the summary
- * says so in advance, so the page can explain rather than ask and fail.
- */
-export async function getOutboxMailBody(identifier: string): Promise<OutboxMailBody> {
-  return adminMailOutboxGetBody(identifier);
-}
-
-export async function getOutboxCounts(): Promise<OutboxCounts> {
-  return adminMailOutboxGetCounts();
-}
-
-/** Puts a failed or cancelled mail back in the queue, due now. 409 if it is being sent. */
-export async function retryOutboxMail(identifier: string): Promise<OutboxMailDetail> {
-  return adminMailOutboxRetry(identifier);
-}
-
-/** Stops a mail that is still waiting. 409 for anything already claimed or settled. */
-export async function cancelOutboxMail(identifier: string): Promise<OutboxMailDetail> {
-  return adminMailOutboxCancel(identifier);
-}
-
-/**
- * Deletes SENT mail older than the cutoff, and nothing else. Cannot be undone, which is why
- * the API refuses it without an explicit confirm.
- */
-export async function purgeOutbox(olderThanDays: number): Promise<OutboxPurgeResult> {
-  return adminMailOutboxPurge({ olderThanDays, confirm: true });
-}
+export const outboxMailQueryOptions = (identifier: string) =>
+  getAdminMailOutboxGetByIdentifierSuspenseQueryOptions(identifier, { query: { staleTime: 0 } });
 
 export const outboxCountsQueryOptions = () => getAdminMailOutboxGetCountsSuspenseQueryOptions();
+
+// keep-comment: the API logs every body read, so it is fetched only on reveal, never refetched and never cached
+export function useOutboxMailBody(identifier: string, revealed: boolean) {
+  return useQuery({
+    ...getAdminMailOutboxGetBodyQueryOptions(identifier),
+    enabled: revealed,
+    staleTime: Infinity,
+    gcTime: 0,
+    retry: false,
+  });
+}
+
+// keep-comment: exact keys, not a URL-prefix match, which would also refetch (and log) an open body
+function useInvalidateOutbox() {
+  const queryClient = useQueryClient();
+
+  return (identifier?: string) =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: getAdminMailOutboxGetAllQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getAdminMailOutboxGetCountsQueryKey() }),
+      identifier && queryClient.invalidateQueries({ queryKey: getAdminMailOutboxGetByIdentifierQueryKey(identifier) }),
+    ]);
+}
+
+export function useRetryOutboxMail() {
+  const invalidate = useInvalidateOutbox();
+
+  return useMutation({
+    mutationFn: (identifier: string) => adminMailOutboxRetry(identifier),
+    onSuccess: (_, identifier) => invalidate(identifier),
+    meta: { successMessage: "Mail queued again." },
+  });
+}
+
+export function useCancelOutboxMail() {
+  const invalidate = useInvalidateOutbox();
+
+  return useMutation({
+    mutationFn: (identifier: string) => adminMailOutboxCancel(identifier),
+    onSuccess: (_, identifier) => invalidate(identifier),
+    meta: { successMessage: "Mail cancelled." },
+  });
+}
+
+// keep-comment: deletes only SENT mail older than the cutoff; the API refuses it without confirm
+export function usePurgeOutbox() {
+  const invalidate = useInvalidateOutbox();
+
+  return useMutation({
+    mutationFn: (olderThanDays: number) => adminMailOutboxPurge({ olderThanDays, confirm: true }),
+    onSuccess: ({ deleted }) => {
+      toast.success(`${deleted} sent mail${deleted === 1 ? "" : "s"} deleted.`);
+      return invalidate();
+    },
+  });
+}

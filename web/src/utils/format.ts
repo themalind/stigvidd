@@ -20,3 +20,7 @@ export function formatBytes(bytes: number | null | undefined): string {
 export function displayName(nickName: string | null | undefined): string {
   return nickName?.trim() ? nickName : "Account deleted";
 }
+
+export function formatDateTime(value: string | null | undefined): string {
+  return value ? new Date(value).toLocaleString() : "—";
+}
