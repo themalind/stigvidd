@@ -7,10 +7,27 @@ import { ApiError } from "@/api/mutator";
 const toasts = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("sonner", () => toasts);
 
-import { createQueryClient, shouldRetry } from "./react-query";
+import { createQueryClient, shouldRetry, underUrl } from "./react-query";
 
 beforeEach(() => {
   vi.clearAllMocks();
+});
+
+describe("underUrl", () => {
+  const { predicate } = underUrl("/api/v1/sessions/1");
+  const matches = (url: unknown) => predicate({ queryKey: [url] });
+
+  it("selects the resource, what lies beneath it and its filtered reads", () => {
+    expect(matches("/api/v1/sessions/1")).toBe(true);
+    expect(matches("/api/v1/sessions/1/proposals")).toBe(true);
+    expect(matches("/api/v1/sessions/1?page=2")).toBe(true);
+  });
+
+  it("leaves a sibling whose id only starts the same alone", () => {
+    expect(matches("/api/v1/sessions/12")).toBe(false);
+    expect(matches("/api/v1/sessions")).toBe(false);
+    expect(matches(["not", "a", "url"])).toBe(false);
+  });
 });
 
 describe("shouldRetry", () => {

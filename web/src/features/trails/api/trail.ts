@@ -8,12 +8,14 @@ import {
   adminTrailsUpdateTrail,
   getAdminTrailsGetAllTrailsQueryKey,
   getAdminTrailsGetAllTrailsSuspenseQueryOptions,
+  getAdminTrailsGetAllTrailsUrl,
   getAdminTrailsGetTrailPathSuspenseQueryOptions,
   getAdminTrailsGetTrailQueryKey,
   getAdminTrailsGetTrailSuspenseQueryOptions,
 } from "@/api/generated/admin-trails/admin-trails";
 import type { AdminTrailListItemResponse, AdminTrailPathResponse, UpdateTrailRequest } from "@/api/generated/model";
 import { addTrailImages, deleteTrailImage } from "@/api/images";
+import { underUrl } from "@/lib/react-query";
 import type { LngLat } from "@/utils/geometry-edit";
 
 export const trailsQueryOptions = () => getAdminTrailsGetAllTrailsSuspenseQueryOptions();
@@ -26,19 +28,13 @@ const toLngLats = ({ coordinates }: AdminTrailPathResponse): LngLat[] =>
 export const trailPathQueryOptions = (identifier: string) =>
   getAdminTrailsGetTrailPathSuspenseQueryOptions(identifier, { query: { select: toLngLats } });
 
-const ADMIN_TRAILS = "/api/v1/admin/trails";
-
-/** Every admin trail query: the list, each detail and each path. */
 export function useInvalidateTrailQueries() {
   const queryClient = useQueryClient();
 
-  return () =>
-    queryClient.invalidateQueries({
-      predicate: ({ queryKey }) => typeof queryKey[0] === "string" && queryKey[0].startsWith(ADMIN_TRAILS),
-    });
+  return () => queryClient.invalidateQueries(underUrl(getAdminTrailsGetAllTrailsUrl()));
 }
 
-/** Drops a cached detail so the next read waits for the server instead of showing up to 30 s old data. */
+// keep-comment: removed, not invalidated, so the next read waits for the server instead of showing up to 30 s old data
 export function useForgetTrail(identifier: string) {
   const queryClient = useQueryClient();
 

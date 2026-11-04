@@ -12,6 +12,18 @@ declare module "@tanstack/react-query" {
   }
 }
 
+// keep-comment: orval keys start with the request URL; matching on a path boundary keeps /sessions/1 from catching /sessions/12
+export function underUrl(prefix: string) {
+  return {
+    predicate: ({ queryKey }: { queryKey: readonly unknown[] }) => {
+      const url = queryKey[0];
+      return (
+        typeof url === "string" && (url === prefix || url.startsWith(`${prefix}/`) || url.startsWith(`${prefix}?`))
+      );
+    },
+  };
+}
+
 const MAX_RETRIES = 2;
 
 export function shouldRetry(failureCount: number, error: unknown): boolean {

@@ -17,15 +17,24 @@ interface Props {
   target: BanTarget;
   initialReason?: string;
   onClose: () => void;
+  onBanned?: () => void;
 }
 
-export function BanSheet({ target, initialReason = "", onClose }: Props) {
+export function BanSheet({ target, initialReason = "", onClose, onBanned }: Props) {
   const [reason, setReason] = useState(initialReason);
   const ban = useBanUser();
   const strikes = target.strikes ?? 0;
 
   function confirm() {
-    ban.mutate({ target, reason: reason.trim() || undefined }, { onSuccess: onClose });
+    ban.mutate(
+      { target, reason: reason.trim() || undefined },
+      {
+        onSuccess: () => {
+          onBanned?.();
+          onClose();
+        },
+      },
+    );
   }
 
   return (
