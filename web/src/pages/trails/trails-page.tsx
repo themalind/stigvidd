@@ -9,7 +9,7 @@ import { useSearchParams } from "react-router";
 import TrailsTable from "@/components/data-table/TrailsTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FilterSelect } from "@/shared/components/filter-select";
 import {
   TRAIL_MISSING,
   TRAIL_SORTS,
@@ -21,31 +21,6 @@ import {
   trailCities,
   type TrailFilterState,
 } from "@/lib/trail-filters";
-
-interface FilterSelectProps {
-  label: string;
-  value: string;
-  options: readonly { value: string; label: string }[];
-  onChange: (value: string) => void;
-  className?: string;
-}
-
-function FilterSelect({ label, value, options, onChange, className }: FilterSelectProps) {
-  return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger aria-label={label} className={className ?? "w-44"}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option.value} value={option.value}>
-            {option.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
 
 const ACCESSIBILITY_OPTIONS = [
   { value: "All", label: "Any accessibility" },
