@@ -14,6 +14,15 @@ namespace Core.Services.Events;
 
 public class EventImageService : IEventImageService
 {
+    // Every screen shows a cover as a 2:1 strip, so the rest of the picture is never seen. keep-comment: why covers are cut to 2:1
+    public const double CoverAspect = 2;
+    public const int CoverMaxWidth = 1080;
+
+    public static ImageProcessingOptions CoverOptions(double? focusY)
+    {
+        return new ImageProcessingOptions { AspectCrop = new AspectCrop(CoverAspect, focusY ?? 0.5), MaxWidth = CoverMaxWidth };
+    }
+
     private readonly EventLoader _loader;
     private readonly IEventImageRepository _imageRepository;
     private readonly IMediaUploadService _mediaUploadService;
@@ -37,8 +46,11 @@ public class EventImageService : IEventImageService
         _logger = logger;
     }
 
-    public async Task<Result<EventImageResponse>> SetImageAsync(string userIdentifier, string identifier, IFormFile image, CancellationToken ctoken)
+    public async Task<Result<EventImageResponse>> SetImageAsync(string userIdentifier, string identifier, IFormFile image, double? focusY, CancellationToken ctoken)
     {
+        if (focusY is double focus && !(focus >= 0 && focus <= 1))
+            return Result.Fail<EventImageResponse>(new Message(400, "focusY must be between 0 and 1."));
+
         var loaded = await _loader.LoadAsync(userIdentifier, identifier, ctoken);
 
         if (loaded.Message is not null || loaded.Value is null)
@@ -48,7 +60,7 @@ public class EventImageService : IEventImageService
             return Result.Fail<EventImageResponse>(refusal);
 
         await using var stream = image.OpenReadStream();
-        var upload = await _mediaUploadService.ProcessAndUploadAsync(stream, "events", ImageProcessingOptions.StripMetadataOnly);
+        var upload = await _mediaUploadService.ProcessAndUploadAsync(stream, "events", CoverOptions(focusY));
 
         if (upload.IsFailure || upload.Value is null)
             return Result.Fail<EventImageResponse>(new Message(500, "Could not upload the image. Try again later."));

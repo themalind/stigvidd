@@ -10,7 +10,7 @@ import { loginReturnPathAtom, userAtom } from "@/atoms/auth-atoms";
 import EventDetailsScreen from "@/components/event/event-details-screen";
 import { EVENTS_TAB_ROUTES } from "@/components/event/event-routes";
 import { EventParticipants, HikingEvent } from "@/data/types";
-import { flushUntil } from "@/test/flush";
+import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
@@ -60,7 +60,7 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ identifier: "e1" }),
   router: {
     navigate: (...args: unknown[]) => mockNavigate(...args),
-    back: mockBack,
+    back: (...args: unknown[]) => mockBack(...args),
     canGoBack: () => true,
   },
   usePathname: () => "/events/event/e1",
@@ -276,9 +276,21 @@ describe("EventDetailsScreen", () => {
 
     fireEvent.press(screen.getAllByText("Lämna")[0]);
     fireEvent.press(screen.getByTestId("event-leave-dialog-confirm"));
-    await flushUntil(() => mockLeave.mock.calls.length > 0);
+    await flushUntil(() => mockBack.mock.calls.length > 0);
 
     expect(mockLeave).toHaveBeenCalledWith("e1");
+    expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("stays on an open event after leaving it", async () => {
+    await show(hikingEvent({ myStatus: "Joined" }));
+    await flushUntil(() => screen.queryByText("Lämna") !== null);
+
+    fireEvent.press(screen.getByText("Lämna"));
+    await flushUntil(() => mockLeave.mock.calls.length > 0);
+    await settle();
+
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   it("shows the unread count on the board link once joined", async () => {

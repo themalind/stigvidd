@@ -97,6 +97,7 @@ export interface EventFeedQuery {
   radiusKm?: number;
   limit?: number;
   cursor?: string;
+  excludeMine?: boolean;
 }
 
 export interface MyEventsQuery {

@@ -22,7 +22,8 @@ public record EventFeedFilter(
     string? OrganizerIdentifier,
     EventArea? Area,
     EventPageKey? After,
-    int Limit);
+    int Limit,
+    bool ExcludeMine);
 
 public record EventMineFilter(int ViewerId, int[] HiddenUserIds, DateTime Now, bool Past, EventPageKey? After, int Limit);
 

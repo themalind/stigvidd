@@ -15,17 +15,40 @@ function trimDot(text: string): string {
   return text.replace(/\.$/, "");
 }
 
+type FormatKind = "weekday" | "month" | "clock" | "dayMonth" | "longDate";
+
+const FORMAT_OPTIONS: Record<FormatKind, Intl.DateTimeFormatOptions> = {
+  weekday: { weekday: "short" },
+  month: { month: "short" },
+  clock: { hour: "2-digit", minute: "2-digit" },
+  dayMonth: { day: "numeric", month: "short" },
+  longDate: { weekday: "long", day: "numeric", month: "long" },
+};
+
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
+// Hermes builds a new formatter on every toLocale*String call, which is slow in a long list. keep-comment: why formatters are cached
+function format(date: Date, language: string, kind: FormatKind): string {
+  const key = `${language}|${kind}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(language, FORMAT_OPTIONS[kind]);
+    formatters.set(key, formatter);
+  }
+  return formatter.format(date);
+}
+
 export function dateBadgeParts(iso: string, language: string): DateBadgeParts {
   const date = new Date(iso);
   return {
-    weekday: trimDot(date.toLocaleDateString(language, { weekday: "short" })),
+    weekday: trimDot(format(date, language, "weekday")),
     day: String(date.getDate()),
-    month: trimDot(date.toLocaleDateString(language, { month: "short" })),
+    month: trimDot(format(date, language, "month")),
   };
 }
 
 export function formatClock(iso: string, language: string): string {
-  return new Date(iso).toLocaleTimeString(language, { hour: "2-digit", minute: "2-digit" });
+  return format(new Date(iso), language, "clock");
 }
 
 export function sameDay(a: Date, b: Date): boolean {
@@ -41,9 +64,9 @@ export function formatTimeRange(startsAt: string, endsAt: string | null | undefi
 
 export function formatPostTime(iso: string, language: string): string {
   const date = new Date(iso);
-  return `${trimDot(date.toLocaleDateString(language, { day: "numeric", month: "short" }))} ${formatClock(iso, language)}`;
+  return `${trimDot(format(date, language, "dayMonth"))} ${formatClock(iso, language)}`;
 }
 
 export function formatEventDate(iso: string, language: string): string {
-  return new Date(iso).toLocaleDateString(language, { weekday: "long", day: "numeric", month: "long" });
+  return format(new Date(iso), language, "longDate");
 }

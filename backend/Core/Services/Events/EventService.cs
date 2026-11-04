@@ -130,7 +130,8 @@ public class EventService : IEventService
             query.Organizer,
             area,
             after,
-            query.Limit + 1);
+            query.Limit + 1,
+            query.ExcludeMine && userIdentifier is not null);
 
         var cards = await _eventRepository.GetFeedAsync(filter, ctoken);
 

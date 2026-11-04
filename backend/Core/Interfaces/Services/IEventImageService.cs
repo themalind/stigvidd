@@ -8,6 +8,6 @@ namespace Core.Interfaces.Services;
 
 public interface IEventImageService
 {
-    Task<Result<EventImageResponse>> SetImageAsync(string userIdentifier, string identifier, IFormFile image, CancellationToken ctoken);
+    Task<Result<EventImageResponse>> SetImageAsync(string userIdentifier, string identifier, IFormFile image, double? focusY, CancellationToken ctoken);
     Task<Result> DeleteImageAsync(string userIdentifier, string identifier, CancellationToken ctoken);
 }

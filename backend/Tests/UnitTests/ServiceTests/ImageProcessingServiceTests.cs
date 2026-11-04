@@ -49,6 +49,73 @@ public class ImageProcessingServiceTests
         processed.GetExifProfile().Should().BeNull();
     }
 
+    private static MemoryStream MakeRedOverBlue(uint width, uint halfHeight)
+    {
+        using var images = new MagickImageCollection
+        {
+            new MagickImage(new MagickColor("#ff0000"), width, halfHeight),
+            new MagickImage(new MagickColor("#0000ff"), width, halfHeight),
+        };
+        using var stacked = images.AppendVertically();
+        stacked.Format = MagickFormat.Png;
+        var ms = new MemoryStream();
+        stacked.Write(ms);
+        ms.Position = 0;
+        return ms;
+    }
+
+    private static string ColourAt(Stream stream, int x, int y)
+    {
+        using var image = new MagickImage(stream);
+        using var pixels = image.GetPixels();
+        var colour = pixels.GetPixel(x, y).ToColor();
+        colour.Should().NotBeNull();
+        return colour.ToHexString().ToLowerInvariant()[..7];
+    }
+
+    [Theory]
+    [InlineData(0.0, "#ff0000")]
+    [InlineData(1.0, "#0000ff")]
+    public void Process_WithAnAspectCrop_CutsATallImageToTheAspectAtItsFocus(double focusY, string expected)
+    {
+        var service = new ImageProcessingService();
+        using var source = MakeRedOverBlue(200, 200);
+
+        using var result = service.Process(source, new ImageProcessingOptions { AspectCrop = new AspectCrop(2, focusY) });
+
+        result.Width.Should().Be(200);
+        result.Height.Should().Be(100);
+        ColourAt(result.Stream, 100, 0).Should().Be(expected);
+        result.Stream.Position = 0;
+        ColourAt(result.Stream, 100, 99).Should().Be(expected);
+    }
+
+    [Fact]
+    public void Process_WithAnAspectCrop_CentresAWideImage()
+    {
+        var service = new ImageProcessingService();
+        using var source = MakeImage(1000, 200);
+
+        using var result = service.Process(source, new ImageProcessingOptions { AspectCrop = new AspectCrop(2, 0) });
+
+        result.Width.Should().Be(400);
+        result.Height.Should().Be(200);
+    }
+
+    [Fact]
+    public void Process_WithAnAspectCropAndNoFiniteFocus_CutsTheMiddle()
+    {
+        var service = new ImageProcessingService();
+        using var source = MakeRedOverBlue(200, 200);
+
+        using var result = service.Process(source, new ImageProcessingOptions { AspectCrop = new AspectCrop(2, double.NaN) });
+
+        result.Height.Should().Be(100);
+        ColourAt(result.Stream, 100, 0).Should().Be("#ff0000");
+        result.Stream.Position = 0;
+        ColourAt(result.Stream, 100, 99).Should().Be("#0000ff");
+    }
+
     [Fact]
     public void Process_WhenLargerThanMax_DownscalesKeepingAspectRatio()
     {

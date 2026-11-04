@@ -64,9 +64,10 @@ public class EventRepositoryTests : TestBase
         string? organizer = null,
         EventArea? area = null,
         EventPageKey? after = null,
-        int limit = 20)
+        int limit = 20,
+        bool excludeMine = false)
     {
-        return new EventFeedFilter(viewerId, hidden ?? [], Now, trail, organizer, area, after, limit);
+        return new EventFeedFilter(viewerId, hidden ?? [], Now, trail, organizer, area, after, limit, excludeMine);
     }
 
     private static async Task<IReadOnlyList<string>> FeedIdentifiers(IDbContextFactory<StigViddDbContext> factory, EventFeedFilter filter)
@@ -199,6 +200,28 @@ public class EventRepositoryTests : TestBase
 
         (await FeedIdentifiers(factory, Feed(trail: Trail2))).Should().Equal("event-1");
         (await FeedIdentifiers(factory, Feed(organizer: "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d67"))).Should().Equal("event-2");
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_ExcludeMine_LeavesOutEventsTheViewerIsPartOfInAnyStatus()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            db.Events.Add(NewEvent(1, organizerId: 2));
+            db.Events.Add(NewEvent(2, organizerId: 3));
+            var joined = NewEvent(3, organizerId: 2);
+            joined.Participants.Add(new EventParticipant { UserId = 3, Role = EventParticipantRole.Participant });
+            db.Events.Add(joined);
+            var interested = NewEvent(4, organizerId: 2);
+            interested.Participants.Add(new EventParticipant { UserId = 3, Role = EventParticipantRole.Participant, Status = EventParticipantStatus.Interested });
+            db.Events.Add(interested);
+            var removed = NewEvent(5, organizerId: 2);
+            removed.Participants.Add(new EventParticipant { UserId = 3, Role = EventParticipantRole.Participant, Status = EventParticipantStatus.Removed });
+            db.Events.Add(removed);
+        });
+
+        (await FeedIdentifiers(factory, Feed(viewerId: 3, excludeMine: true))).Should().Equal("event-1");
+        (await FeedIdentifiers(factory, Feed(viewerId: 3))).Should().Equal("event-1", "event-2", "event-3", "event-4", "event-5");
     }
 
     [Fact]

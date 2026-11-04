@@ -938,3 +938,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   Adding a table to EmptiedTables satisfies ClassificationTests but deletes nothing: EmptyContactTablesAsync and NeutralizeOutboundAsync
   must each get the ExecuteDeleteAsync, with count assertions in DataAnonymizerIntegrationTests. Measured gap: FriendNotes is listed
   but never deleted, so friend notes survive an anonymised export. Add a migration table checklist.
+- [Removing an observed query does not stop its refetch; exclude the deleted entity from the invalidation instead](removing-an-observed-query-does-not-stop-its-refetch.md) —
+  Deleting an event from its own detail screen logged getEvent / getEventParticipants failed 404 in the dev build because onSuccess
+  invalidated all of ["events"] while useQuery observers were still mounted. queryClient.removeQueries does not help: the observer
+  rebuilds the query on re-render and fetches. Fix: invalidateQueries with predicate queryKey[2] !== identifier (useEventManage.ts deleteMutation, react-query cache, delete mutation, 404 after delete).

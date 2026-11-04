@@ -18,9 +18,16 @@ export function useEventErrorHandler() {
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setWarningMsg = useSetAtom(showWarningAtom);
 
-  const refresh = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ["events"] });
-  }, [queryClient]);
+  // `gone` is an event the viewer can no longer read; refetching its open screen would 404. keep-comment: see docs/notes/removing-an-observed-query-does-not-stop-its-refetch.md
+  const refresh = useCallback(
+    (gone?: string) => {
+      void queryClient.invalidateQueries({
+        queryKey: ["events"],
+        predicate: (query) => gone === undefined || query.queryKey[2] !== gone,
+      });
+    },
+    [queryClient],
+  );
 
   // A known code means the screen showed an old picture: say why and redraw it. keep-comment: the stale-state rule
   const onEventError = useCallback(

@@ -11,9 +11,9 @@ import CountedTextInput from "@/components/counted-text-input";
 import FieldErrorBadge from "@/components/field-error-badge";
 import DateTimeField from "@/components/date-time-field";
 import PointPickerMap from "@/components/map/point-picker-map";
+import CoverFramer from "@/components/cover-framer";
 import SectionPanel from "@/components/section-panel";
-import SlimButton from "@/components/slim-button";
-import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
+import { BORDER_RADIUS, EVENT_COVER_ASPECT, SCREEN_PADDING } from "@/constants/constants";
 import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";
 import { EventVisibility, HikingEvent } from "@/data/types";
 import { CoverChange, useSaveEvent } from "@/hooks/events/useSaveEvent";
@@ -67,11 +67,12 @@ function EventForm({ original }: { original?: HikingEvent }) {
   const isCreate = !original;
   const isPrivate = values.visibility === "Private";
   const canToggleInvites = !original || original.myRole === "Organizer";
-  const coverUri = cover === "remove" ? null : cover ? cover.uri : (original?.imageUrl ?? null);
+  const savedCoverUri = cover === null ? (original?.imageUrl ?? null) : null;
+  const [draggingCover, setDraggingCover] = useState(false);
 
   const chooseCover = async () => {
     const uris = await pickImages({ limit: 1 });
-    if (uris && uris[0]) setCover({ uri: uris[0] });
+    if (uris && uris[0]) setCover({ uri: uris[0], focusY: 0.5 });
   };
 
   // Only a saved cover needs a delete; an unsaved pick is just dropped. keep-comment: avoids a needless DELETE on create
@@ -124,8 +125,17 @@ function EventForm({ original }: { original?: HikingEvent }) {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        <CoverPicker uri={coverUri} onPick={() => void chooseCover()} onRemove={removeCover} />
+      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled" scrollEnabled={!draggingCover}>
+        <CoverPicker
+          picked={cover !== null && cover !== "remove" ? cover : null}
+          savedUri={savedCoverUri}
+          onFocusChange={(focusY) =>
+            setCover((current) => (current && current !== "remove" ? { ...current, focusY } : current))
+          }
+          onDragChange={setDraggingCover}
+          onPick={() => void chooseCover()}
+          onRemove={removeCover}
+        />
 
         <SectionPanel title={t("events.form.about")}>
           <View style={s.fields}>
@@ -317,16 +327,17 @@ function EventForm({ original }: { original?: HikingEvent }) {
       </ScrollView>
 
       <View style={[s.footer, { backgroundColor: theme.colors.surface, borderTopColor: theme.colors.outlineVariant }]}>
-        <SlimButton
+        <Button
           testID="event-form-submit"
           mode="contained"
           loading={save.isPending}
           disabled={save.isPending}
           onPress={submit}
           style={{ borderRadius: BORDER_RADIUS }}
+          contentStyle={s.submit}
         >
           {submitLabel}
-        </SlimButton>
+        </Button>
       </View>
 
       <EventRoutePicker
@@ -350,34 +361,63 @@ function EventForm({ original }: { original?: HikingEvent }) {
   );
 }
 
-function CoverPicker({ uri, onPick, onRemove }: { uri: string | null; onPick: () => void; onRemove: () => void }) {
+type CoverPickerProps = {
+  picked: { uri: string; focusY: number } | null;
+  savedUri: string | null;
+  onFocusChange: (focusY: number) => void;
+  onDragChange: (dragging: boolean) => void;
+  onPick: () => void;
+  onRemove: () => void;
+};
+
+// A new pick can be reframed; a saved cover was cut when uploaded. keep-comment: why only a pick is draggable
+function CoverPicker({ picked, savedUri, onFocusChange, onDragChange, onPick, onRemove }: CoverPickerProps) {
   const theme = useTheme();
   const { t } = useTranslation();
 
-  if (uri)
+  const actions = (
+    <View style={s.coverActions}>
+      <Button
+        testID="event-form-cover-change"
+        mode="contained-tonal"
+        compact
+        onPress={onPick}
+        style={{ borderRadius: BORDER_RADIUS }}
+      >
+        {t("events.form.changeCover")}
+      </Button>
+      <Button
+        testID="event-form-cover-remove"
+        mode="contained-tonal"
+        compact
+        onPress={onRemove}
+        style={{ borderRadius: BORDER_RADIUS }}
+      >
+        {t("common.delete")}
+      </Button>
+    </View>
+  );
+
+  if (picked)
     return (
-      <View style={s.cover}>
-        <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-        <View style={s.coverActions}>
-          <Button
-            testID="event-form-cover-change"
-            mode="contained-tonal"
-            compact
-            onPress={onPick}
-            style={{ borderRadius: BORDER_RADIUS }}
-          >
-            {t("events.form.changeCover")}
-          </Button>
-          <Button
-            testID="event-form-cover-remove"
-            mode="contained-tonal"
-            compact
-            onPress={onRemove}
-            style={{ borderRadius: BORDER_RADIUS }}
-          >
-            {t("common.delete")}
-          </Button>
-        </View>
+      <CoverFramer
+        testID="event-form-cover"
+        uri={picked.uri}
+        aspect={EVENT_COVER_ASPECT}
+        focusY={picked.focusY}
+        onFocusChange={onFocusChange}
+        onDragChange={onDragChange}
+        style={s.coverSpacing}
+      >
+        {actions}
+      </CoverFramer>
+    );
+
+  if (savedUri)
+    return (
+      <View testID="event-form-cover" style={[s.cover, s.coverSpacing]}>
+        <Image source={{ uri: savedUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        {actions}
       </View>
     );
 
@@ -386,7 +426,12 @@ function CoverPicker({ uri, onPick, onRemove }: { uri: string | null; onPick: ()
       testID="event-form-cover-add"
       accessibilityRole="button"
       onPress={onPick}
-      style={[s.cover, s.coverEmpty, { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface }]}
+      style={[
+        s.cover,
+        s.coverSpacing,
+        s.coverEmpty,
+        { borderColor: theme.colors.outline, backgroundColor: theme.colors.surface },
+      ]}
     >
       <Icon source="image-outline" size={28} color={theme.colors.onSurfaceVariant} />
       <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("events.form.addCover")}</Text>
@@ -573,10 +618,12 @@ const s = StyleSheet.create({
     gap: 6,
   },
   cover: {
-    height: 140,
-    marginHorizontal: SCREEN_PADDING,
+    aspectRatio: EVENT_COVER_ASPECT,
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
+  },
+  coverSpacing: {
+    marginHorizontal: SCREEN_PADDING,
   },
   coverEmpty: {
     borderWidth: 1,
@@ -588,7 +635,7 @@ const s = StyleSheet.create({
   coverActions: {
     position: "absolute",
     right: 8,
-    bottom: 8,
+    top: 8,
     flexDirection: "row",
     gap: 8,
   },
@@ -619,5 +666,8 @@ const s = StyleSheet.create({
   footer: {
     padding: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  submit: {
+    height: 48,
   },
 });

@@ -47,7 +47,8 @@ jest.mock("@/api/events", () => ({
 
 const mockSetImage = jest.fn();
 const mockDeleteImage = jest.fn();
-jest.mock("@/utils/pick-images", () => ({ pickImages: () => Promise.resolve(["file://picked.jpg"]) }));
+const mockPickImages = jest.fn();
+jest.mock("@/utils/pick-images", () => ({ pickImages: (...args: unknown[]) => mockPickImages(...args) }));
 
 jest.mock("@/api/trails", () => ({
   getAllTrails: () =>
@@ -152,6 +153,7 @@ function created(overrides: Partial<HikingEvent> = {}): HikingEvent {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockPickImages.mockResolvedValue(["file://picked.jpg"]);
   mockParams = {};
   mockDateProps = null;
   mockTimeProps = null;
@@ -261,6 +263,36 @@ describe("EventFormScreen", () => {
     expect(mockBack).toHaveBeenCalled();
   });
 
+  it("uploads a picked cover with the framing the user dragged it to", async () => {
+    mockSetImage.mockResolvedValue({ identifier: "img-1", imageUrl: "https://media/new.jpg" });
+    await render();
+    fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
+    await pickStart();
+    tapMap(12.94, 57.72);
+    fireEvent.press(screen.getByTestId("event-form-cover-add"));
+    await flushUntil(() => screen.queryByTestId("event-form-cover-image") !== null);
+    act(() => {
+      fireEvent(screen.getByTestId("event-form-cover"), "layout", {
+        nativeEvent: { layout: { width: 300, height: 150 } },
+      });
+      screen
+        .getByTestId("event-form-cover-image")
+        .props.onLoad({ nativeEvent: { source: { width: 1000, height: 1000 } } });
+    });
+    const frame = screen.getByTestId("event-form-cover-frame");
+    fireEvent(frame, "responderGrant", { nativeEvent: { pageY: 100 } });
+    fireEvent(frame, "responderMove", { nativeEvent: { pageY: 160 } });
+    fireEvent(frame, "responderRelease");
+
+    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await flushUntil(() => mockSetImage.mock.calls.length > 0);
+
+    const [identifier, uri, focusY] = mockSetImage.mock.calls[0];
+    expect(identifier).toBe("new-1");
+    expect(uri).toBe("file://picked.jpg");
+    expect(focusY).toBeCloseTo(0.1);
+  });
+
   it("drops an unsaved cover without asking the server to delete one", async () => {
     await render();
     fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
@@ -268,6 +300,7 @@ describe("EventFormScreen", () => {
     tapMap(12.94, 57.72);
     fireEvent.press(screen.getByTestId("event-form-cover-add"));
     await flushUntil(() => screen.queryByTestId("event-form-cover-remove") !== null);
+    expect(mockPickImages).toHaveBeenCalledWith({ limit: 1 });
     fireEvent.press(screen.getByTestId("event-form-cover-remove"));
     await settle();
 

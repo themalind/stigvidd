@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, EVENT_COVER_ASPECT } from "@/constants/constants";
 import { EventSummary } from "@/data/types";
 import { formatDistanceKm } from "@/utils/format-distance";
 import { formatTimeRange } from "@/utils/event-time";
@@ -105,7 +105,7 @@ const s = StyleSheet.create({
     overflow: "hidden",
   },
   cover: {
-    height: 140,
+    aspectRatio: EVENT_COVER_ASPECT,
   },
   body: {
     flexDirection: "row",

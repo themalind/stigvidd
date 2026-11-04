@@ -43,6 +43,18 @@ public class EventPageTests
     }
 
     [Fact]
+    public async Task The_cover_is_shown_in_the_same_2_to_1_strip_as_in_the_app()
+    {
+        using var factory = new LinkServiceFactory();
+        factory.Api.Returns(Event());
+
+        var (_, html) = await GetAsync(factory, "/event/event-1");
+
+        html.Should().Contain("<img class=\"hero cover\" src=\"https://media.example.test/e.webp\"");
+        html.Should().Contain(".hero.cover { aspect-ratio: 2 / 1; }");
+    }
+
+    [Fact]
     public async Task The_open_in_app_button_uses_the_custom_scheme_with_the_event_path()
     {
         using var factory = new LinkServiceFactory();

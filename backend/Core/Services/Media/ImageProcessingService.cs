@@ -15,6 +15,11 @@ public class ImageProcessingService : IImageProcessingService
         // Bake in the EXIF orientation before we strip metadata, otherwise phone photos rotate.
         image.AutoOrient();
 
+        if (options.AspectCrop is { Aspect: > 0 } aspectCrop)
+        {
+            CropToAspect(image, aspectCrop);
+        }
+
         if (options.Crop is { } crop && crop.Width > 0 && crop.Height > 0)
         {
             image.Crop(new MagickGeometry(crop.X, crop.Y, (uint)crop.Width, (uint)crop.Height));
@@ -78,5 +83,31 @@ public class ImageProcessingService : IImageProcessingService
             Height = (int)image.Height,
             SizeBytes = output.Length
         };
+    }
+
+    private static void CropToAspect(MagickImage image, AspectCrop aspectCrop)
+    {
+        var width = image.Width;
+        var height = image.Height;
+        var focusY = double.IsFinite(aspectCrop.FocusY) ? Math.Clamp(aspectCrop.FocusY, 0, 1) : 0.5;
+        var targetHeight = (uint)Math.Max(1, Math.Round(width / aspectCrop.Aspect));
+
+        if (targetHeight < height)
+        {
+            var y = (int)Math.Round((height - targetHeight) * focusY);
+            image.Crop(new MagickGeometry(0, y, width, targetHeight));
+        }
+        else
+        {
+            var targetWidth = (uint)Math.Max(1, Math.Round(height * aspectCrop.Aspect));
+
+            if (targetWidth >= width)
+                return;
+
+            var x = (int)((width - targetWidth) / 2);
+            image.Crop(new MagickGeometry(x, 0, targetWidth, height));
+        }
+
+        image.ResetPage();
     }
 }

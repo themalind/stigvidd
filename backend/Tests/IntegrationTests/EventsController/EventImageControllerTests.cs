@@ -20,11 +20,36 @@ public class EventImageControllerTests : IClassFixture<BoardWebApplicationFactor
         _factory.SeedDatabase();
     }
 
-    private static MultipartFormDataContent ImageForm()
+    private static MultipartFormDataContent ImageForm(string? focusY = null)
     {
         var imageContent = new ByteArrayContent(TestImages.JpegWithGps());
         imageContent.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
-        return new MultipartFormDataContent { { imageContent, "image", "cover.jpg" } };
+        var form = new MultipartFormDataContent { { imageContent, "image", "cover.jpg" } };
+        if (focusY is not null)
+            form.Add(new StringContent(focusY), "focusY");
+        return form;
+    }
+
+    [Fact]
+    public async Task PostImage_WithADecimalFocus_IsAccepted()
+    {
+        var identifier = await BoardRequests.CreateBoardAsync(_factory);
+
+        var response = await BoardRequests.Client(_factory, BoardRequests.NaturElskaren)
+            .PostAsync($"{BoardRequests.BASE_URL}/{identifier}/image", ImageForm("0.25"), TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task PostImage_WithAFocusOutside0To1_Is400()
+    {
+        var identifier = await BoardRequests.CreateBoardAsync(_factory);
+
+        var response = await BoardRequests.Client(_factory, BoardRequests.NaturElskaren)
+            .PostAsync($"{BoardRequests.BASE_URL}/{identifier}/image", ImageForm("2"), TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     private async Task<EventResponse> EventAsync(string subject, string identifier)

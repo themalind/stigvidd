@@ -22,7 +22,7 @@ export function useEventFeed() {
   const user = useAtomValue(userAtom);
   return useInfiniteQuery({
     queryKey: ["events", "feed", user?.id],
-    queryFn: ({ pageParam }) => getEvents({ cursor: pageParam }),
+    queryFn: ({ pageParam }) => getEvents({ cursor: pageParam, excludeMine: true }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: nextCursor,
     staleTime: EVENTS_STALE_TIME,

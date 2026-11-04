@@ -6,6 +6,9 @@
     "since": "Suspended since {{date}}"
   },
   "common": {
+    "dragToMove": "Drag to reposition",
+    "imageFraming": "Image framing",
+    "imageFramingHint": "Swipe up or down to move the framing",
     "save": "Save",
     "saving": "Saving...",
     "cancel": "Cancel",

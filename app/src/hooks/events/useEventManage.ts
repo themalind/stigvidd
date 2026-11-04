@@ -64,7 +64,7 @@ export function useEventManageMutations(identifier: string) {
   const deleteMutation = useMutation({
     mutationFn: () => deleteEvent(identifier),
     onSuccess: () => {
-      refresh();
+      refresh(identifier);
       setSuccessMsg(t("events.deleted"));
     },
     onError: (error) => onEventError(error),
@@ -79,7 +79,7 @@ export function useEventManageMutations(identifier: string) {
 
   const removeMutation = useMutation({
     mutationFn: (userIdentifier: string) => removeEventParticipant(identifier, userIdentifier),
-    onSuccess: refresh,
+    onSuccess: () => refresh(),
     onError: (error) => onEventError(error),
   });
 

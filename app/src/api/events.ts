@@ -276,9 +276,10 @@ export async function setEventPostPinned(postIdentifier: string, pinned: boolean
   });
 }
 
-export function setEventImage(identifier: string, uri: string): Promise<EventImage> {
+export function setEventImage(identifier: string, uri: string, focusY?: number): Promise<EventImage> {
   const form = new FormData();
   form.append("image", { uri, type: "image/jpeg", name: `${uuid.v4()}.jpg` } as unknown as Blob);
+  if (focusY !== undefined) form.append("focusY", String(focusY));
 
   return sendForJson({
     name: "setEventImage",

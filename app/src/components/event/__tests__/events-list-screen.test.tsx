@@ -87,17 +87,15 @@ beforeEach(() => {
     },
   ]);
   mockGetMine.mockResolvedValue({ items: [summary("mine", "Min tur", { myRole: "Organizer" })], nextCursor: null });
-  mockGetEvents.mockResolvedValue({
-    items: [summary("mine", "Min tur", { myRole: "Organizer" }), summary("open", "Fikapromenad")],
-    nextCursor: null,
-  });
+  mockGetEvents.mockResolvedValue({ items: [summary("open", "Fikapromenad")], nextCursor: null });
   mockAccept.mockResolvedValue(undefined);
 });
 
 describe("EventsListScreen", () => {
-  it("starts on Utforska with the open feed, leaving out events one is already in", async () => {
+  it("starts on Utforska with the open feed, which the server sends without events one is already in", async () => {
     await show();
 
+    expect(mockGetEvents).toHaveBeenCalledWith(expect.objectContaining({ excludeMine: true }));
     expect(screen.getByTestId("events-tabs-explore")).toBeSelected();
     expect(screen.getByText("Fikapromenad")).toBeTruthy();
     expect(screen.queryByText("Min tur")).toBeNull();

@@ -70,15 +70,53 @@ public class EventImageServiceTests : TestBase
     {
         var factory = CreateSeededFactory(db => db.Events.Add(Organized()));
 
-        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), null, TestContext.Current.CancellationToken);
 
         result.Value.Should().NotBeNull();
         result.Value.ImageUrl.Should().Be($"{Utilities.Stubs.PresentableBaseUrl}{Uploaded}");
         var stored = (await ImagesOf(factory, 1)).Should().ContainSingle().Subject;
         stored.Identifier.Should().Be(result.Value.Identifier);
         stored.ImageUrl.Should().Be(Uploaded);
-        _media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), "events", ImageProcessingOptions.StripMetadataOnly), Times.Once);
+        _media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), "events", EventImageService.CoverOptions(null)), Times.Once);
         _webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SetImageAsync_CutsTheCoverTo2To1AtTheChosenFocus()
+    {
+        var factory = CreateSeededFactory(db => db.Events.Add(Organized()));
+
+        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), 0.25, TestContext.Current.CancellationToken);
+
+        result.Success.Should().BeTrue();
+        var expected = new ImageProcessingOptions { AspectCrop = new AspectCrop(2, 0.25), MaxWidth = 1080 };
+        _media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), "events", expected), Times.Once);
+    }
+
+    [Fact]
+    public async Task SetImageAsync_WithoutAFocus_CutsTheMiddle()
+    {
+        var factory = CreateSeededFactory(db => db.Events.Add(Organized()));
+
+        await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), null, TestContext.Current.CancellationToken);
+
+        var expected = new ImageProcessingOptions { AspectCrop = new AspectCrop(2, 0.5), MaxWidth = 1080 };
+        _media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), "events", expected), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(-0.1)]
+    [InlineData(1.1)]
+    [InlineData(double.NaN)]
+    public async Task SetImageAsync_WithAFocusOutside0To1_Is400BeforeAnyUpload(double focusY)
+    {
+        var factory = CreateSeededFactory(db => db.Events.Add(Organized()));
+
+        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), focusY, TestContext.Current.CancellationToken);
+
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(400);
+        _media.Verify(m => m.ProcessAndUploadAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<ImageProcessingOptions>()), Times.Never);
     }
 
     [Fact]
@@ -86,7 +124,7 @@ public class EventImageServiceTests : TestBase
     {
         var factory = CreateSeededFactory(db => db.Events.Add(Organized("events/old.jpeg")));
 
-        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), null, TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         var stored = (await ImagesOf(factory, 1)).Should().ContainSingle().Subject;
@@ -106,7 +144,7 @@ public class EventImageServiceTests : TestBase
             db.Events.Add(other);
         });
 
-        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), null, TestContext.Current.CancellationToken);
 
         result.Success.Should().BeTrue();
         _webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Never);
@@ -117,7 +155,7 @@ public class EventImageServiceTests : TestBase
     {
         var factory = CreateSeededFactory(db => db.Events.Add(Organized()));
 
-        var result = await Service(factory).SetImageAsync(User2, "event-1", Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+        var result = await Service(factory).SetImageAsync(User2, "event-1", Utilities.Stubs.FakeFile(), null, TestContext.Current.CancellationToken);
 
         result.Message.Should().NotBeNull();
         result.Message.Code.Should().Be(EventErrorCodes.NotAllowed);
@@ -129,7 +167,7 @@ public class EventImageServiceTests : TestBase
     {
         var factory = CreateSeededFactory(db => db.Events.Add(Organized(status: EventStatus.Cancelled)));
 
-        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+        var result = await Service(factory).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), null, TestContext.Current.CancellationToken);
 
         result.Message.Should().NotBeNull();
         result.Message.Code.Should().Be(EventErrorCodes.EventCancelled);
@@ -146,7 +184,7 @@ public class EventImageServiceTests : TestBase
         images.Setup(r => r.ReplaceAsync(It.IsAny<int>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(status == RepositoryResultStatus.NotFound ? RepositoryResult<ReplacedEventImage>.NotFound() : RepositoryResult<ReplacedEventImage>.Error());
 
-        var result = await Service(factory, images.Object).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), TestContext.Current.CancellationToken);
+        var result = await Service(factory, images.Object).SetImageAsync(User1, "event-1", Utilities.Stubs.FakeFile(), null, TestContext.Current.CancellationToken);
 
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(statusCode);

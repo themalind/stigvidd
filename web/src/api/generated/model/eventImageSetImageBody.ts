@@ -9,4 +9,6 @@
 export type EventImageSetImageBody = {
   /** @nullable */
   image?: Blob | null;
+  /** @nullable */
+  focusY?: number | null;
 };

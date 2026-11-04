@@ -32,4 +32,5 @@ Limit?: number;
  * @nullable
  */
 Cursor?: string | null;
+ExcludeMine?: boolean;
 };

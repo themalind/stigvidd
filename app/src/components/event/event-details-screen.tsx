@@ -12,7 +12,7 @@ import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dial
 import BackButton from "@/components/back-button";
 import NoticeBanner from "@/components/notice-banner";
 import SectionPanel from "@/components/section-panel";
-import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
+import { BORDER_RADIUS, EVENT_COVER_ASPECT, SCREEN_PADDING } from "@/constants/constants";
 import { HikingEvent } from "@/data/types";
 import { useEventManageMutations, useEventParticipants } from "@/hooks/events/useEventManage";
 import { useEventMutations } from "@/hooks/events/useEventMutations";
@@ -34,7 +34,7 @@ import EventInviteModal from "./event-invite-modal";
 import EventManageMenu from "./event-manage-menu";
 import EventMap from "./event-map";
 import EventParticipantsPanel from "./event-participants-panel";
-import { EventStackRoutes } from "./event-routes";
+import { EventStackRoutes, leaveEventScreen } from "./event-routes";
 import EventShareButton from "./event-share-button";
 import EventVisibilityChip from "./event-visibility-chip";
 import InvitationAnswerButtons from "./invitation-answer-buttons";
@@ -169,7 +169,7 @@ function EventBody({ event, routes }: { event: HikingEvent } & Props) {
         <NoticeBanner testID="event-past-banner" icon="history" title={t("events.pastBanner")} style={s.notice} />
       ) : null}
 
-      {event.hasPendingInvite && !isCancelled ? <InviteBanner identifier={event.identifier} /> : null}
+      {event.hasPendingInvite && !isCancelled ? <InviteBanner event={event} /> : null}
 
       <SectionPanel>
         <EventFactRow
@@ -226,7 +226,13 @@ function EventBody({ event, routes }: { event: HikingEvent } & Props) {
   );
 }
 
-function InviteBanner({ identifier }: { identifier: string }) {
+// A private event is no longer readable once left or declined, so the screen goes back. keep-comment: why only private events leave
+function leaveIfPrivate(event: HikingEvent) {
+  return event.visibility === "Private" ? leaveEventScreen : undefined;
+}
+
+function InviteBanner({ event }: { event: HikingEvent }) {
+  const identifier = event.identifier;
   const theme = useTheme();
   const { t } = useTranslation();
   const { acceptInvitationMutation, declineInvitationMutation } = useEventMutations();
@@ -238,7 +244,7 @@ function InviteBanner({ identifier }: { identifier: string }) {
       <InvitationAnswerButtons
         busy={busy}
         onAccept={() => acceptInvitationMutation.mutate(identifier)}
-        onDecline={() => declineInvitationMutation.mutate(identifier)}
+        onDecline={() => declineInvitationMutation.mutate(identifier, { onSuccess: leaveIfPrivate(event) })}
       />
     </View>
   );
@@ -251,7 +257,7 @@ function EventFooter({ event }: { event: HikingEvent }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const returnHere = useReturnHereAfterLogin();
   const { joinMutation, leaveMutation, interestedMutation } = useEventMutations();
-  const leave = () => leaveMutation.mutate(event.identifier);
+  const leave = () => leaveMutation.mutate(event.identifier, { onSuccess: leaveIfPrivate(event) });
   const busy = joinMutation.isPending || leaveMutation.isPending || interestedMutation.isPending;
 
   // An invitee answers in the banner instead. keep-comment: accepting is the invitee's join
@@ -318,7 +324,7 @@ const s = StyleSheet.create({
     gap: 12,
   },
   cover: {
-    height: 180,
+    aspectRatio: EVENT_COVER_ASPECT,
     marginHorizontal: SCREEN_PADDING,
     borderRadius: BORDER_RADIUS,
   },

@@ -274,6 +274,12 @@ public class EventRepository : IEventRepository
             if (query.Area is not null)
                 events = WithinArea(events, query.Area);
 
+            if (query.ExcludeMine)
+            {
+                var viewerId = query.ViewerId;
+                events = events.Where(e => !e.Participants.Any(p => p.UserId == viewerId));
+            }
+
             var cards = await After(events, query.After, descending: false)
                 .OrderBy(e => e.StartsAt).ThenBy(e => e.Id)
                 .Take(query.Limit)

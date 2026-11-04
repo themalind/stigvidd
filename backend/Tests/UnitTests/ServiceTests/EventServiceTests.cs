@@ -706,6 +706,29 @@ public class EventServiceTests : TestBase
     }
 
     [Fact]
+    public async Task GetFeedAsync_ExcludeMine_DropsTheSignedInViewersOwnEventsOnly()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            db.Events.Add(EventRepositoryTests.NewEvent(1, organizerId: 2));
+            db.Events.Add(EventRepositoryTests.NewEvent(2, organizerId: 3));
+        });
+        var service = Service(factory);
+        var excluding = new EventFeedQuery { ExcludeMine = true };
+
+        var mine = await service.GetFeedAsync(User3, excluding, TestContext.Current.CancellationToken);
+        var anonymous = await service.GetFeedAsync(null, excluding, TestContext.Current.CancellationToken);
+        var all = await service.GetFeedAsync(User3, new EventFeedQuery(), TestContext.Current.CancellationToken);
+
+        mine.Value.Should().NotBeNull();
+        mine.Value.Items.Select(e => e.Identifier).Should().Equal("event-1");
+        anonymous.Value.Should().NotBeNull();
+        anonymous.Value.Items.Should().HaveCount(2);
+        all.Value.Should().NotBeNull();
+        all.Value.Items.Should().HaveCount(2);
+    }
+
+    [Fact]
     public async Task GetFeedAsync_ReturnsDistanceAndACursorWhenMoreRemain()
     {
         var factory = CreateSeededFactory(db =>

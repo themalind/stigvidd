@@ -14,7 +14,8 @@ import {
   unmarkEventInterested,
 } from "@/api/events";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
-import { useMutation } from "@tanstack/react-query";
+import { HikingEvent } from "@/data/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
 import { useEventErrorHandler } from "./useEventErrorHandler";
@@ -23,6 +24,7 @@ export function useEventMutations() {
   const { t } = useTranslation();
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const { refresh, onEventError } = useEventErrorHandler();
+  const queryClient = useQueryClient();
 
   const joinMutation = useMutation({
     mutationFn: (identifier: string) => joinEvent(identifier),
@@ -33,10 +35,17 @@ export function useEventMutations() {
     onError: (error) => onEventError(error, "join"),
   });
 
+  // Only a participant or invitee can read a private event, so leaving or declining one loses it. keep-comment: why these skip its refetch
+  const refreshAfterLeaving = (identifier: string) => {
+    const cached = queryClient.getQueriesData<HikingEvent>({ queryKey: ["events", "detail", identifier] });
+    const isPrivate = cached.some(([, event]) => event?.visibility === "Private");
+    refresh(isPrivate ? identifier : undefined);
+  };
+
   const leaveMutation = useMutation({
     mutationFn: (identifier: string) => leaveEvent(identifier),
-    onSuccess: () => {
-      refresh();
+    onSuccess: (_data, identifier) => {
+      refreshAfterLeaving(identifier);
       setSuccessMsg(t("events.left"));
     },
     onError: (error) => onEventError(error),
@@ -45,7 +54,7 @@ export function useEventMutations() {
   const interestedMutation = useMutation({
     mutationFn: ({ identifier, interested }: { identifier: string; interested: boolean }) =>
       interested ? markEventInterested(identifier) : unmarkEventInterested(identifier),
-    onSuccess: refresh,
+    onSuccess: () => refresh(),
     onError: (error) => onEventError(error),
   });
 
@@ -60,8 +69,8 @@ export function useEventMutations() {
 
   const declineInvitationMutation = useMutation({
     mutationFn: (identifier: string) => declineEventInvitation(identifier),
-    onSuccess: () => {
-      refresh();
+    onSuccess: (_data, identifier) => {
+      refreshAfterLeaving(identifier);
       setSuccessMsg(t("events.declined"));
     },
     onError: (error) => onEventError(error),

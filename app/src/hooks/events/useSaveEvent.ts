@@ -14,15 +14,15 @@ import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
 import { useEventErrorHandler } from "./useEventErrorHandler";
 
-// A picked file to upload, "remove" to drop the current one, or null to leave it. keep-comment: the three image outcomes
-export type CoverChange = { uri: string } | "remove" | null;
+// A picked file to upload with where its 2:1 cut sits (0 top, 1 bottom), "remove" to drop the current one, or null to leave it. keep-comment: the three image outcomes
+export type CoverChange = { uri: string; focusY: number } | "remove" | null;
 
 type SaveInput = { values: EventFormValues; cover: CoverChange };
 
 async function applyCover(identifier: string, cover: CoverChange): Promise<boolean> {
   try {
     if (cover === "remove") await deleteEventImage(identifier);
-    else if (cover) await setEventImage(identifier, cover.uri);
+    else if (cover) await setEventImage(identifier, cover.uri, cover.focusY);
     return true;
   } catch {
     return false;
@@ -58,7 +58,7 @@ export function useSaveEvent(original?: HikingEvent) {
       else setSuccess(t(original ? "events.form.saved" : "events.form.created"));
       return saved;
     },
-    onSuccess: refresh,
+    onSuccess: () => refresh(),
     onError: (error) => onEventError(error),
   });
 }

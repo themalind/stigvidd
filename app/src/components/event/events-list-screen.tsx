@@ -51,11 +51,7 @@ export default function EventsListScreen() {
   const answering = acceptInvitationMutation.isPending || declineInvitationMutation.isPending;
   const invitationCount = invitations.data?.length ?? 0;
 
-  // Events the user is already part of are listed under "Mina". keep-comment: avoids showing one twice
-  const feedEvents = useMemo(
-    () => feed.data?.pages.flatMap((page) => page.items).filter((item) => !item.myRole && !item.myStatus) ?? [],
-    [feed.data],
-  );
+  const feedEvents = useMemo(() => feed.data?.pages.flatMap((page) => page.items) ?? [], [feed.data]);
   const myEvents = useMemo(() => mine.data?.pages.flatMap((page) => page.items) ?? [], [mine.data]);
   const pastEvents = useMemo(() => past.data?.pages.flatMap((page) => page.items) ?? [], [past.data]);
 

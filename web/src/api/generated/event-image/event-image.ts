@@ -61,6 +61,9 @@ export const eventImageSetImage = async (identifier: string,
 if(eventImageSetImageBody?.image !== undefined && eventImageSetImageBody.image !== null) {
  formData.append(`image`, eventImageSetImageBody.image);
  }
+if(eventImageSetImageBody?.focusY !== undefined && eventImageSetImageBody.focusY !== null) {
+ formData.append(`focusY`, eventImageSetImageBody.focusY.toString())
+ }
 
   return customFetch<EventImageResponse>(getEventImageSetImageUrl(identifier),
   {

@@ -6,6 +6,9 @@
     "since": "Avstängd sedan {{date}}"
   },
   "common": {
+    "dragToMove": "Dra för att flytta",
+    "imageFraming": "Bildens utsnitt",
+    "imageFramingHint": "Svep uppåt eller nedåt för att flytta utsnittet",
     "save": "Spara",
     "saving": "Sparar...",
     "cancel": "Avbryt",

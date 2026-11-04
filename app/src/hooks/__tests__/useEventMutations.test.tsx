@@ -135,6 +135,29 @@ describe("useEventMutations", () => {
     expect(store.get(snackbarAtom)).toMatchObject({ type: "success", message: "Inbjudan avböjd" });
   });
 
+  it.each(["leaveMutation", "declineInvitationMutation"] as const)(
+    "%s on a private event refreshes the lists but not the event it can no longer read",
+    async (name) => {
+      const { run, queryClient, invalidated } = render();
+      queryClient.setQueryData(DETAIL, { visibility: "Private" });
+      await run(name, "e1");
+
+      expect(invalidated(DETAIL)).toBe(false);
+      expect(invalidated(INVITATIONS)).toBe(true);
+    },
+  );
+
+  it.each(["leaveMutation", "declineInvitationMutation"] as const)(
+    "%s on an open event refreshes the event too",
+    async (name) => {
+      const { run, queryClient, invalidated } = render();
+      queryClient.setQueryData(DETAIL, { visibility: "Public" });
+      await run(name, "e1");
+
+      expect(invalidated(DETAIL)).toBe(true);
+    },
+  );
+
   it("marks and unmarks interest through the matching endpoint", async () => {
     const { setInterested } = render();
     await setInterested(true);

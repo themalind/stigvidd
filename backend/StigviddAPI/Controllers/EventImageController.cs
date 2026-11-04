@@ -24,7 +24,7 @@ public class EventImageController : StigViddController
 
     [HttpPost]
     [Route("{identifier}/image")]
-    public async Task<ActionResult<EventImageResponse>> SetImage([FromRoute] string identifier, IFormFile image, CancellationToken ctoken)
+    public async Task<ActionResult<EventImageResponse>> SetImage([FromRoute] string identifier, IFormFile image, [FromForm] double? focusY, CancellationToken ctoken)
     {
         var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
 
@@ -33,7 +33,7 @@ public class EventImageController : StigViddController
             return Unauthorized("User not found");
         }
 
-        var result = await _imageService.SetImageAsync(userResponse.Identifier, identifier, image, ctoken);
+        var result = await _imageService.SetImageAsync(userResponse.Identifier, identifier, image, focusY, ctoken);
 
         if (!result.Success || result.Value is null)
         {
