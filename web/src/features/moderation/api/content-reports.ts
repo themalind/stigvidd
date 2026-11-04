@@ -1,54 +1,52 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   adminContentReportsDecide,
-  adminContentReportsGetCounts,
-  adminContentReportsGetReport,
-  adminContentReportsGetReports,
+  getAdminContentReportsGetCountsQueryKey,
+  getAdminContentReportsGetCountsSuspenseQueryOptions,
+  getAdminContentReportsGetReportsQueryKey,
+  getAdminContentReportsGetReportsSuspenseQueryOptions,
+  getAdminContentReportsGetReportSuspenseQueryOptions,
 } from "@/api/generated/admin-content-reports/admin-content-reports";
-import { getAdminContentReportsGetCountsSuspenseQueryOptions } from "@/api/generated/admin-content-reports/admin-content-reports";
-import type {
-  ContentReportCountsResponse,
-  ContentReportDetailResponse,
-  ContentReportSummaryResponse,
-  PagedResultOfContentReportSummaryResponse,
-} from "@/api/generated/model";
 
-// Wrappers over the generated admin client, following the same convention as
-// trail-import.ts. Auth and base URL come from the customFetch mutator.
+export const REPORTS_PAGE_SIZE = 25;
 
-export type ReportSummary = ContentReportSummaryResponse;
-export type ReportDetail = ContentReportDetailResponse;
-export type ReportCounts = ContentReportCountsResponse;
-
-export type QueueFilters = {
+export interface QueueFilters {
   status?: string;
   contentType?: string;
   hideOutcome?: string;
-  page?: number;
-  pageSize?: number;
-};
-
-export async function getReports(filters: QueueFilters): Promise<PagedResultOfContentReportSummaryResponse> {
-  return adminContentReportsGetReports(filters);
+  page: number;
 }
 
-export async function getReport(identifier: string): Promise<ReportDetail> {
-  return adminContentReportsGetReport(identifier);
-}
+export type Decision = "Dismiss" | "Uphold";
 
-export async function getCounts(): Promise<ReportCounts> {
-  return adminContentReportsGetCounts();
-}
+export const reportsQueryOptions = ({ page, ...filters }: QueueFilters) =>
+  getAdminContentReportsGetReportsSuspenseQueryOptions({ ...filters, page, pageSize: REPORTS_PAGE_SIZE });
 
-/** Dismiss puts the content back. Uphold deletes it permanently and records a strike. */
-export async function decideReport(
-  identifier: string,
-  decision: "Dismiss" | "Uphold",
-  decisionNote?: string,
-): Promise<ReportDetail> {
-  return adminContentReportsDecide(identifier, { decision, decisionNote });
-}
+export const reportQueryOptions = (identifier: string) =>
+  getAdminContentReportsGetReportSuspenseQueryOptions(identifier);
 
 export const reportCountsQueryOptions = () => getAdminContentReportsGetCountsSuspenseQueryOptions();
+
+// keep-comment: Dismiss puts the content back; Uphold deletes it permanently and records a strike
+export function useDecideReport(identifier: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ decision, note }: { decision: Decision; note?: string }) =>
+      adminContentReportsDecide(identifier, { decision, decisionNote: note }),
+    onSuccess: (updated, { decision }) => {
+      queryClient.setQueryData(reportQueryOptions(identifier).queryKey, updated);
+      toast.success(
+        decision === "Uphold" ? "The content was removed and a strike recorded." : "The content is visible again.",
+      );
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: getAdminContentReportsGetReportsQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getAdminContentReportsGetCountsQueryKey() }),
+      ]);
+    },
+  });
+}

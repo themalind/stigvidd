@@ -4,6 +4,7 @@
 import { startTransition, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
+import { FilterRow } from "@/components/filter-row";
 import { Page } from "@/components/page";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
@@ -83,20 +84,12 @@ export default function MailOutboxPage() {
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1 text-sm">
-          <span className="text-muted-foreground">Status</span>
-          {OUTBOX_STATUS_FILTERS.map((option) => (
-            <Button
-              key={option}
-              size="sm"
-              variant={option === activeStatus ? "default" : "ghost"}
-              aria-pressed={option === activeStatus}
-              onClick={() => update({ status: option === "All" ? undefined : option })}
-            >
-              {option}
-            </Button>
-          ))}
-        </div>
+        <FilterRow
+          label="Status"
+          options={OUTBOX_STATUS_FILTERS}
+          value={activeStatus}
+          onChange={(option) => update({ status: option === "All" ? undefined : option })}
+        />
 
         <form
           className="flex items-center gap-2"
