@@ -54,6 +54,8 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 - `"AdminOnly"` is an unchecked string; `EndpointAuthorizationTests` pins it and every route behind it.
 - Nullable warnings are errors. **Never use the null-forgiving `!`** in C# or TS, tests included. C# tests:
   `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`.
+  A many-to-many join (`CityAreaFacility`, `CityAreaTrail`) needs no nullable navigation: query/add rows via
+  `context.Set<Dictionary<string, object>>("CityAreaFacility")` + `EF.Property<int>(row, "CityAreaId")` (`CityAreaRepository.SetLinkAsync`).
 - A `DateTime` from a request or query string goes through `UtcDates.ToUtc` before it reaches a timestamptz
   column or a comparison: Npgsql refuses a non-UTC Kind (500), and the SQLite tests never show it.
 - Geometry is SRID 4326, built only via `GeoPointFactory.FromLonLat(lon, lat)`. Any other

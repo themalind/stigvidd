@@ -34,3 +34,14 @@ public record CityAreaTrailProjection(
 public record CityAreaTrailImageProjection(
     string Identifier,
     string ImageUrl);
+
+public record AdminCityAreaProjection(
+    string Identifier,
+    string Name,
+    string Location,
+    IReadOnlyCollection<AdminCityAreaFacilityProjection> Facilities,
+    IReadOnlyCollection<AdminCityAreaTrailProjection> Trails);
+
+public record AdminCityAreaFacilityProjection(string Identifier, string Name, int FacilityType);
+
+public record AdminCityAreaTrailProjection(string Identifier, string Name, bool IsVerified);

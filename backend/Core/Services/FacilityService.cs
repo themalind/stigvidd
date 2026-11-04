@@ -73,6 +73,16 @@ public class FacilityService : IFacilityService
         return Result.Ok(_facilityResponseFactory.Create(result.Value));
     }
 
+    public async Task<Result<IReadOnlyCollection<FacilityResponse>>> GetAllIncludingUnmappedAsync(CancellationToken ctoken)
+    {
+        var result = await _facilityRepository.GetAllIncludingUnmappedAsync(ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<FacilityResponse>>(new Message(500, "An error occurred while retrieving facilities."));
+
+        return Result.Ok(_facilityResponseFactory.Create(result.Value));
+    }
+
     public async Task<Result<FacilityResponse>> GetByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         var result = await _facilityRepository.GetByIdentifierAsync(identifier, ctoken);

@@ -83,4 +83,39 @@ public class CityAreaService : ICityAreaService
 
         return Result.Ok(_cityAreaResponseFactory.Create(result.Value));
     }
+
+    public async Task<Result<IReadOnlyCollection<AdminCityAreaResponse>>> GetAllForAdminAsync(CancellationToken ctoken)
+    {
+        var result = await _cityAreaRepository.GetAllForAdminAsync(ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<AdminCityAreaResponse>>(new Message(500, "An error occurred while retrieving city areas."));
+
+        return Result.Ok(_cityAreaResponseFactory.CreateAdmin(result.Value));
+    }
+
+    public async Task<Result> SetFacilityLinkAsync(string areaIdentifier, string facilityIdentifier, bool linked, CancellationToken ctoken)
+    {
+        var result = await _cityAreaRepository.SetFacilityLinkAsync(areaIdentifier, facilityIdentifier, linked, ctoken);
+
+        return ToLinkResult(result, $"No city area '{areaIdentifier}' or facility '{facilityIdentifier}' found.");
+    }
+
+    public async Task<Result> SetTrailLinkAsync(string areaIdentifier, string trailIdentifier, bool linked, CancellationToken ctoken)
+    {
+        var result = await _cityAreaRepository.SetTrailLinkAsync(areaIdentifier, trailIdentifier, linked, ctoken);
+
+        return ToLinkResult(result, $"No city area '{areaIdentifier}' or trail '{trailIdentifier}' found.");
+    }
+
+    private static Result ToLinkResult(RepositoryResult result, string notFoundMessage)
+    {
+        if (result.Status == RepositoryResultStatus.NotFound)
+            return Result.Fail(new Message(404, notFoundMessage));
+
+        if (!result.IsSuccess)
+            return Result.Fail(new Message(500, "An error occurred while updating the city area."));
+
+        return Result.Ok();
+    }
 }

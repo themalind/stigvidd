@@ -85,6 +85,12 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "GET /api/v1/admin/dashboard",
         "GET /api/v1/admin/trails/{identifier}",
         "GET /api/v1/admin/trails/{identifier}/path",
+        "GET /api/v1/admin/facilities",
+        "GET /api/v1/admin/city-areas",
+        "PUT /api/v1/admin/city-areas/{identifier}/facilities/{facilityIdentifier}",
+        "DELETE /api/v1/admin/city-areas/{identifier}/facilities/{facilityIdentifier}",
+        "PUT /api/v1/admin/city-areas/{identifier}/trails/{trailIdentifier}",
+        "DELETE /api/v1/admin/city-areas/{identifier}/trails/{trailIdentifier}",
 
         // The one write that stayed on the public controller. It is admin-gated like the
         // rest, but it is also the only admin route that needs the caller's StigVidd user
