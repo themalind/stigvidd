@@ -9,7 +9,7 @@ export function RouteModePanel({ editor }: { editor: RouteEditor }) {
 
   if (mode === "redraw" || mode === "cut") {
     return (
-      <div className="flex flex-wrap items-center gap-3 rounded-[5px] border p-3 text-sm">
+      <div className="flex flex-wrap items-center gap-3 rounded-sm border p-3 text-sm">
         {anchors.length < 2 ? (
           <span>
             {`Click the two points the section ${mode === "cut" ? "to remove lies" : "should run"} between (${anchors.length}/2).`}
@@ -29,7 +29,7 @@ export function RouteModePanel({ editor }: { editor: RouteEditor }) {
 
   if (mode === "extend") {
     return (
-      <div className="flex flex-wrap items-center gap-3 rounded-[5px] border p-3 text-sm">
+      <div className="flex flex-wrap items-center gap-3 rounded-sm border p-3 text-sm">
         <span>Extend from</span>
         {(["start", "end"] as const).map((from) => (
           <Button

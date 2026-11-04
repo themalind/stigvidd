@@ -22,7 +22,7 @@ export function JumpsCard({ editor: { path, jumps }, onFocus }: Props) {
           <button
             key={jump.index}
             type="button"
-            className="w-full rounded-[5px] border border-destructive/40 bg-destructive/5 px-3 py-2 text-left text-sm hover:bg-destructive/10"
+            className="w-full rounded-sm border border-destructive/40 bg-destructive/5 px-3 py-2 text-left text-sm hover:bg-destructive/10"
             onClick={() => onFocus([path[jump.index], path[jump.index + 1]])}
           >
             <b className="text-destructive">Jump of {Math.round(jump.metres)} m between two points</b>

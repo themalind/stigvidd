@@ -107,10 +107,10 @@ export function TrailPathMap({ path, gaps, satellite }: Props) {
   useEffect(() => redraw(), [redraw, path, gaps]);
 
   return (
-    <div className="relative h-[520px] w-full overflow-hidden rounded-[5px] border">
+    <div className="relative h-[520px] w-full overflow-hidden rounded-sm border">
       {/* keep-comment: maplibre's unlayered .maplibregl-map sets position: relative, which beats Tailwind's layered "absolute", so size it explicitly (docs/notes/maplibre-css-beats-tailwind-v4-layered-utilities.md) */}
       <div ref={containerRef} data-testid="trail-path-map" className="h-full w-full" />
-      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1 rounded-[5px] border bg-background/95 px-3 py-2 text-xs">
+      <div className="pointer-events-none absolute bottom-3 left-3 flex flex-col gap-1 rounded-sm border bg-background/95 px-3 py-2 text-xs">
         <span className="flex items-center gap-2">
           <span className="size-3 rounded-full" style={{ background: START }} />
           Start

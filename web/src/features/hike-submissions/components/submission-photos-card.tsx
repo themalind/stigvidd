@@ -32,13 +32,13 @@ export function SubmissionPhotosCard({ detail, pending, trailPhotos }: Props) {
         <div className="flex flex-wrap gap-2">
           {detail.images.map((image) => (
             <div key={image.identifier} className="relative">
-              <img src={image.imageUrl} alt="" className="h-20 w-28 rounded-[5px] object-cover" />
+              <img src={image.imageUrl} alt="" className="h-20 w-28 rounded-sm object-cover" />
               {pending && (
                 <button
                   type="button"
                   aria-label="Remove photo"
                   disabled={remove.isPending}
-                  className="absolute right-1 top-1 rounded-[5px] bg-background/90 p-1"
+                  className="absolute right-1 top-1 rounded-sm bg-background/90 p-1"
                   onClick={() => remove.mutate(image.identifier)}
                 >
                   <Trash2 className="size-4 text-destructive" />
