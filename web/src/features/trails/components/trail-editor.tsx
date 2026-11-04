@@ -36,7 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { Edit, Plus, X } from "lucide-react";
 import { useState } from "react";
-import { trailQueryOptions, useUpdateTrail } from "@/features/trails/api/trail";
+import { trailQueryOptions, useForgetTrail, useUpdateTrail } from "@/features/trails/api/trail";
 import { Separator } from "@/components/ui/separator";
 
 interface Props {
@@ -133,8 +133,10 @@ function EditorMessage({ children }: { children: React.ReactNode }) {
 }
 
 export default function TrailEditor({ data, selected }: Props) {
+  const forget = useForgetTrail(data.identifier);
+
   return (
-    <Sheet>
+    <Sheet onOpenChange={(open) => open && forget()}>
       <SheetTrigger asChild>
         {selected ? (
           <Button variant="ghost">

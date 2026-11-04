@@ -320,8 +320,14 @@ describe("TrailEditor", () => {
     expect(saveButton()).toBeEnabled();
   });
 
-  it("keeps what the server saved, and marks the trail list stale", async () => {
-    api.mock.on("PUT", TRAIL, (request) => ({ ...full, ...(request as object) }));
+  it("refetches the trail after a save, since the save reply carries no images", async () => {
+    const image = { identifier: "img-1", imageUrl: "https://media.test/img-1.jpg" };
+    let stored = trailDetail({ trailImagesResponse: [image] });
+    api.mock.on("GET", TRAIL, () => stored);
+    api.mock.on("PUT", TRAIL, (request) => {
+      stored = { ...stored, ...(request as object) };
+      return { ...stored, trailImagesResponse: null };
+    });
     const { client } = render(<TrailEditor data={short} selected />);
     client.setQueryData(["/api/v1/admin/trails"], []);
     await open();
@@ -332,7 +338,18 @@ describe("TrailEditor", () => {
     await userEvent.click(saveButton());
 
     await waitFor(() => expect(toasted.success).toHaveBeenCalledWith("Trail updated successfully."));
-    expect(client.getQueryData<TrailResponse>([TRAIL])?.name).toBe("Knalleleden norr");
     expect(client.getQueryState(["/api/v1/admin/trails"])?.isInvalidated).toBe(true);
+    await waitFor(() => expect(client.getQueryData<TrailResponse>([TRAIL])?.name).toBe("Knalleleden norr"));
+    expect(client.getQueryData<TrailResponse>([TRAIL])?.trailImagesResponse).toEqual([image]);
+  });
+
+  it("fills the form from the server, not from an older cached copy", async () => {
+    const { client } = render(<TrailEditor data={short} selected />);
+    client.setQueryData([TRAIL], trailDetail({ name: "Gammalt namn" }));
+
+    await open();
+
+    expect(await screen.findByDisplayValue("Knalleleden")).toBeVisible();
+    expect(screen.queryByDisplayValue("Gammalt namn")).not.toBeInTheDocument();
   });
 });

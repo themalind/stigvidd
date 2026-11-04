@@ -21,6 +21,8 @@ const trailApi = vi.hoisted(() => ({
   addTrailImages: vi.fn(),
   deleteTrailImage: vi.fn(),
   setTrailSymbol: vi.fn(),
+  invalidateTrails: vi.fn(),
+  useInvalidateTrailQueries: () => trailApi.invalidateTrails,
 }));
 vi.mock("@/features/trails/api/trail", () => trailApi);
 
@@ -362,6 +364,7 @@ describe("the images already attached", () => {
     expect(confirmed).toHaveBeenCalled();
     await waitFor(() => expect(trailApi.deleteTrailImage).toHaveBeenCalledWith("m1"));
     expect(onMediaChanged).toHaveBeenCalled();
+    expect(trailApi.invalidateTrails).toHaveBeenCalled();
   });
 
   it("does nothing when the question is answered no", async () => {
@@ -423,6 +426,7 @@ describe("uploading", () => {
     await userEvent.click(uploadButton());
 
     await waitFor(() => expect(trailApi.addTrailImages).toHaveBeenCalledOnce());
+    await waitFor(() => expect(trailApi.invalidateTrails).toHaveBeenCalled());
     const [identifier, files, options] = trailApi.addTrailImages.mock.calls[0];
     expect(identifier).toBe("t-1");
     expect(files).toHaveLength(2);
@@ -485,6 +489,7 @@ describe("uploading", () => {
     await waitFor(() => expect(facilityApi.uploadFacilityImages).toHaveBeenCalledOnce());
     expect(facilityApi.uploadFacilityImages.mock.calls[0][0]).toBe("f-1");
     expect(trailApi.addTrailImages).not.toHaveBeenCalled();
+    expect(trailApi.invalidateTrails).not.toHaveBeenCalled();
   });
 });
 

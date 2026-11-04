@@ -162,6 +162,20 @@ describe("deleting an image", () => {
     expect(deleteButtons()[0]).toBeEnabled();
   });
 
+  it("keeps every image that is being deleted locked, not just the last one", async () => {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    for (const id of ["img-1", "img-2"]) {
+      api.mock.on("DELETE", `/api/v1/admin/trails/images/${id}`, () => new Promise(() => {}));
+    }
+    await open();
+
+    await userEvent.click(deleteButtons()[0]);
+    await userEvent.click(deleteButtons()[1]);
+
+    await waitFor(() => expect(deleteButtons()[1]).toBeDisabled());
+    expect(deleteButtons()[0]).toBeDisabled();
+  });
+
   it("opens an enlarged view when an image is clicked", async () => {
     await open();
 

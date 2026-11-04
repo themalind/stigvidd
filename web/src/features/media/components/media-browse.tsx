@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { getMedia, updateImageMetadata, type ReprocessJobSummary } from "@/features/media/api/media";
-import { deleteTrailImage } from "@/features/trails/api/trail";
+import { deleteTrailImage, useInvalidateTrailQueries } from "@/features/trails/api/trail";
 import { deleteFacilityImage } from "@/features/facilities/api/facility";
 import MediaReprocessDialog from "./media-reprocess-dialog";
 import type { MediaItemResponse } from "@/api/generated/model";
@@ -47,6 +47,7 @@ interface Props {
 }
 
 export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
+  const invalidateTrails = useInvalidateTrailQueries();
   const [items, setItems] = useState<MediaItemResponse[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [filters, setFilters] = useState<MediaFilterState>(emptyMediaFilters);
@@ -171,8 +172,10 @@ export default function MediaBrowse({ refreshKey, onBatchStarted }: Props) {
     if (!confirm("Delete this image? This cannot be undone.")) return;
 
     try {
-      if (item.ownerType === "Trail") await deleteTrailImage(item.identifier);
-      else if (item.ownerType === "Facility") await deleteFacilityImage(item.identifier);
+      if (item.ownerType === "Trail") {
+        await deleteTrailImage(item.identifier);
+        void invalidateTrails();
+      } else if (item.ownerType === "Facility") await deleteFacilityImage(item.identifier);
 
       setSelected((current) => {
         const next = new Set(current);

@@ -150,4 +150,37 @@ describe("activating and hiding a trail", () => {
     expect(toggle()).toBeChecked();
     release();
   });
+
+  it("still says so when the change filters the trail out of view", async () => {
+    renderPage("/trails?status=Active");
+    await screen.findByText("1 of 2 trails");
+
+    await userEvent.click(toggle());
+
+    await waitFor(() => expect(toasts.toast.success).toHaveBeenCalledWith("Knalleleden is now hidden from the app."));
+    expect(screen.queryByRole("checkbox", { name: "Active: Knalleleden" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a second trail's change when the first one fails", async () => {
+    let failFirst = () => {};
+    api.mock.on(
+      "PUT",
+      VERIFIED,
+      () => new Promise<void>((_, reject) => (failFirst = () => reject(new ApiError("Server error", 500)))),
+    );
+    let answerSecond = () => {};
+    api.mock.on("PUT", `${TRAILS}/trail-2/verified`, () => new Promise<void>((resolve) => (answerSecond = resolve)));
+    renderPage();
+    await screen.findByText("2 of 2 trails");
+
+    await userEvent.click(toggle());
+    await userEvent.click(screen.getByRole("checkbox", { name: "Active: Ryaslingan" }));
+    await waitFor(() => expect(api.mock.calls.filter((call) => call.method === "PUT")).toHaveLength(2));
+    failFirst();
+
+    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to update Knalleleden."));
+    expect(toggle()).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Active: Ryaslingan" })).toBeChecked();
+    answerSecond();
+  });
 });
