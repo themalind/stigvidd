@@ -16,6 +16,7 @@ import {
   adminTrailsUpdateTrail,
   getAdminTrailsAddTrailImagesUrl,
   getAdminTrailsDeleteTrailImageUrl,
+  getAdminTrailsGetAllTrailsSuspenseQueryOptions,
   getAdminTrailsSetTrailSymbolUrl,
 } from "@/api/generated/admin-trails/admin-trails";
 import { customFetch } from "@/api/mutator";
@@ -27,6 +28,8 @@ import { appendProcessingOptions } from "@/api/image-options";
 // The generated models are looser (nullable/optional) than the UI's hand-written
 // types, so responses are asserted back to those types at this boundary.
 // Auth + base URL are handled centrally by the `customFetch` mutator.
+
+export const trailsQueryOptions = () => getAdminTrailsGetAllTrailsSuspenseQueryOptions();
 
 export async function getAllTrails(): Promise<AdminTrailListItem[]> {
   return (await adminTrailsGetAllTrails()) as AdminTrailListItem[];

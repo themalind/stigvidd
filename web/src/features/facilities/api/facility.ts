@@ -6,11 +6,14 @@ import {
   adminFacilitiesGetAll,
   getAdminFacilitiesAddFacilityImagesUrl,
   getAdminFacilitiesDeleteFacilityImageUrl,
+  getAdminFacilitiesGetAllSuspenseQueryOptions,
 } from "@/api/generated/admin-facilities/admin-facilities";
 import { customFetch } from "@/api/mutator";
 import { appendProcessingOptions } from "@/api/image-options";
 
 // The admin list, as the public one drops facilities without coordinates. keep-comment: two endpoints look interchangeable
+export const facilitiesQueryOptions = () => getAdminFacilitiesGetAllSuspenseQueryOptions();
+
 export async function getAllFacilities(): Promise<FacilityResponse[]> {
   return (await adminFacilitiesGetAll()) as FacilityResponse[];
 }

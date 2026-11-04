@@ -8,9 +8,9 @@
 
 export interface FacilityResponse {
   identifier: string;
-  name?: string;
+  name: string;
   facilityType: number;
-  isAccessible?: boolean;
+  isAccessible: boolean;
   /** @nullable */
   latitude?: number | null;
   /** @nullable */

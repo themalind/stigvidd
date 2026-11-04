@@ -10,15 +10,15 @@ export interface AdminTrailListItemResponse {
   identifier: string;
   name: string;
   trailLength: number;
-  accessibility?: boolean;
-  classification?: number;
+  accessibility: boolean;
+  classification: number;
   city: string;
-  isVerified?: boolean;
-  hasImages?: boolean;
-  hasExampleImages?: boolean;
-  hasSymbol?: boolean;
-  hasDescription?: boolean;
-  hasFullDescription?: boolean;
-  createdAt?: string;
-  lastUpdatedAt?: string;
+  isVerified: boolean;
+  hasImages: boolean;
+  hasExampleImages: boolean;
+  hasSymbol: boolean;
+  hasDescription: boolean;
+  hasFullDescription: boolean;
+  createdAt: string;
+  lastUpdatedAt: string;
 }
