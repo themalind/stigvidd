@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Link } from "react-router";
 import { ApiError } from "@/api/mutator";
 import { QueryBoundary } from "@/components/query-boundary";
 import { trailListItem } from "@/testing/fixtures/trails";
@@ -91,6 +92,21 @@ describe("the trail list", () => {
     await userEvent.click(screen.getByRole("button", { name: "Clear" }));
 
     expect(screen.getByText("2 of 2 trails")).toBeInTheDocument();
+  });
+
+  it("follows the address when a link changes it while the page is open", async () => {
+    renderWithProviders(
+      <QueryBoundary>
+        <Link to="/trails">All trails</Link>
+        <TrailsPage />
+      </QueryBoundary>,
+      { initialEntries: ["/trails?status=Inactive"] },
+    );
+    await screen.findByText("1 of 2 trails");
+
+    await userEvent.click(screen.getByRole("link", { name: "All trails" }));
+
+    expect(await screen.findByText("2 of 2 trails")).toBeInTheDocument();
   });
 });
 

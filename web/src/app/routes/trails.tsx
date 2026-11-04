@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useSearchState } from "@/hooks/use-search-state";
 import { trailsQueryOptions } from "@/features/trails/api/trail";
 import { trailColumns } from "@/features/trails/components/trail-columns";
 import { CLASSIFICATION } from "@/utils/classification";
@@ -13,22 +13,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FilterSelect } from "@/components/filter-select";
 import {
+  TRAIL_ACCESSIBILITY,
   TRAIL_MISSING,
   TRAIL_SORTS,
   TRAIL_STATUSES,
   TRAIL_UPDATED,
-  emptyTrailFilters,
   filterTrails,
   filtersFromSearch,
   trailCities,
-  type TrailFilterState,
+  trailSearchDefaults,
+  type TrailSearchFilters,
+  type TrailTextFilters,
 } from "@/features/trails/utils/trail-filters";
 
-const ACCESSIBILITY_OPTIONS = [
-  { value: "All", label: "Any accessibility" },
-  { value: "Accessible", label: "Accessible" },
-  { value: "NotAccessible", label: "Not accessible" },
-] as const;
+const EMPTY_TEXT: TrailTextFilters = { query: "", minKm: "", maxKm: "" };
 
 const CLASSIFICATION_OPTIONS = [
   { value: "All", label: "All difficulties" },
@@ -37,8 +35,9 @@ const CLASSIFICATION_OPTIONS = [
 
 export default function TrailsPage() {
   const { data: trails } = useSuspenseQuery(trailsQueryOptions());
-  const [searchParams] = useSearchParams();
-  const [filters, setFilters] = useState<TrailFilterState>(() => filtersFromSearch(searchParams));
+  const search = useSearchState(trailSearchDefaults);
+  const [text, setText] = useState(EMPTY_TEXT);
+  const filters = useMemo(() => ({ ...filtersFromSearch(search.values), ...text }), [search.values, text]);
 
   const cityOptions = useMemo(
     () => [{ value: "All", label: "All cities" }, ...trailCities(trails).map((city) => ({ value: city, label: city }))],
@@ -46,8 +45,17 @@ export default function TrailsPage() {
   );
   const visible = useMemo(() => filterTrails(trails, filters), [trails, filters]);
 
-  function update(key: keyof TrailFilterState) {
-    return (value: string) => setFilters((current) => ({ ...current, [key]: value }));
+  function update(key: keyof TrailSearchFilters) {
+    return (value: string) => search.update({ [key]: value });
+  }
+
+  function type(key: keyof TrailTextFilters) {
+    return (value: string) => setText((current) => ({ ...current, [key]: value }));
+  }
+
+  function clear() {
+    setText(EMPTY_TEXT);
+    search.update(Object.fromEntries(Object.keys(trailSearchDefaults).map((key) => [key, undefined])));
   }
 
   return (
@@ -57,7 +65,7 @@ export default function TrailsPage() {
           aria-label="Search trails"
           placeholder="Search name, city or identifier"
           value={filters.query}
-          onChange={(e) => update("query")(e.target.value)}
+          onChange={(e) => type("query")(e.target.value)}
           className="w-72"
         />
         <FilterSelect
@@ -77,7 +85,7 @@ export default function TrailsPage() {
         <FilterSelect
           label="Accessibility"
           value={filters.accessibility}
-          options={ACCESSIBILITY_OPTIONS}
+          options={TRAIL_ACCESSIBILITY}
           onChange={update("accessibility")}
         />
         <FilterSelect
@@ -99,7 +107,7 @@ export default function TrailsPage() {
           placeholder="Min km"
           inputMode="decimal"
           value={filters.minKm}
-          onChange={(e) => update("minKm")(e.target.value)}
+          onChange={(e) => type("minKm")(e.target.value)}
           className="w-24"
         />
         <Input
@@ -107,11 +115,11 @@ export default function TrailsPage() {
           placeholder="Max km"
           inputMode="decimal"
           value={filters.maxKm}
-          onChange={(e) => update("maxKm")(e.target.value)}
+          onChange={(e) => type("maxKm")(e.target.value)}
           className="w-24"
         />
         <FilterSelect label="Sort" value={filters.sort} options={TRAIL_SORTS} onChange={update("sort")} />
-        <Button variant="ghost" onClick={() => setFilters(emptyTrailFilters)}>
+        <Button variant="ghost" onClick={clear}>
           Clear
         </Button>
         <span className="text-muted-foreground text-sm ml-auto">
