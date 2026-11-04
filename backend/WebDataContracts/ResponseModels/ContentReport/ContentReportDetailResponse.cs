@@ -8,11 +8,11 @@ namespace WebDataContracts.ResponseModels.ContentReport;
 public class ContentReportDetailResponse
 {
     public required ContentReportSummaryResponse Report { get; set; }
-    public int AuthorStrikes { get; set; }
-    public int ReporterTotal { get; set; }
-    public int ReporterPending { get; set; }
-    public int ReporterDismissed { get; set; }
-    public int ReporterUpheld { get; set; }
+    public required int AuthorStrikes { get; set; }
+    public required int ReporterTotal { get; set; }
+    public required int ReporterPending { get; set; }
+    public required int ReporterDismissed { get; set; }
+    public required int ReporterUpheld { get; set; }
 
     public static ContentReportDetailResponse Create(
         ContentReportSummaryResponse report,

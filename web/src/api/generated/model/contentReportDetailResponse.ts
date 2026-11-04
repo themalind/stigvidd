@@ -9,9 +9,9 @@ import type { ContentReportSummaryResponse } from "./contentReportSummaryRespons
 
 export interface ContentReportDetailResponse {
   report: ContentReportSummaryResponse;
-  authorStrikes?: number;
-  reporterTotal?: number;
-  reporterPending?: number;
-  reporterDismissed?: number;
-  reporterUpheld?: number;
+  authorStrikes: number;
+  reporterTotal: number;
+  reporterPending: number;
+  reporterDismissed: number;
+  reporterUpheld: number;
 }

@@ -1,244 +1,65 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Flag, Loader2, TriangleAlert } from "lucide-react";
-import {
-  decideReport,
-  getCounts,
-  getReport,
-  getReports,
-  type ReportCounts,
-  type ReportDetail,
-  type ReportSummary,
-} from "@/features/moderation/api/content-reports";
-import {
-  canDecide,
-  didNotHide,
-  dismissEnabled,
-  hideOutcomeExplanation,
-  narrowedBy,
-  reporterRisk,
-  strikeAfterUphold,
-  upholdEnabled,
-} from "@/features/moderation/utils/moderation-review";
-import { Badge } from "@/components/ui/badge";
-import { useUnbanUser } from "@/features/users/api/users";
-import { BanSheet } from "@/features/users/components/ban-sheet";
+import { startTransition, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Flag, Loader2 } from "lucide-react";
+import { useSearchParams } from "react-router";
+import type { ContentReportDetailResponse } from "@/api/generated/model";
+import { FilterRow } from "@/components/filter-row";
+import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { reportCountsQueryOptions, type QueueFilters } from "@/features/moderation/api/content-reports";
+import { ReportQueue } from "@/features/moderation/components/report-queue";
+import { useUnbanUser } from "@/features/users/api/users";
+import { BanSheet } from "@/features/users/components/ban-sheet";
 
-const PageSize = 25;
+const STATUS_FILTERS = ["Pending", "Dismissed", "Upheld", "ContentExpired", "All"] as const;
+const TYPE_FILTERS = ["All", "Review", "TrailObstacle", "HikeImage", "Event", "EventPost", "EventImage"] as const;
+const OUTCOME_FILTERS = ["All", "Hidden", "AlreadyHidden", "WithheldReporterDismissed"] as const;
 
-// Anything the moderator could be typing or picking in. `u` prepares an uphold, so a
-// keypress landing while they type must never touch a decision. Asking what the target
-// sits inside rather than what it is catches contenteditable and every Radix trigger.
-const EditableTargets =
-  'input, textarea, select, [contenteditable="true"], [role="textbox"], ' +
-  '[role="combobox"], [role="listbox"], [role="searchbox"]';
+type FilterKey = "status" | "contentType" | "hideOutcome";
 
-const statusFilters = ["Pending", "Dismissed", "Upheld", "ContentExpired", "All"] as const;
-const contentTypeFilters = ["All", "Review", "TrailObstacle", "HikeImage", "Event", "EventPost", "EventImage"] as const;
+// keep-comment: the status filter defaults to Pending, so "All" has to be written to the address explicitly
+function useQueueFilters() {
+  const [params, setParams] = useSearchParams();
+  const status = params.get("status") ?? "Pending";
+  const contentType = params.get("contentType") ?? "All";
+  const hideOutcome = params.get("hideOutcome") ?? "All";
 
-const contentTypeNoun: Record<string, string> = {
-  Review: "review",
-  TrailObstacle: "obstacle report",
-  HikeImage: "hike image",
-  Event: "event",
-  EventPost: "event board post",
-  EventImage: "event cover image",
-};
-const hideOutcomeFilters = ["All", "Hidden", "AlreadyHidden", "WithheldReporterDismissed"] as const;
+  const filters: QueueFilters = {
+    status: status === "All" ? undefined : status,
+    contentType: contentType === "All" ? undefined : contentType,
+    hideOutcome: hideOutcome === "All" ? undefined : hideOutcome,
+    page: Math.max(1, Number(params.get("page")) || 1),
+  };
 
-const riskLabel: Record<string, string> = {
-  unknown: "No history",
-  clean: "Never dismissed",
-  watch: "Some dismissed",
-  unreliable: "Often dismissed",
-};
+  const change = (update: (next: URLSearchParams) => void) =>
+    startTransition(() =>
+      setParams((current) => {
+        const next = new URLSearchParams(current);
+        update(next);
+        return next;
+      }),
+    );
+
+  const setFilter = (key: FilterKey, value: string) =>
+    change((next) => {
+      next.delete("page");
+      const isDefault = value === (key === "status" ? "Pending" : "All");
+      if (isDefault) next.delete(key);
+      else next.set(key, value);
+    });
+
+  const setPage = (page: number) => change((next) => next.set("page", String(page)));
+
+  return { filters, selected: { status, contentType, hideOutcome }, setFilter, setPage };
+}
 
 export default function ModerationPage() {
-  const [reports, setReports] = useState<ReportSummary[] | null>(null);
-  const [counts, setCounts] = useState<ReportCounts | null>(null);
-  const [detail, setDetail] = useState<ReportDetail | null>(null);
-  const [status, setStatus] = useState<string>("Pending");
-  const [contentType, setContentType] = useState<string>("All");
-  const [hideOutcome, setHideOutcome] = useState<string>("All");
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
-  // Uphold hard-deletes, so it stays off until the content has actually been opened.
-  const [hasReadContent, setHasReadContent] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [decisionNote, setDecisionNote] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [banOpen, setBanOpen] = useState(false);
-
-  const filters = useMemo(
-    () => ({
-      status: status === "All" ? undefined : status,
-      contentType: contentType === "All" ? undefined : contentType,
-      hideOutcome: hideOutcome === "All" ? undefined : hideOutcome,
-    }),
-    [status, contentType, hideOutcome],
-  );
-
-  const load = useCallback(async () => {
-    try {
-      const [paged, loadedCounts] = await Promise.all([
-        getReports({ ...filters, page, pageSize: PageSize }),
-        getCounts(),
-      ]);
-
-      setReports(paged.items ?? []);
-      setTotal(paged.totalCount ?? 0);
-      setHasMore(paged.hasMore ?? false);
-      setCounts(loadedCounts);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The queue could not be loaded.");
-    }
-  }, [filters, page]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  // Keep a row selected as the list changes, so the keyboard never lands on nothing.
-  useEffect(() => {
-    if (!reports || reports.length === 0) {
-      setSelected(null);
-      return;
-    }
-
-    setSelected((current) =>
-      current !== null && reports.some((r) => r.identifier === current) ? current : reports[0].identifier,
-    );
-  }, [reports]);
-
-  // The detail carries the author's strike count and the reporter's record, neither of
-  // which the list row has.
-  useEffect(() => {
-    if (!selected) {
-      setDetail(null);
-      return;
-    }
-
-    let current = true;
-    setHasReadContent(false);
-    setDecisionNote("");
-
-    getReport(selected)
-      .then((loaded) => {
-        if (current) setDetail(loaded);
-      })
-      .catch(() => {
-        if (current) toast.error("The report could not be loaded.");
-      });
-
-    return () => {
-      current = false;
-    };
-  }, [selected]);
-
-  const step = useCallback(
-    (offset: number) => {
-      if (!reports || reports.length === 0) return;
-
-      const index = reports.findIndex((r) => r.identifier === selected);
-      const next = Math.min(Math.max(index + offset, 0), reports.length - 1);
-      setSelected(reports[next].identifier);
-    },
-    [reports, selected],
-  );
-
-  const report = detail?.report ?? null;
-
-  const reloadReport = useCallback(async (identifier: string) => {
-    try {
-      const reloaded = await getReport(identifier);
-      setDetail((current) => (current?.report?.identifier === reloaded.report?.identifier ? reloaded : current));
-    } catch {
-      toast.error("The report could not be reloaded.");
-    }
-  }, []);
-
-  const unbanUser = useUnbanUser();
-
-  function unban() {
-    if (!report?.authorIdentifier) return;
-
-    const identifier = report.identifier;
-    unbanUser.mutate(
-      { identifier: report.authorIdentifier, nickName: report.authorNickName },
-      { onSuccess: () => void reloadReport(identifier) },
-    );
-  }
-
-  const decide = useCallback(
-    async (decision: "Dismiss" | "Uphold") => {
-      if (!selected) return;
-
-      setSaving(true);
-
-      try {
-        await decideReport(selected, decision, decisionNote.trim() || undefined);
-        setConfirming(false);
-        toast.success(
-          decision === "Uphold" ? "The content was removed and a strike recorded." : "The content is visible again.",
-        );
-        await load();
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "The decision could not be saved.");
-      } finally {
-        setSaving(false);
-      }
-    },
-    [selected, decisionNote, load],
-  );
-
-  // `u` only prepares the decision. Confirming it is a second, deliberate action, because
-  // upholding deletes the content and there is no undo.
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      const target = event.target as HTMLElement | null;
-      if (target?.closest?.(EditableTargets)) return;
-      if (event.metaKey || event.ctrlKey || event.altKey) return;
-
-      const shortcuts: Record<string, () => void> = {
-        j: () => step(1),
-        k: () => step(-1),
-        d: () => {
-          if (dismissEnabled(report)) void decide("Dismiss");
-        },
-        u: () => {
-          if (upholdEnabled(report, hasReadContent)) setConfirming(true);
-        },
-      };
-
-      const action = shortcuts[event.key.toLowerCase()];
-      if (!action) return;
-
-      event.preventDefault();
-      action();
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [step, report, hasReadContent, decide]);
-
-  const narrowed = narrowedBy(filters);
-  const risk = reporterRisk(
-    detail
-      ? {
-          reporterTotal: detail.reporterTotal ?? 0,
-          reporterDismissed: detail.reporterDismissed ?? 0,
-        }
-      : null,
-  );
+  const { filters, selected, setFilter, setPage } = useQueueFilters();
+  const { data: counts } = useQuery(reportCountsQueryOptions());
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -254,301 +75,87 @@ export default function ModerationPage() {
       </header>
 
       <div className="flex flex-wrap gap-4">
-        <FilterRow label="Status" options={statusFilters} value={status} onChange={setStatus} />
-        <FilterRow label="Type" options={contentTypeFilters} value={contentType} onChange={setContentType} />
-        <FilterRow label="Outcome" options={hideOutcomeFilters} value={hideOutcome} onChange={setHideOutcome} />
+        <FilterRow
+          label="Status"
+          options={STATUS_FILTERS}
+          value={selected.status}
+          onChange={(v) => setFilter("status", v)}
+        />
+        <FilterRow
+          label="Type"
+          options={TYPE_FILTERS}
+          value={selected.contentType}
+          onChange={(v) => setFilter("contentType", v)}
+        />
+        <FilterRow
+          label="Outcome"
+          options={OUTCOME_FILTERS}
+          value={selected.hideOutcome}
+          onChange={(v) => setFilter("hideOutcome", v)}
+        />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
-        <section className="flex flex-col gap-2">
-          {reports === null && (
-            <>
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-            </>
-          )}
-
-          {reports?.length === 0 && (
-            <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-              {narrowed.length > 0 ? `Nothing matches ${narrowed.join(", ")}.` : "Nothing has been reported."}
-            </div>
-          )}
-
-          {reports?.map((row) => (
-            <button
-              key={row.identifier}
-              type="button"
-              data-testid="report-row"
-              aria-current={row.identifier === selected}
-              onClick={() => setSelected(row.identifier)}
-              className={`rounded-md border p-3 text-left text-sm ${
-                row.identifier === selected ? "border-primary" : "border-border"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">{row.contentType}</Badge>
-                <Badge variant="outline">{row.reason}</Badge>
-                <Badge variant="outline">{row.status}</Badge>
-                {didNotHide(row.hideOutcome) && (
-                  <span
-                    data-testid="did-not-hide"
-                    title={hideOutcomeExplanation(row.hideOutcome) ?? undefined}
-                    className="rounded bg-yellow-200 px-1.5 py-0.5 text-xs text-yellow-900"
-                  >
-                    did not hide
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-muted-foreground">
-                {row.reporterNickName ?? "Deleted reporter"} reported {row.authorNickName ?? "a deleted author"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}
-              </p>
-            </button>
-          ))}
-
-          <nav className="flex items-center justify-between pt-2 text-sm">
-            <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => Math.max(p - 1, 1))}>
-              <ChevronLeft className="size-4" />
-            </Button>
-            <span className="text-muted-foreground">
-              Page {page} of {total} report{total === 1 ? "" : "s"}
-            </span>
-            <Button size="sm" variant="outline" disabled={!hasMore} onClick={() => setPage((p) => p + 1)}>
-              <ChevronRight className="size-4" />
-            </Button>
-          </nav>
-        </section>
-
-        <section className="flex flex-col gap-4">
-          {!report && (
-            <div className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
-              Pick a report to see what was reported.
-            </div>
-          )}
-
-          {report && (
-            <>
-              {!report.contentStillExists && (
-                <div
-                  data-testid="content-gone"
-                  className="rounded-md border border-dashed p-4 text-sm text-muted-foreground"
-                >
-                  <TriangleAlert className="mb-1 inline size-4" /> The content is no longer there, so only this snapshot
-                  remains. Upholding still records the strike.
-                </div>
-              )}
-
-              <article className="rounded-md border p-4">
-                <h2 className="text-sm font-semibold">Reported content</h2>
-                {report.contentImageUrl ? (
-                  <a
-                    href={report.contentImageUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 block w-fit"
-                    onMouseEnter={() => setHasReadContent(true)}
-                    onFocus={() => setHasReadContent(true)}
-                  >
-                    <img
-                      data-testid="content-image"
-                      src={report.contentImageUrl}
-                      alt={`The reported ${contentTypeNoun[report.contentType] ?? "image"}`}
-                      className="max-h-80 rounded-md border object-contain"
-                    />
-                  </a>
-                ) : (
-                  <p
-                    data-testid="content-snapshot"
-                    className="mt-2 whitespace-pre-wrap text-sm"
-                    onMouseEnter={() => setHasReadContent(true)}
-                    onFocus={() => setHasReadContent(true)}
-                    tabIndex={0}
-                  >
-                    {report.contentSnapshot ?? "The snapshot was cleared with the author's account."}
-                  </p>
-                )}
-                {!hasReadContent && (
-                  <Button
-                    className="mt-3"
-                    size="sm"
-                    variant="outline"
-                    data-testid="mark-read"
-                    onClick={() => setHasReadContent(true)}
-                  >
-                    I have read this
-                  </Button>
-                )}
-              </article>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <article className="rounded-md border p-4 text-sm">
-                  <h2 className="font-semibold">Author</h2>
-                  <p className="text-muted-foreground">{report.authorNickName ?? "Deleted author"}</p>
-                  <p data-testid="author-strikes">
-                    {detail?.authorStrikes ?? 0} strike
-                    {detail?.authorStrikes === 1 ? "" : "s"}
-                  </p>
-
-                  {report.authorIdentifier && report.authorBannedAt && (
-                    <>
-                      <p data-testid="author-banned-since" className="text-muted-foreground">
-                        Banned {new Date(report.authorBannedAt).toLocaleDateString()}
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-3"
-                        data-testid="unban-author"
-                        disabled={unbanUser.isPending}
-                        onClick={unban}
-                      >
-                        {unbanUser.isPending && <Loader2 className="size-4 animate-spin" />}
-                        Lift the ban
-                      </Button>
-                    </>
-                  )}
-
-                  {report.authorIdentifier && !report.authorBannedAt && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      data-testid="ban-author"
-                      onClick={() => setBanOpen(true)}
-                    >
-                      Ban this account
-                    </Button>
-                  )}
-
-                  {banOpen && report.authorIdentifier && (
-                    <BanSheet
-                      target={{
-                        identifier: report.authorIdentifier,
-                        nickName: report.authorNickName,
-                        strikes: detail?.authorStrikes,
-                      }}
-                      initialReason={`Moderation: ${report.identifier}`}
-                      onClose={() => setBanOpen(false)}
-                      onBanned={() => void reloadReport(report.identifier)}
-                    />
-                  )}
-                </article>
-
-                <article className="rounded-md border p-4 text-sm">
-                  <h2 className="font-semibold">Reporter</h2>
-                  <p className="text-muted-foreground">{report.reporterNickName ?? "Deleted reporter"}</p>
-                  <p data-testid="reporter-record">
-                    {detail?.reporterTotal ?? 0} reports, {detail?.reporterDismissed ?? 0} dismissed
-                  </p>
-                  <Badge variant="outline" data-testid="reporter-risk">
-                    {riskLabel[risk]}
-                  </Badge>
-                  {report.reporterNote && <p className="mt-2 whitespace-pre-wrap">{report.reporterNote}</p>}
-                </article>
-              </div>
-
-              {canDecide(report) ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="outline"
-                    data-testid="dismiss"
-                    disabled={!dismissEnabled(report) || saving}
-                    onClick={() => void decide("Dismiss")}
-                  >
-                    {saving && <Loader2 className="size-4 animate-spin" />}
-                    Nothing wrong, put it back
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    data-testid="uphold"
-                    disabled={!upholdEnabled(report, hasReadContent) || saving}
-                    onClick={() => setConfirming(true)}
-                  >
-                    Breaks the rules, delete it
-                  </Button>
-                  {!hasReadContent && (
-                    <span className="text-xs text-muted-foreground">Read the content before deleting it.</span>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Decided {report.status.toLowerCase()} by {report.decidedBy ?? "unknown"}
-                  {report.decidedAt ? ` on ${new Date(report.decidedAt).toLocaleString()}` : ""}.
-                  {report.decisionNote ? ` ${report.decisionNote}` : ""}
-                </p>
-              )}
-            </>
-          )}
-        </section>
-      </div>
-
-      <Sheet open={confirming} onOpenChange={setConfirming}>
-        <SheetContent side="right">
-          <SheetHeader>
-            <SheetTitle>Delete this content permanently?</SheetTitle>
-            <SheetDescription data-testid="confirm-body">
-              This deletes {report?.authorNickName ?? "the author"}
-              {"'"}s {contentTypeNoun[report?.contentType ?? ""] ?? "content"} for good. It cannot be undone. It becomes
-              strike {strikeAfterUphold(detail?.authorStrikes ?? 0, false)} against them.
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="px-4">
-            <Textarea
-              data-testid="decision-note"
-              placeholder="Why (optional)"
-              value={decisionNote}
-              onChange={(event) => setDecisionNote(event.target.value)}
-            />
+      <QueryBoundary
+        fallback={
+          <div className="flex flex-col gap-2 lg:w-[26rem]">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
           </div>
-
-          <SheetFooter>
-            <Button
-              variant="destructive"
-              data-testid="confirm-uphold"
-              disabled={saving}
-              onClick={() => void decide("Uphold")}
-            >
-              {saving && <Loader2 className="size-4 animate-spin" />}
-              Delete permanently
-            </Button>
-            <Button variant="outline" onClick={() => setConfirming(false)}>
-              Cancel
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+        }
+      >
+        <ReportQueue
+          filters={filters}
+          onPageChange={setPage}
+          renderAuthorActions={(detail) => <AuthorBanControls detail={detail} />}
+        />
+      </QueryBoundary>
     </div>
   );
 }
 
-function FilterRow({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: readonly string[];
-  value: string;
-  onChange: (next: string) => void;
-}) {
-  return (
-    <div className="flex items-center gap-1 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      {options.map((option) => (
+function AuthorBanControls({ detail }: { detail: ContentReportDetailResponse }) {
+  const { report } = detail;
+  const [banning, setBanning] = useState(false);
+  const unban = useUnbanUser();
+
+  if (!report.authorIdentifier) return null;
+
+  const author = { identifier: report.authorIdentifier, nickName: report.authorNickName };
+
+  if (report.authorBannedAt) {
+    return (
+      <>
+        <p data-testid="author-banned-since" className="text-muted-foreground">
+          Banned {new Date(report.authorBannedAt).toLocaleDateString()}
+        </p>
         <Button
-          key={option}
+          variant="outline"
           size="sm"
-          variant={option === value ? "default" : "ghost"}
-          onClick={() => onChange(option)}
+          className="mt-3"
+          data-testid="unban-author"
+          disabled={unban.isPending}
+          onClick={() => unban.mutate(author)}
         >
-          {option}
+          {unban.isPending && <Loader2 className="size-4 animate-spin" />}
+          Lift the ban
         </Button>
-      ))}
-    </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Button variant="outline" size="sm" className="mt-3" data-testid="ban-author" onClick={() => setBanning(true)}>
+        Ban this account
+      </Button>
+      {banning && (
+        <BanSheet
+          target={{ ...author, strikes: detail.authorStrikes }}
+          initialReason={`Moderation: ${report.identifier}`}
+          onClose={() => setBanning(false)}
+        />
+      )}
+    </>
   );
 }

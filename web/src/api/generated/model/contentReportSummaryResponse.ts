@@ -11,30 +11,30 @@ export interface ContentReportSummaryResponse {
   contentType: string;
   contentIdentifier: string;
   /** @nullable */
-  trailIdentifier?: string | null;
+  trailIdentifier: string | null;
   reason: string;
   /** @nullable */
-  reporterNote?: string | null;
+  reporterNote: string | null;
   status: string;
   hideOutcome: string;
   /** @nullable */
-  reporterNickName?: string | null;
+  reporterNickName: string | null;
   /** @nullable */
-  authorNickName?: string | null;
+  authorNickName: string | null;
   /** @nullable */
-  authorIdentifier?: string | null;
+  authorIdentifier: string | null;
   /** @nullable */
-  authorBannedAt?: string | null;
+  authorBannedAt: string | null;
   /** @nullable */
-  contentSnapshot?: string | null;
+  contentSnapshot: string | null;
   /** @nullable */
-  contentImageUrl?: string | null;
-  contentStillExists?: boolean;
+  contentImageUrl: string | null;
+  contentStillExists: boolean;
   /** @nullable */
-  decidedBy?: string | null;
+  decidedBy: string | null;
   /** @nullable */
-  decidedAt?: string | null;
+  decidedAt: string | null;
   /** @nullable */
-  decisionNote?: string | null;
-  createdAt?: string;
+  decisionNote: string | null;
+  createdAt: string;
 }

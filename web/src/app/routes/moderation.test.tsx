@@ -1,56 +1,60 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { beforeEach, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReportDetail, ReportSummary } from "@/features/moderation/api/content-reports";
+import { useLocation } from "react-router";
+import type { ContentReportDetailResponse, ContentReportSummaryResponse } from "@/api/generated/model";
 import { renderWithProviders } from "@/testing/render";
-import ModerationPage from "./moderation";
 
-// The page's own imports, stubbed at the module boundary.
-const api = vi.hoisted(() => ({
-  getReports: vi.fn(),
-  getReport: vi.fn(),
-  getCounts: vi.fn(),
-  decideReport: vi.fn(),
-}));
-vi.mock("@/features/moderation/api/content-reports", () => api);
-
-const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
-vi.mock("sonner", () => ({ toast: toasts }));
-
-const net = await vi.hoisted(async () => {
+const api = await vi.hoisted(async () => {
   const { createApiMock } = await import("@/testing/mock-api");
   return { mock: createApiMock() };
 });
 vi.mock("@/api/mutator", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/mutator")>()),
-  customFetch: net.mock.customFetch,
+  customFetch: api.mock.customFetch,
 }));
 
-const BAN = "/api/v1/admin/users/author-1/ban";
-const banCalls = (method: string) => net.mock.calls.filter((call) => call.method === method && call.path === BAN);
+const toasts = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => toasts);
 
-function summary(overrides: Partial<ReportSummary> = {}): ReportSummary {
+import ModerationPage from "./moderation";
+
+const REPORTS = "/api/v1/admin/content-reports/reports";
+const COUNTS = "/api/v1/admin/content-reports/counts";
+const BAN = "/api/v1/admin/users/author-1/ban";
+const decideUrl = (id: string) => `${REPORTS}/${id}/decide`;
+
+function summary(overrides: Partial<ContentReportSummaryResponse> = {}): ContentReportSummaryResponse {
   return {
     identifier: "report-1",
     contentType: "Review",
     contentIdentifier: "review-1",
+    trailIdentifier: null,
     reason: "Offensive",
+    reporterNote: null,
     status: "Pending",
     hideOutcome: "Hidden",
     reporterNickName: "VandrarVennen",
     authorNickName: "SkogsGreven",
     authorIdentifier: "author-1",
+    authorBannedAt: null,
     contentSnapshot: "Something unpleasant",
+    contentImageUrl: null,
     contentStillExists: true,
+    decidedBy: null,
+    decidedAt: null,
+    decisionNote: null,
     createdAt: "2026-05-01T10:00:00Z",
     ...overrides,
-  } as ReportSummary;
+  };
 }
 
-function detail(report: ReportSummary, overrides: Partial<ReportDetail> = {}): ReportDetail {
+let rows: ContentReportSummaryResponse[] = [];
+
+function detailOf(report: ContentReportSummaryResponse): ContentReportDetailResponse {
   return {
     report,
     authorStrikes: 1,
@@ -58,301 +62,426 @@ function detail(report: ReportSummary, overrides: Partial<ReportDetail> = {}): R
     reporterPending: 1,
     reporterDismissed: 0,
     reporterUpheld: 3,
-    ...overrides,
-  } as ReportDetail;
+  };
 }
 
-function renderPage(rows: ReportSummary[], reportDetail?: ReportDetail) {
-  api.getReports.mockResolvedValue({
-    items: rows,
-    totalCount: rows.length,
-    hasMore: false,
-  });
-  api.getCounts.mockResolvedValue({
-    pending: rows.length,
-    dismissed: 0,
-    upheld: 0,
-    contentExpired: 0,
-  });
-  api.getReport.mockResolvedValue(reportDetail ?? detail(rows[0] ?? summary()));
+const calls = (method: string, path: string) =>
+  api.mock.calls.filter((call) => call.method === method && call.path === path);
 
-  renderWithProviders(<ModerationPage />, { initialEntries: ["/moderation"] });
+function listParams() {
+  const last = calls("GET", REPORTS).at(-1);
+  return new URL(last?.url ?? REPORTS, "http://x").searchParams;
+}
+
+function Location() {
+  const { search } = useLocation();
+  return <output data-testid="location">{search}</output>;
+}
+
+function renderPage(reports: ContentReportSummaryResponse[], url = "/moderation") {
+  rows = reports;
+  for (const row of reports) {
+    api.mock.on("GET", `${REPORTS}/${row.identifier}`, () => {
+      const current = rows.find((r) => r.identifier === row.identifier) ?? row;
+      return detailOf(current);
+    });
+    api.mock.on("POST", decideUrl(row.identifier), (body) => {
+      const { decision, decisionNote } = body as { decision: string; decisionNote?: string };
+      rows = rows.map((r) =>
+        r.identifier === row.identifier
+          ? {
+              ...r,
+              status: decision === "Uphold" ? "Upheld" : "Dismissed",
+              decidedBy: "moderator",
+              decisionNote: decisionNote ?? null,
+            }
+          : r,
+      );
+      const updated = rows.find((r) => r.identifier === row.identifier) ?? row;
+      return detailOf(updated);
+    });
+  }
+
+  return renderWithProviders(
+    <>
+      <ModerationPage />
+      <Location />
+    </>,
+    { initialEntries: [url] },
+  );
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  net.mock.reset();
-  net.mock.on("POST", BAN, () => undefined);
-  net.mock.on("DELETE", BAN, () => undefined);
-  api.decideReport.mockResolvedValue(detail(summary({ status: "Upheld" })));
-});
+  api.mock.reset();
 
-it("lists the queue and opens the first report", async () => {
-  renderPage([summary()]);
-
-  expect(await screen.findByTestId("content-snapshot")).toHaveTextContent("Something unpleasant");
-  expect(screen.getByTestId("author-strikes")).toHaveTextContent("1 strike");
-  expect(screen.getByTestId("reporter-record")).toHaveTextContent("4 reports, 0 dismissed");
-});
-
-// Two rows with the same status but different effects in the app look like a bug unless
-// the queue says which is which.
-it("marks a report that did not hide anything, and explains why", async () => {
-  renderPage([summary({ hideOutcome: "WithheldReporterDismissed" })]);
-
-  const marker = await screen.findByTestId("did-not-hide");
-  expect(marker).toHaveAttribute("title", expect.stringContaining("dismissed"));
-});
-
-it("leaves an ordinary report unmarked", async () => {
-  renderPage([summary({ hideOutcome: "Hidden" })]);
-
-  await screen.findByTestId("content-snapshot");
-  expect(screen.queryByTestId("did-not-hide")).toBeNull();
-});
-
-// Upholding hard-deletes, so the button stays off until the content was actually opened.
-it("keeps uphold disabled until the content has been read", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-
-  expect(await screen.findByTestId("uphold")).toBeDisabled();
-
-  await user.click(screen.getByTestId("mark-read"));
-
-  expect(screen.getByTestId("uphold")).toBeEnabled();
-});
-
-it("leaves dismiss available without reading, because it is reversible", async () => {
-  renderPage([summary()]);
-
-  expect(await screen.findByTestId("dismiss")).toBeEnabled();
-});
-
-it("does not delete anything until the confirmation is accepted", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-
-  await user.click(await screen.findByTestId("mark-read"));
-  await user.click(screen.getByTestId("uphold"));
-
-  expect(api.decideReport).not.toHaveBeenCalled();
-
-  await user.click(await screen.findByTestId("confirm-uphold"));
-
-  await waitFor(() => expect(api.decideReport).toHaveBeenCalledWith("report-1", "Uphold", undefined));
-});
-
-// The dialog has to say the deletion is permanent and which strike this becomes, because
-// the strike count is what a decision to remove an account is built on.
-it("says the deletion is permanent and names the strike it becomes", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-
-  await user.click(await screen.findByTestId("mark-read"));
-  await user.click(screen.getByTestId("uphold"));
-
-  const body = await screen.findByTestId("confirm-body");
-  expect(body).toHaveTextContent("cannot be undone");
-  expect(body).toHaveTextContent("strike 2");
-});
-
-it("sends the decision note when one was typed", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-
-  await user.click(await screen.findByTestId("mark-read"));
-  await user.click(screen.getByTestId("uphold"));
-  await user.type(await screen.findByTestId("decision-note"), "Personal data");
-  await user.click(screen.getByTestId("confirm-uphold"));
-
-  await waitFor(() => expect(api.decideReport).toHaveBeenCalledWith("report-1", "Uphold", "Personal data"));
-});
-
-// `u` prepares an uphold, so a keystroke landing in a text field must never touch it.
-it("does not act on a shortcut typed into a text field", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-
-  await user.click(await screen.findByTestId("mark-read"));
-  await user.click(screen.getByTestId("uphold"));
-  const note = await screen.findByTestId("decision-note");
-  await user.type(note, "d");
-
-  expect(api.decideReport).not.toHaveBeenCalled();
-});
-
-// Retention or an account deletion may take the content first. Upholding still records the
-// strike, so the state has to be shown rather than the row simply looking broken.
-it("explains when only the snapshot is left, and still allows uphold", async () => {
-  const gone = summary({ status: "ContentExpired", contentStillExists: false });
-  renderPage([gone], detail(gone));
-
-  expect(await screen.findByTestId("content-gone")).toBeInTheDocument();
-  expect(screen.getByTestId("dismiss")).toBeDisabled();
-});
-
-it("offers no decision on a report that is already settled", async () => {
-  const settled = summary({ status: "Upheld", decidedBy: "moderator" });
-  renderPage([settled], detail(settled));
-
-  await screen.findByTestId("content-snapshot");
-  expect(screen.queryByTestId("uphold")).toBeNull();
-  expect(screen.queryByTestId("dismiss")).toBeNull();
-});
-
-// An empty list has to say whether the filters are what emptied it.
-it("explains an empty queue in terms of the filters that narrowed it", async () => {
-  renderPage([]);
-
-  expect(await screen.findByText(/Nothing matches status Pending/)).toBeInTheDocument();
-});
-
-// The queue covers reviews and obstacle reports alike, so this is the one place a moderator
-// can ban the author of either without leaving the item they are looking at.
-it("bans the author of whatever is open, only after the moderator confirms", async () => {
-  const user = userEvent.setup();
-  renderPage([summary({ contentType: "TrailObstacle" })]);
-
-  await user.click(await screen.findByTestId("ban-author"));
-  expect(banCalls("POST")).toHaveLength(0);
-  await user.click(screen.getByTestId("confirm-ban"));
-
-  await waitFor(() =>
-    expect(banCalls("POST")).toEqual([
-      expect.objectContaining({ body: { reason: expect.stringContaining("report-1") } }),
-    ]),
-  );
-});
-
-it("offers to lift the ban straight after banning, without reselecting the report", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-
-  const banButton = await screen.findByTestId("ban-author");
-  api.getReport.mockResolvedValue(detail(summary({ authorBannedAt: "2026-03-04T10:00:00Z" })));
-  await user.click(banButton);
-  await user.click(screen.getByTestId("confirm-ban"));
-
-  expect(await screen.findByTestId("unban-author")).toHaveTextContent("Lift the ban");
-  expect(screen.queryByTestId("ban-author")).toBeNull();
-});
-
-// A deleted author has no identifier left, so there is no account to ban.
-it("offers no ban once the author is gone", async () => {
-  renderPage([summary({ authorIdentifier: null, authorNickName: null })]);
-
-  await screen.findByTestId("content-snapshot");
-
-  expect(screen.queryByTestId("ban-author")).toBeNull();
-});
-
-// The card reads BannedAt back and offers Unban instead.
-it("offers to lift the ban on an author who is already banned", async () => {
-  const user = userEvent.setup();
-  renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
-
-  expect(await screen.findByTestId("author-banned-since")).toHaveTextContent("Banned");
-  expect(screen.queryByTestId("ban-author")).toBeNull();
-
-  await user.click(screen.getByTestId("unban-author"));
-
-  await waitFor(() => expect(banCalls("DELETE")).toHaveLength(1));
-});
-
-it("says why when the bar cannot be lifted", async () => {
-  const user = userEvent.setup();
-  net.mock.on("DELETE", BAN, () => {
-    throw new Error("the server said no");
+  api.mock.on("GET", REPORTS, () => {
+    const params = listParams();
+    const status = params.get("status");
+    const type = params.get("contentType");
+    const items = rows.filter((r) => (!status || r.status === status) && (!type || r.contentType === type));
+    return { items, page: 1, hasMore: false, totalCount: items.length };
   });
-  renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
-
-  await user.click(await screen.findByTestId("unban-author"));
-
-  await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("the server said no"));
-});
-
-it("says why when the ban fails, and leaves the queue alone", async () => {
-  const user = userEvent.setup();
-  net.mock.on("POST", BAN, () => {
-    throw new Error("the server said no");
+  api.mock.on("GET", COUNTS, () => ({
+    pending: rows.filter((r) => r.status === "Pending").length,
+    dismissed: 0,
+    upheld: rows.filter((r) => r.status === "Upheld").length,
+    contentExpired: 0,
+  }));
+  api.mock.on("POST", BAN, () => {
+    rows = rows.map((r) => ({ ...r, authorBannedAt: "2026-03-04T10:00:00Z" }));
+    return undefined;
   });
-  renderPage([summary()]);
-
-  await user.click(await screen.findByTestId("ban-author"));
-  await user.click(screen.getByTestId("confirm-ban"));
-
-  await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("the server said no"));
+  api.mock.on("DELETE", BAN, () => {
+    rows = rows.map((r) => ({ ...r, authorBannedAt: null }));
+    return undefined;
+  });
 });
 
-it("shows a reported hike image as the picture itself, not its path", async () => {
-  renderPage([
-    summary({
-      contentType: "HikeImage",
-      contentSnapshot: "hikes/abc.jpg",
-      contentImageUrl: "https://media.stigvidd.se/hikes/abc.jpg",
-    }),
-  ]);
+describe("the queue", () => {
+  it("lists the queue and opens the first report", async () => {
+    renderPage([summary()]);
 
-  const image = await screen.findByTestId("content-image");
-  expect(image).toHaveAttribute("src", "https://media.stigvidd.se/hikes/abc.jpg");
-  expect(screen.queryByTestId("content-snapshot")).toBeNull();
+    expect(await screen.findByTestId("content-snapshot")).toHaveTextContent("Something unpleasant");
+    expect(screen.getByTestId("author-strikes")).toHaveTextContent("1 strike");
+    expect(screen.getByTestId("reporter-record")).toHaveTextContent("4 reports, 0 dismissed");
+    expect(await screen.findByText(/1 pending/)).toBeInTheDocument();
+  });
+
+  it("marks a report that did not hide anything, and explains why", async () => {
+    renderPage([summary({ hideOutcome: "WithheldReporterDismissed" })]);
+
+    const marker = await screen.findByTestId("did-not-hide");
+    expect(marker).toHaveAttribute("title", expect.stringContaining("dismissed"));
+  });
+
+  it("leaves an ordinary report unmarked", async () => {
+    renderPage([summary({ hideOutcome: "Hidden" })]);
+
+    await screen.findByTestId("content-snapshot");
+    expect(screen.queryByTestId("did-not-hide")).toBeNull();
+  });
+
+  it("explains an empty queue in terms of the filters that narrowed it", async () => {
+    renderPage([]);
+
+    expect(await screen.findByText(/Nothing matches status Pending/)).toBeInTheDocument();
+    expect(screen.getByText("Pick a report to see what was reported.")).toBeInTheDocument();
+  });
+
+  it("opens the report that was clicked", async () => {
+    const user = userEvent.setup();
+    renderPage([summary(), summary({ identifier: "report-2", contentSnapshot: "Something else" })]);
+    await screen.findByText("Something unpleasant");
+
+    await user.click(screen.getAllByTestId("report-row")[1]);
+
+    expect(await screen.findByText("Something else")).toBeInTheDocument();
+    expect(screen.getAllByTestId("report-row")[1]).toHaveAttribute("aria-current", "true");
+  });
 });
 
-it("names a hike image in the deletion warning", async () => {
-  const user = userEvent.setup();
-  renderPage([
-    summary({
-      contentType: "HikeImage",
-      contentSnapshot: "hikes/abc.jpg",
-      contentImageUrl: "https://media.stigvidd.se/hikes/abc.jpg",
-    }),
-  ]);
+describe("filters", () => {
+  it.each(["EventPost", "HikeImage"])("filters the queue on %s and keeps it in the address", async (type) => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+    await screen.findByTestId("content-snapshot");
 
-  await user.click(await screen.findByTestId("mark-read"));
-  await user.click(screen.getByTestId("uphold"));
+    await user.click(screen.getByRole("button", { name: type }));
 
-  expect(await screen.findByTestId("confirm-body")).toHaveTextContent("hike image for good");
+    await waitFor(() => expect(listParams().get("contentType")).toBe(type));
+    expect(screen.getByTestId("location")).toHaveTextContent(`contentType=${type}`);
+  });
+
+  it("starts from the filters in the address", async () => {
+    renderPage([summary({ status: "Upheld" })], "/moderation?status=Upheld");
+
+    expect(await screen.findByTestId("content-snapshot")).toBeInTheDocument();
+    expect(calls("GET", REPORTS)[0].url).toContain("status=Upheld");
+    expect(screen.getByRole("button", { name: "Upheld" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("asks for every status when All is picked, and goes back to the first page", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()], "/moderation?page=3");
+    await screen.findByText(/Page 3/);
+
+    await user.click(screen.getAllByRole("button", { name: "All" })[0]);
+
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("?status=All"));
+    await waitFor(() => expect(listParams().get("page")).toBe("1"));
+    expect(listParams().has("status")).toBe(false);
+  });
 });
 
-it("shows a reported event cover as a picture and names it in the deletion warning", async () => {
-  const user = userEvent.setup();
-  renderPage([
-    summary({
-      contentType: "EventImage",
-      contentSnapshot: "events/abc.jpg",
-      contentImageUrl: "https://media.stigvidd.se/events/abc.jpg",
-    }),
-  ]);
+describe("deciding", () => {
+  it("keeps uphold disabled until the content has been read", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
 
-  const image = await screen.findByTestId("content-image");
-  expect(image).toHaveAttribute("alt", "The reported event cover image");
-  await user.click(screen.getByTestId("mark-read"));
-  await user.click(screen.getByTestId("uphold"));
+    expect(await screen.findByTestId("uphold")).toBeDisabled();
 
-  expect(await screen.findByTestId("confirm-body")).toHaveTextContent("event cover image for good");
+    await user.click(screen.getByTestId("mark-read"));
+
+    expect(screen.getByTestId("uphold")).toBeEnabled();
+  });
+
+  it("leaves dismiss available without reading, because it is reversible", async () => {
+    renderPage([summary()]);
+
+    expect(await screen.findByTestId("dismiss")).toBeEnabled();
+  });
+
+  it("dismisses, then moves on to the next report in the queue", async () => {
+    const user = userEvent.setup();
+    renderPage([summary(), summary({ identifier: "report-2", contentSnapshot: "Something else" })]);
+
+    await user.click(await screen.findByTestId("dismiss"));
+
+    expect(await screen.findByText("Something else")).toBeInTheDocument();
+    expect(calls("POST", decideUrl("report-1"))[0]?.body).toEqual({ decision: "Dismiss" });
+    expect(toasts.toast.success).toHaveBeenCalledWith("The content is visible again.");
+    expect(screen.getAllByTestId("report-row")).toHaveLength(1);
+    expect(await screen.findByText(/1 pending/)).toBeInTheDocument();
+  });
+
+  it("does not delete anything until the confirmation is accepted", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+
+    await user.click(await screen.findByTestId("mark-read"));
+    await user.click(screen.getByTestId("uphold"));
+
+    expect(calls("POST", decideUrl("report-1"))).toHaveLength(0);
+
+    await user.click(await screen.findByTestId("confirm-uphold"));
+
+    await waitFor(() => expect(calls("POST", decideUrl("report-1"))[0]?.body).toEqual({ decision: "Uphold" }));
+    expect(toasts.toast.success).toHaveBeenCalledWith("The content was removed and a strike recorded.");
+    await waitFor(() => expect(screen.queryByTestId("confirm-uphold")).toBeNull());
+  });
+
+  it("says the deletion is permanent and names the strike it becomes", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+
+    await user.click(await screen.findByTestId("mark-read"));
+    await user.click(screen.getByTestId("uphold"));
+
+    const body = await screen.findByTestId("confirm-body");
+    expect(body).toHaveTextContent("cannot be undone");
+    expect(body).toHaveTextContent("strike 2");
+  });
+
+  it("sends the decision note when one was typed", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+
+    await user.click(await screen.findByTestId("mark-read"));
+    await user.click(screen.getByTestId("uphold"));
+    await user.type(await screen.findByTestId("decision-note"), "Personal data");
+    await user.click(screen.getByTestId("confirm-uphold"));
+
+    await waitFor(() =>
+      expect(calls("POST", decideUrl("report-1"))[0]?.body).toEqual({
+        decision: "Uphold",
+        decisionNote: "Personal data",
+      }),
+    );
+  });
+
+  it("keeps the confirmation open and says why when the decision fails", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+    api.mock.on("POST", decideUrl("report-1"), () => {
+      throw new Error("Already decided");
+    });
+
+    await user.click(await screen.findByTestId("mark-read"));
+    await user.click(screen.getByTestId("uphold"));
+    await user.click(await screen.findByTestId("confirm-uphold"));
+
+    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Already decided"));
+    expect(screen.getByTestId("confirm-uphold")).toBeEnabled();
+  });
+
+  it("explains when only the snapshot is left, and allows no dismiss", async () => {
+    renderPage([summary({ status: "ContentExpired", contentStillExists: false })], "/moderation?status=ContentExpired");
+
+    expect(await screen.findByTestId("content-gone")).toBeInTheDocument();
+    expect(screen.getByTestId("dismiss")).toBeDisabled();
+  });
+
+  it("offers no decision on a report that is already settled", async () => {
+    renderPage([summary({ status: "Upheld", decidedBy: "moderator" })], "/moderation?status=Upheld");
+
+    await screen.findByTestId("content-snapshot");
+    expect(screen.queryByTestId("uphold")).toBeNull();
+    expect(screen.queryByTestId("dismiss")).toBeNull();
+    expect(screen.getByText(/Decided upheld by moderator/)).toBeInTheDocument();
+  });
 });
 
-it("filters the queue on event board posts", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-  await screen.findByTestId("content-snapshot");
+describe("keyboard", () => {
+  it("steps through the queue with j and k", async () => {
+    const user = userEvent.setup();
+    renderPage([summary(), summary({ identifier: "report-2", contentSnapshot: "Something else" })]);
+    await screen.findByText("Something unpleasant");
 
-  await user.click(screen.getByRole("button", { name: "EventPost" }));
+    await user.keyboard("j");
+    expect(await screen.findByText("Something else")).toBeInTheDocument();
 
-  await waitFor(() =>
-    expect(api.getReports).toHaveBeenLastCalledWith(expect.objectContaining({ contentType: "EventPost" })),
-  );
+    await user.keyboard("k");
+    expect(await screen.findByText("Something unpleasant")).toBeInTheDocument();
+  });
+
+  it("dismisses with d", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+    await screen.findByTestId("dismiss");
+
+    await user.keyboard("d");
+
+    await waitFor(() => expect(calls("POST", decideUrl("report-1"))).toHaveLength(1));
+  });
+
+  it("prepares an uphold with u only after the content was read", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+    await screen.findByTestId("uphold");
+
+    await user.keyboard("u");
+    expect(screen.queryByTestId("confirm-uphold")).toBeNull();
+
+    await user.click(screen.getByTestId("mark-read"));
+    await user.keyboard("u");
+
+    expect(await screen.findByTestId("confirm-uphold")).toBeInTheDocument();
+    expect(calls("POST", decideUrl("report-1"))).toHaveLength(0);
+  });
+
+  it("does not act on a shortcut typed into a text field", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+
+    await user.click(await screen.findByTestId("mark-read"));
+    await user.click(screen.getByTestId("uphold"));
+    await user.type(await screen.findByTestId("decision-note"), "d");
+
+    expect(calls("POST", decideUrl("report-1"))).toHaveLength(0);
+  });
 });
 
-it("filters the queue on hike images", async () => {
-  const user = userEvent.setup();
-  renderPage([summary()]);
-  await screen.findByTestId("content-snapshot");
+describe("the author", () => {
+  it("bans the author of whatever is open, only after the moderator confirms", async () => {
+    const user = userEvent.setup();
+    renderPage([summary({ contentType: "TrailObstacle" })]);
 
-  await user.click(screen.getByRole("button", { name: "HikeImage" }));
+    await user.click(await screen.findByTestId("ban-author"));
+    expect(calls("POST", BAN)).toHaveLength(0);
+    await user.click(screen.getByTestId("confirm-ban"));
 
-  await waitFor(() =>
-    expect(api.getReports).toHaveBeenLastCalledWith(expect.objectContaining({ contentType: "HikeImage" })),
-  );
+    await waitFor(() =>
+      expect(calls("POST", BAN)).toEqual([
+        expect.objectContaining({ body: { reason: expect.stringContaining("report-1") } }),
+      ]),
+    );
+  });
+
+  it("offers to lift the ban straight after banning, without reselecting the report", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+
+    await user.click(await screen.findByTestId("ban-author"));
+    await user.click(screen.getByTestId("confirm-ban"));
+
+    expect(await screen.findByTestId("unban-author")).toHaveTextContent("Lift the ban");
+    expect(screen.queryByTestId("ban-author")).toBeNull();
+  });
+
+  it("offers no ban once the author is gone", async () => {
+    renderPage([summary({ authorIdentifier: null, authorNickName: null })]);
+
+    await screen.findByTestId("content-snapshot");
+
+    expect(screen.queryByTestId("ban-author")).toBeNull();
+  });
+
+  it("lifts the ban on an author who is already banned, and offers a ban again", async () => {
+    const user = userEvent.setup();
+    renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
+
+    expect(await screen.findByTestId("author-banned-since")).toHaveTextContent("Banned");
+    expect(screen.queryByTestId("ban-author")).toBeNull();
+
+    await user.click(screen.getByTestId("unban-author"));
+
+    expect(await screen.findByTestId("ban-author")).toBeInTheDocument();
+    expect(calls("DELETE", BAN)).toHaveLength(1);
+  });
+
+  it("says why when the ban cannot be lifted", async () => {
+    const user = userEvent.setup();
+    renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
+    api.mock.on("DELETE", BAN, () => {
+      throw new Error("the server said no");
+    });
+
+    await user.click(await screen.findByTestId("unban-author"));
+
+    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("the server said no"));
+  });
+
+  it("says why when the ban fails", async () => {
+    const user = userEvent.setup();
+    renderPage([summary()]);
+    api.mock.on("POST", BAN, () => {
+      throw new Error("the server said no");
+    });
+
+    await user.click(await screen.findByTestId("ban-author"));
+    await user.click(screen.getByTestId("confirm-ban"));
+
+    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("the server said no"));
+  });
+});
+
+describe("images", () => {
+  it("shows a reported hike image as the picture itself and names it in the warning", async () => {
+    const user = userEvent.setup();
+    renderPage([
+      summary({
+        contentType: "HikeImage",
+        contentSnapshot: "hikes/abc.jpg",
+        contentImageUrl: "https://media.stigvidd.se/hikes/abc.jpg",
+      }),
+    ]);
+
+    const image = await screen.findByTestId("content-image");
+    expect(image).toHaveAttribute("src", "https://media.stigvidd.se/hikes/abc.jpg");
+    expect(screen.queryByTestId("content-snapshot")).toBeNull();
+
+    await user.click(screen.getByTestId("mark-read"));
+    await user.click(screen.getByTestId("uphold"));
+
+    expect(await screen.findByTestId("confirm-body")).toHaveTextContent("hike image for good");
+  });
+
+  it("shows a reported event cover as a picture and names it in the warning", async () => {
+    const user = userEvent.setup();
+    renderPage([
+      summary({
+        contentType: "EventImage",
+        contentSnapshot: "events/abc.jpg",
+        contentImageUrl: "https://media.stigvidd.se/events/abc.jpg",
+      }),
+    ]);
+
+    const image = await screen.findByTestId("content-image");
+    expect(image).toHaveAttribute("alt", "The reported event cover image");
+    await user.click(screen.getByTestId("mark-read"));
+    await user.click(screen.getByTestId("uphold"));
+
+    expect(await screen.findByTestId("confirm-body")).toHaveTextContent("event cover image for good");
+  });
 });
