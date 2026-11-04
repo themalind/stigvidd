@@ -7,6 +7,7 @@ type Handler = (body: unknown) => unknown;
 
 export interface ApiCall {
   method: string;
+  url: string;
   path: string;
   body: unknown;
 }
@@ -19,7 +20,7 @@ export function createApiMock() {
     const method = (options.method ?? "GET").toUpperCase();
     const path = url.split("?")[0];
     const body = typeof options.body === "string" ? JSON.parse(options.body) : options.body;
-    calls.push({ method, path, body });
+    calls.push({ method, url, path, body });
 
     const handler = handlers.get(`${method} ${path}`);
     if (!handler) throw new Error(`No API mock for ${method} ${path}`);

@@ -97,7 +97,9 @@ describe("CityAreasPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Link Vindskydd Rya" }));
 
     expect(facilitiesCard().getByRole("button", { name: "Unlink Vindskydd Rya" })).toBeInTheDocument();
-    expect(api.mock.calls).toContainEqual({ method: "PUT", path: `${AREAS}/a-1/facilities/f-2`, body: undefined });
+    expect(api.mock.calls).toContainEqual(
+      expect.objectContaining({ method: "PUT", path: `${AREAS}/a-1/facilities/f-2`, body: undefined }),
+    );
     answer(undefined);
   });
 

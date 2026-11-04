@@ -5,9 +5,9 @@ namespace WebDataContracts.ResponseModels.UserMapping;
 
 public class MappableUserResponse
 {
-    public int Id { get; set; }
+    public required int Id { get; set; }
     public required string NickName { get; set; }
     public required string Email { get; set; }
-    public int HikeCount { get; set; }
-    public bool IsMapped { get; set; }
+    public required int HikeCount { get; set; }
+    public required bool IsMapped { get; set; }
 }

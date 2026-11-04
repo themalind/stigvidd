@@ -1,60 +1,49 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { getErrorMessage } from "react-error-boundary";
 import { Loader2, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  deleteUserMapping,
-  getUserMappings,
-  saveUserMapping,
-  searchKeycloakUsers,
-} from "@/features/users/api/user-mappings";
-import type { KeycloakUserResponse, UserMappingsResponse } from "@/api/generated/model";
+  keycloakUsersQueryOptions,
+  useDeleteUserMapping,
+  userMappingsQueryOptions,
+  useSaveUserMapping,
+} from "@/features/migration/api/user-mappings";
+import type { KeycloakUserResponse } from "@/api/generated/model";
 
 const MIN_SEARCH = 3;
 
 export default function UserMappingCard() {
-  const [data, setData] = useState<UserMappingsResponse | null>(null);
+  const { data } = useSuspenseQuery(userMappingsQueryOptions());
   const [filter, setFilter] = useState("");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const [found, setFound] = useState<KeycloakUserResponse[]>([]);
-  const [searching, setSearching] = useState(false);
+  const [submitted, setSubmitted] = useState<string | null>(null);
   const [keycloakUser, setKeycloakUser] = useState<KeycloakUserResponse | null>(null);
   const [nickName, setNickName] = useState("");
   const [email, setEmail] = useState("");
-  const [saving, setSaving] = useState(false);
 
-  const load = useCallback(async () => {
-    try {
-      setData(await getUserMappings());
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not load user mappings.");
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const found = useQuery({ ...keycloakUsersQueryOptions(submitted ?? ""), enabled: submitted !== null });
+  const save = useSaveUserMapping();
+  const remove = useDeleteUserMapping();
 
   const needle = filter.trim().toLowerCase();
-  const users = (data?.users ?? []).filter(
+  const users = data.users.filter(
     (u) => needle === "" || u.nickName.toLowerCase().includes(needle) || String(u.id).includes(needle),
   );
 
-  async function handleSearch() {
-    setSearching(true);
-    try {
-      setFound(await searchKeycloakUsers(search.trim()));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Search failed.");
-    } finally {
-      setSearching(false);
+  function handleSearch() {
+    const term = search.trim();
+    if (term === submitted) {
+      void found.refetch();
+    } else {
+      setSubmitted(term);
     }
   }
 
@@ -65,38 +54,24 @@ export default function UserMappingCard() {
   }
 
   const canSave =
-    selectedId !== null && keycloakUser !== null && nickName.trim() !== "" && email.trim() !== "" && !saving;
+    selectedId !== null && keycloakUser !== null && nickName.trim() !== "" && email.trim() !== "" && !save.isPending;
 
-  async function handleSave() {
+  function handleSave() {
     if (selectedId === null || keycloakUser === null) return;
-    setSaving(true);
-    try {
-      await saveUserMapping(selectedId, {
-        keycloakSubjectId: keycloakUser.id,
-        nickName: nickName.trim(),
-        email: email.trim(),
-      });
-      toast.success("Mapping saved and applied.");
-      setSelectedId(null);
-      setKeycloakUser(null);
-      setNickName("");
-      setEmail("");
-      await load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save the mapping.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDelete(packageUserId: number) {
-    try {
-      await deleteUserMapping(packageUserId);
-      toast.success("Mapping removed.");
-      await load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not remove the mapping.");
-    }
+    save.mutate(
+      {
+        packageUserId: selectedId,
+        request: { keycloakSubjectId: keycloakUser.id, nickName: nickName.trim(), email: email.trim() },
+      },
+      {
+        onSuccess: () => {
+          setSelectedId(null);
+          setKeycloakUser(null);
+          setNickName("");
+          setEmail("");
+        },
+      },
+    );
   }
 
   return (
@@ -125,13 +100,13 @@ export default function UserMappingCard() {
                   type="button"
                   aria-pressed={selectedId === u.id}
                   className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-muted aria-pressed:bg-muted"
-                  onClick={() => setSelectedId(u.id ?? null)}
+                  onClick={() => setSelectedId(u.id)}
                 >
                   <span>
                     {u.nickName} <span className="text-muted-foreground">#{u.id}</span>
                   </span>
                   <span className="text-muted-foreground">
-                    {u.hikeCount ?? 0} hikes{u.isMapped ? " · mapped" : ""}
+                    {u.hikeCount} hikes{u.isMapped ? " · mapped" : ""}
                   </span>
                 </button>
               </li>
@@ -154,14 +129,14 @@ export default function UserMappingCard() {
               type="button"
               variant="secondary"
               onClick={handleSearch}
-              disabled={search.trim().length < MIN_SEARCH || searching}
+              disabled={search.trim().length < MIN_SEARCH || found.isFetching}
             >
-              {searching ? <Loader2 className="animate-spin" /> : <Search />}
+              {found.isFetching ? <Loader2 className="animate-spin" /> : <Search />}
               Search
             </Button>
           </div>
           <ul className="divide-y rounded-md border empty:hidden" aria-label="Keycloak users">
-            {found.map((k) => (
+            {found.data?.map((k) => (
               <li key={k.id}>
                 <button
                   type="button"
@@ -171,11 +146,16 @@ export default function UserMappingCard() {
                 >
                   {k.username}
                   {k.email && k.email !== k.username ? ` · ${k.email}` : ""}
-                  {k.enabled === false ? " (disabled)" : ""}
+                  {k.enabled ? "" : " (disabled)"}
                 </button>
               </li>
             ))}
           </ul>
+          {found.isError && (
+            <p role="alert" className="text-sm text-destructive">
+              {getErrorMessage(found.error) ?? "Search failed."}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -195,11 +175,11 @@ export default function UserMappingCard() {
           </div>
         </div>
 
-        {(data?.mappings.length ?? 0) > 0 && (
+        {data.mappings.length > 0 && (
           <div className="space-y-2">
             <Label>Saved mappings</Label>
             <ul className="divide-y rounded-md border" aria-label="Saved mappings">
-              {data?.mappings.map((m) => (
+              {data.mappings.map((m) => (
                 <li key={m.packageUserId} className="flex items-center justify-between px-3 py-2 text-sm">
                   <span>
                     #{m.packageUserId} → {m.keycloakUsername}{" "}
@@ -210,7 +190,8 @@ export default function UserMappingCard() {
                     variant="ghost"
                     size="icon"
                     aria-label={`Remove mapping for user ${m.packageUserId}`}
-                    onClick={() => handleDelete(m.packageUserId ?? 0)}
+                    onClick={() => remove.mutate(m.packageUserId)}
+                    disabled={remove.isPending}
                   >
                     <Trash2 />
                   </Button>
@@ -222,7 +203,7 @@ export default function UserMappingCard() {
       </CardContent>
       <CardFooter>
         <Button onClick={handleSave} disabled={!canSave}>
-          {saving && <Loader2 className="animate-spin" />}
+          {save.isPending && <Loader2 className="animate-spin" />}
           Save mapping
         </Button>
       </CardFooter>

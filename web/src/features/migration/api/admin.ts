@@ -3,8 +3,6 @@
 
 import { getValidAccessToken } from "@/lib/keycloak-auth";
 import { describeRequest, logRefused, logUnanswered } from "@/api/mutator";
-import { adminGetTransferInfo } from "@/api/generated/admin/admin";
-import type { DataTransferInfoResponse } from "@/api/generated/model";
 
 // The generated orval client + `customFetch` mutator assume JSON responses, so
 // export (binary zip) and import (raw file upload) use raw fetch here. Auth
@@ -18,10 +16,6 @@ async function authHeaders(): Promise<Record<string, string>> {
 }
 
 export type ImportOutcome = { message: string; notes: string[] };
-
-export function getTransferInfo(): Promise<DataTransferInfoResponse> {
-  return adminGetTransferInfo();
-}
 
 /** Downloads a migration archive and saves it to the user's disk. */
 export async function exportData({ anonymize = false }: { anonymize?: boolean } = {}): Promise<void> {
