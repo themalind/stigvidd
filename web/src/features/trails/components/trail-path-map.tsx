@@ -4,7 +4,8 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { useEffect } from "react";
 import type { Jump, LngLat } from "@/utils/geometry-edit";
-import { upsertSource, useMapLibre } from "@/hooks/use-maplibre";
+import { useMapLibre } from "@/hooks/use-maplibre";
+import { upsertSource } from "@/lib/maplibre";
 
 type Props = {
   path: LngLat[];

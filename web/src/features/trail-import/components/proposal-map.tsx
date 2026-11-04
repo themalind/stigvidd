@@ -4,8 +4,8 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { fitTo, upsertSource, useMapLibre } from "@/hooks/use-maplibre";
-import { hasSatellite } from "@/lib/map-style";
+import { useMapLibre } from "@/hooks/use-maplibre";
+import { fitTo, hasSatellite, upsertSource } from "@/lib/maplibre";
 
 type Coordinates = GeoJSON.Position[];
 type Shown = { feature: boolean; trail: boolean };
