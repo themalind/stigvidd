@@ -7,17 +7,17 @@ namespace WebDataContracts.ResponseModels.TrailImport;
 // left to do.
 public class TrailImportCountsResponse
 {
-    public int Total { get; set; }
-    public int Certain { get; set; }
-    public int High { get; set; }
-    public int Medium { get; set; }
-    public int Unmatched { get; set; }
-    public int Pending { get; set; }
-    public int Accepted { get; set; }
-    public int Relinked { get; set; }
-    public int CreateNew { get; set; }
-    public int Excluded { get; set; }
-    public int Skipped { get; set; }
+    public required int Total { get; set; }
+    public required int Certain { get; set; }
+    public required int High { get; set; }
+    public required int Medium { get; set; }
+    public required int Unmatched { get; set; }
+    public required int Pending { get; set; }
+    public required int Accepted { get; set; }
+    public required int Relinked { get; set; }
+    public required int CreateNew { get; set; }
+    public required int Excluded { get; set; }
+    public required int Skipped { get; set; }
 
     public static TrailImportCountsResponse Create(
         int total,

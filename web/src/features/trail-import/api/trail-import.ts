@@ -1,24 +1,25 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   getTrailImportCreateSessionUrl,
+  getTrailImportGetDiffQueryOptions,
+  getTrailImportGetPreviewQueryOptions,
+  getTrailImportGetProposalsSuspenseQueryOptions,
+  getTrailImportGetSessionsQueryKey,
+  getTrailImportGetSessionsSuspenseQueryOptions,
+  getTrailImportGetSessionSuspenseQueryOptions,
   trailImportAnalyze,
   trailImportApply,
   trailImportDecide,
   trailImportDecideBulk,
   trailImportDeleteSession,
-  trailImportGetDiff,
-  trailImportGetPreview,
   trailImportGetProposals,
-  trailImportGetSession,
-  trailImportGetSessions,
 } from "@/api/generated/trail-import/trail-import";
-import { getTrailImportGetSessionsSuspenseQueryOptions } from "@/api/generated/trail-import/trail-import";
 import type {
   DecideProposalRequest,
-  DecideProposalsBulkRequest,
-  PagedResultOfTrailImportProposalResponse,
   TrailImportApplyResponse,
   TrailImportDiffResponse,
   TrailImportPreviewResponse,
@@ -26,10 +27,6 @@ import type {
   TrailImportSessionResponse,
 } from "@/api/generated/model";
 import { customFetch } from "@/api/mutator";
-
-// Wrappers over the generated trail-import client, following the same convention as
-// trail.ts: the generated models are looser than the UI needs, so responses are asserted
-// back at this boundary. Auth and base URL come from the customFetch mutator.
 
 export type Confidence = "Certain" | "High" | "Medium" | "Unmatched";
 export type Decision = "Pending" | "Accept" | "Relink" | "CreateNew" | "Exclude" | "Skip";
@@ -46,72 +43,158 @@ export type Preview = TrailImportPreviewResponse;
 export type Diff = TrailImportDiffResponse;
 export type ApplyResult = TrailImportApplyResponse;
 
-/**
- * The generated multipart function expands IFormFile's own properties into form fields
- * instead of sending the file, so the body is built here — the same workaround trail.ts
- * uses for image uploads.
- */
-export async function createSession(file: File, source?: string): Promise<Session> {
+export const PROPOSALS_PAGE_SIZE = 50;
+const SELECT_ALL_PAGE_SIZE = 200;
+const ANALYSING_POLL_MS = 4000;
+
+export interface ProposalFilters {
+  confidence?: Confidence;
+  decision?: Decision;
+}
+
+const SESSIONS_URL = getTrailImportGetSessionsQueryKey()[0];
+
+export const sessionsQueryOptions = () => getTrailImportGetSessionsSuspenseQueryOptions();
+
+// keep-comment: an analysing session has a worker holding it, and the full export takes tens of seconds
+export const pollWhileAnalysing = (sessions: Session[] | undefined) =>
+  sessions?.some((session) => session.status === "Analyzing") ? ANALYSING_POLL_MS : false;
+
+export const sessionQueryOptions = (sessionId: number) => getTrailImportGetSessionSuspenseQueryOptions(sessionId);
+
+export const proposalsQueryOptions = (sessionId: number, filters: ProposalFilters, page: number) =>
+  getTrailImportGetProposalsSuspenseQueryOptions(sessionId, { ...filters, page, pageSize: PROPOSALS_PAGE_SIZE });
+
+export const fetchProposalPage = (sessionId: number, filters: ProposalFilters, page: number) =>
+  trailImportGetProposals(sessionId, { ...filters, page, pageSize: SELECT_ALL_PAGE_SIZE });
+
+export function usePreview(sessionId: number, proposalId: number) {
+  return useQuery(getTrailImportGetPreviewQueryOptions(sessionId, proposalId));
+}
+
+// keep-comment: read fresh every time it is opened, since it is what the apply button acts on
+export function useDiff(sessionId: number, open: boolean) {
+  return useQuery({ ...getTrailImportGetDiffQueryOptions(sessionId), enabled: open, staleTime: 0, gcTime: 0 });
+}
+
+// keep-comment: a decision moves the session's counts, its lists, the siblings in other previews and the diff
+function useInvalidateSession() {
+  const queryClient = useQueryClient();
+
+  return (sessionId?: number) =>
+    queryClient.invalidateQueries({
+      predicate: ({ queryKey }) =>
+        typeof queryKey[0] === "string" &&
+        (queryKey[0] === SESSIONS_URL ||
+          (sessionId !== undefined && queryKey[0].startsWith(`${SESSIONS_URL}/${sessionId}`))),
+    });
+}
+
+// keep-comment: the generated multipart function sends IFormFile's properties as fields instead of the file
+function createSession(file: File, source?: string): Promise<Session> {
   const formData = new FormData();
   formData.append("file", file, file.name);
   if (source) formData.append("source", source);
 
-  return customFetch<Session>(getTrailImportCreateSessionUrl(), {
-    method: "POST",
-    body: formData,
+  return customFetch<Session>(getTrailImportCreateSessionUrl(), { method: "POST", body: formData });
+}
+
+export function useCreateSession() {
+  const invalidate = useInvalidateSession();
+
+  return useMutation({
+    mutationFn: ({ file, source }: { file: File; source?: string }) => createSession(file, source),
+    onSuccess: (session) => {
+      if (session.duplicateOf && session.duplicateOf.length > 0) {
+        toast.warning(
+          `This file has been uploaded before (${session.duplicateOf.length} earlier session(s)). Analysing it again is fine.`,
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(`${session.fileName} uploaded.`);
+      }
+      return invalidate();
+    },
   });
 }
 
-/** Refuses when decisions would be discarded, unless force says to run it anyway. */
-export async function analyzeSession(sessionId: number, force = false): Promise<Session> {
-  return trailImportAnalyze(sessionId, { force });
+// keep-comment: the API refuses to discard decided proposals unless forced, and says how many
+function isDiscardRefusal(error: unknown): error is Error {
+  return error instanceof Error && error.message.includes("discard");
 }
 
-/** What applying the session would write, without writing any of it. */
-export async function getDiff(sessionId: number): Promise<Diff> {
-  return trailImportGetDiff(sessionId);
+interface AnalyzeVariables {
+  sessionId: number;
+  confirmDiscard: (message: string) => boolean;
+}
+
+export function useAnalyzeSession() {
+  const invalidate = useInvalidateSession();
+
+  return useMutation({
+    mutationFn: async ({ sessionId, confirmDiscard }: AnalyzeVariables) => {
+      try {
+        return await trailImportAnalyze(sessionId, { force: false });
+      } catch (error) {
+        if (!isDiscardRefusal(error)) throw error;
+        if (!confirmDiscard(error.message)) return null;
+        return trailImportAnalyze(sessionId, { force: true });
+      }
+    },
+    onSuccess: (session, { sessionId }) => {
+      if (session) toast.success("Analysis queued. This page updates itself while it runs.");
+      return invalidate(sessionId);
+    },
+  });
+}
+
+export function useDeleteSession() {
+  const invalidate = useInvalidateSession();
+
+  return useMutation({
+    mutationFn: (sessionId: number) => trailImportDeleteSession(sessionId),
+    onSuccess: () => invalidate(),
+    meta: { successMessage: "Session deleted." },
+  });
+}
+
+export function useDecideProposal(sessionId: number, proposalId: number) {
+  const invalidate = useInvalidateSession();
+
+  return useMutation({
+    mutationFn: (request: DecideProposalRequest) => trailImportDecide(sessionId, proposalId, request),
+    // keep-comment: not awaited, so the caller steps to the next row before the decided one leaves the list
+    onSuccess: () => {
+      void invalidate(sessionId);
+    },
+  });
+}
+
+export function useDecideBulk(sessionId: number) {
+  const invalidate = useInvalidateSession();
+
+  return useMutation({
+    mutationFn: ({ proposalIds, decision }: { proposalIds: number[]; decision: Decision }) =>
+      trailImportDecideBulk(sessionId, { proposalIds, decision }),
+    onSuccess: ({ decided }, { decision }) => {
+      toast.success(`${decided} proposal(s) set to ${decision}.`);
+      return invalidate(sessionId);
+    },
+  });
 }
 
 /** The destructive one: writes the decisions to Trails and their source links. */
-export async function applySession(sessionId: number): Promise<ApplyResult> {
-  return trailImportApply(sessionId);
+export function useApplySession(sessionId: number) {
+  const invalidate = useInvalidateSession();
+
+  return useMutation({
+    mutationFn: () => trailImportApply(sessionId),
+    onSuccess: (result) => {
+      toast.success(
+        `Applied: ${result.trailsCreated} created, ${result.trailsUpdated} updated, ${result.linksWritten} links written.`,
+      );
+      return invalidate(sessionId);
+    },
+    meta: { errorMessage: "The session could not be applied." },
+  });
 }
-
-export async function getSessions(): Promise<Session[]> {
-  return trailImportGetSessions();
-}
-
-export async function getSession(sessionId: number): Promise<Session> {
-  return trailImportGetSession(sessionId);
-}
-
-export async function deleteSession(sessionId: number): Promise<void> {
-  await trailImportDeleteSession(sessionId);
-}
-
-export async function getProposals(
-  sessionId: number,
-  params: { confidence?: Confidence; decision?: Decision; page?: number; pageSize?: number },
-): Promise<PagedResultOfTrailImportProposalResponse> {
-  return trailImportGetProposals(sessionId, params);
-}
-
-export async function getPreview(sessionId: number, proposalId: number): Promise<Preview> {
-  return trailImportGetPreview(sessionId, proposalId);
-}
-
-export async function decideProposal(
-  sessionId: number,
-  proposalId: number,
-  request: DecideProposalRequest,
-): Promise<void> {
-  await trailImportDecide(sessionId, proposalId, request);
-}
-
-export async function decideBulk(sessionId: number, request: DecideProposalsBulkRequest): Promise<number> {
-  const result = await trailImportDecideBulk(sessionId, request);
-
-  return result.decided;
-}
-
-export const sessionsQueryOptions = () => getTrailImportGetSessionsSuspenseQueryOptions();

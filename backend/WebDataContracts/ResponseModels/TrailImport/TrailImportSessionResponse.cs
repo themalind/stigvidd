@@ -12,19 +12,19 @@ public class TrailImportSessionResponse
     public required string Source { get; set; }
     public required string FileName { get; set; }
     public required string FileHash { get; set; }
-    public long FileSizeBytes { get; set; }
+    public required long FileSizeBytes { get; set; }
     public required string Status { get; set; }
-    public string? UploadedBy { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? AnalyzedAt { get; set; }
-    public DateTime? AppliedAt { get; set; }
-    public int FeatureCount { get; set; }
-    public string? ErrorMessage { get; set; }
-    public TrailImportCountsResponse? Counts { get; set; }
+    public required string? UploadedBy { get; set; }
+    public required DateTime CreatedAt { get; set; }
+    public required DateTime? AnalyzedAt { get; set; }
+    public required DateTime? AppliedAt { get; set; }
+    public required int FeatureCount { get; set; }
+    public required string? ErrorMessage { get; set; }
+    public required TrailImportCountsResponse? Counts { get; set; }
 
     // What applying wrote, for a session that has been applied. Null for every other
     // status, so a session in review cannot be mistaken for one that is done.
-    public TrailImportApplyResponse? Applied { get; set; }
+    public required TrailImportApplyResponse? Applied { get; set; }
 
     // Earlier sessions built from a byte-identical file. Empty is the normal case.
     public IReadOnlyCollection<string>? DuplicateOf { get; set; }

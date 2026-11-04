@@ -2,16 +2,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { Decision, Preview, Proposal } from "@/features/trail-import/api/trail-import";
-import type { TrailShortInfoResponse } from "@/types/types";
+import type { DecideProposalRequest } from "@/api/generated/model";
+import type { Preview, Proposal } from "@/features/trail-import/api/trail-import";
+import { preview, proposal } from "@/testing/fixtures/trail-import";
+import { renderWithProviders } from "@/testing/render";
+import type { RelinkTarget } from "./relink-picker";
 
-const api = vi.hoisted(() => ({
-  decideProposal: vi.fn(),
-  getPreview: vi.fn(),
+const api = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
+});
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: api.mock.customFetch,
 }));
-vi.mock("@/features/trail-import/api/trail-import", () => api);
 
 const toasted = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasted }));
@@ -22,83 +28,49 @@ vi.mock("./proposal-map", () => ({
 
 import { ProposalDetail } from "./proposal-detail";
 
-const proposal = (over: Partial<Proposal> = {}): Proposal => ({
-  id: 7,
-  externalId: "102",
-  featureName: "Knalleleden etapp 2",
-  confidence: "High",
-  coverageForward: 0.94,
-  coverageBackward: 0.91,
-  hausdorffMeters: 22,
-  matchReason: "Runs along Knalleleden for 94% of its length",
-  decision: "Pending",
-  decidedRole: "Segment",
-  suggestedTrailId: 3,
-  suggestedTrailName: "Knalleleden",
-  ...over,
-});
+const PROPOSAL = "/api/v1/admin/trail-import/sessions/11/proposals/7";
 
-const preview = (over: Partial<Preview> = {}): Preview => ({
-  proposalId: 7,
-  featureName: "Knalleleden etapp 2",
-  confidence: "High",
-  featureCoordinates: [
-    [13, 57.7],
-    [13.1, 57.7],
-  ],
-  featureLengthKm: 6.2,
-  sourceStatedLengthKm: 6,
-  sourceLengthDisagrees: false,
-  trailCoordinates: [
-    [13, 57.7],
-    [13.1, 57.7],
-  ],
-  trailId: 3,
-  trailName: "Knalleleden",
-  trailCuratedLengthKm: 42,
-  trailMeasuredLengthKm: 42.1,
-  trailIsNearestOnly: false,
-  sharingTheTrail: [],
-  ...over,
-});
+const server = {
+  getPreview: vi.fn<() => Preview>(),
+  decideProposal: vi.fn<(body: DecideProposalRequest) => void>(),
+};
 
-const trails = [
+const trails: RelinkTarget[] = [
   { identifier: "t-1", name: "Sjuhäradsrundan", trailLength: 59 },
   { identifier: "t-2", name: "Knalleleden", trailLength: 42 },
-] as TrailShortInfoResponse[];
+];
 
 const onDecided = vi.fn();
-const onShortcutHandled = vi.fn();
 
 function show(
   over: {
     proposal?: Partial<Proposal>;
     preview?: Partial<Preview>;
     readOnly?: boolean;
-    pendingShortcut?: Decision | null;
   } = {},
 ) {
-  api.getPreview.mockResolvedValue(preview(over.preview));
+  server.getPreview.mockReturnValue(preview(over.preview));
 
-  return render(
+  return renderWithProviders(
     <ProposalDetail
       sessionId={11}
       proposal={proposal(over.proposal)}
       trails={trails}
       onDecided={onDecided}
       readOnly={over.readOnly}
-      pendingShortcut={over.pendingShortcut ?? null}
-      onShortcutHandled={onShortcutHandled}
     />,
   );
 }
 
 const drawn = () => screen.findByTestId("proposal-map");
 const button = (name: RegExp | string) => screen.getByRole("button", { name });
-const saved = () => api.decideProposal.mock.calls[0][2];
+const saved = () => server.decideProposal.mock.calls[0][0];
 
 beforeEach(() => {
-  api.decideProposal.mockResolvedValue(undefined);
+  vi.clearAllMocks();
+  api.mock.reset();
+  api.mock.on("GET", `${PROPOSAL}/preview`, () => server.getPreview());
+  api.mock.on("POST", `${PROPOSAL}/decide`, (body) => server.decideProposal(body as DecideProposalRequest));
 });
 
 describe("the link to the source's own page", () => {
@@ -168,10 +140,9 @@ describe("Accept", () => {
 
     await userEvent.click(button(/^Accept$/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalledOnce());
-    expect(api.decideProposal.mock.calls[0].slice(0, 2)).toEqual([11, 7]);
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalledOnce());
     expect(saved()).toMatchObject({ decision: "Accept", role: "Segment" });
-    expect(onDecided).toHaveBeenCalled();
+    await waitFor(() => expect(onDecided).toHaveBeenCalled());
   });
 
   // Accepting means "the match the analysis found is right". With nothing suggested there
@@ -184,18 +155,25 @@ describe("Accept", () => {
   });
 
   it("says so rather than deciding when the shortcut is pressed with no suggestion", async () => {
-    show({
-      proposal: { suggestedTrailId: null },
-      pendingShortcut: "Accept",
-    });
+    show({ proposal: { suggestedTrailId: null } });
     await drawn();
 
-    await waitFor(() =>
-      expect(toasted.error).toHaveBeenCalledWith(
-        "Nothing was suggested for this feature. Relink it or create a new trail.",
-      ),
+    await userEvent.keyboard("a");
+
+    expect(toasted.error).toHaveBeenCalledWith(
+      "Nothing was suggested for this feature. Relink it or create a new trail.",
     );
-    expect(api.decideProposal).not.toHaveBeenCalled();
+    expect(server.decideProposal).not.toHaveBeenCalled();
+  });
+
+  it("accepts with the shortcut", async () => {
+    show();
+    await drawn();
+
+    await userEvent.keyboard("a");
+
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalledOnce());
+    expect(saved()).toMatchObject({ decision: "Accept", role: "Segment" });
   });
 
   // Pressing it again would save the same row and step on, which reads as a flinch.
@@ -223,14 +201,12 @@ describe("Accept", () => {
   });
 
   it("does nothing when the shortcut repeats a decision already made", async () => {
-    show({
-      proposal: { decision: "Accept", decidedRole: "Segment" },
-      pendingShortcut: "Accept",
-    });
+    show({ proposal: { decision: "Accept", decidedRole: "Segment" } });
     await drawn();
 
-    await waitFor(() => expect(onShortcutHandled).toHaveBeenCalled());
-    expect(api.decideProposal).not.toHaveBeenCalled();
+    await userEvent.keyboard("a");
+
+    expect(server.decideProposal).not.toHaveBeenCalled();
   });
 });
 
@@ -242,7 +218,7 @@ describe("the note", () => {
     await userEvent.type(screen.getByLabelText("Note"), "Signed on site");
     await userEvent.click(button(/^Accept$/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().note).toBe("Signed on site");
   });
 
@@ -253,7 +229,7 @@ describe("the note", () => {
     await userEvent.type(screen.getByLabelText("Note"), "   ");
     await userEvent.click(button(/^Accept$/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().note).toBeUndefined();
   });
 
@@ -262,6 +238,15 @@ describe("the note", () => {
     await drawn();
 
     expect(screen.getByLabelText("Note")).toHaveValue("Checked against the map");
+  });
+
+  it("takes no shortcut from what is typed into it", async () => {
+    show();
+    await drawn();
+
+    await userEvent.type(screen.getByLabelText("Note"), "axsu");
+
+    expect(server.decideProposal).not.toHaveBeenCalled();
   });
 });
 
@@ -272,7 +257,7 @@ describe("Exclude, Skip and Undo", () => {
 
     await userEvent.click(button(/^Exclude$/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().decision).toBe("Exclude");
     expect(saved().role).toBeUndefined();
   });
@@ -283,9 +268,22 @@ describe("Exclude, Skip and Undo", () => {
 
     await userEvent.click(button(/^Skip$/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved()).toMatchObject({ decision: "Skip" });
     expect(saved().role).toBeUndefined();
+  });
+
+  it.each([
+    ["x", "Exclude"],
+    ["s", "Skip"],
+  ])("decides with the %s shortcut", async (key, decision) => {
+    show();
+    await drawn();
+
+    await userEvent.keyboard(key);
+
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalledOnce());
+    expect(saved().decision).toBe(decision);
   });
 
   it("offers no Undo on a row that was never decided", async () => {
@@ -297,11 +295,12 @@ describe("Exclude, Skip and Undo", () => {
 
   // Undoing a row that was never decided would report a decision that did not happen.
   it("ignores the Undo shortcut on a pending row", async () => {
-    show({ pendingShortcut: "Pending" });
+    show();
     await drawn();
 
-    await waitFor(() => expect(onShortcutHandled).toHaveBeenCalled());
-    expect(api.decideProposal).not.toHaveBeenCalled();
+    await userEvent.keyboard("u");
+
+    expect(server.decideProposal).not.toHaveBeenCalled();
   });
 
   it("clears a decision that was made", async () => {
@@ -310,35 +309,50 @@ describe("Exclude, Skip and Undo", () => {
 
     await userEvent.click(button(/Undo/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
+    expect(saved().decision).toBe("Pending");
+  });
+
+  it("undoes a decision with the shortcut", async () => {
+    show({ proposal: { decision: "Skip" } });
+    await drawn();
+
+    await userEvent.keyboard("u");
+
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalledOnce());
     expect(saved().decision).toBe("Pending");
   });
 
   it("ignores a shortcut that repeats the exclusion already recorded", async () => {
-    show({ proposal: { decision: "Exclude" }, pendingShortcut: "Exclude" });
+    show({ proposal: { decision: "Exclude" } });
     await drawn();
 
-    await waitFor(() => expect(onShortcutHandled).toHaveBeenCalled());
-    expect(api.decideProposal).not.toHaveBeenCalled();
+    await userEvent.keyboard("x");
+
+    expect(server.decideProposal).not.toHaveBeenCalled();
   });
 });
 
 // A keypress must never be the whole of an irreversible decision: these two open a panel.
 describe("the shortcuts that only open a panel", () => {
   it("opens the trail picker for Relink rather than relinking", async () => {
-    show({ pendingShortcut: "Relink" });
+    show();
     await drawn();
 
+    await userEvent.keyboard("r");
+
     expect(await screen.findByLabelText("Link to another trail")).toBeVisible();
-    expect(api.decideProposal).not.toHaveBeenCalled();
+    expect(server.decideProposal).not.toHaveBeenCalled();
   });
 
   it("opens the naming panel for a new trail rather than creating one", async () => {
-    show({ pendingShortcut: "CreateNew" });
+    show();
     await drawn();
 
+    await userEvent.keyboard("n");
+
     expect(await screen.findByLabelText("Name for the new trail")).toBeVisible();
-    expect(api.decideProposal).not.toHaveBeenCalled();
+    expect(server.decideProposal).not.toHaveBeenCalled();
   });
 });
 
@@ -351,7 +365,7 @@ describe("Relink", () => {
     await userEvent.type(screen.getByLabelText("Link to another trail"), "sjuhärad");
     await userEvent.click(button(/Sjuhäradsrundan/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved()).toMatchObject({
       decision: "Relink",
       trailIdentifier: "t-1",
@@ -379,6 +393,18 @@ describe("Relink", () => {
 
     expect(screen.getByText("No trail matches that.")).toBeVisible();
   });
+
+  it("says so when the trail list could not be loaded", async () => {
+    server.getPreview.mockReturnValue(preview());
+    renderWithProviders(
+      <ProposalDetail sessionId={11} proposal={proposal()} trails={undefined} onDecided={onDecided} />,
+    );
+    await drawn();
+
+    await userEvent.click(button(/^Relink$/));
+
+    expect(screen.getByText("The trail list is not available.")).toBeVisible();
+  });
 });
 
 describe("a new trail", () => {
@@ -392,6 +418,13 @@ describe("a new trail", () => {
     await drawn();
 
     expect(await openPanel()).toHaveValue("Knalleleden etapp 2");
+  });
+
+  it("starts from the name already decided, when there is one", async () => {
+    show({ proposal: { decidedName: "Knalleleden norr" } });
+    await drawn();
+
+    expect(await openPanel()).toHaveValue("Knalleleden norr");
   });
 
   it("cannot be created without a name", async () => {
@@ -411,7 +444,7 @@ describe("a new trail", () => {
 
     await userEvent.click(button(/Create trail/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved()).toMatchObject({
       decision: "CreateNew",
       name: "Knalleleden etapp 2",
@@ -426,7 +459,7 @@ describe("a new trail", () => {
 
     await userEvent.click(button(/Create trail/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().role).toBeUndefined();
   });
 
@@ -439,7 +472,7 @@ describe("a new trail", () => {
     await userEvent.click(screen.getByRole("radio", { name: /what the source states/ }));
     await userEvent.click(button(/Create trail/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().lengthKm).toBe(9);
   });
 
@@ -460,8 +493,18 @@ describe("a new trail", () => {
     await userEvent.type(name, "  Knalleleden norr  ");
     await userEvent.click(button(/Create trail/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().name).toBe("Knalleleden norr");
+  });
+
+  it("closes once the trail is decided", async () => {
+    show();
+    await drawn();
+    await openPanel();
+
+    await userEvent.click(button(/Create trail/));
+
+    await waitFor(() => expect(screen.queryByLabelText("Name for the new trail")).toBeNull());
   });
 });
 
@@ -493,7 +536,7 @@ describe("features that point at the same trail", () => {
 
     await userEvent.click(button(/Accept as segment/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved()).toMatchObject({ decision: "Accept", role: "Segment" });
   });
 
@@ -507,7 +550,7 @@ describe("features that point at the same trail", () => {
 
     await userEvent.click(button(/Accept as duplicate/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved()).toMatchObject({ decision: "Accept", role: "Duplicate" });
   });
 
@@ -609,7 +652,7 @@ describe("rewriting the trail's length", () => {
 
     await userEvent.click(button(/^Accept$/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().lengthKm).toBeUndefined();
   });
 
@@ -620,7 +663,18 @@ describe("rewriting the trail's length", () => {
     await userEvent.click(screen.getByRole("checkbox"));
     await userEvent.click(button(/^Accept$/));
 
-    await waitFor(() => expect(api.decideProposal).toHaveBeenCalled());
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
+    expect(saved().lengthKm).toBe(30);
+  });
+
+  it("sends the measured length from the shortcut as well as the button", async () => {
+    show({ preview: gap });
+    await drawn();
+
+    await userEvent.click(screen.getByRole("checkbox"));
+    await userEvent.keyboard("a");
+
+    await waitFor(() => expect(server.decideProposal).toHaveBeenCalled());
     expect(saved().lengthKm).toBe(30);
   });
 
@@ -644,34 +698,37 @@ describe("an applied session", () => {
     expect(screen.queryByRole("button", { name: /^Exclude$/ })).toBeNull();
     expect(screen.queryByLabelText("Note")).toBeNull();
   });
+
+  it("takes the shortcuts away too", async () => {
+    show({ readOnly: true });
+    await drawn();
+
+    await userEvent.keyboard("x");
+
+    expect(server.decideProposal).not.toHaveBeenCalled();
+  });
 });
 
 describe("when the preview cannot be loaded", () => {
   it("says so and still offers the decisions", async () => {
-    api.getPreview.mockRejectedValue(new Error("offline"));
+    server.getPreview.mockImplementation(() => {
+      throw new Error("offline");
+    });
 
-    render(
-      <ProposalDetail
-        sessionId={11}
-        proposal={proposal()}
-        trails={trails}
-        onDecided={onDecided}
-        pendingShortcut={null}
-        onShortcutHandled={onShortcutHandled}
-      />,
-    );
+    renderWithProviders(<ProposalDetail sessionId={11} proposal={proposal()} trails={trails} onDecided={onDecided} />);
 
     expect(await screen.findByText("No preview available.")).toBeVisible();
-    expect(toasted.error).toHaveBeenCalledWith("offline");
+    expect(screen.getByText("offline")).toBeVisible();
     expect(button(/^Exclude$/)).toBeEnabled();
   });
 });
 
 describe("when the decision cannot be saved", () => {
   it("reports it and does not tell the page to move on", async () => {
-    api.decideProposal.mockRejectedValue(new Error("Session already applied."));
-
     show();
+    server.decideProposal.mockImplementation(() => {
+      throw new Error("Session already applied.");
+    });
     await drawn();
 
     await userEvent.click(button(/^Accept$/));

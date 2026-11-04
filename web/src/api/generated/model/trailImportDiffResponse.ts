@@ -10,16 +10,16 @@ import type { TrailImportDiffWarningResponse } from "./trailImportDiffWarningRes
 
 export interface TrailImportDiffResponse {
   sessionId: number;
-  canApply?: boolean;
+  canApply: boolean;
   /** @nullable */
-  blockedReason?: string | null;
-  trailsToCreate?: number;
-  trailsToUpdate?: number;
-  trailsLinked?: number;
-  linksToWrite?: number;
-  featuresExcluded?: number;
-  featuresSkipped?: number;
-  featuresPending?: number;
+  blockedReason: string | null;
+  trailsToCreate: number;
+  trailsToUpdate: number;
+  trailsLinked: number;
+  linksToWrite: number;
+  featuresExcluded: number;
+  featuresSkipped: number;
+  featuresPending: number;
   againstStrongMatch: TrailImportDiffWarningResponse[];
   withoutSegment: TrailImportDiffTrailResponse[];
 }

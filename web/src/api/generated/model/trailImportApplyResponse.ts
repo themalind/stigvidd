@@ -11,12 +11,12 @@ export interface TrailImportApplyResponse {
   sessionId: number;
   status: string;
   /** @nullable */
-  appliedAt?: string | null;
-  trailsCreated?: number;
-  trailsUpdated?: number;
-  linksWritten?: number;
-  featuresExcluded?: number;
+  appliedAt: string | null;
+  trailsCreated: number;
+  trailsUpdated: number;
+  linksWritten: number;
+  featuresExcluded: number;
   /** @nullable */
-  trailsLinked?: number | null;
+  trailsLinked: number | null;
   conflicts: TrailImportApplyConflictResponse[];
 }

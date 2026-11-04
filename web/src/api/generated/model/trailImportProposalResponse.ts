@@ -11,34 +11,34 @@ export interface TrailImportProposalResponse {
   externalId: string;
   featureName: string;
   confidence: string;
-  coverageForward?: number;
-  coverageBackward?: number;
+  coverageForward: number;
+  coverageBackward: number;
   /** @nullable */
-  hausdorffMeters?: number | null;
+  hausdorffMeters: number | null;
   /** @nullable */
-  matchReason?: string | null;
+  matchReason: string | null;
   decision: string;
   decidedRole: string;
   /** @nullable */
-  suggestedTrailId?: number | null;
+  suggestedTrailId: number | null;
   /** @nullable */
-  suggestedTrailName?: string | null;
+  suggestedTrailName: string | null;
   /** @nullable */
-  nearestTrailId?: number | null;
+  nearestTrailId: number | null;
   /** @nullable */
-  nearestTrailName?: string | null;
+  nearestTrailName: string | null;
   /** @nullable */
-  decidedTrailId?: number | null;
+  decidedTrailId: number | null;
   /** @nullable */
-  decidedTrailName?: string | null;
+  decidedTrailName: string | null;
   /** @nullable */
-  decidedBy?: string | null;
+  decidedBy: string | null;
   /** @nullable */
-  decidedAt?: string | null;
+  decidedAt: string | null;
   /** @nullable */
-  note?: string | null;
+  note: string | null;
   /** @nullable */
-  decidedName?: string | null;
+  decidedName: string | null;
   /** @nullable */
-  decidedLengthKm?: number | null;
+  decidedLengthKm: number | null;
 }
