@@ -19,6 +19,7 @@ import { ProposalQueue } from "@/features/trail-import/components/proposal-queue
 import { trailsQueryOptions, useInvalidateTrailQueries } from "@/features/trails/api/trail";
 import { FilterRow } from "@/components/filter-row";
 import { paths } from "@/config/paths";
+import { Page } from "@/components/page";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -111,18 +112,16 @@ export default function TrailImportReviewPage() {
   const sessionId = Number(useParams().sessionId);
 
   return (
-    <main>
-      <div className="container mx-auto space-y-4 py-6">
-        <Button asChild variant="ghost" size="sm">
-          <NavLink to={paths.trailImport}>
-            <ArrowLeft />
-            Sessions
-          </NavLink>
-        </Button>
-        <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
-          <Review sessionId={sessionId} />
-        </QueryBoundary>
-      </div>
-    </main>
+    <Page width="full" className="space-y-4 py-6">
+      <Button asChild variant="ghost" size="sm">
+        <NavLink to={paths.trailImport}>
+          <ArrowLeft />
+          Sessions
+        </NavLink>
+      </Button>
+      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
+        <Review sessionId={sessionId} />
+      </QueryBoundary>
+    </Page>
   );
 }
