@@ -18,11 +18,11 @@ decisions that are easy to break.
 | Upload endpoints (trail/facility/symbol) | `backend/StigviddAPI/Controllers/Admin/AdminTrailsController.cs`, `AdminFacilitiesController.cs` |
 | Upload endpoint (review photos)         | `backend/StigviddAPI/Controllers/ReviewsController.cs` (`POST api/v1/reviews`) |
 | Media library + image metadata          | `backend/StigviddAPI/Controllers/Admin/AdminMediaController.cs` |
-| Admin web upload panel                  | `web/src/components/media/media-upload.tsx`, `web/src/pages/media/media-page.tsx` |
-| Admin web upload rules (tested)         | `web/src/lib/media-upload.ts`                           |
-| Admin web staged files across a refresh | `web/src/lib/staged-media.ts`                           |
+| Admin web upload panel                  | `web/src/features/media/components/media-upload.tsx`, `web/src/app/routes/media.tsx` |
+| Admin web upload rules (tested)         | `web/src/features/media/utils/media-upload.ts`                           |
+| Admin web staged files across a refresh | `web/src/features/media/utils/staged-media.ts`                           |
 | Batch reprocess job + dispatcher        | `backend/Core/Services/Media/MediaReprocessService.cs`, `backend/StigviddAPI/BackgroundServices/MediaReprocessDispatcher.cs` |
-| Admin web batch dialog + jobs list      | `web/src/components/media/media-reprocess-dialog.tsx`, `web/src/components/media/media-reprocess-jobs.tsx` |
+| Admin web batch dialog + jobs list      | `web/src/features/media/components/media-reprocess-dialog.tsx`, `web/src/features/media/components/media-reprocess-jobs.tsx` |
 
 ## The pipeline at a glance
 
@@ -64,7 +64,7 @@ bandwidth optimization — the server does the authoritative processing.
 
 Review photos from the app are processed with fixed server-side options
 (`ImageProcessingOptions.StripMetadataOnly` — the app has already resized them); the admin
-dashboard's *Media* page lets the operator choose the options per upload. The panel's decisions live in `web/src/lib/media-upload.ts` so
+dashboard's *Media* page lets the operator choose the options per upload. The panel's decisions live in `web/src/features/media/utils/media-upload.ts` so
 they are tested without a file picker:
 
 - **`buildImageOptions`** turns the resolution / quality / format / crop choices into the
@@ -78,7 +78,7 @@ they are tested without a file picker:
   id alone would list the symbol among the gallery images with a delete button that has
   no endpoint.
 
-**Staged files survive a page refresh** (`web/src/lib/staged-media.ts`): the picked bytes
+**Staged files survive a page refresh** (`web/src/features/media/utils/staged-media.ts`): the picked bytes
 are copied into IndexedDB (`stigvidd-media`) and the chosen target into localStorage. The
 bytes are stored as an owned `Blob`, not the picked `File` — a `File` is only a reference,
 and after a refresh the upload would stall rather than fail. All of it is best-effort: a

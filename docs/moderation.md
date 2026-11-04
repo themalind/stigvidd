@@ -21,8 +21,8 @@ to make that one irreversible step safe.
 | Hide / restore / delete, account deletion | `backend/Core/Repositories/ContentReportRepository.cs` |
 | The report row | `backend/Infrastructure/Data/Entities/ContentReport.cs` |
 | The hidden-content filter | `backend/Infrastructure/Data/StigViddDbContext.cs` (`HasQueryFilter("Moderation", …)`) |
-| Moderation page (web) | `web/src/pages/admin/moderation-page.tsx` |
-| Decide-button rules, strike and accuracy arithmetic (tested) | `web/src/lib/moderation-review.ts`, `web/src/lib/moderation-statistics.ts` |
+| Moderation page (web) | `web/src/app/routes/moderation.tsx` |
+| Decide-button rules, strike and accuracy arithmetic (tested) | `web/src/features/moderation/utils/moderation-review.ts`, `web/src/features/moderation/utils/moderation-statistics.ts` |
 
 ## What can be reported
 
@@ -154,7 +154,7 @@ unlifted row per user, and banning an account that is already banned is a **409*
 the first ban untouched — two moderators acting on the same author from stale pages cannot
 overwrite each other. The rows cascade with the account when it is deleted. **Users →
 Authors** shows the count as **Bans**, lifted ones included. The
-`strikeSeverity` grading in `web/src/lib/moderation-statistics.ts` (one or two is *watch*,
+`strikeSeverity` grading in `web/src/features/moderation/utils/moderation-statistics.ts` (one or two is *watch*,
 three or more is *serious*) is the list that decision is made from.
 
 Banning from the Author card works for a review and an obstacle report alike, and records the

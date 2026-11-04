@@ -12,8 +12,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    globalSetup: ["./src/test/global-setup.ts"],
-    setupFiles: ["./src/test/setup.ts"],
+    globalSetup: ["./src/testing/global-setup.ts"],
+    setupFiles: ["./src/testing/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     exclude: ["src/api/generated/**", "node_modules/**", "dist/**"],
     // import.meta.env for tests comes from here, never from the developer's own

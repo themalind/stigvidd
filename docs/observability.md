@@ -45,7 +45,7 @@ wrong is "we retained precise location data about identifiable users for two yea
   takes public reads but authed writes, `api` requires a Keycloak token, and
   `auth` is Keycloak's own hardened surface. This one is different in kind.
 - **The admin web** posts logs the same way, to `stigvidd_web_logs`, from
-  `web/src/services/telemetry.ts`. Same bulk `_json` endpoint as the app, same
+  `web/src/lib/telemetry.ts`. Same bulk `_json` endpoint as the app, same
   credential shape, and one difference that matters: its token is inlined by Vite
   into a bundle served publicly from the web domain, so extracting it needs a
   single `curl` rather than an APK. `ZO_CORS_ALLOWED_ORIGINS` already permits the

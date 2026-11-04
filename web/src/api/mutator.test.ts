@@ -4,10 +4,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getValidAccessToken = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
-vi.mock("@/services/keycloak-auth", () => ({ getValidAccessToken }));
+vi.mock("@/lib/keycloak-auth", () => ({ getValidAccessToken }));
 
 const logger = vi.hoisted(() => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }));
-vi.mock("@/services/telemetry", () => ({ logger }));
+vi.mock("@/lib/telemetry", () => ({ logger }));
 
 import { ApiError, customFetch } from "./mutator";
 

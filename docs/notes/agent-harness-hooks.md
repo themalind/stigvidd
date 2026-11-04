@@ -156,7 +156,7 @@ Note the last row: outside a heredoc the same backticks are fine, so this is spe
 heredoc path. And note the fourth and fifth: whether it denies depends on what is *inside* the
 backticks, not on the prose around it — which is why it looks so arbitrary from the outside.
 
-This is live. It denied a `cat > web/src/services/telemetry.test.ts <<'EOF' … EOF` whose body
+This is live. It denied a `cat > web/src/lib/telemetry.test.ts <<'EOF' … EOF` whose body
 was a test file with `` `vitest.config.ts` `` in one comment and no `vitest` command anywhere;
 the whole call is rejected, so the file is not written and the first symptom is a missing file
 rather than a message about prose. **Write file content with the Write tool** — that is the

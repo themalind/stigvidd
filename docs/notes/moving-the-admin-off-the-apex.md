@@ -31,7 +31,7 @@ admin's hostname means editing them in the admin console, by hand, on each envir
 Nothing in a diff, a test or a deploy will mention it.
 
 **It is Web Origins, not Redirect URIs.** The admin does not use a redirect flow at all:
-`web/src/services/keycloak-auth.ts` logs in with the **Direct Access Grant** — a `fetch`
+`web/src/lib/keycloak-auth.ts` logs in with the **Direct Access Grant** — a `fetch`
 POST of username and password to `{realm}/protocol/openid-connect/token` — and logs out
 with a POST to the logout endpoint. There is no browser redirect anywhere, so redirect
 URIs are irrelevant to it and changing them fixes nothing.
