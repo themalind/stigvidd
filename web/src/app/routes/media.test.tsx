@@ -72,7 +72,7 @@ let owned: MediaItemResponse[];
 const calls = (method: string, path: string) =>
   api.mock.calls.filter((call) => call.method === method && call.path === path);
 
-const show = () => renderWithProviders(<MediaPage />);
+const show = () => renderWithProviders(<MediaPage />, { initialEntries: ["/media"] });
 
 async function settled() {
   await waitFor(() => expect(calls("GET", FACILITIES)).toHaveLength(1));
@@ -352,8 +352,6 @@ describe("the images already attached", () => {
   });
 
   it("asks before deleting one, then refreshes the image and trail lists", async () => {
-    const confirmed = vi.fn(() => true);
-    vi.stubGlobal("confirm", confirmed);
     show();
     await settled();
     await pick("Trail", /Knalleleden/);
@@ -361,8 +359,9 @@ describe("the images already attached", () => {
     owned = [];
 
     await userEvent.click(deleteButton);
+    expect(images.deleteTrailImage).not.toHaveBeenCalled();
+    await userEvent.click(await screen.findByRole("button", { name: "Delete" }));
 
-    expect(confirmed).toHaveBeenCalled();
     await waitFor(() => expect(images.deleteTrailImage).toHaveBeenCalledWith("m1"));
     expect(await screen.findByText(/No images attached yet/)).toBeInTheDocument();
     await waitFor(() => expect(calls("GET", TRAILS)).toHaveLength(2));
@@ -370,24 +369,25 @@ describe("the images already attached", () => {
   });
 
   it("does nothing when the question is answered no", async () => {
-    vi.stubGlobal("confirm", () => false);
     show();
     await settled();
     await pick("Trail", /Knalleleden/);
 
     await userEvent.click(await screen.findByTitle("Delete image"));
+    await userEvent.click(await screen.findByRole("button", { name: "Cancel" }));
 
+    expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(images.deleteTrailImage).not.toHaveBeenCalled();
   });
 
   it("sends a facility's image to the facility endpoint", async () => {
-    vi.stubGlobal("confirm", () => true);
     show();
     await settled();
     await pick("Attach to", "Facility");
     await pick("Facility", "Vindskydd");
 
     await userEvent.click(await screen.findByTitle("Delete image"));
+    await userEvent.click(await screen.findByRole("button", { name: "Delete" }));
 
     await waitFor(() => expect(images.deleteFacilityImage).toHaveBeenCalledWith("m3"));
     expect(images.deleteTrailImage).not.toHaveBeenCalled();

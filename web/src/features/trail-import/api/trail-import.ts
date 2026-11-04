@@ -124,7 +124,7 @@ function isDiscardRefusal(error: unknown): error is Error {
 
 interface AnalyzeVariables {
   sessionId: number;
-  confirmDiscard: (message: string) => boolean;
+  confirmDiscard: (message: string) => Promise<boolean>;
 }
 
 export function useAnalyzeSession() {
@@ -136,7 +136,7 @@ export function useAnalyzeSession() {
         return await trailImportAnalyze(sessionId, { force: false });
       } catch (error) {
         if (!isDiscardRefusal(error)) throw error;
-        if (!confirmDiscard(error.message)) return null;
+        if (!(await confirmDiscard(error.message))) return null;
         return trailImportAnalyze(sessionId, { force: true });
       }
     },

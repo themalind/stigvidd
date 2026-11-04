@@ -6,6 +6,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { TrailImageResponse } from "@/api/generated/model";
 import { ApiError } from "@/api/mutator";
+import { answerConfirm } from "@/testing/confirm";
 import { trailDetail } from "@/testing/fixtures/trails";
 import { renderWithProviders } from "@/testing/render";
 
@@ -114,29 +115,29 @@ describe("opening the dialog", () => {
 // button sits under the pointer on hover, one click from the image itself.
 describe("deleting an image", () => {
   it("asks first", async () => {
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     await open();
 
     await userEvent.click(deleteButtons()[0]);
 
-    expect(confirm).toHaveBeenCalledWith("Delete this image?");
+    expect(await screen.findByRole("alertdialog", { name: "Delete this image?" })).toBeInTheDocument();
+    expect(api.mock.calls.filter((call) => call.method === "DELETE")).toHaveLength(0);
   });
 
   it("deletes nothing when the answer is no", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
     await open();
 
     await userEvent.click(deleteButtons()[0]);
+    await answerConfirm("no");
 
     expect(api.mock.calls.filter((call) => call.method === "DELETE")).toHaveLength(0);
     expect(deleteButtons()).toHaveLength(2);
   });
 
   it("deletes the image that was clicked, and only that one", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     await open();
 
     await userEvent.click(deleteButtons()[1]);
+    await answerConfirm("yes");
 
     await waitFor(() => expect(deleteButtons()).toHaveLength(1));
     expect(api.mock.calls.filter((call) => call.method === "DELETE").map((call) => call.path)).toEqual([
@@ -146,13 +147,13 @@ describe("deleting an image", () => {
   });
 
   it("keeps the image, and says so, when the server refuses", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     api.mock.on("DELETE", "/api/v1/admin/trails/images/img-1", () => {
       throw new ApiError("Server error", 500);
     });
     await open();
 
     await userEvent.click(deleteButtons()[0]);
+    await answerConfirm("yes");
 
     await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to delete image."));
     expect(deleteButtons()).toHaveLength(2);
@@ -163,14 +164,15 @@ describe("deleting an image", () => {
   });
 
   it("keeps every image that is being deleted locked, not just the last one", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     for (const id of ["img-1", "img-2"]) {
       api.mock.on("DELETE", `/api/v1/admin/trails/images/${id}`, () => new Promise(() => {}));
     }
     await open();
 
     await userEvent.click(deleteButtons()[0]);
+    await answerConfirm("yes");
     await userEvent.click(deleteButtons()[1]);
+    await answerConfirm("yes");
 
     await waitFor(() => expect(deleteButtons()[1]).toBeDisabled());
     expect(deleteButtons()[0]).toBeDisabled();

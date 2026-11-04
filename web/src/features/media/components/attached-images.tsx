@@ -3,6 +3,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
+import { useConfirm } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,8 @@ import { formatBytes } from "@/utils/format";
 import type { MediaItemResponse } from "@/api/generated/model";
 import { ownerMediaQueryOptions, useDeleteImage } from "@/features/media/api/media";
 import { attachedTo, type TargetType } from "@/features/media/utils/media-upload";
+
+const DELETE_IMAGE = { title: "Delete this image?", confirmLabel: "Delete", destructive: true };
 
 interface Props {
   targetType: TargetType;
@@ -23,13 +26,16 @@ export function AttachedImages({ targetType, targetId, onTrailImagesChanged }: P
   const isSymbol = targetType === "trail-symbol";
   const existing = data ? attachedTo(data, targetId, targetType) : undefined;
 
-  function handleDelete(item: MediaItemResponse) {
-    if (!confirm("Delete this image?")) return;
+  const [confirm, confirmDialog] = useConfirm();
+
+  async function handleDelete(item: MediaItemResponse) {
+    if (!(await confirm(DELETE_IMAGE))) return;
     deleteImage.mutate(item);
   }
 
   return (
     <div className="space-y-2">
+      {confirmDialog}
       <Label>
         {isSymbol ? "Current symbol" : "Existing images"}
         {existing && existing.length > 0 && (

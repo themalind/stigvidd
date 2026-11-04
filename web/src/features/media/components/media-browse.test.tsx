@@ -6,6 +6,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { MediaItemResponse, MediaLibraryPageResponse } from "@/api/generated/model";
 import { libraryPage, mediaItem, reprocessJob } from "@/testing/fixtures/media";
+import { answerConfirm } from "@/testing/confirm";
 import { renderWithProviders } from "@/testing/render";
 
 const api = await vi.hoisted(async () => {
@@ -42,7 +43,9 @@ const posted = () => api.mock.calls.find((call) => call.method === "POST" && cal
 const onBatchStarted = vi.fn();
 const onTrailImagesChanged = vi.fn();
 const show = () =>
-  renderWithProviders(<MediaBrowse onTrailImagesChanged={onTrailImagesChanged} onBatchStarted={onBatchStarted} />);
+  renderWithProviders(<MediaBrowse onTrailImagesChanged={onTrailImagesChanged} onBatchStarted={onBatchStarted} />, {
+    initialEntries: ["/media?tab=browse"],
+  });
 
 const loaded = (owner = "trail-1") => screen.findByText(`Owner ${owner}`);
 const optimize = () => screen.getByRole("button", { name: /^optimize/i });
@@ -254,7 +257,6 @@ describe("sorting", () => {
 
 describe("deleting an image", () => {
   it("re-reads the library so the totals and the size do not drift", async () => {
-    vi.stubGlobal("confirm", () => true);
     let library = libraryPage([item("trail-1", "Trail"), item("trail-2", "Trail")]);
     respond = () => library;
     api.mock.on("DELETE", "/api/v1/admin/trails/images/trail-1", () => {
@@ -266,6 +268,7 @@ describe("deleting an image", () => {
     expect(screen.getByText(/of 2/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: `Delete ${named("trail-1")}` }));
+    expect(await answerConfirm("yes")).toContain("This cannot be undone.");
 
     expect(await screen.findByText(/of 1/)).toBeInTheDocument();
     expect(onTrailImagesChanged).toHaveBeenCalled();
@@ -273,23 +276,23 @@ describe("deleting an image", () => {
   });
 
   it("sends a facility's image to the facility endpoint, which leaves the trails alone", async () => {
-    vi.stubGlobal("confirm", () => true);
     api.mock.on("DELETE", "/api/v1/admin/facilities/images/facility-1", () => undefined);
     show();
     await loaded();
 
     await userEvent.click(screen.getByRole("button", { name: `Delete ${named("facility-1")}` }));
+    await answerConfirm("yes");
 
     await waitFor(() => expect(toasts.success).toHaveBeenCalledWith("Image deleted."));
     expect(onTrailImagesChanged).not.toHaveBeenCalled();
   });
 
   it("does nothing when the question is answered no", async () => {
-    vi.stubGlobal("confirm", () => false);
     show();
     await loaded();
 
     await userEvent.click(screen.getByRole("button", { name: `Delete ${named("trail-1")}` }));
+    await answerConfirm("no");
 
     expect(api.mock.calls.some((call) => call.method === "DELETE")).toBe(false);
   });

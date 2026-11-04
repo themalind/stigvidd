@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { QueryBoundary } from "@/components/query-boundary";
+import { useSearchState } from "@/hooks/use-search-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { facilitiesQueryOptions } from "@/features/facilities/api/facility";
 import MediaBrowse from "@/features/media/components/media-browse";
@@ -24,8 +24,12 @@ function UploadTab({ onTrailImagesChanged }: { onTrailImagesChanged: () => void 
   );
 }
 
+const TAB = { tab: "upload" };
+
 export default function MediaPage() {
-  const [tab, setTab] = useState("upload");
+  const { values, page, update } = useSearchState(TAB);
+  const { tab } = values;
+  const setTab = (next: string) => update({ tab: next, page });
   const invalidateTrails = useInvalidateTrailQueries();
   const onTrailImagesChanged = () => void invalidateTrails();
 

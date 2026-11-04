@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { startTransition, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router";
+import { useSearchState } from "@/hooks/use-search-state";
 import { FilterRow } from "@/components/filter-row";
 import { Page } from "@/components/page";
 import { QueryBoundary } from "@/components/query-boundary";
@@ -15,28 +15,15 @@ import { OutboxTable } from "@/features/mail/components/outbox-table";
 import { PurgeOutboxSheet } from "@/features/mail/components/purge-outbox-sheet";
 import { OUTBOX_STATUS_FILTERS } from "@/features/mail/utils/mail-outbox";
 
-function useOutboxFilters() {
-  const [params, setParams] = useSearchParams();
-  const filters: OutboxFilters = {
-    status: params.get("status") ?? undefined,
-    recipient: params.get("recipient") ?? undefined,
-    page: Math.max(1, Number(params.get("page")) || 1),
-  };
+const FILTER_DEFAULTS = { status: "", recipient: "" };
 
-  // keep-comment: a filter change drops the page, or page 4 of a narrower result would be empty
-  function update(changes: Partial<Record<keyof OutboxFilters, string | undefined>>) {
-    startTransition(() =>
-      setParams((current) => {
-        const next = new URLSearchParams(current);
-        if (!("page" in changes)) next.delete("page");
-        for (const [key, value] of Object.entries(changes)) {
-          if (value) next.set(key, value);
-          else next.delete(key);
-        }
-        return next;
-      }),
-    );
-  }
+function useOutboxFilters() {
+  const { values, page, update } = useSearchState(FILTER_DEFAULTS);
+  const filters: OutboxFilters = {
+    status: values.status || undefined,
+    recipient: values.recipient || undefined,
+    page,
+  };
 
   return { filters, update };
 }
@@ -113,7 +100,7 @@ export default function MailOutboxPage() {
       </div>
 
       <QueryBoundary>
-        <OutboxTable filters={filters} onPageChange={(page) => update({ page: String(page) })} onOpen={setOpenMail} />
+        <OutboxTable filters={filters} onPageChange={(page) => update({ page })} onOpen={setOpenMail} />
       </QueryBoundary>
 
       <OutboxMailSheet identifier={openMail} onClose={() => setOpenMail(null)} />

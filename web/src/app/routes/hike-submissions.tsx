@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { startTransition } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
-import { Link, useSearchParams } from "react-router";
+import { Link } from "react-router";
+import { useSearchState } from "@/hooks/use-search-state";
 import { Page, PageHeader } from "@/components/page";
 import { paths } from "@/config/paths";
 import { QueryBoundary } from "@/components/query-boundary";
@@ -17,18 +17,17 @@ import { submissionsQueryOptions, type SubmissionStatus } from "@/features/hike-
 import { DEFAULT_JUMP_METRES } from "@/utils/geometry-edit";
 
 const STATUSES: SubmissionStatus[] = ["Pending", "Approved", "Rejected"];
+const STATUS_DEFAULT = { status: "Pending" };
 
 function isStatus(value: string | null): value is SubmissionStatus {
   return STATUSES.some((status) => status === value);
 }
 
 export default function HikeSubmissionsPage() {
-  const [params, setParams] = useSearchParams();
-  const requested = params.get("status");
-  const status = isStatus(requested) ? requested : "Pending";
+  const { values, update } = useSearchState(STATUS_DEFAULT);
+  const status = isStatus(values.status) ? values.status : "Pending";
 
-  const show = (which: SubmissionStatus) =>
-    startTransition(() => setParams(which === "Pending" ? {} : { status: which }));
+  const show = (which: SubmissionStatus) => update({ status: which });
 
   return (
     <Page width="wide">

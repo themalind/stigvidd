@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Pager } from "@/components/pager";
 import {
   PROPOSALS_PAGE_SIZE,
   proposalsQueryOptions,
@@ -101,31 +101,13 @@ export function ProposalQueue({
           ))}
         </div>
 
-        <div className="flex items-center justify-between pt-1 text-xs text-muted-foreground">
-          <span>
-            {data.totalCount === 0 ? "0" : `${first}–${first + proposals.length - 1}`} of {data.totalCount}
-          </span>
-          <span className="flex gap-1">
-            <Button
-              size="sm"
-              variant="ghost"
-              aria-label="Previous page"
-              disabled={page === 1}
-              onClick={() => onPageChange(page - 1)}
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              aria-label="Next page"
-              disabled={!data.hasMore}
-              onClick={() => onPageChange(page + 1)}
-            >
-              <ChevronRight />
-            </Button>
-          </span>
-        </div>
+        <Pager
+          className="pt-1"
+          page={page}
+          hasMore={data.hasMore}
+          onChange={onPageChange}
+          summary={`${data.totalCount === 0 ? "0" : `${first}–${first + proposals.length - 1}`} of ${data.totalCount}`}
+        />
 
         {!applied && (
           <p className="pt-2 text-xs text-muted-foreground">

@@ -6,6 +6,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Session } from "@/features/trail-import/api/trail-import";
 import { pollWhileAnalysing } from "@/features/trail-import/api/trail-import";
+import { answerConfirm } from "@/testing/confirm";
 import { session } from "@/testing/fixtures/trail-import";
 import { renderWithProviders } from "@/testing/render";
 
@@ -179,7 +180,6 @@ describe("analysing", () => {
   });
 
   it("asks before discarding decisions, and forces it on a yes", async () => {
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     api.mock.on("POST", ANALYZE, () => {
       if (calls("POST", ANALYZE).length === 1) throw new Error(REFUSAL);
       return session({ status: "Analyzing" });
@@ -187,30 +187,29 @@ describe("analysing", () => {
     renderPage([session()]);
 
     await userEvent.click(await analyseButton());
+    expect(await answerConfirm("yes")).toContain(REFUSAL);
 
     await waitFor(() => expect(calls("POST", ANALYZE)).toHaveLength(2));
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining(REFUSAL));
     expect(calls("POST", ANALYZE)[1].url).toContain("force=true");
     expect(toasts.error).not.toHaveBeenCalled();
   });
 
   it("leaves the decisions alone on a no, without calling it an error", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
     api.mock.on("POST", ANALYZE, () => {
       throw new Error(REFUSAL);
     });
     renderPage([session()]);
 
     await userEvent.click(await analyseButton());
+    await answerConfirm("no");
 
-    await waitFor(() => expect(window.confirm).toHaveBeenCalled());
+    await waitFor(async () => expect(await analyseButton()).toBeEnabled());
     expect(calls("POST", ANALYZE)).toHaveLength(1);
     expect(toasts.error).not.toHaveBeenCalled();
     expect(toasts.success).not.toHaveBeenCalled();
   });
 
   it("says why when the analysis could not be queued", async () => {
-    const confirm = vi.spyOn(window, "confirm");
     api.mock.on("POST", ANALYZE, () => {
       throw new Error("The file is gone.");
     });
@@ -219,7 +218,7 @@ describe("analysing", () => {
     await userEvent.click(await analyseButton());
 
     await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("The file is gone."));
-    expect(confirm).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
   it.each(["Analyzing", "Applying", "Applied"])("is not offered while the session is %s", async (status) => {
@@ -239,20 +238,19 @@ describe("analysing", () => {
 
 describe("deleting", () => {
   it("does nothing until the moderator confirms", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(false);
     renderPage([session()]);
 
     await userEvent.click(within(await card()).getByRole("button", { name: /Delete/ }));
 
-    expect(window.confirm).toHaveBeenCalledWith("Delete boras-2026.geojson and everything proposed from it?");
+    expect(await answerConfirm("no")).toContain("Delete boras-2026.geojson?");
     expect(calls("DELETE", SESSION)).toHaveLength(0);
   });
 
   it("deletes on a yes and drops it from the list", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
     renderPage([session()]);
 
     await userEvent.click(within(await card()).getByRole("button", { name: /Delete/ }));
+    await answerConfirm("yes");
 
     await waitFor(() => expect(calls("DELETE", SESSION)).toHaveLength(1));
     expect(toasts.success).toHaveBeenCalledWith("Session deleted.");
