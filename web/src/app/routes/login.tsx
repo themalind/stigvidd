@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { DarkModeToggle } from "@/app/layout/dark-mode-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { LoginCard } from "@/features/auth/components/login-card";
 import { Badge } from "@/components/ui/badge";
 import { isStaging } from "@/config/environment";
@@ -25,7 +25,7 @@ export default function LoginPage() {
   return (
     <main className="flex flex-col h-full bg-background">
       <div className="flex justify-end">
-        <DarkModeToggle />
+        <ThemeToggle />
       </div>
       <div className="flex flex-1 flex-col justify-center items-center">
         <div className="flex items-center pr-5 pb-10">
