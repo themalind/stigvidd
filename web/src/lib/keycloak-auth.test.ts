@@ -336,6 +336,25 @@ describe("keycloak-auth", () => {
     });
   });
 
+  describe("hasSession", () => {
+    it("is false while only a stored refresh token exists, as on a cold start", async () => {
+      localStorage.setItem(REFRESH_TOKEN_KEY, "refresh-0");
+      const { hasSession } = await loadAuth();
+
+      expect(hasSession()).toBe(false);
+    });
+
+    it("is true once a grant has landed, and false again after sign-out", async () => {
+      const { hasSession, passwordGrant, clearTokens } = await loadAuth();
+
+      await passwordGrant("admin@example.test", "hunter2");
+      expect(hasSession()).toBe(true);
+
+      clearTokens();
+      expect(hasSession()).toBe(false);
+    });
+  });
+
   describe("restoreSession", () => {
     it("returns null and asks Keycloak nothing when no token is stored", async () => {
       const { restoreSession } = await loadAuth();
