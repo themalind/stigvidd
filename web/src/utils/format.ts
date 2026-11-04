@@ -15,3 +15,8 @@ export function formatBytes(bytes: number | null | undefined): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+// keep-comment: a deleted account has no nickname left, and an empty cell reads as a rendering fault
+export function displayName(nickName: string | null | undefined): string {
+  return nickName?.trim() ? nickName : "Account deleted";
+}

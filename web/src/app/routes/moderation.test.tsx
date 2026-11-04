@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router";
 import type { ReportDetail, ReportSummary } from "@/features/moderation/api/content-reports";
+import { renderWithProviders } from "@/testing/render";
 import ModerationPage from "./moderation";
 
 // The page's own imports, stubbed at the module boundary.
@@ -20,8 +20,17 @@ vi.mock("@/features/moderation/api/content-reports", () => api);
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasts }));
 
-const users = vi.hoisted(() => ({ banUser: vi.fn(), unbanUser: vi.fn() }));
-vi.mock("@/features/users/api/users", () => users);
+const net = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
+});
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: net.mock.customFetch,
+}));
+
+const BAN = "/api/v1/admin/users/author-1/ban";
+const banCalls = (method: string) => net.mock.calls.filter((call) => call.method === method && call.path === BAN);
 
 function summary(overrides: Partial<ReportSummary> = {}): ReportSummary {
   return {
@@ -67,15 +76,14 @@ function renderPage(rows: ReportSummary[], reportDetail?: ReportDetail) {
   });
   api.getReport.mockResolvedValue(reportDetail ?? detail(rows[0] ?? summary()));
 
-  render(
-    <MemoryRouter>
-      <ModerationPage />
-    </MemoryRouter>,
-  );
+  renderWithProviders(<ModerationPage />, { initialEntries: ["/moderation"] });
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
+  net.mock.reset();
+  net.mock.on("POST", BAN, () => undefined);
+  net.mock.on("DELETE", BAN, () => undefined);
   api.decideReport.mockResolvedValue(detail(summary({ status: "Upheld" })));
 });
 
@@ -204,19 +212,21 @@ it("explains an empty queue in terms of the filters that narrowed it", async () 
 // can ban the author of either without leaving the item they are looking at.
 it("bans the author of whatever is open, only after the moderator confirms", async () => {
   const user = userEvent.setup();
-  users.banUser.mockResolvedValue(undefined);
   renderPage([summary({ contentType: "TrailObstacle" })]);
 
   await user.click(await screen.findByTestId("ban-author"));
-  expect(users.banUser).not.toHaveBeenCalled();
+  expect(banCalls("POST")).toHaveLength(0);
   await user.click(screen.getByTestId("confirm-ban"));
 
-  await waitFor(() => expect(users.banUser).toHaveBeenCalledWith("author-1", expect.stringContaining("report-1")));
+  await waitFor(() =>
+    expect(banCalls("POST")).toEqual([
+      expect.objectContaining({ body: { reason: expect.stringContaining("report-1") } }),
+    ]),
+  );
 });
 
 it("offers to lift the ban straight after banning, without reselecting the report", async () => {
   const user = userEvent.setup();
-  users.banUser.mockResolvedValue(undefined);
   renderPage([summary()]);
 
   const banButton = await screen.findByTestId("ban-author");
@@ -240,7 +250,6 @@ it("offers no ban once the author is gone", async () => {
 // The card reads BannedAt back and offers Unban instead.
 it("offers to lift the ban on an author who is already banned", async () => {
   const user = userEvent.setup();
-  users.unbanUser.mockResolvedValue(undefined);
   renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
 
   expect(await screen.findByTestId("author-banned-since")).toHaveTextContent("Banned");
@@ -248,12 +257,14 @@ it("offers to lift the ban on an author who is already banned", async () => {
 
   await user.click(screen.getByTestId("unban-author"));
 
-  await waitFor(() => expect(users.unbanUser).toHaveBeenCalledWith("author-1"));
+  await waitFor(() => expect(banCalls("DELETE")).toHaveLength(1));
 });
 
 it("says why when the bar cannot be lifted", async () => {
   const user = userEvent.setup();
-  users.unbanUser.mockRejectedValue(new Error("the server said no"));
+  net.mock.on("DELETE", BAN, () => {
+    throw new Error("the server said no");
+  });
   renderPage([summary({ authorBannedAt: "2026-03-04T10:00:00Z" })]);
 
   await user.click(await screen.findByTestId("unban-author"));
@@ -263,7 +274,9 @@ it("says why when the bar cannot be lifted", async () => {
 
 it("says why when the ban fails, and leaves the queue alone", async () => {
   const user = userEvent.setup();
-  users.banUser.mockRejectedValue(new Error("the server said no"));
+  net.mock.on("POST", BAN, () => {
+    throw new Error("the server said no");
+  });
   renderPage([summary()]);
 
   await user.click(await screen.findByTestId("ban-author"));

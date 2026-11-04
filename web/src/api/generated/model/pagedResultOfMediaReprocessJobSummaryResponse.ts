@@ -8,8 +8,8 @@
 import type { MediaReprocessJobSummaryResponse } from "./mediaReprocessJobSummaryResponse";
 
 export interface PagedResultOfMediaReprocessJobSummaryResponse {
-  items?: MediaReprocessJobSummaryResponse[];
-  page?: number;
-  hasMore?: boolean;
-  totalCount?: number;
+  items: MediaReprocessJobSummaryResponse[];
+  page: number;
+  hasMore: boolean;
+  totalCount: number;
 }

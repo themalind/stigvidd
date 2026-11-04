@@ -7,14 +7,14 @@ namespace WebDataContracts.ResponseModels.ContentReport;
 public class AuthorStatisticResponse
 {
     // Null once the account is deleted, which is also when there is nothing left to ban.
-    public string? Identifier { get; set; }
-    public string? NickName { get; set; }
-    public int Strikes { get; set; }
+    public required string? Identifier { get; set; }
+    public required string? NickName { get; set; }
+    public required int Strikes { get; set; }
 
     // Null while the account can still write; the row offers Ban or Lift ban on it.
-    public DateTime? BannedAt { get; set; }
+    public required DateTime? BannedAt { get; set; }
 
-    public int BanCount { get; set; }
+    public required int BanCount { get; set; }
 
     public static AuthorStatisticResponse Create(string? identifier, string? nickName, int strikes, DateTime? bannedAt, int banCount)
     {

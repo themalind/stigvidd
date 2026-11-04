@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import { formatBytes } from "./format";
+import { displayName, formatBytes } from "./format";
 
 describe("formatBytes", () => {
   it("switches unit at each threshold", () => {
@@ -20,5 +20,15 @@ describe("formatBytes", () => {
 
   it("stays just under the megabyte in kilobytes", () => {
     expect(formatBytes(1024 * 1024 - 1)).toBe("1024 KB");
+  });
+});
+
+describe("displayName", () => {
+  it("uses the nickname when there is one", () => {
+    expect(displayName("SkogsGreven")).toBe("SkogsGreven");
+  });
+
+  it.each([null, undefined, "", "   "])("says the account is gone for %p", (value) => {
+    expect(displayName(value)).toBe("Account deleted");
   });
 });

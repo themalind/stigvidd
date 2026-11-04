@@ -8,11 +8,11 @@
 
 export interface ReporterStatisticResponse {
   /** @nullable */
-  nickName?: string | null;
-  total?: number;
-  pending?: number;
-  dismissed?: number;
-  upheld?: number;
-  lastReportedAt?: string;
-  reportsAreWithheld?: boolean;
+  nickName: string | null;
+  total: number;
+  pending: number;
+  dismissed: number;
+  upheld: number;
+  lastReportedAt: string;
+  reportsAreWithheld: boolean;
 }
