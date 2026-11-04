@@ -64,6 +64,8 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 - Web structure (bulletproof-react, lint-enforced): server data only via React Query in `features/<x>/api/`
   (query options from orval's `get…QueryOptions`/`get…QueryKey`, never hand-made keys; mutations toast through
   `meta`). A feature never imports another feature or `app/`; compose two features in `app/routes/`.
+  A new page is one row in `app/pages.ts` (route, title, sidebar); links via `config/paths.ts`. Reuse before
+  writing: `useSearchState` (URL filters), `Pager`, `useConfirm`, `ToneBadge`, `useMapLibre`, `underUrl` (invalidation).
 - A test that has never failed is not evidence (skill `prove-it-bites`).
 
 ## Cross-cutting
