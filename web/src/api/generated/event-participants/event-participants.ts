@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -75,78 +78,48 @@ export const eventParticipantsJoinEvent = async (identifier: string, options?: R
 
 
 
-export const getEventParticipantsJoinEventQueryKey = (identifier: string,) => {
-    return [
-    'POST', `/api/v1/events/${identifier}/join`
-    ] as const;
+export const getEventParticipantsJoinEventMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['eventParticipantsJoinEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  eventParticipantsJoinEvent(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventParticipantsJoinEventMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>>
+
+    export type EventParticipantsJoinEventMutationError = unknown
+
+    export const useEventParticipantsJoinEvent = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventParticipantsJoinEvent>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getEventParticipantsJoinEventMutationOptions(options), queryClient);
     }
-
-
-export const getEventParticipantsJoinEventQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsJoinEventQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>> = ({ signal }) => eventParticipantsJoinEvent(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventParticipantsJoinEventQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>>
-export type EventParticipantsJoinEventQueryError = unknown
-
-
-export function useEventParticipantsJoinEvent<TData = Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsJoinEvent>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsJoinEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsJoinEvent<TData = Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsJoinEvent>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsJoinEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsJoinEvent<TData = Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventParticipantsJoinEvent<TData = Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsJoinEvent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventParticipantsJoinEventQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventParticipantsMarkInterestedUrl = (identifier: string,) => {
+    export const getEventParticipantsMarkInterestedUrl = (identifier: string,) => {
 
 
 
@@ -169,78 +142,48 @@ export const eventParticipantsMarkInterested = async (identifier: string, option
 
 
 
-export const getEventParticipantsMarkInterestedQueryKey = (identifier: string,) => {
-    return [
-    'POST', `/api/v1/events/${identifier}/interested`
-    ] as const;
+export const getEventParticipantsMarkInterestedMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['eventParticipantsMarkInterested'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  eventParticipantsMarkInterested(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventParticipantsMarkInterestedMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>>
+
+    export type EventParticipantsMarkInterestedMutationError = unknown
+
+    export const useEventParticipantsMarkInterested = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventParticipantsMarkInterested>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getEventParticipantsMarkInterestedMutationOptions(options), queryClient);
     }
-
-
-export const getEventParticipantsMarkInterestedQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsMarkInterestedQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>> = ({ signal }) => eventParticipantsMarkInterested(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventParticipantsMarkInterestedQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>>
-export type EventParticipantsMarkInterestedQueryError = unknown
-
-
-export function useEventParticipantsMarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsMarkInterested>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsMarkInterested>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsMarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsMarkInterested>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsMarkInterested>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsMarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventParticipantsMarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsMarkInterested>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventParticipantsMarkInterestedQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventParticipantsUnmarkInterestedUrl = (identifier: string,) => {
+    export const getEventParticipantsUnmarkInterestedUrl = (identifier: string,) => {
 
 
 
@@ -263,78 +206,48 @@ export const eventParticipantsUnmarkInterested = async (identifier: string, opti
 
 
 
-export const getEventParticipantsUnmarkInterestedQueryKey = (identifier: string,) => {
-    return [
-    'DELETE', `/api/v1/events/${identifier}/interested`
-    ] as const;
+export const getEventParticipantsUnmarkInterestedMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['eventParticipantsUnmarkInterested'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  eventParticipantsUnmarkInterested(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventParticipantsUnmarkInterestedMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>>
+
+    export type EventParticipantsUnmarkInterestedMutationError = unknown
+
+    export const useEventParticipantsUnmarkInterested = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getEventParticipantsUnmarkInterestedMutationOptions(options), queryClient);
     }
-
-
-export const getEventParticipantsUnmarkInterestedQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsUnmarkInterestedQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>> = ({ signal }) => eventParticipantsUnmarkInterested(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventParticipantsUnmarkInterestedQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>>
-export type EventParticipantsUnmarkInterestedQueryError = unknown
-
-
-export function useEventParticipantsUnmarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsUnmarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsUnmarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventParticipantsUnmarkInterested<TData = Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsUnmarkInterested>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventParticipantsUnmarkInterestedQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventParticipantsLeaveEventUrl = (identifier: string,) => {
+    export const getEventParticipantsLeaveEventUrl = (identifier: string,) => {
 
 
 
@@ -357,78 +270,48 @@ export const eventParticipantsLeaveEvent = async (identifier: string, options?: 
 
 
 
-export const getEventParticipantsLeaveEventQueryKey = (identifier: string,) => {
-    return [
-    'DELETE', `/api/v1/events/${identifier}/leave`
-    ] as const;
+export const getEventParticipantsLeaveEventMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['eventParticipantsLeaveEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  eventParticipantsLeaveEvent(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventParticipantsLeaveEventMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>>
+
+    export type EventParticipantsLeaveEventMutationError = unknown
+
+    export const useEventParticipantsLeaveEvent = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getEventParticipantsLeaveEventMutationOptions(options), queryClient);
     }
-
-
-export const getEventParticipantsLeaveEventQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsLeaveEventQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>> = ({ signal }) => eventParticipantsLeaveEvent(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventParticipantsLeaveEventQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>>
-export type EventParticipantsLeaveEventQueryError = unknown
-
-
-export function useEventParticipantsLeaveEvent<TData = Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsLeaveEvent<TData = Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsLeaveEvent<TData = Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventParticipantsLeaveEvent<TData = Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsLeaveEvent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventParticipantsLeaveEventQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventParticipantsGetParticipantsUrl = (identifier: string,) => {
+    export const getEventParticipantsGetParticipantsUrl = (identifier: string,) => {
 
 
 
@@ -451,48 +334,130 @@ export const eventParticipantsGetParticipants = async (identifier: string, optio
 
 
 
-export const getEventParticipantsGetParticipantsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['eventParticipantsGetParticipants'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  eventParticipantsGetParticipants(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventParticipantsGetParticipantsMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>>
-
-    export type EventParticipantsGetParticipantsMutationError = unknown
-
-    export const useEventParticipantsGetParticipants = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventParticipantsGetParticipants>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getEventParticipantsGetParticipantsMutationOptions(options), queryClient);
+export const getEventParticipantsGetParticipantsQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/events/${identifier}/participants`
+    ] as const;
     }
-    export const getEventParticipantsRemoveParticipantUrl = (identifier: string,
+
+
+export const getEventParticipantsGetParticipantsQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsGetParticipantsQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>> = ({ signal }) => eventParticipantsGetParticipants(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type EventParticipantsGetParticipantsQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>>
+export type EventParticipantsGetParticipantsQueryError = unknown
+
+
+export function useEventParticipantsGetParticipants<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof eventParticipantsGetParticipants>>,
+          TError,
+          Awaited<ReturnType<typeof eventParticipantsGetParticipants>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEventParticipantsGetParticipants<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof eventParticipantsGetParticipants>>,
+          TError,
+          Awaited<ReturnType<typeof eventParticipantsGetParticipants>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEventParticipantsGetParticipants<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useEventParticipantsGetParticipants<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getEventParticipantsGetParticipantsQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getEventParticipantsGetParticipantsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsGetParticipantsQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>> = ({ signal }) => eventParticipantsGetParticipants(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type EventParticipantsGetParticipantsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>>
+export type EventParticipantsGetParticipantsSuspenseQueryError = unknown
+
+
+export function useEventParticipantsGetParticipantsSuspense<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEventParticipantsGetParticipantsSuspense<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEventParticipantsGetParticipantsSuspense<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useEventParticipantsGetParticipantsSuspense<TData = Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventParticipantsGetParticipants>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getEventParticipantsGetParticipantsSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getEventParticipantsRemoveParticipantUrl = (identifier: string,
     participantIdentifier: string,) => {
 
 
@@ -517,84 +482,48 @@ export const eventParticipantsRemoveParticipant = async (identifier: string,
 
 
 
-export const getEventParticipantsRemoveParticipantQueryKey = (identifier: string,
-    participantIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/events/${identifier}/participants/${participantIdentifier}`
-    ] as const;
+export const getEventParticipantsRemoveParticipantMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError,{identifier: string;participantIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError,{identifier: string;participantIdentifier: string}, TContext> => {
+
+const mutationKey = ['eventParticipantsRemoveParticipant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, {identifier: string;participantIdentifier: string}> = (props) => {
+          const {identifier,participantIdentifier} = props ?? {};
+
+          return  eventParticipantsRemoveParticipant(identifier,participantIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventParticipantsRemoveParticipantMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>>
+
+    export type EventParticipantsRemoveParticipantMutationError = unknown
+
+    export const useEventParticipantsRemoveParticipant = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError,{identifier: string;participantIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>,
+        TError,
+        {identifier: string;participantIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getEventParticipantsRemoveParticipantMutationOptions(options), queryClient);
     }
-
-
-export const getEventParticipantsRemoveParticipantQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError = unknown>(identifier: string,
-    participantIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsRemoveParticipantQueryKey(identifier,participantIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>> = ({ signal }) => eventParticipantsRemoveParticipant(identifier,participantIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined && participantIdentifier !== null && participantIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventParticipantsRemoveParticipantQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>>
-export type EventParticipantsRemoveParticipantQueryError = unknown
-
-
-export function useEventParticipantsRemoveParticipant<TData = Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsRemoveParticipant<TData = Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsRemoveParticipant<TData = Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventParticipantsRemoveParticipant<TData = Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsRemoveParticipant>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventParticipantsRemoveParticipantQueryOptions(identifier,participantIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventParticipantsSetParticipantRoleUrl = (identifier: string,
+    export const getEventParticipantsSetParticipantRoleUrl = (identifier: string,
     participantIdentifier: string,) => {
 
 
@@ -620,90 +549,48 @@ export const eventParticipantsSetParticipantRole = async (identifier: string,
 
 
 
-export const getEventParticipantsSetParticipantRoleQueryKey = (identifier: string,
-    participantIdentifier: string,
-    eventRoleRequest?: EventRoleRequest,) => {
-    return [
-    'PUT', `/api/v1/events/${identifier}/participants/${participantIdentifier}/role`, eventRoleRequest
-    ] as const;
+export const getEventParticipantsSetParticipantRoleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError,{identifier: string;participantIdentifier: string;data: EventRoleRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError,{identifier: string;participantIdentifier: string;data: EventRoleRequest}, TContext> => {
+
+const mutationKey = ['eventParticipantsSetParticipantRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, {identifier: string;participantIdentifier: string;data: EventRoleRequest}> = (props) => {
+          const {identifier,participantIdentifier,data} = props ?? {};
+
+          return  eventParticipantsSetParticipantRole(identifier,participantIdentifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventParticipantsSetParticipantRoleMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>>
+    export type EventParticipantsSetParticipantRoleMutationBody = EventRoleRequest
+    export type EventParticipantsSetParticipantRoleMutationError = unknown
+
+    export const useEventParticipantsSetParticipantRole = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError,{identifier: string;participantIdentifier: string;data: EventRoleRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>,
+        TError,
+        {identifier: string;participantIdentifier: string;data: EventRoleRequest},
+        TContext
+      > => {
+      return useMutation(getEventParticipantsSetParticipantRoleMutationOptions(options), queryClient);
     }
-
-
-export const getEventParticipantsSetParticipantRoleQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError = unknown>(identifier: string,
-    participantIdentifier: string,
-    eventRoleRequest: EventRoleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsSetParticipantRoleQueryKey(identifier,participantIdentifier,eventRoleRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>> = ({ signal }) => eventParticipantsSetParticipantRole(identifier,participantIdentifier,eventRoleRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined && participantIdentifier !== null && participantIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventParticipantsSetParticipantRoleQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>>
-export type EventParticipantsSetParticipantRoleQueryError = unknown
-
-
-export function useEventParticipantsSetParticipantRole<TData = Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string,
-    eventRoleRequest: EventRoleRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsSetParticipantRole<TData = Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string,
-    eventRoleRequest: EventRoleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsSetParticipantRole<TData = Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string,
-    eventRoleRequest: EventRoleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventParticipantsSetParticipantRole<TData = Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError = unknown>(
- identifier: string,
-    participantIdentifier: string,
-    eventRoleRequest: EventRoleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetParticipantRole>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventParticipantsSetParticipantRoleQueryOptions(identifier,participantIdentifier,eventRoleRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventParticipantsSetMutedUrl = (identifier: string,) => {
+    export const getEventParticipantsSetMutedUrl = (identifier: string,) => {
 
 
 
@@ -727,80 +614,44 @@ export const eventParticipantsSetMuted = async (identifier: string,
 
 
 
-export const getEventParticipantsSetMutedQueryKey = (identifier: string,
-    eventMuteRequest?: EventMuteRequest,) => {
-    return [
-    'PUT', `/api/v1/events/${identifier}/mute`, eventMuteRequest
-    ] as const;
+export const getEventParticipantsSetMutedMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError,{identifier: string;data: EventMuteRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError,{identifier: string;data: EventMuteRequest}, TContext> => {
+
+const mutationKey = ['eventParticipantsSetMuted'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, {identifier: string;data: EventMuteRequest}> = (props) => {
+          const {identifier,data} = props ?? {};
+
+          return  eventParticipantsSetMuted(identifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EventParticipantsSetMutedMutationResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsSetMuted>>>
+    export type EventParticipantsSetMutedMutationBody = EventMuteRequest
+    export type EventParticipantsSetMutedMutationError = unknown
+
+    export const useEventParticipantsSetMuted = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError,{identifier: string;data: EventMuteRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof eventParticipantsSetMuted>>,
+        TError,
+        {identifier: string;data: EventMuteRequest},
+        TContext
+      > => {
+      return useMutation(getEventParticipantsSetMutedMutationOptions(options), queryClient);
     }
-
-
-export const getEventParticipantsSetMutedQueryOptions = <TData = Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError = unknown>(identifier: string,
-    eventMuteRequest: EventMuteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventParticipantsSetMutedQueryKey(identifier,eventMuteRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventParticipantsSetMuted>>> = ({ signal }) => eventParticipantsSetMuted(identifier,eventMuteRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventParticipantsSetMutedQueryResult = NonNullable<Awaited<ReturnType<typeof eventParticipantsSetMuted>>>
-export type EventParticipantsSetMutedQueryError = unknown
-
-
-export function useEventParticipantsSetMuted<TData = Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError = unknown>(
- identifier: string,
-    eventMuteRequest: EventMuteRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsSetMuted>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsSetMuted>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsSetMuted<TData = Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError = unknown>(
- identifier: string,
-    eventMuteRequest: EventMuteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventParticipantsSetMuted>>,
-          TError,
-          Awaited<ReturnType<typeof eventParticipantsSetMuted>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventParticipantsSetMuted<TData = Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError = unknown>(
- identifier: string,
-    eventMuteRequest: EventMuteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventParticipantsSetMuted<TData = Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError = unknown>(
- identifier: string,
-    eventMuteRequest: EventMuteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventParticipantsSetMuted>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventParticipantsSetMutedQueryOptions(identifier,eventMuteRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

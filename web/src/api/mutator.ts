@@ -42,6 +42,16 @@ async function errorMessage(response: Response): Promise<string> {
   return text.slice(0, 300) || fallback;
 }
 
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 export type ApiRequest = { method: string; endpoint: string };
 
 export function describeRequest(path: string, method: string | undefined): ApiRequest {
@@ -87,7 +97,7 @@ export const customFetch = async <T>(url: string, options: RequestInit): Promise
   if (!response.ok) {
     const message = await errorMessage(response);
     logRefused(request, response.status, message);
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
 
   // 204/205/304 carry no body; everything else is JSON from the API.

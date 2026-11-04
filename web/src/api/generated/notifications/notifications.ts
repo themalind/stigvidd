@@ -6,18 +6,13 @@
  * OpenAPI spec version: 1.0.0
  */
 import {
-  useQuery
+  useMutation
 } from '@tanstack/react-query';
 import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult
+  UseMutationOptions,
+  UseMutationResult
 } from '@tanstack/react-query';
 
 import type {
@@ -30,21 +25,6 @@ import { customFetch } from '../../mutator';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
-
-const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
-  const result = { queryKey } as T & { queryKey: K };
-  for (const key of Object.keys(query)) {
-    // The explicit queryKey always wins, matching the previous
-    // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
-    Object.defineProperty(result, key, {
-      enumerable: true,
-      configurable: true,
-      get: () => (query as Record<string, unknown>)[key],
-    });
-  }
-  return result;
-};
 
 export const getNotificationsRegisterTokenUrl = () => {
 
@@ -69,78 +49,48 @@ export const notificationsRegisterToken = async (registerPushTokenRequest: Regis
 
 
 
-export const getNotificationsRegisterTokenQueryKey = (registerPushTokenRequest?: RegisterPushTokenRequest,) => {
-    return [
-    'POST', `/api/v1/Notifications/tokens`, registerPushTokenRequest
-    ] as const;
+export const getNotificationsRegisterTokenMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError,{data: RegisterPushTokenRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError,{data: RegisterPushTokenRequest}, TContext> => {
+
+const mutationKey = ['notificationsRegisterToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsRegisterToken>>, {data: RegisterPushTokenRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  notificationsRegisterToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsRegisterTokenMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsRegisterToken>>>
+    export type NotificationsRegisterTokenMutationBody = RegisterPushTokenRequest
+    export type NotificationsRegisterTokenMutationError = unknown
+
+    export const useNotificationsRegisterToken = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError,{data: RegisterPushTokenRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsRegisterToken>>,
+        TError,
+        {data: RegisterPushTokenRequest},
+        TContext
+      > => {
+      return useMutation(getNotificationsRegisterTokenMutationOptions(options), queryClient);
     }
-
-
-export const getNotificationsRegisterTokenQueryOptions = <TData = Awaited<ReturnType<typeof notificationsRegisterToken>>, TError = unknown>(registerPushTokenRequest: RegisterPushTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getNotificationsRegisterTokenQueryKey(registerPushTokenRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsRegisterToken>>> = ({ signal }) => notificationsRegisterToken(registerPushTokenRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type NotificationsRegisterTokenQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsRegisterToken>>>
-export type NotificationsRegisterTokenQueryError = unknown
-
-
-export function useNotificationsRegisterToken<TData = Awaited<ReturnType<typeof notificationsRegisterToken>>, TError = unknown>(
- registerPushTokenRequest: RegisterPushTokenRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsRegisterToken>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsRegisterToken>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsRegisterToken<TData = Awaited<ReturnType<typeof notificationsRegisterToken>>, TError = unknown>(
- registerPushTokenRequest: RegisterPushTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsRegisterToken>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsRegisterToken>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsRegisterToken<TData = Awaited<ReturnType<typeof notificationsRegisterToken>>, TError = unknown>(
- registerPushTokenRequest: RegisterPushTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useNotificationsRegisterToken<TData = Awaited<ReturnType<typeof notificationsRegisterToken>>, TError = unknown>(
- registerPushTokenRequest: RegisterPushTokenRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsRegisterToken>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getNotificationsRegisterTokenQueryOptions(registerPushTokenRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getNotificationsDeleteTokenUrl = (expoToken: string,) => {
+    export const getNotificationsDeleteTokenUrl = (expoToken: string,) => {
 
 
 
@@ -163,74 +113,44 @@ export const notificationsDeleteToken = async (expoToken: string, options?: Requ
 
 
 
-export const getNotificationsDeleteTokenQueryKey = (expoToken: string,) => {
-    return [
-    'DELETE', `/api/v1/Notifications/tokens/${expoToken}`
-    ] as const;
+export const getNotificationsDeleteTokenMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError,{expoToken: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError,{expoToken: string}, TContext> => {
+
+const mutationKey = ['notificationsDeleteToken'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof notificationsDeleteToken>>, {expoToken: string}> = (props) => {
+          const {expoToken} = props ?? {};
+
+          return  notificationsDeleteToken(expoToken,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type NotificationsDeleteTokenMutationResult = NonNullable<Awaited<ReturnType<typeof notificationsDeleteToken>>>
+
+    export type NotificationsDeleteTokenMutationError = unknown
+
+    export const useNotificationsDeleteToken = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError,{expoToken: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof notificationsDeleteToken>>,
+        TError,
+        {expoToken: string},
+        TContext
+      > => {
+      return useMutation(getNotificationsDeleteTokenMutationOptions(options), queryClient);
     }
-
-
-export const getNotificationsDeleteTokenQueryOptions = <TData = Awaited<ReturnType<typeof notificationsDeleteToken>>, TError = unknown>(expoToken: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getNotificationsDeleteTokenQueryKey(expoToken);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof notificationsDeleteToken>>> = ({ signal }) => notificationsDeleteToken(expoToken, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: expoToken !== null && expoToken !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type NotificationsDeleteTokenQueryResult = NonNullable<Awaited<ReturnType<typeof notificationsDeleteToken>>>
-export type NotificationsDeleteTokenQueryError = unknown
-
-
-export function useNotificationsDeleteToken<TData = Awaited<ReturnType<typeof notificationsDeleteToken>>, TError = unknown>(
- expoToken: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsDeleteToken>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsDeleteToken>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsDeleteToken<TData = Awaited<ReturnType<typeof notificationsDeleteToken>>, TError = unknown>(
- expoToken: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof notificationsDeleteToken>>,
-          TError,
-          Awaited<ReturnType<typeof notificationsDeleteToken>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useNotificationsDeleteToken<TData = Awaited<ReturnType<typeof notificationsDeleteToken>>, TError = unknown>(
- expoToken: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useNotificationsDeleteToken<TData = Awaited<ReturnType<typeof notificationsDeleteToken>>, TError = unknown>(
- expoToken: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof notificationsDeleteToken>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getNotificationsDeleteTokenQueryOptions(expoToken,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

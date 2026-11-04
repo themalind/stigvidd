@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -76,48 +79,130 @@ export const adminUserMappingsGetMappings = async ( options?: RequestInit): Prom
 
 
 
-export const getAdminUserMappingsGetMappingsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError,void, TContext> => {
-
-const mutationKey = ['adminUserMappingsGetMappings'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, void> = () => {
-
-
-          return  adminUserMappingsGetMappings(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminUserMappingsGetMappingsMutationResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>>
-
-    export type AdminUserMappingsGetMappingsMutationError = unknown
-
-    export const useAdminUserMappingsGetMappings = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminUserMappingsGetMappings>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getAdminUserMappingsGetMappingsMutationOptions(options), queryClient);
+export const getAdminUserMappingsGetMappingsQueryKey = () => {
+    return [
+    `/api/v1/admin/user-mappings`
+    ] as const;
     }
-    export const getAdminUserMappingsSaveMappingUrl = (packageUserId: number,) => {
+
+
+export const getAdminUserMappingsGetMappingsQueryOptions = <TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminUserMappingsGetMappingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>> = ({ signal }) => adminUserMappingsGetMappings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminUserMappingsGetMappingsQueryResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>>
+export type AdminUserMappingsGetMappingsQueryError = unknown
+
+
+export function useAdminUserMappingsGetMappings<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminUserMappingsGetMappings>>,
+          TError,
+          Awaited<ReturnType<typeof adminUserMappingsGetMappings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsGetMappings<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminUserMappingsGetMappings>>,
+          TError,
+          Awaited<ReturnType<typeof adminUserMappingsGetMappings>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsGetMappings<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminUserMappingsGetMappings<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminUserMappingsGetMappingsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminUserMappingsGetMappingsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminUserMappingsGetMappingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>> = ({ signal }) => adminUserMappingsGetMappings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminUserMappingsGetMappingsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>>
+export type AdminUserMappingsGetMappingsSuspenseQueryError = unknown
+
+
+export function useAdminUserMappingsGetMappingsSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsGetMappingsSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsGetMappingsSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminUserMappingsGetMappingsSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsGetMappings>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminUserMappingsGetMappingsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminUserMappingsSaveMappingUrl = (packageUserId: number,) => {
 
 
 
@@ -141,84 +226,48 @@ export const adminUserMappingsSaveMapping = async (packageUserId: number,
 
 
 
-export const getAdminUserMappingsSaveMappingQueryKey = (packageUserId: number,
-    saveUserMappingRequest?: SaveUserMappingRequest,) => {
-    return [
-    'PUT', `/api/v1/admin/user-mappings/${packageUserId}`, saveUserMappingRequest
-    ] as const;
+export const getAdminUserMappingsSaveMappingMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError,{packageUserId: number;data: SaveUserMappingRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError,{packageUserId: number;data: SaveUserMappingRequest}, TContext> => {
+
+const mutationKey = ['adminUserMappingsSaveMapping'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, {packageUserId: number;data: SaveUserMappingRequest}> = (props) => {
+          const {packageUserId,data} = props ?? {};
+
+          return  adminUserMappingsSaveMapping(packageUserId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUserMappingsSaveMappingMutationResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>>
+    export type AdminUserMappingsSaveMappingMutationBody = SaveUserMappingRequest
+    export type AdminUserMappingsSaveMappingMutationError = unknown
+
+    export const useAdminUserMappingsSaveMapping = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError,{packageUserId: number;data: SaveUserMappingRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>,
+        TError,
+        {packageUserId: number;data: SaveUserMappingRequest},
+        TContext
+      > => {
+      return useMutation(getAdminUserMappingsSaveMappingMutationOptions(options), queryClient);
     }
-
-
-export const getAdminUserMappingsSaveMappingQueryOptions = <TData = Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError = unknown>(packageUserId: number,
-    saveUserMappingRequest: SaveUserMappingRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminUserMappingsSaveMappingQueryKey(packageUserId,saveUserMappingRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>> = ({ signal }) => adminUserMappingsSaveMapping(packageUserId,saveUserMappingRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: packageUserId !== null && packageUserId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminUserMappingsSaveMappingQueryResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>>
-export type AdminUserMappingsSaveMappingQueryError = unknown
-
-
-export function useAdminUserMappingsSaveMapping<TData = Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError = unknown>(
- packageUserId: number,
-    saveUserMappingRequest: SaveUserMappingRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>,
-          TError,
-          Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUserMappingsSaveMapping<TData = Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError = unknown>(
- packageUserId: number,
-    saveUserMappingRequest: SaveUserMappingRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>,
-          TError,
-          Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUserMappingsSaveMapping<TData = Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError = unknown>(
- packageUserId: number,
-    saveUserMappingRequest: SaveUserMappingRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminUserMappingsSaveMapping<TData = Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError = unknown>(
- packageUserId: number,
-    saveUserMappingRequest: SaveUserMappingRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSaveMapping>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminUserMappingsSaveMappingQueryOptions(packageUserId,saveUserMappingRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminUserMappingsDeleteMappingUrl = (packageUserId: number,) => {
+    export const getAdminUserMappingsDeleteMappingUrl = (packageUserId: number,) => {
 
 
 
@@ -241,78 +290,48 @@ export const adminUserMappingsDeleteMapping = async (packageUserId: number, opti
 
 
 
-export const getAdminUserMappingsDeleteMappingQueryKey = (packageUserId: number,) => {
-    return [
-    'DELETE', `/api/v1/admin/user-mappings/${packageUserId}`
-    ] as const;
+export const getAdminUserMappingsDeleteMappingMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError,{packageUserId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError,{packageUserId: number}, TContext> => {
+
+const mutationKey = ['adminUserMappingsDeleteMapping'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, {packageUserId: number}> = (props) => {
+          const {packageUserId} = props ?? {};
+
+          return  adminUserMappingsDeleteMapping(packageUserId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminUserMappingsDeleteMappingMutationResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>>
+
+    export type AdminUserMappingsDeleteMappingMutationError = unknown
+
+    export const useAdminUserMappingsDeleteMapping = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError,{packageUserId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>,
+        TError,
+        {packageUserId: number},
+        TContext
+      > => {
+      return useMutation(getAdminUserMappingsDeleteMappingMutationOptions(options), queryClient);
     }
-
-
-export const getAdminUserMappingsDeleteMappingQueryOptions = <TData = Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError = unknown>(packageUserId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminUserMappingsDeleteMappingQueryKey(packageUserId);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>> = ({ signal }) => adminUserMappingsDeleteMapping(packageUserId, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: packageUserId !== null && packageUserId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminUserMappingsDeleteMappingQueryResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>>
-export type AdminUserMappingsDeleteMappingQueryError = unknown
-
-
-export function useAdminUserMappingsDeleteMapping<TData = Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError = unknown>(
- packageUserId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>,
-          TError,
-          Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUserMappingsDeleteMapping<TData = Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError = unknown>(
- packageUserId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>,
-          TError,
-          Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUserMappingsDeleteMapping<TData = Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError = unknown>(
- packageUserId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminUserMappingsDeleteMapping<TData = Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError = unknown>(
- packageUserId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsDeleteMapping>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminUserMappingsDeleteMappingQueryOptions(packageUserId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminUserMappingsSearchKeycloakUsersUrl = (params?: AdminUserMappingsSearchKeycloakUsersParams,) => {
+    export const getAdminUserMappingsSearchKeycloakUsersUrl = (params?: AdminUserMappingsSearchKeycloakUsersParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -342,44 +361,126 @@ export const adminUserMappingsSearchKeycloakUsers = async (params?: AdminUserMap
 
 
 
-export const getAdminUserMappingsSearchKeycloakUsersMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError,{params?: AdminUserMappingsSearchKeycloakUsersParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError,{params?: AdminUserMappingsSearchKeycloakUsersParams}, TContext> => {
-
-const mutationKey = ['adminUserMappingsSearchKeycloakUsers'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, {params?: AdminUserMappingsSearchKeycloakUsersParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  adminUserMappingsSearchKeycloakUsers(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminUserMappingsSearchKeycloakUsersMutationResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>>
-
-    export type AdminUserMappingsSearchKeycloakUsersMutationError = unknown
-
-    export const useAdminUserMappingsSearchKeycloakUsers = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError,{params?: AdminUserMappingsSearchKeycloakUsersParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>,
-        TError,
-        {params?: AdminUserMappingsSearchKeycloakUsersParams},
-        TContext
-      > => {
-      return useMutation(getAdminUserMappingsSearchKeycloakUsersMutationOptions(options), queryClient);
+export const getAdminUserMappingsSearchKeycloakUsersQueryKey = (params?: AdminUserMappingsSearchKeycloakUsersParams,) => {
+    return [
+    `/api/v1/admin/keycloak-users`, ...(params ? [params] : [])
+    ] as const;
     }
+
+
+export const getAdminUserMappingsSearchKeycloakUsersQueryOptions = <TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminUserMappingsSearchKeycloakUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>> = ({ signal }) => adminUserMappingsSearchKeycloakUsers(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminUserMappingsSearchKeycloakUsersQueryResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>>
+export type AdminUserMappingsSearchKeycloakUsersQueryError = unknown
+
+
+export function useAdminUserMappingsSearchKeycloakUsers<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params: undefined |  AdminUserMappingsSearchKeycloakUsersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>,
+          TError,
+          Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsSearchKeycloakUsers<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>,
+          TError,
+          Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsSearchKeycloakUsers<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminUserMappingsSearchKeycloakUsers<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminUserMappingsSearchKeycloakUsersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminUserMappingsSearchKeycloakUsersSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminUserMappingsSearchKeycloakUsersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>> = ({ signal }) => adminUserMappingsSearchKeycloakUsers(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminUserMappingsSearchKeycloakUsersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>>
+export type AdminUserMappingsSearchKeycloakUsersSuspenseQueryError = unknown
+
+
+export function useAdminUserMappingsSearchKeycloakUsersSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params: undefined |  AdminUserMappingsSearchKeycloakUsersParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsSearchKeycloakUsersSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminUserMappingsSearchKeycloakUsersSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminUserMappingsSearchKeycloakUsersSuspense<TData = Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError = unknown>(
+ params?: AdminUserMappingsSearchKeycloakUsersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminUserMappingsSearchKeycloakUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminUserMappingsSearchKeycloakUsersSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -77,48 +80,130 @@ export const friendsGetBlockedUsers = async ( options?: RequestInit): Promise<Bl
 
 
 
-export const getFriendsGetBlockedUsersMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError,void, TContext> => {
-
-const mutationKey = ['friendsGetBlockedUsers'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, void> = () => {
-
-
-          return  friendsGetBlockedUsers(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FriendsGetBlockedUsersMutationResult = NonNullable<Awaited<ReturnType<typeof friendsGetBlockedUsers>>>
-
-    export type FriendsGetBlockedUsersMutationError = unknown
-
-    export const useFriendsGetBlockedUsers = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof friendsGetBlockedUsers>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getFriendsGetBlockedUsersMutationOptions(options), queryClient);
+export const getFriendsGetBlockedUsersQueryKey = () => {
+    return [
+    `/api/v1/Friends/blocks`
+    ] as const;
     }
-    export const getFriendsBlockUserUrl = (identifier: string,) => {
+
+
+export const getFriendsGetBlockedUsersQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetBlockedUsersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetBlockedUsers>>> = ({ signal }) => friendsGetBlockedUsers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetBlockedUsersQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetBlockedUsers>>>
+export type FriendsGetBlockedUsersQueryError = unknown
+
+
+export function useFriendsGetBlockedUsers<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetBlockedUsers>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetBlockedUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetBlockedUsers<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetBlockedUsers>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetBlockedUsers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetBlockedUsers<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetBlockedUsers<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetBlockedUsersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsGetBlockedUsersSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetBlockedUsersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetBlockedUsers>>> = ({ signal }) => friendsGetBlockedUsers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetBlockedUsersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetBlockedUsers>>>
+export type FriendsGetBlockedUsersSuspenseQueryError = unknown
+
+
+export function useFriendsGetBlockedUsersSuspense<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetBlockedUsersSuspense<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetBlockedUsersSuspense<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetBlockedUsersSuspense<TData = Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetBlockedUsers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetBlockedUsersSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsBlockUserUrl = (identifier: string,) => {
 
 
 
@@ -141,78 +226,48 @@ export const friendsBlockUser = async (identifier: string, options?: RequestInit
 
 
 
-export const getFriendsBlockUserQueryKey = (identifier: string,) => {
-    return [
-    'POST', `/api/v1/Friends/blocks/${identifier}`
-    ] as const;
+export const getFriendsBlockUserMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['friendsBlockUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsBlockUser>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  friendsBlockUser(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FriendsBlockUserMutationResult = NonNullable<Awaited<ReturnType<typeof friendsBlockUser>>>
+
+    export type FriendsBlockUserMutationError = unknown
+
+    export const useFriendsBlockUser = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof friendsBlockUser>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getFriendsBlockUserMutationOptions(options), queryClient);
     }
-
-
-export const getFriendsBlockUserQueryOptions = <TData = Awaited<ReturnType<typeof friendsBlockUser>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFriendsBlockUserQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsBlockUser>>> = ({ signal }) => friendsBlockUser(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FriendsBlockUserQueryResult = NonNullable<Awaited<ReturnType<typeof friendsBlockUser>>>
-export type FriendsBlockUserQueryError = unknown
-
-
-export function useFriendsBlockUser<TData = Awaited<ReturnType<typeof friendsBlockUser>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsBlockUser>>,
-          TError,
-          Awaited<ReturnType<typeof friendsBlockUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsBlockUser<TData = Awaited<ReturnType<typeof friendsBlockUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsBlockUser>>,
-          TError,
-          Awaited<ReturnType<typeof friendsBlockUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsBlockUser<TData = Awaited<ReturnType<typeof friendsBlockUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFriendsBlockUser<TData = Awaited<ReturnType<typeof friendsBlockUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsBlockUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFriendsBlockUserQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getFriendsUnblockUserUrl = (identifier: string,) => {
+    export const getFriendsUnblockUserUrl = (identifier: string,) => {
 
 
 
@@ -235,78 +290,48 @@ export const friendsUnblockUser = async (identifier: string, options?: RequestIn
 
 
 
-export const getFriendsUnblockUserQueryKey = (identifier: string,) => {
-    return [
-    'DELETE', `/api/v1/Friends/blocks/${identifier}`
-    ] as const;
+export const getFriendsUnblockUserMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['friendsUnblockUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsUnblockUser>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  friendsUnblockUser(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FriendsUnblockUserMutationResult = NonNullable<Awaited<ReturnType<typeof friendsUnblockUser>>>
+
+    export type FriendsUnblockUserMutationError = unknown
+
+    export const useFriendsUnblockUser = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof friendsUnblockUser>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getFriendsUnblockUserMutationOptions(options), queryClient);
     }
-
-
-export const getFriendsUnblockUserQueryOptions = <TData = Awaited<ReturnType<typeof friendsUnblockUser>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFriendsUnblockUserQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsUnblockUser>>> = ({ signal }) => friendsUnblockUser(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FriendsUnblockUserQueryResult = NonNullable<Awaited<ReturnType<typeof friendsUnblockUser>>>
-export type FriendsUnblockUserQueryError = unknown
-
-
-export function useFriendsUnblockUser<TData = Awaited<ReturnType<typeof friendsUnblockUser>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsUnblockUser>>,
-          TError,
-          Awaited<ReturnType<typeof friendsUnblockUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsUnblockUser<TData = Awaited<ReturnType<typeof friendsUnblockUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsUnblockUser>>,
-          TError,
-          Awaited<ReturnType<typeof friendsUnblockUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsUnblockUser<TData = Awaited<ReturnType<typeof friendsUnblockUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFriendsUnblockUser<TData = Awaited<ReturnType<typeof friendsUnblockUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsUnblockUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFriendsUnblockUserQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getFriendsGetFriendsUrl = () => {
+    export const getFriendsGetFriendsUrl = () => {
 
 
 
@@ -329,48 +354,130 @@ export const friendsGetFriends = async ( options?: RequestInit): Promise<Blob> =
 
 
 
-export const getFriendsGetFriendsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError,void, TContext> => {
-
-const mutationKey = ['friendsGetFriends'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsGetFriends>>, void> = () => {
-
-
-          return  friendsGetFriends(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FriendsGetFriendsMutationResult = NonNullable<Awaited<ReturnType<typeof friendsGetFriends>>>
-
-    export type FriendsGetFriendsMutationError = unknown
-
-    export const useFriendsGetFriends = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof friendsGetFriends>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getFriendsGetFriendsMutationOptions(options), queryClient);
+export const getFriendsGetFriendsQueryKey = () => {
+    return [
+    `/api/v1/Friends`
+    ] as const;
     }
-    export const getFriendsGetFriendProfileUrl = (identifier: string,) => {
+
+
+export const getFriendsGetFriendsQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetFriendsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetFriends>>> = ({ signal }) => friendsGetFriends({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetFriendsQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetFriends>>>
+export type FriendsGetFriendsQueryError = unknown
+
+
+export function useFriendsGetFriends<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetFriends>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetFriends>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriends<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetFriends>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetFriends>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriends<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetFriends<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetFriendsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsGetFriendsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetFriendsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetFriends>>> = ({ signal }) => friendsGetFriends({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetFriendsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetFriends>>>
+export type FriendsGetFriendsSuspenseQueryError = unknown
+
+
+export function useFriendsGetFriendsSuspense<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriendsSuspense<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriendsSuspense<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetFriendsSuspense<TData = Awaited<ReturnType<typeof friendsGetFriends>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriends>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetFriendsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsGetFriendProfileUrl = (identifier: string,) => {
 
 
 
@@ -393,48 +500,130 @@ export const friendsGetFriendProfile = async (identifier: string, options?: Requ
 
 
 
-export const getFriendsGetFriendProfileMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['friendsGetFriendProfile'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsGetFriendProfile>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  friendsGetFriendProfile(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FriendsGetFriendProfileMutationResult = NonNullable<Awaited<ReturnType<typeof friendsGetFriendProfile>>>
-
-    export type FriendsGetFriendProfileMutationError = unknown
-
-    export const useFriendsGetFriendProfile = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof friendsGetFriendProfile>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getFriendsGetFriendProfileMutationOptions(options), queryClient);
+export const getFriendsGetFriendProfileQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/Friends/${identifier}/profile`
+    ] as const;
     }
-    export const getFriendsSetFriendNoteUrl = (identifier: string,) => {
+
+
+export const getFriendsGetFriendProfileQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetFriendProfileQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetFriendProfile>>> = ({ signal }) => friendsGetFriendProfile(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetFriendProfileQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetFriendProfile>>>
+export type FriendsGetFriendProfileQueryError = unknown
+
+
+export function useFriendsGetFriendProfile<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetFriendProfile>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetFriendProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriendProfile<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetFriendProfile>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetFriendProfile>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriendProfile<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetFriendProfile<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetFriendProfileQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsGetFriendProfileSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetFriendProfileQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetFriendProfile>>> = ({ signal }) => friendsGetFriendProfile(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetFriendProfileSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetFriendProfile>>>
+export type FriendsGetFriendProfileSuspenseQueryError = unknown
+
+
+export function useFriendsGetFriendProfileSuspense<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriendProfileSuspense<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetFriendProfileSuspense<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetFriendProfileSuspense<TData = Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetFriendProfile>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetFriendProfileSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsSetFriendNoteUrl = (identifier: string,) => {
 
 
 
@@ -458,84 +647,48 @@ export const friendsSetFriendNote = async (identifier: string,
 
 
 
-export const getFriendsSetFriendNoteQueryKey = (identifier: string,
-    setFriendNoteRequest?: SetFriendNoteRequest,) => {
-    return [
-    'PUT', `/api/v1/Friends/${identifier}/note`, setFriendNoteRequest
-    ] as const;
+export const getFriendsSetFriendNoteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError,{identifier: string;data: SetFriendNoteRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError,{identifier: string;data: SetFriendNoteRequest}, TContext> => {
+
+const mutationKey = ['friendsSetFriendNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsSetFriendNote>>, {identifier: string;data: SetFriendNoteRequest}> = (props) => {
+          const {identifier,data} = props ?? {};
+
+          return  friendsSetFriendNote(identifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FriendsSetFriendNoteMutationResult = NonNullable<Awaited<ReturnType<typeof friendsSetFriendNote>>>
+    export type FriendsSetFriendNoteMutationBody = SetFriendNoteRequest
+    export type FriendsSetFriendNoteMutationError = unknown
+
+    export const useFriendsSetFriendNote = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError,{identifier: string;data: SetFriendNoteRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof friendsSetFriendNote>>,
+        TError,
+        {identifier: string;data: SetFriendNoteRequest},
+        TContext
+      > => {
+      return useMutation(getFriendsSetFriendNoteMutationOptions(options), queryClient);
     }
-
-
-export const getFriendsSetFriendNoteQueryOptions = <TData = Awaited<ReturnType<typeof friendsSetFriendNote>>, TError = unknown>(identifier: string,
-    setFriendNoteRequest: SetFriendNoteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFriendsSetFriendNoteQueryKey(identifier,setFriendNoteRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsSetFriendNote>>> = ({ signal }) => friendsSetFriendNote(identifier,setFriendNoteRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FriendsSetFriendNoteQueryResult = NonNullable<Awaited<ReturnType<typeof friendsSetFriendNote>>>
-export type FriendsSetFriendNoteQueryError = unknown
-
-
-export function useFriendsSetFriendNote<TData = Awaited<ReturnType<typeof friendsSetFriendNote>>, TError = unknown>(
- identifier: string,
-    setFriendNoteRequest: SetFriendNoteRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsSetFriendNote>>,
-          TError,
-          Awaited<ReturnType<typeof friendsSetFriendNote>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsSetFriendNote<TData = Awaited<ReturnType<typeof friendsSetFriendNote>>, TError = unknown>(
- identifier: string,
-    setFriendNoteRequest: SetFriendNoteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsSetFriendNote>>,
-          TError,
-          Awaited<ReturnType<typeof friendsSetFriendNote>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsSetFriendNote<TData = Awaited<ReturnType<typeof friendsSetFriendNote>>, TError = unknown>(
- identifier: string,
-    setFriendNoteRequest: SetFriendNoteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFriendsSetFriendNote<TData = Awaited<ReturnType<typeof friendsSetFriendNote>>, TError = unknown>(
- identifier: string,
-    setFriendNoteRequest: SetFriendNoteRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSetFriendNote>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFriendsSetFriendNoteQueryOptions(identifier,setFriendNoteRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getFriendsGetIncomingFriendRequestsUrl = () => {
+    export const getFriendsGetIncomingFriendRequestsUrl = () => {
 
 
 
@@ -558,48 +711,130 @@ export const friendsGetIncomingFriendRequests = async ( options?: RequestInit): 
 
 
 
-export const getFriendsGetIncomingFriendRequestsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError,void, TContext> => {
-
-const mutationKey = ['friendsGetIncomingFriendRequests'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, void> = () => {
-
-
-          return  friendsGetIncomingFriendRequests(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FriendsGetIncomingFriendRequestsMutationResult = NonNullable<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>>
-
-    export type FriendsGetIncomingFriendRequestsMutationError = unknown
-
-    export const useFriendsGetIncomingFriendRequests = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getFriendsGetIncomingFriendRequestsMutationOptions(options), queryClient);
+export const getFriendsGetIncomingFriendRequestsQueryKey = () => {
+    return [
+    `/api/v1/Friends/requests/incoming`
+    ] as const;
     }
-    export const getFriendsGetOutgoingFriendRequestsUrl = () => {
+
+
+export const getFriendsGetIncomingFriendRequestsQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetIncomingFriendRequestsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>> = ({ signal }) => friendsGetIncomingFriendRequests({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetIncomingFriendRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>>
+export type FriendsGetIncomingFriendRequestsQueryError = unknown
+
+
+export function useFriendsGetIncomingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetIncomingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetIncomingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetIncomingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetIncomingFriendRequestsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsGetIncomingFriendRequestsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetIncomingFriendRequestsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>> = ({ signal }) => friendsGetIncomingFriendRequests({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetIncomingFriendRequestsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>>
+export type FriendsGetIncomingFriendRequestsSuspenseQueryError = unknown
+
+
+export function useFriendsGetIncomingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetIncomingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetIncomingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetIncomingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetIncomingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetIncomingFriendRequestsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsGetOutgoingFriendRequestsUrl = () => {
 
 
 
@@ -622,48 +857,130 @@ export const friendsGetOutgoingFriendRequests = async ( options?: RequestInit): 
 
 
 
-export const getFriendsGetOutgoingFriendRequestsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError,void, TContext> => {
-
-const mutationKey = ['friendsGetOutgoingFriendRequests'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, void> = () => {
-
-
-          return  friendsGetOutgoingFriendRequests(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FriendsGetOutgoingFriendRequestsMutationResult = NonNullable<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>>
-
-    export type FriendsGetOutgoingFriendRequestsMutationError = unknown
-
-    export const useFriendsGetOutgoingFriendRequests = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getFriendsGetOutgoingFriendRequestsMutationOptions(options), queryClient);
+export const getFriendsGetOutgoingFriendRequestsQueryKey = () => {
+    return [
+    `/api/v1/Friends/requests/outgoing`
+    ] as const;
     }
-    export const getFriendsSendFriendRequestUrl = () => {
+
+
+export const getFriendsGetOutgoingFriendRequestsQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetOutgoingFriendRequestsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>> = ({ signal }) => friendsGetOutgoingFriendRequests({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetOutgoingFriendRequestsQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>>
+export type FriendsGetOutgoingFriendRequestsQueryError = unknown
+
+
+export function useFriendsGetOutgoingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetOutgoingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>,
+          TError,
+          Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetOutgoingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetOutgoingFriendRequests<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetOutgoingFriendRequestsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsGetOutgoingFriendRequestsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFriendsGetOutgoingFriendRequestsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>> = ({ signal }) => friendsGetOutgoingFriendRequests({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FriendsGetOutgoingFriendRequestsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>>
+export type FriendsGetOutgoingFriendRequestsSuspenseQueryError = unknown
+
+
+export function useFriendsGetOutgoingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetOutgoingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFriendsGetOutgoingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFriendsGetOutgoingFriendRequestsSuspense<TData = Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof friendsGetOutgoingFriendRequests>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFriendsGetOutgoingFriendRequestsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getFriendsSendFriendRequestUrl = () => {
 
 
 
@@ -686,78 +1003,48 @@ export const friendsSendFriendRequest = async (sendFriendRequestRequest: SendFri
 
 
 
-export const getFriendsSendFriendRequestQueryKey = (sendFriendRequestRequest?: SendFriendRequestRequest,) => {
-    return [
-    'POST', `/api/v1/Friends/requests`, sendFriendRequestRequest
-    ] as const;
+export const getFriendsSendFriendRequestMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError,{data: SendFriendRequestRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError,{data: SendFriendRequestRequest}, TContext> => {
+
+const mutationKey = ['friendsSendFriendRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsSendFriendRequest>>, {data: SendFriendRequestRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  friendsSendFriendRequest(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FriendsSendFriendRequestMutationResult = NonNullable<Awaited<ReturnType<typeof friendsSendFriendRequest>>>
+    export type FriendsSendFriendRequestMutationBody = SendFriendRequestRequest
+    export type FriendsSendFriendRequestMutationError = unknown
+
+    export const useFriendsSendFriendRequest = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError,{data: SendFriendRequestRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof friendsSendFriendRequest>>,
+        TError,
+        {data: SendFriendRequestRequest},
+        TContext
+      > => {
+      return useMutation(getFriendsSendFriendRequestMutationOptions(options), queryClient);
     }
-
-
-export const getFriendsSendFriendRequestQueryOptions = <TData = Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError = unknown>(sendFriendRequestRequest: SendFriendRequestRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFriendsSendFriendRequestQueryKey(sendFriendRequestRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsSendFriendRequest>>> = ({ signal }) => friendsSendFriendRequest(sendFriendRequestRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FriendsSendFriendRequestQueryResult = NonNullable<Awaited<ReturnType<typeof friendsSendFriendRequest>>>
-export type FriendsSendFriendRequestQueryError = unknown
-
-
-export function useFriendsSendFriendRequest<TData = Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError = unknown>(
- sendFriendRequestRequest: SendFriendRequestRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsSendFriendRequest>>,
-          TError,
-          Awaited<ReturnType<typeof friendsSendFriendRequest>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsSendFriendRequest<TData = Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError = unknown>(
- sendFriendRequestRequest: SendFriendRequestRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsSendFriendRequest>>,
-          TError,
-          Awaited<ReturnType<typeof friendsSendFriendRequest>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsSendFriendRequest<TData = Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError = unknown>(
- sendFriendRequestRequest: SendFriendRequestRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFriendsSendFriendRequest<TData = Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError = unknown>(
- sendFriendRequestRequest: SendFriendRequestRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsSendFriendRequest>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFriendsSendFriendRequestQueryOptions(sendFriendRequestRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getFriendsAcceptFriendRequestUrl = (requesterIdentifier: string,) => {
+    export const getFriendsAcceptFriendRequestUrl = (requesterIdentifier: string,) => {
 
 
 
@@ -780,78 +1067,48 @@ export const friendsAcceptFriendRequest = async (requesterIdentifier: string, op
 
 
 
-export const getFriendsAcceptFriendRequestQueryKey = (requesterIdentifier: string,) => {
-    return [
-    'PUT', `/api/v1/Friends/requests/accept/${requesterIdentifier}`
-    ] as const;
+export const getFriendsAcceptFriendRequestMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError,{requesterIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError,{requesterIdentifier: string}, TContext> => {
+
+const mutationKey = ['friendsAcceptFriendRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, {requesterIdentifier: string}> = (props) => {
+          const {requesterIdentifier} = props ?? {};
+
+          return  friendsAcceptFriendRequest(requesterIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FriendsAcceptFriendRequestMutationResult = NonNullable<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>>
+
+    export type FriendsAcceptFriendRequestMutationError = unknown
+
+    export const useFriendsAcceptFriendRequest = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError,{requesterIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof friendsAcceptFriendRequest>>,
+        TError,
+        {requesterIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getFriendsAcceptFriendRequestMutationOptions(options), queryClient);
     }
-
-
-export const getFriendsAcceptFriendRequestQueryOptions = <TData = Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError = unknown>(requesterIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFriendsAcceptFriendRequestQueryKey(requesterIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>> = ({ signal }) => friendsAcceptFriendRequest(requesterIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: requesterIdentifier !== null && requesterIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FriendsAcceptFriendRequestQueryResult = NonNullable<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>>
-export type FriendsAcceptFriendRequestQueryError = unknown
-
-
-export function useFriendsAcceptFriendRequest<TData = Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError = unknown>(
- requesterIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsAcceptFriendRequest>>,
-          TError,
-          Awaited<ReturnType<typeof friendsAcceptFriendRequest>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsAcceptFriendRequest<TData = Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError = unknown>(
- requesterIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsAcceptFriendRequest>>,
-          TError,
-          Awaited<ReturnType<typeof friendsAcceptFriendRequest>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsAcceptFriendRequest<TData = Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError = unknown>(
- requesterIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFriendsAcceptFriendRequest<TData = Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError = unknown>(
- requesterIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsAcceptFriendRequest>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFriendsAcceptFriendRequestQueryOptions(requesterIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getFriendsRemoveConnectionUrl = (otherIdentifier: string,) => {
+    export const getFriendsRemoveConnectionUrl = (otherIdentifier: string,) => {
 
 
 
@@ -874,78 +1131,48 @@ export const friendsRemoveConnection = async (otherIdentifier: string, options?:
 
 
 
-export const getFriendsRemoveConnectionQueryKey = (otherIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/Friends/reject/${otherIdentifier}`
-    ] as const;
+export const getFriendsRemoveConnectionMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError,{otherIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError,{otherIdentifier: string}, TContext> => {
+
+const mutationKey = ['friendsRemoveConnection'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsRemoveConnection>>, {otherIdentifier: string}> = (props) => {
+          const {otherIdentifier} = props ?? {};
+
+          return  friendsRemoveConnection(otherIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FriendsRemoveConnectionMutationResult = NonNullable<Awaited<ReturnType<typeof friendsRemoveConnection>>>
+
+    export type FriendsRemoveConnectionMutationError = unknown
+
+    export const useFriendsRemoveConnection = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError,{otherIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof friendsRemoveConnection>>,
+        TError,
+        {otherIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getFriendsRemoveConnectionMutationOptions(options), queryClient);
     }
-
-
-export const getFriendsRemoveConnectionQueryOptions = <TData = Awaited<ReturnType<typeof friendsRemoveConnection>>, TError = unknown>(otherIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFriendsRemoveConnectionQueryKey(otherIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsRemoveConnection>>> = ({ signal }) => friendsRemoveConnection(otherIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: otherIdentifier !== null && otherIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FriendsRemoveConnectionQueryResult = NonNullable<Awaited<ReturnType<typeof friendsRemoveConnection>>>
-export type FriendsRemoveConnectionQueryError = unknown
-
-
-export function useFriendsRemoveConnection<TData = Awaited<ReturnType<typeof friendsRemoveConnection>>, TError = unknown>(
- otherIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsRemoveConnection>>,
-          TError,
-          Awaited<ReturnType<typeof friendsRemoveConnection>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsRemoveConnection<TData = Awaited<ReturnType<typeof friendsRemoveConnection>>, TError = unknown>(
- otherIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsRemoveConnection>>,
-          TError,
-          Awaited<ReturnType<typeof friendsRemoveConnection>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsRemoveConnection<TData = Awaited<ReturnType<typeof friendsRemoveConnection>>, TError = unknown>(
- otherIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFriendsRemoveConnection<TData = Awaited<ReturnType<typeof friendsRemoveConnection>>, TError = unknown>(
- otherIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveConnection>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFriendsRemoveConnectionQueryOptions(otherIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getFriendsRemoveFriendUrl = (friendIdentifier: string,) => {
+    export const getFriendsRemoveFriendUrl = (friendIdentifier: string,) => {
 
 
 
@@ -968,74 +1195,44 @@ export const friendsRemoveFriend = async (friendIdentifier: string, options?: Re
 
 
 
-export const getFriendsRemoveFriendQueryKey = (friendIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/Friends/${friendIdentifier}`
-    ] as const;
+export const getFriendsRemoveFriendMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError,{friendIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError,{friendIdentifier: string}, TContext> => {
+
+const mutationKey = ['friendsRemoveFriend'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof friendsRemoveFriend>>, {friendIdentifier: string}> = (props) => {
+          const {friendIdentifier} = props ?? {};
+
+          return  friendsRemoveFriend(friendIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FriendsRemoveFriendMutationResult = NonNullable<Awaited<ReturnType<typeof friendsRemoveFriend>>>
+
+    export type FriendsRemoveFriendMutationError = unknown
+
+    export const useFriendsRemoveFriend = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError,{friendIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof friendsRemoveFriend>>,
+        TError,
+        {friendIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getFriendsRemoveFriendMutationOptions(options), queryClient);
     }
-
-
-export const getFriendsRemoveFriendQueryOptions = <TData = Awaited<ReturnType<typeof friendsRemoveFriend>>, TError = unknown>(friendIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFriendsRemoveFriendQueryKey(friendIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof friendsRemoveFriend>>> = ({ signal }) => friendsRemoveFriend(friendIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: friendIdentifier !== null && friendIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FriendsRemoveFriendQueryResult = NonNullable<Awaited<ReturnType<typeof friendsRemoveFriend>>>
-export type FriendsRemoveFriendQueryError = unknown
-
-
-export function useFriendsRemoveFriend<TData = Awaited<ReturnType<typeof friendsRemoveFriend>>, TError = unknown>(
- friendIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsRemoveFriend>>,
-          TError,
-          Awaited<ReturnType<typeof friendsRemoveFriend>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsRemoveFriend<TData = Awaited<ReturnType<typeof friendsRemoveFriend>>, TError = unknown>(
- friendIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof friendsRemoveFriend>>,
-          TError,
-          Awaited<ReturnType<typeof friendsRemoveFriend>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFriendsRemoveFriend<TData = Awaited<ReturnType<typeof friendsRemoveFriend>>, TError = unknown>(
- friendIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFriendsRemoveFriend<TData = Awaited<ReturnType<typeof friendsRemoveFriend>>, TError = unknown>(
- friendIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof friendsRemoveFriend>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFriendsRemoveFriendQueryOptions(friendIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

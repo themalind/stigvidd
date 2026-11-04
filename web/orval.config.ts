@@ -67,7 +67,8 @@ export default defineConfig({
         mutator: { path: "src/api/mutator.ts", name: "customFetch" },
         // Hooks return the DTO directly instead of { data, status, headers }.
         fetch: { includeHttpResponseReturnType: false },
-        query: { useQuery: true, useMutation: true },
+        // keep-comment: an explicit useQuery/useMutation applies to every verb (GET became a mutation); orval.dev/docs/reference/configuration/output
+        query: { useSuspenseQuery: true, signal: true },
       },
     },
   },

@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -89,48 +92,130 @@ export const adminContentReportsGetReports = async (params?: AdminContentReports
 
 
 
-export const getAdminContentReportsGetReportsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError,{params?: AdminContentReportsGetReportsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError,{params?: AdminContentReportsGetReportsParams}, TContext> => {
-
-const mutationKey = ['adminContentReportsGetReports'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminContentReportsGetReports>>, {params?: AdminContentReportsGetReportsParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  adminContentReportsGetReports(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminContentReportsGetReportsMutationResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReports>>>
-
-    export type AdminContentReportsGetReportsMutationError = unknown
-
-    export const useAdminContentReportsGetReports = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError,{params?: AdminContentReportsGetReportsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminContentReportsGetReports>>,
-        TError,
-        {params?: AdminContentReportsGetReportsParams},
-        TContext
-      > => {
-      return useMutation(getAdminContentReportsGetReportsMutationOptions(options), queryClient);
+export const getAdminContentReportsGetReportsQueryKey = (params?: AdminContentReportsGetReportsParams,) => {
+    return [
+    `/api/v1/admin/content-reports/reports`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getAdminContentReportsGetReportUrl = (identifier: string,) => {
+
+
+export const getAdminContentReportsGetReportsQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetReports>>> = ({ signal }) => adminContentReportsGetReports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetReportsQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReports>>>
+export type AdminContentReportsGetReportsQueryError = unknown
+
+
+export function useAdminContentReportsGetReports<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params: undefined |  AdminContentReportsGetReportsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetReports>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReports<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetReports>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetReports>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReports<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetReports<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetReportsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetReportsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetReportsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetReports>>> = ({ signal }) => adminContentReportsGetReports(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetReportsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReports>>>
+export type AdminContentReportsGetReportsSuspenseQueryError = unknown
+
+
+export function useAdminContentReportsGetReportsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params: undefined |  AdminContentReportsGetReportsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReportsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReportsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetReportsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError = unknown>(
+ params?: AdminContentReportsGetReportsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReports>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetReportsSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetReportUrl = (identifier: string,) => {
 
 
 
@@ -153,48 +238,130 @@ export const adminContentReportsGetReport = async (identifier: string, options?:
 
 
 
-export const getAdminContentReportsGetReportMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['adminContentReportsGetReport'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminContentReportsGetReport>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  adminContentReportsGetReport(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminContentReportsGetReportMutationResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReport>>>
-
-    export type AdminContentReportsGetReportMutationError = unknown
-
-    export const useAdminContentReportsGetReport = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminContentReportsGetReport>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminContentReportsGetReportMutationOptions(options), queryClient);
+export const getAdminContentReportsGetReportQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/admin/content-reports/reports/${identifier}`
+    ] as const;
     }
-    export const getAdminContentReportsGetCountsUrl = () => {
+
+
+export const getAdminContentReportsGetReportQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetReportQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetReport>>> = ({ signal }) => adminContentReportsGetReport(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetReportQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReport>>>
+export type AdminContentReportsGetReportQueryError = unknown
+
+
+export function useAdminContentReportsGetReport<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetReport>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReport<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetReport>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetReport>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReport<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetReport<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetReportQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetReportSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetReportQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetReport>>> = ({ signal }) => adminContentReportsGetReport(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetReportSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReport>>>
+export type AdminContentReportsGetReportSuspenseQueryError = unknown
+
+
+export function useAdminContentReportsGetReportSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReportSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReportSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetReportSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetReportSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetCountsUrl = () => {
 
 
 
@@ -217,48 +384,130 @@ export const adminContentReportsGetCounts = async ( options?: RequestInit): Prom
 
 
 
-export const getAdminContentReportsGetCountsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError,void, TContext> => {
-
-const mutationKey = ['adminContentReportsGetCounts'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, void> = () => {
-
-
-          return  adminContentReportsGetCounts(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminContentReportsGetCountsMutationResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetCounts>>>
-
-    export type AdminContentReportsGetCountsMutationError = unknown
-
-    export const useAdminContentReportsGetCounts = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminContentReportsGetCounts>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getAdminContentReportsGetCountsMutationOptions(options), queryClient);
+export const getAdminContentReportsGetCountsQueryKey = () => {
+    return [
+    `/api/v1/admin/content-reports/counts`
+    ] as const;
     }
-    export const getAdminContentReportsDecideUrl = (identifier: string,) => {
+
+
+export const getAdminContentReportsGetCountsQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetCountsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetCounts>>> = ({ signal }) => adminContentReportsGetCounts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetCountsQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetCounts>>>
+export type AdminContentReportsGetCountsQueryError = unknown
+
+
+export function useAdminContentReportsGetCounts<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetCounts>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetCounts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetCounts<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetCounts>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetCounts>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetCounts<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetCounts<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetCountsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetCountsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetCountsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetCounts>>> = ({ signal }) => adminContentReportsGetCounts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetCountsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetCounts>>>
+export type AdminContentReportsGetCountsSuspenseQueryError = unknown
+
+
+export function useAdminContentReportsGetCountsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetCountsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetCountsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetCountsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetCountsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsDecideUrl = (identifier: string,) => {
 
 
 
@@ -282,84 +531,48 @@ export const adminContentReportsDecide = async (identifier: string,
 
 
 
-export const getAdminContentReportsDecideQueryKey = (identifier: string,
-    decideContentReportRequest?: DecideContentReportRequest,) => {
-    return [
-    'POST', `/api/v1/admin/content-reports/reports/${identifier}/decide`, decideContentReportRequest
-    ] as const;
+export const getAdminContentReportsDecideMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError,{identifier: string;data: DecideContentReportRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError,{identifier: string;data: DecideContentReportRequest}, TContext> => {
+
+const mutationKey = ['adminContentReportsDecide'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminContentReportsDecide>>, {identifier: string;data: DecideContentReportRequest}> = (props) => {
+          const {identifier,data} = props ?? {};
+
+          return  adminContentReportsDecide(identifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminContentReportsDecideMutationResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsDecide>>>
+    export type AdminContentReportsDecideMutationBody = DecideContentReportRequest
+    export type AdminContentReportsDecideMutationError = ProblemDetails
+
+    export const useAdminContentReportsDecide = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError,{identifier: string;data: DecideContentReportRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminContentReportsDecide>>,
+        TError,
+        {identifier: string;data: DecideContentReportRequest},
+        TContext
+      > => {
+      return useMutation(getAdminContentReportsDecideMutationOptions(options), queryClient);
     }
-
-
-export const getAdminContentReportsDecideQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsDecide>>, TError = ProblemDetails>(identifier: string,
-    decideContentReportRequest: DecideContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsDecideQueryKey(identifier,decideContentReportRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsDecide>>> = ({ signal }) => adminContentReportsDecide(identifier,decideContentReportRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminContentReportsDecideQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsDecide>>>
-export type AdminContentReportsDecideQueryError = ProblemDetails
-
-
-export function useAdminContentReportsDecide<TData = Awaited<ReturnType<typeof adminContentReportsDecide>>, TError = ProblemDetails>(
- identifier: string,
-    decideContentReportRequest: DecideContentReportRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminContentReportsDecide>>,
-          TError,
-          Awaited<ReturnType<typeof adminContentReportsDecide>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminContentReportsDecide<TData = Awaited<ReturnType<typeof adminContentReportsDecide>>, TError = ProblemDetails>(
- identifier: string,
-    decideContentReportRequest: DecideContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminContentReportsDecide>>,
-          TError,
-          Awaited<ReturnType<typeof adminContentReportsDecide>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminContentReportsDecide<TData = Awaited<ReturnType<typeof adminContentReportsDecide>>, TError = ProblemDetails>(
- identifier: string,
-    decideContentReportRequest: DecideContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminContentReportsDecide<TData = Awaited<ReturnType<typeof adminContentReportsDecide>>, TError = ProblemDetails>(
- identifier: string,
-    decideContentReportRequest: DecideContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsDecide>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminContentReportsDecideQueryOptions(identifier,decideContentReportRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminContentReportsGetReportersUrl = (params?: AdminContentReportsGetReportersParams,) => {
+    export const getAdminContentReportsGetReportersUrl = (params?: AdminContentReportsGetReportersParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -389,48 +602,130 @@ export const adminContentReportsGetReporters = async (params?: AdminContentRepor
 
 
 
-export const getAdminContentReportsGetReportersMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError,{params?: AdminContentReportsGetReportersParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError,{params?: AdminContentReportsGetReportersParams}, TContext> => {
-
-const mutationKey = ['adminContentReportsGetReporters'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, {params?: AdminContentReportsGetReportersParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  adminContentReportsGetReporters(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminContentReportsGetReportersMutationResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReporters>>>
-
-    export type AdminContentReportsGetReportersMutationError = unknown
-
-    export const useAdminContentReportsGetReporters = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError,{params?: AdminContentReportsGetReportersParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminContentReportsGetReporters>>,
-        TError,
-        {params?: AdminContentReportsGetReportersParams},
-        TContext
-      > => {
-      return useMutation(getAdminContentReportsGetReportersMutationOptions(options), queryClient);
+export const getAdminContentReportsGetReportersQueryKey = (params?: AdminContentReportsGetReportersParams,) => {
+    return [
+    `/api/v1/admin/content-reports/reporters`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getAdminContentReportsGetAuthorsUrl = (params?: AdminContentReportsGetAuthorsParams,) => {
+
+
+export const getAdminContentReportsGetReportersQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetReportersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetReporters>>> = ({ signal }) => adminContentReportsGetReporters(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetReportersQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReporters>>>
+export type AdminContentReportsGetReportersQueryError = unknown
+
+
+export function useAdminContentReportsGetReporters<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params: undefined |  AdminContentReportsGetReportersParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetReporters>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetReporters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReporters<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetReporters>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetReporters>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReporters<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetReporters<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetReportersQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetReportersSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetReportersQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetReporters>>> = ({ signal }) => adminContentReportsGetReporters(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetReportersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetReporters>>>
+export type AdminContentReportsGetReportersSuspenseQueryError = unknown
+
+
+export function useAdminContentReportsGetReportersSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params: undefined |  AdminContentReportsGetReportersParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReportersSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetReportersSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetReportersSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError = unknown>(
+ params?: AdminContentReportsGetReportersParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetReporters>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetReportersSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetAuthorsUrl = (params?: AdminContentReportsGetAuthorsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -460,48 +755,130 @@ export const adminContentReportsGetAuthors = async (params?: AdminContentReports
 
 
 
-export const getAdminContentReportsGetAuthorsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError,{params?: AdminContentReportsGetAuthorsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError,{params?: AdminContentReportsGetAuthorsParams}, TContext> => {
-
-const mutationKey = ['adminContentReportsGetAuthors'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, {params?: AdminContentReportsGetAuthorsParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  adminContentReportsGetAuthors(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminContentReportsGetAuthorsMutationResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>>
-
-    export type AdminContentReportsGetAuthorsMutationError = unknown
-
-    export const useAdminContentReportsGetAuthors = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError,{params?: AdminContentReportsGetAuthorsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminContentReportsGetAuthors>>,
-        TError,
-        {params?: AdminContentReportsGetAuthorsParams},
-        TContext
-      > => {
-      return useMutation(getAdminContentReportsGetAuthorsMutationOptions(options), queryClient);
+export const getAdminContentReportsGetAuthorsQueryKey = (params?: AdminContentReportsGetAuthorsParams,) => {
+    return [
+    `/api/v1/admin/content-reports/authors`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getAdminContentReportsGetVocabularyUrl = () => {
+
+
+export const getAdminContentReportsGetAuthorsQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetAuthorsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>> = ({ signal }) => adminContentReportsGetAuthors(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetAuthorsQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>>
+export type AdminContentReportsGetAuthorsQueryError = unknown
+
+
+export function useAdminContentReportsGetAuthors<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params: undefined |  AdminContentReportsGetAuthorsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetAuthors>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetAuthors>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetAuthors<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetAuthors>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetAuthors>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetAuthors<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetAuthors<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetAuthorsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetAuthorsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetAuthorsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>> = ({ signal }) => adminContentReportsGetAuthors(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetAuthorsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>>
+export type AdminContentReportsGetAuthorsSuspenseQueryError = unknown
+
+
+export function useAdminContentReportsGetAuthorsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params: undefined |  AdminContentReportsGetAuthorsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetAuthorsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetAuthorsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetAuthorsSuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError = unknown>(
+ params?: AdminContentReportsGetAuthorsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetAuthors>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetAuthorsSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetVocabularyUrl = () => {
 
 
 
@@ -524,44 +901,126 @@ export const adminContentReportsGetVocabulary = async ( options?: RequestInit): 
 
 
 
-export const getAdminContentReportsGetVocabularyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError,void, TContext> => {
-
-const mutationKey = ['adminContentReportsGetVocabulary'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, void> = () => {
-
-
-          return  adminContentReportsGetVocabulary(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminContentReportsGetVocabularyMutationResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>>
-
-    export type AdminContentReportsGetVocabularyMutationError = unknown
-
-    export const useAdminContentReportsGetVocabulary = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getAdminContentReportsGetVocabularyMutationOptions(options), queryClient);
+export const getAdminContentReportsGetVocabularyQueryKey = () => {
+    return [
+    `/api/v1/admin/content-reports/vocabulary`
+    ] as const;
     }
+
+
+export const getAdminContentReportsGetVocabularyQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetVocabularyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>> = ({ signal }) => adminContentReportsGetVocabulary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetVocabularyQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>>
+export type AdminContentReportsGetVocabularyQueryError = unknown
+
+
+export function useAdminContentReportsGetVocabulary<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetVocabulary<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>,
+          TError,
+          Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetVocabulary<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetVocabulary<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetVocabularyQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminContentReportsGetVocabularySuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminContentReportsGetVocabularyQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>> = ({ signal }) => adminContentReportsGetVocabulary({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminContentReportsGetVocabularySuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>>
+export type AdminContentReportsGetVocabularySuspenseQueryError = unknown
+
+
+export function useAdminContentReportsGetVocabularySuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetVocabularySuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminContentReportsGetVocabularySuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminContentReportsGetVocabularySuspense<TData = Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminContentReportsGetVocabulary>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminContentReportsGetVocabularySuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

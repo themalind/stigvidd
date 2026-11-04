@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { createTestQueryClient, renderWithProviders } from "@/test/render";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import type { AuthUser, StigviddUser } from "@/types/types";
@@ -49,11 +50,15 @@ function Probe() {
 }
 
 function renderAuth() {
-  render(
+  const client = createTestQueryClient();
+  client.setQueryData(["cached admin data"], "secret");
+  renderWithProviders(
     <AuthProvider>
       <Probe />
     </AuthProvider>,
+    { client },
   );
+  return client;
 }
 
 const state = () => screen.getByTestId("state").textContent;
@@ -143,6 +148,17 @@ describe("signing in and out", () => {
     expect(keycloak.logoutKeycloak).toHaveBeenCalledOnce();
     expect(screen.getByTestId("profile")).toHaveTextContent("no profile");
   });
+
+  it("empties the query cache, so the next admin never sees the last one's data", async () => {
+    keycloak.restoreSession.mockResolvedValue(admin);
+    const client = renderAuth();
+    await waitFor(() => expect(state()).toBe("signed in as admin"));
+
+    await userEvent.click(screen.getByRole("button", { name: "Sign out" }));
+
+    await waitFor(() => expect(state()).toBe("signed out"));
+    expect(client.getQueryData(["cached admin data"])).toBeUndefined();
+  });
 });
 
 describe("a session that expires mid-use", () => {
@@ -167,8 +183,20 @@ describe("a session that expires mid-use", () => {
     expect(screen.getByTestId("profile")).toHaveTextContent("no profile");
   });
 
+  it("empties the query cache when the session expires", async () => {
+    keycloak.restoreSession.mockResolvedValue(admin);
+    const client = renderAuth();
+    await waitFor(() => expect(state()).toBe("signed in as admin"));
+
+    const expire = keycloak.setSessionExpiredHandler.mock.calls[0][0] as () => void;
+    expire();
+
+    await waitFor(() => expect(state()).toBe("signed out"));
+    expect(client.getQueryData(["cached admin data"])).toBeUndefined();
+  });
+
   it("unregisters the handler on unmount, so a dead provider is not called", async () => {
-    const { unmount } = render(
+    const { unmount } = renderWithProviders(
       <AuthProvider>
         <Probe />
       </AuthProvider>,
@@ -184,7 +212,7 @@ describe("a session that expires mid-use", () => {
 /** The SPA's own gate. Everything behind it assumes an authenticated admin. */
 describe("ProtectedRoute", () => {
   function renderRoutes() {
-    render(
+    renderWithProviders(
       <AuthProvider>
         <MemoryRouter initialEntries={["/admin"]}>
           <Routes>

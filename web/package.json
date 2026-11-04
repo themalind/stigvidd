@@ -19,7 +19,8 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-query": "^5.104.5",
+    "@tanstack/react-query-devtools": "^5.104.5",
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/core": "3.31.3",
     "@tiptap/extension-link": "3.31.3",
@@ -35,6 +36,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-error-boundary": "^6.1.6",
     "react-router": "^7.13.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
