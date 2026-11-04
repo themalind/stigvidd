@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import { lazy, Suspense, type ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
 
+const CityAreasPage = lazy(() => import("@/pages/admin/city-areas-page"));
 const DashboardPage = lazy(() => import("@/pages/dashboard/dashboard-page"));
 const HikeSubmissionReviewPage = lazy(() => import("@/pages/admin/hike-submission-review-page"));
 const HikeSubmissionsPage = lazy(() => import("@/pages/admin/hike-submissions-page"));
@@ -70,6 +71,11 @@ export const router = createBrowserRouter([
             path: "/trails",
             handle: { title: "Trails" },
             element: withSuspense(TrailsPage),
+          },
+          {
+            path: "/areas",
+            handle: { title: "Areas" },
+            element: withSuspense(CityAreasPage),
           },
           {
             path: "/media",
