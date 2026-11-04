@@ -8,7 +8,7 @@ import type {
   UpdateTrailLinkRequest,
   UpdateTrailRequest,
 } from "@/api/generated/model";
-import { CLASSIFICATION } from "@/types/types";
+import { CLASSIFICATION } from "@/utils/classification";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

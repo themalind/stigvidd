@@ -11,9 +11,8 @@ import {
   getAdminTrailsSetTrailSymbolUrl,
 } from "@/api/generated/admin-trails/admin-trails";
 import type { TrailImageResponse, TrailSymbolResponse } from "@/api/generated/model";
-import { appendProcessingOptions } from "@/api/image-options";
+import { appendProcessingOptions, type ImageProcessingOptions } from "@/api/image-options";
 import { customFetch } from "@/api/mutator";
-import type { ImageProcessingOptions } from "@/types/types";
 
 // keep-comment: the generated multipart clients expand a File's own properties into fields, so these bodies are built here
 function postImages<T>(url: string, field: string, files: File[], options?: ImageProcessingOptions): Promise<T> {

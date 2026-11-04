@@ -3,7 +3,13 @@
 
 import { jwtDecode } from "jwt-decode";
 import { logger } from "./telemetry";
-import type { AuthUser } from "@/types/types";
+
+// keep-comment: `id` is the token's `sub` claim; the profile in our own database is StigviddUser
+export type AuthUser = {
+  id: string;
+  email: string;
+  username: string;
+};
 
 /**
  * Keycloak Direct Access Grant (Resource Owner Password Credentials) for the

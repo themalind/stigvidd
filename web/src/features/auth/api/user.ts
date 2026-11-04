@@ -1,13 +1,11 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { StigviddUser } from "@/types/types";
+import type { UserResponse } from "@/api/generated/model";
 import { usersGetStigViddUser } from "@/api/generated/users/users";
 
-// See trail.ts for the wrapper rationale — delegates to the generated client
-// while keeping the app's existing signature. Auth + base URL come from the
-// `customFetch` mutator the generated function calls.
+export type StigviddUser = UserResponse;
 
-export async function getStigviddUser(): Promise<StigviddUser> {
-  return (await usersGetStigViddUser()) as StigviddUser;
+export function getStigviddUser(): Promise<StigviddUser> {
+  return usersGetStigViddUser();
 }

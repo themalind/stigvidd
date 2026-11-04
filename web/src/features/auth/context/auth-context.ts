@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { createContext, useContext } from "react";
-import type { AuthUser, StigviddUser } from "@/types/types";
+import type { AuthUser } from "@/lib/keycloak-auth";
+import type { StigviddUser } from "@/features/auth/api/user";
 
 export type AuthContextValue = {
   user: AuthUser | null;

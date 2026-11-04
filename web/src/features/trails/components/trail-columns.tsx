@@ -2,7 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { AdminTrailListItemResponse } from "@/api/generated/model";
-import type { TableColumn } from "@/types/types";
+
+export type TableColumn<T> = {
+  label: string;
+  key: keyof T;
+  type: string;
+  width?: number;
+};
 
 export const trailColumns: TableColumn<AdminTrailListItemResponse>[] = [
   { label: "Name", key: "name", type: "text" },

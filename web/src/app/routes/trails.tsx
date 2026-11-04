@@ -6,7 +6,7 @@ import { useSearchParams } from "react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { trailsQueryOptions } from "@/features/trails/api/trail";
 import { trailColumns } from "@/features/trails/components/trail-columns";
-import { CLASSIFICATION } from "@/types/types";
+import { CLASSIFICATION } from "@/utils/classification";
 import { Page } from "@/components/page";
 import TrailsTable from "@/features/trails/components/trails-table";
 import { Input } from "@/components/ui/input";
