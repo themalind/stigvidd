@@ -1,80 +1,112 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { TrailImageResponse, TrailShortInfoResponse } from "@/types/types";
+import type { TrailImageResponse } from "@/api/generated/model";
+import { ApiError } from "@/api/mutator";
+import { trailDetail } from "@/testing/fixtures/trails";
+import { renderWithProviders } from "@/testing/render";
 
-const api = vi.hoisted(() => ({
-  getTrailByIdentifier: vi.fn(),
-  addTrailImages: vi.fn(),
-  deleteTrailImage: vi.fn(),
+const api = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
+});
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: api.mock.customFetch,
 }));
-vi.mock("@/features/trails/api/trail", () => api);
 
-const toasts = vi.hoisted(() => ({
-  toast: { success: vi.fn(), error: vi.fn() },
-}));
+const toasts = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("sonner", () => toasts);
 
 import TrailImagesDialog from "./trail-images-dialog";
 
-const trail: TrailShortInfoResponse = {
-  identifier: "t-1",
-  name: "Knalleleden",
-  trailLength: 4000,
-  accessibility: true,
-  classification: 1,
-  city: "Borås",
-};
+const TRAIL = "/api/v1/admin/trails/t-1";
+const IMAGES = `${TRAIL}/images`;
+const trail = { identifier: "t-1", name: "Knalleleden" };
 
 const image = (identifier: string): TrailImageResponse => ({
   identifier,
   imageUrl: `https://media.test/${identifier}.jpg`,
 });
 
-/** The dialog fetches nothing until it is opened. */
+let stored: TrailImageResponse[] = [];
+
 async function open(images = [image("img-1"), image("img-2")]) {
-  api.getTrailByIdentifier.mockResolvedValue({ trailImagesResponse: images });
-  render(<TrailImagesDialog data={trail} selected={true} />);
+  stored = images;
+  renderWithProviders(<TrailImagesDialog data={trail} selected={true} />);
   await userEvent.click(screen.getByRole("button"));
-  await waitFor(() => expect(screen.getAllByTitle("Delete image")).toHaveLength(images.length));
+  await screen.findByText("Manage images for this trail.");
+  await waitFor(() => expect(screen.queryAllByTitle("Delete image")).toHaveLength(images.length));
 }
 
 const deleteButtons = () => screen.getAllByTitle("Delete image");
+const calls = (method: string, path: string) =>
+  api.mock.calls.filter((call) => call.method === method && call.path === path);
+
+function fileInput(): HTMLInputElement {
+  const input = document.querySelector<HTMLInputElement>("input[type=file]");
+  if (!input) throw new Error("expected a file input");
+  return input;
+}
 
 beforeEach(() => {
-  api.deleteTrailImage.mockResolvedValue(undefined);
-  api.addTrailImages.mockResolvedValue([]);
+  vi.clearAllMocks();
+  api.mock.reset();
+  api.mock.on("GET", TRAIL, () => trailDetail({ identifier: "t-1", trailImagesResponse: stored }));
+  api.mock.on("POST", IMAGES, () => {
+    const added = [image("img-3")];
+    stored = [...stored, ...added];
+    return added;
+  });
+  for (const id of ["img-1", "img-2"]) {
+    api.mock.on("DELETE", `/api/v1/admin/trails/images/${id}`, () => {
+      stored = stored.filter((i) => i.identifier !== id);
+      return undefined;
+    });
+  }
 });
 
 describe("opening the dialog", () => {
+  it("fetches nothing until it is opened", () => {
+    renderWithProviders(<TrailImagesDialog data={trail} selected={true} />);
+
+    expect(api.mock.calls).toHaveLength(0);
+  });
+
+  it("offers no way in when the row is not selected", () => {
+    renderWithProviders(<TrailImagesDialog data={trail} selected={false} />);
+
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
   it("fetches the trail's images", async () => {
     await open();
 
-    expect(api.getTrailByIdentifier).toHaveBeenCalledWith({
-      identifier: "t-1",
-    });
+    expect(calls("GET", TRAIL)).toHaveLength(1);
   });
 
   it("shows nothing to delete for a trail with no images", async () => {
-    api.getTrailByIdentifier.mockResolvedValue({ trailImagesResponse: [] });
-    render(<TrailImagesDialog data={trail} selected={true} />);
+    await open([]);
 
-    await userEvent.click(screen.getByRole("button"));
-
-    await screen.findByText("Manage images for this trail.");
     expect(screen.queryByTitle("Delete image")).not.toBeInTheDocument();
   });
 
-  it("says so when the images cannot be loaded", async () => {
-    api.getTrailByIdentifier.mockRejectedValue(new Error("nope"));
-    render(<TrailImagesDialog data={trail} selected={true} />);
+  it("says so when the images cannot be loaded, and can try again", async () => {
+    api.mock.on("GET", TRAIL, () => {
+      throw new ApiError("Not found", 404);
+    });
+    renderWithProviders(<TrailImagesDialog data={trail} selected={true} />);
 
     await userEvent.click(screen.getByRole("button"));
+    expect(await screen.findByText("Failed to load images.")).toBeVisible();
 
-    await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to load images."));
+    api.mock.on("GET", TRAIL, () => trailDetail({ identifier: "t-1", trailImagesResponse: [image("img-1")] }));
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    await waitFor(() => expect(deleteButtons()).toHaveLength(1));
   });
 });
 
@@ -96,7 +128,7 @@ describe("deleting an image", () => {
 
     await userEvent.click(deleteButtons()[0]);
 
-    expect(api.deleteTrailImage).not.toHaveBeenCalled();
+    expect(api.mock.calls.filter((call) => call.method === "DELETE")).toHaveLength(0);
     expect(deleteButtons()).toHaveLength(2);
   });
 
@@ -106,14 +138,18 @@ describe("deleting an image", () => {
 
     await userEvent.click(deleteButtons()[1]);
 
-    await waitFor(() => expect(api.deleteTrailImage).toHaveBeenCalledWith("img-2"));
-    expect(api.deleteTrailImage).toHaveBeenCalledOnce();
     await waitFor(() => expect(deleteButtons()).toHaveLength(1));
+    expect(api.mock.calls.filter((call) => call.method === "DELETE").map((call) => call.path)).toEqual([
+      "/api/v1/admin/trails/images/img-2",
+    ]);
+    expect(toasts.toast.success).toHaveBeenCalledWith("Image deleted.");
   });
 
   it("keeps the image, and says so, when the server refuses", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
-    api.deleteTrailImage.mockRejectedValue(new Error("500"));
+    api.mock.on("DELETE", "/api/v1/admin/trails/images/img-1", () => {
+      throw new ApiError("Server error", 500);
+    });
     await open();
 
     await userEvent.click(deleteButtons()[0]);
@@ -126,10 +162,6 @@ describe("deleting an image", () => {
     expect(deleteButtons()[0]).toBeEnabled();
   });
 
-  // While the enlarged view is open it is a modal of its own, and Radix makes the
-  // grid behind it inert — so the delete button cannot be reached from there. The
-  // `setEnlarged(null)` inside handleDelete is a second line of defence, not a path
-  // a user can take, and driving it here would need an event no pointer can produce.
   it("opens an enlarged view when an image is clicked", async () => {
     await open();
 
@@ -140,25 +172,28 @@ describe("deleting an image", () => {
 });
 
 describe("uploading", () => {
-  it("adds what came back to the grid", async () => {
-    api.addTrailImages.mockResolvedValue([image("img-3")]);
+  it("adds what came back to the grid and says how many", async () => {
     await open();
 
-    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
-    await userEvent.upload(input, new File(["x"], "photo.jpg", { type: "image/jpeg" }));
+    await userEvent.upload(fileInput(), new File(["x"], "photo.jpg", { type: "image/jpeg" }));
 
     await waitFor(() => expect(deleteButtons()).toHaveLength(3));
-    expect(api.addTrailImages).toHaveBeenCalledWith("t-1", [expect.objectContaining({ name: "photo.jpg" })]);
+    const body = calls("POST", IMAGES)[0].body;
+    if (!(body instanceof FormData)) throw new Error("expected a multipart body");
+    expect(body.getAll("images")).toEqual([expect.objectContaining({ name: "photo.jpg" })]);
+    expect(toasts.toast.success).toHaveBeenCalledWith("1 image uploaded.");
   });
 
   it("keeps the grid as it was when the upload failed", async () => {
-    api.addTrailImages.mockRejectedValue(new Error("500"));
+    api.mock.on("POST", IMAGES, () => {
+      throw new ApiError("Server error", 500);
+    });
     await open();
 
-    const input = document.querySelector<HTMLInputElement>("input[type=file]")!;
-    await userEvent.upload(input, new File(["x"], "photo.jpg", { type: "image/jpeg" }));
+    await userEvent.upload(fileInput(), new File(["x"], "photo.jpg", { type: "image/jpeg" }));
 
     await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to upload images."));
     expect(deleteButtons()).toHaveLength(2);
+    expect(fileInput().value).toBe("");
   });
 });

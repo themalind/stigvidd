@@ -12,17 +12,6 @@ export type TrailShortInfoResponse = {
   startLongitude?: number;
 };
 
-export type AdminTrailListItem = TrailShortInfoResponse & {
-  isVerified: boolean;
-  hasImages: boolean;
-  hasExampleImages: boolean;
-  hasSymbol: boolean;
-  hasDescription: boolean;
-  hasFullDescription: boolean;
-  createdAt: string;
-  lastUpdatedAt: string;
-};
-
 export type StigviddUser = {
   identifier: string;
   nickName: string;
@@ -37,17 +26,6 @@ export type AuthUser = {
   id: string;
   email: string;
   username: string;
-};
-
-export type VisitorInformation = {
-  identifier: string;
-  gettingThere: string;
-  publicTransport: string;
-  parking: string;
-  illumination: boolean;
-  illuminationText: string;
-  maintainedBy: string;
-  winterMaintenance: boolean;
 };
 
 export type TrailImageResponse = {
@@ -82,69 +60,11 @@ export type ImageProcessingOptions = {
   cropHeight?: number;
 };
 
-export type TrailResponse = {
-  identifier: string;
-  name: string;
-  trailLength: number;
-  classification: number;
-  accessibility: boolean;
-  accessibilityInfo: string;
-  trailSymbol: string;
-  trailSymbolImage: string;
-  description: string;
-  fullDescription: string;
-  coordinates?: string;
-  tags: string;
-  createdBy: string;
-  isVerified: boolean;
-  city: string;
-  visitorInformation?: VisitorInformation;
-  trailImagesResponse?: TrailImageResponse[];
-  trailLinksResponse?: TrailLinkResponse[];
-};
-
-export type TrailLinkResponse = {
-  identifier: string;
-  link: string;
-  title: string;
-};
-
-export type UpdateTrailLinkRequest = {
-  identifier?: string;
-  title: string;
-  link: string;
-};
-
 export type TableColumn<T> = {
   label: string;
   key: keyof T;
   type: string;
   width?: number;
-};
-
-export type UpdateVisitorInformationRequest = {
-  gettingThere?: string;
-  publicTransport?: string;
-  parking?: string;
-  illumination?: boolean;
-  illuminationText?: string;
-  maintainedBy?: string;
-  winterMaintenance?: boolean;
-};
-
-export type UpdateTrailRequest = {
-  name: string;
-  trailLength: number;
-  classification?: number;
-  accessibility?: boolean;
-  accessibilityInfo?: string;
-  trailSymbol?: string;
-  description?: string;
-  fullDescription?: string;
-  tags?: string;
-  city?: string;
-  visitorInformation?: UpdateVisitorInformationRequest;
-  links?: UpdateTrailLinkRequest[];
 };
 
 export const CLASSIFICATION: Record<number, string> = {

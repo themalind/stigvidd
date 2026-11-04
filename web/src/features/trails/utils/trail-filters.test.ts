@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import type { AdminTrailListItem } from "@/types/types";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
 import {
   emptyTrailFilters,
   filterTrails,
@@ -13,7 +13,7 @@ import {
 
 const NOW = Date.parse("2026-10-04T12:00:00Z");
 
-function trail(overrides: Partial<AdminTrailListItem>): AdminTrailListItem {
+function trail(overrides: Partial<AdminTrailListItemResponse>): AdminTrailListItemResponse {
   return {
     identifier: "id",
     name: "Name",

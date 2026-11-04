@@ -3,10 +3,10 @@
 
 import { describe, expect, it } from "vitest";
 import type { Session } from "@/features/trail-import/api/trail-import";
-import type { AdminTrailListItem } from "@/types/types";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
 import { importsAwaitingReview, relativeTime, share, trailStats } from "./dashboard";
 
-function trail(overrides: Partial<AdminTrailListItem>): AdminTrailListItem {
+function trail(overrides: Partial<AdminTrailListItemResponse>): AdminTrailListItemResponse {
   return {
     identifier: "id",
     name: "Name",

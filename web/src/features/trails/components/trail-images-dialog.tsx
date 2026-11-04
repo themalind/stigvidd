@@ -3,77 +3,27 @@
 
 import { Dialog } from "radix-ui";
 import { useRef, useState } from "react";
-import { addTrailImages, deleteTrailImage, getTrailByIdentifier } from "@/features/trails/api/trail";
-import type { TrailImageResponse, TrailShortInfoResponse } from "@/types/types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Images, X } from "lucide-react";
+import type { AdminTrailListItemResponse, TrailImageResponse } from "@/api/generated/model";
+import { QueryBoundary } from "@/components/query-boundary";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { trailQueryOptions, useAddTrailImages, useDeleteTrailImage } from "@/features/trails/api/trail";
 
 interface Props {
-  data: Pick<TrailShortInfoResponse, "identifier" | "name">;
+  data: Pick<AdminTrailListItemResponse, "identifier" | "name">;
   selected: boolean;
   label?: string;
 }
 
 export default function TrailImagesDialog({ data, selected, label }: Props) {
-  const [images, setImages] = useState<TrailImageResponse[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [enlarged, setEnlarged] = useState<TrailImageResponse | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  async function handleOpenChange(open: boolean) {
-    if (!open) {
-      setEnlarged(null);
-      return;
-    }
-    setLoading(true);
-    try {
-      const trail = await getTrailByIdentifier({ identifier: data.identifier });
-      setImages(trail.trailImagesResponse ?? []);
-    } catch {
-      toast.error("Failed to load images.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    setUploading(true);
-    try {
-      const newImages = await addTrailImages(data.identifier, files);
-      setImages((prev) => [...prev, ...newImages]);
-      toast.success(`${newImages.length} image${newImages.length !== 1 ? "s" : ""} uploaded.`);
-    } catch {
-      toast.error("Failed to upload images.");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  }
-
-  async function handleDelete(img: TrailImageResponse) {
-    if (!confirm("Delete this image?")) return;
-    setDeletingId(img.identifier);
-    try {
-      await deleteTrailImage(img.identifier);
-      setImages((prev) => prev.filter((i) => i.identifier !== img.identifier));
-      if (enlarged?.identifier === img.identifier) setEnlarged(null);
-      toast.success("Image deleted.");
-    } catch {
-      toast.error("Failed to delete image.");
-    } finally {
-      setDeletingId(null);
-    }
-  }
 
   return (
     <>
-      <Dialog.Root onOpenChange={handleOpenChange}>
+      <Dialog.Root onOpenChange={(open) => !open && setEnlarged(null)}>
         <Dialog.Trigger asChild>
           {selected ? (
             <Button variant={label ? "outline" : "ghost"} size={label ? "default" : "icon"}>
@@ -90,51 +40,23 @@ export default function TrailImagesDialog({ data, selected, label }: Props) {
               Manage images for this trail.
             </Dialog.Description>
 
-            {loading ? (
-              <p className="text-muted-foreground text-sm">Loading...</p>
-            ) : (
-              <div className="grid grid-cols-3 gap-3">
-                {images.map((img) => (
-                  <div key={img.identifier} className="group relative aspect-square overflow-hidden rounded-xs border">
-                    <img
-                      src={img.imageUrl}
-                      alt=""
-                      className="h-full w-full cursor-pointer object-cover"
-                      onClick={() => setEnlarged(img)}
-                    />
-                    <button
-                      onClick={() => handleDelete(img)}
-                      disabled={deletingId === img.identifier}
-                      title="Delete image"
-                      className={cn(
-                        "bg-background/80 hover:bg-background absolute top-1 right-1 rounded-xs p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
-                        deletingId === img.identifier && "cursor-not-allowed opacity-50",
-                      )}
-                    >
-                      <X className="size-3.5" />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className={cn(
-                    "border-muted-foreground/40 text-muted-foreground hover:border-muted-foreground hover:text-foreground aspect-square rounded-xs border-2 border-dashed text-2xl transition-colors",
-                    uploading && "cursor-not-allowed opacity-50",
-                  )}
-                >
-                  {uploading ? "..." : "+"}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </div>
-            )}
+            <QueryBoundary
+              fallback={<p className="text-muted-foreground text-sm">Loading...</p>}
+              errorFallback={({ retry }) => (
+                <div className="flex items-center gap-3">
+                  <p className="text-muted-foreground text-sm">Failed to load images.</p>
+                  <Button size="sm" variant="outline" onClick={retry}>
+                    Try again
+                  </Button>
+                </div>
+              )}
+            >
+              <ImageGrid
+                identifier={data.identifier}
+                onEnlarge={setEnlarged}
+                onDeleted={(id) => enlarged?.identifier === id && setEnlarged(null)}
+              />
+            </QueryBoundary>
 
             <div className="mt-4 flex justify-end">
               <Dialog.Close asChild>
@@ -162,5 +84,73 @@ export default function TrailImagesDialog({ data, selected, label }: Props) {
         </Dialog.Root>
       )}
     </>
+  );
+}
+
+interface GridProps {
+  identifier: string;
+  onEnlarge: (image: TrailImageResponse) => void;
+  onDeleted: (imageIdentifier: string) => void;
+}
+
+function ImageGrid({ identifier, onEnlarge, onDeleted }: GridProps) {
+  const { data: trail } = useSuspenseQuery(trailQueryOptions(identifier));
+  const upload = useAddTrailImages(identifier);
+  const remove = useDeleteTrailImage(identifier);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const images = trail.trailImagesResponse ?? [];
+  const deletingId = remove.isPending ? remove.variables : null;
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    upload.mutate(files, {
+      onSuccess: (added) => toast.success(`${added.length} image${added.length !== 1 ? "s" : ""} uploaded.`),
+      onSettled: () => {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      },
+    });
+  }
+
+  function handleDelete(image: TrailImageResponse) {
+    if (!confirm("Delete this image?")) return;
+    remove.mutate(image.identifier, { onSuccess: () => onDeleted(image.identifier) });
+  }
+
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {images.map((img) => (
+        <div key={img.identifier} className="group relative aspect-square overflow-hidden rounded-xs border">
+          <img
+            src={img.imageUrl}
+            alt=""
+            className="h-full w-full cursor-pointer object-cover"
+            onClick={() => onEnlarge(img)}
+          />
+          <button
+            onClick={() => handleDelete(img)}
+            disabled={deletingId === img.identifier}
+            title="Delete image"
+            className={cn(
+              "bg-background/80 hover:bg-background absolute top-1 right-1 rounded-xs p-0.5 opacity-0 transition-opacity group-hover:opacity-100",
+              deletingId === img.identifier && "cursor-not-allowed opacity-50",
+            )}
+          >
+            <X className="size-3.5" />
+          </button>
+        </div>
+      ))}
+      <button
+        onClick={() => fileInputRef.current?.click()}
+        disabled={upload.isPending}
+        className={cn(
+          "border-muted-foreground/40 text-muted-foreground hover:border-muted-foreground hover:text-foreground aspect-square rounded-xs border-2 border-dashed text-2xl transition-colors",
+          upload.isPending && "cursor-not-allowed opacity-50",
+        )}
+      >
+        {upload.isPending ? "..." : "+"}
+      </button>
+      <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+    </div>
   );
 }

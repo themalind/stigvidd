@@ -242,7 +242,7 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<SymbolUrlResponse>(TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<TrailSymbolResponse>(TestContext.Current.CancellationToken);
         body.Should().NotBeNull();
         body.SymbolUrl.Should().NotBeNullOrWhiteSpace();
     }
@@ -435,5 +435,4 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
     }
 
     /// <summary>The anonymous shape of AdminTrailsController.SetTrailSymbol's response body.</summary>
-    private sealed record SymbolUrlResponse(string SymbolUrl);
 }

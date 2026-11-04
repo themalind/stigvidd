@@ -169,6 +169,7 @@ export * from './trailResponse';
 export * from './trailsAddTrailBody';
 export * from './trailsGetPopularTrailsParams';
 export * from './trailShortInfoResponse';
+export * from './trailSymbolResponse';
 export * from './updateEventRequest';
 export * from './updateFacilityRequest';
 export * from './updateHikeRequest';
