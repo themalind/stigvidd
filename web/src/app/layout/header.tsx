@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useEffect } from "react";
 import { useMatches } from "react-router";
 import { isStaging } from "@/config/environment";
 import { cn } from "@/lib/utils";
@@ -18,10 +17,6 @@ export default function Header() {
 
   const currentTitle = [...matches].reverse().find((match) => match.handle?.title)?.handle?.title ?? "Stigvidd";
 
-  useEffect(() => {
-    document.title = isStaging ? `[STAGING] ${currentTitle}` : currentTitle;
-  }, [currentTitle]);
-
   return (
     <header
       className={cn(
@@ -29,6 +24,7 @@ export default function Header() {
         isStaging ? "bg-amber-100 dark:bg-amber-950 border-t-amber-500" : "bg-background border-t-sidebar",
       )}
     >
+      <title>{isStaging ? `[STAGING] ${currentTitle}` : currentTitle}</title>
       <div className="flex pl-1 items-center">
         <SidebarTrigger />
       </div>
