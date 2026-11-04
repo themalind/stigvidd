@@ -14,6 +14,7 @@ import {
   trailImportGetSession,
   trailImportGetSessions,
 } from "@/api/generated/trail-import/trail-import";
+import { getTrailImportGetSessionsSuspenseQueryOptions } from "@/api/generated/trail-import/trail-import";
 import type {
   DecideProposalRequest,
   DecideProposalsBulkRequest,
@@ -112,3 +113,5 @@ export async function decideBulk(sessionId: number, request: DecideProposalsBulk
 
   return result.decided;
 }
+
+export const sessionsQueryOptions = () => getTrailImportGetSessionsSuspenseQueryOptions();

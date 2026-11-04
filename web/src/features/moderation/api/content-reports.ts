@@ -7,6 +7,7 @@ import {
   adminContentReportsGetReport,
   adminContentReportsGetReports,
 } from "@/api/generated/admin-content-reports/admin-content-reports";
+import { getAdminContentReportsGetCountsSuspenseQueryOptions } from "@/api/generated/admin-content-reports/admin-content-reports";
 import type {
   ContentReportCountsResponse,
   ContentReportDetailResponse,
@@ -49,3 +50,5 @@ export async function decideReport(
 ): Promise<ReportDetail> {
   return adminContentReportsDecide(identifier, { decision, decisionNote });
 }
+
+export const reportCountsQueryOptions = () => getAdminContentReportsGetCountsSuspenseQueryOptions();

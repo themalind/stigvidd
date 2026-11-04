@@ -7,8 +7,8 @@
  */
 
 export interface ContentReportCountsResponse {
-  pending?: number;
-  dismissed?: number;
-  upheld?: number;
-  contentExpired?: number;
+  pending: number;
+  dismissed: number;
+  upheld: number;
+  contentExpired: number;
 }

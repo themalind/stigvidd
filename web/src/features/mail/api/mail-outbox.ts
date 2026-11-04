@@ -10,6 +10,7 @@ import {
   adminMailOutboxPurge,
   adminMailOutboxRetry,
 } from "@/api/generated/admin-mail-outbox/admin-mail-outbox";
+import { getAdminMailOutboxGetCountsSuspenseQueryOptions } from "@/api/generated/admin-mail-outbox/admin-mail-outbox";
 import type {
   MailOutboxCountsResponse,
   MailOutboxPurgeResponse,
@@ -78,3 +79,5 @@ export async function cancelOutboxMail(identifier: string): Promise<OutboxMailDe
 export async function purgeOutbox(olderThanDays: number): Promise<OutboxPurgeResult> {
   return adminMailOutboxPurge({ olderThanDays, confirm: true });
 }
+
+export const outboxCountsQueryOptions = () => getAdminMailOutboxGetCountsSuspenseQueryOptions();

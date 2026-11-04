@@ -8,9 +8,9 @@
 import type { AdminDashboardReviewResponse } from "./adminDashboardReviewResponse";
 
 export interface AdminDashboardResponse {
-  userCount?: number;
-  newUsersLast7Days?: number;
-  reviewCount?: number;
-  reviewsLast7Days?: number;
+  userCount: number;
+  newUsersLast7Days: number;
+  reviewCount: number;
+  reviewsLast7Days: number;
   latestReviews: AdminDashboardReviewResponse[];
 }
