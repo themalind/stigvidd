@@ -3,13 +3,12 @@
 
 import { useState, type ReactNode } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { ContentReportDetailResponse } from "@/api/generated/model";
+import { countOf, Pager } from "@/components/pager";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { reportsQueryOptions, type QueueFilters } from "@/features/moderation/api/content-reports";
+import { REPORTS_PAGE_SIZE, reportsQueryOptions, type QueueFilters } from "@/features/moderation/api/content-reports";
 import { didNotHide, hideOutcomeExplanation, narrowedBy } from "@/features/moderation/utils/moderation-review";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { formatDateTime } from "@/utils/format";
@@ -78,29 +77,14 @@ export function ReportQueue({ filters, onPageChange, renderAuthorActions }: Prop
           </button>
         ))}
 
-        <nav className="flex items-center justify-between pt-2 text-sm">
-          <Button
-            size="sm"
-            variant="outline"
-            aria-label="Previous page"
-            disabled={filters.page <= 1}
-            onClick={() => onPageChange(filters.page - 1)}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="text-muted-foreground">
-            Page {filters.page} of {data.totalCount} report{data.totalCount === 1 ? "" : "s"}
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            aria-label="Next page"
-            disabled={!data.hasMore}
-            onClick={() => onPageChange(filters.page + 1)}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </nav>
+        <Pager
+          className="pt-2"
+          page={filters.page}
+          pageCount={Math.max(1, Math.ceil(data.totalCount / REPORTS_PAGE_SIZE))}
+          hasMore={data.hasMore}
+          onChange={onPageChange}
+          summary={countOf(data.totalCount, "report")}
+        />
       </section>
 
       <section className="flex flex-col gap-4">

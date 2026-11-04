@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, TriangleAlert } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
+import { countOf, Pager } from "@/components/pager";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { OUTBOX_PAGE_SIZE, outboxMailsQueryOptions, type OutboxFilters } from "@/features/mail/api/mail-outbox";
@@ -81,36 +82,13 @@ export function OutboxTable({ filters, onPageChange, onOpen }: Props) {
         </Table>
       )}
 
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <span>
-          {data.totalCount} mail{data.totalCount === 1 ? "" : "s"}
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            aria-label="Previous page"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-            data-testid="previous-page"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span>
-            Page {page} of {lastPage}
-          </span>
-          <Button
-            size="sm"
-            variant="outline"
-            aria-label="Next page"
-            disabled={!data.hasMore}
-            onClick={() => onPageChange(page + 1)}
-            data-testid="next-page"
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
-      </div>
+      <Pager
+        page={page}
+        pageCount={lastPage}
+        hasMore={data.hasMore}
+        onChange={onPageChange}
+        summary={countOf(data.totalCount, "mail")}
+      />
     </>
   );
 }

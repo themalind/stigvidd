@@ -3,11 +3,12 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useConfirm } from "@/components/confirm-dialog";
 import { ErrorState } from "@/components/error-state";
 import { ImageLightbox } from "@/components/image-lightbox";
-import { Button } from "@/components/ui/button";
+import { Pager } from "@/components/pager";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSearchState } from "@/hooks/use-search-state";
 import type { MediaItemResponse } from "@/api/generated/model";
 import { mediaLibraryQueryOptions, useDeleteImage, type ReprocessJobSummary } from "@/features/media/api/media";
 import {
@@ -15,6 +16,7 @@ import {
   describeMediaFilters,
   emptyMediaFilters,
   isFiltered,
+  MEDIA_SORTS,
   MediaPageSize,
   pageSelection,
   selectableMedia,
@@ -40,11 +42,23 @@ interface Props {
   onBatchStarted: (job: ReprocessJobSummary) => void;
 }
 
+const SEARCH_DEFAULTS: Record<keyof MediaFilterState | "sort", string> = {
+  ...emptyMediaFilters,
+  needsWork: "",
+  sort: "newest",
+};
+
+function useBrowseSearch() {
+  const { values, page, update, setPage } = useSearchState(SEARCH_DEFAULTS);
+  const { sort, needsWork, ...rest } = values;
+  const filters: MediaFilterState = { ...rest, needsWork: needsWork === "true" };
+  const knownSort = MEDIA_SORTS.find((option) => option.value === sort)?.value ?? "newest";
+
+  return { filters, sort: knownSort, page, setPage, update };
+}
+
 export default function MediaBrowse({ onTrailImagesChanged, onBatchStarted }: Props) {
-  const [filters, setFilters] = useState<MediaFilterState>(emptyMediaFilters);
-  // keep-comment: separate from filters - a new sort shows the same images in another order, so it rewinds to page 1 but must NOT drop a selection the operator has already made
-  const [sort, setSort] = useState<MediaSortValue>("newest");
-  const [page, setPage] = useState(1);
+  const { filters, sort, page, setPage, update } = useBrowseSearch();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [allMatching, setAllMatching] = useState(false);
   const [enlarged, setEnlarged] = useState<MediaItemResponse | null>(null);
@@ -55,6 +69,7 @@ export default function MediaBrowse({ onTrailImagesChanged, onBatchStarted }: Pr
     mediaLibraryQueryOptions({ ...toMediaQuery(filters, preset), Sort: sort, Page: page, PageSize: MediaPageSize }),
   );
   const deleteImage = useDeleteImage(onTrailImagesChanged);
+  const [confirm, confirmDialog] = useConfirm();
 
   const items = library.data?.items;
   const total = library.data?.totalCount ?? 0;
@@ -68,8 +83,7 @@ export default function MediaBrowse({ onTrailImagesChanged, onBatchStarted }: Pr
   }
 
   function changeFilters(next: MediaFilterState) {
-    setFilters(next);
-    setPage(1);
+    update(next);
     clearSelection();
   }
 
@@ -83,8 +97,14 @@ export default function MediaBrowse({ onTrailImagesChanged, onBatchStarted }: Pr
     });
   }
 
-  function handleDelete(item: MediaItemResponse) {
-    if (!confirm("Delete this image? This cannot be undone.")) return;
+  async function handleDelete(item: MediaItemResponse) {
+    const sure = await confirm({
+      title: "Delete this image?",
+      description: "This cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (!sure) return;
     deleteImage.mutate(item, { onSuccess: () => toggleSelected(item.identifier, false) });
   }
 
@@ -107,14 +127,13 @@ export default function MediaBrowse({ onTrailImagesChanged, onBatchStarted }: Pr
 
   return (
     <div className="space-y-3">
+      {confirmDialog}
       <MediaFilters
         filters={filters}
         onFiltersChange={changeFilters}
         sort={sort}
-        onSortChange={(next) => {
-          setSort(next);
-          setPage(1);
-        }}
+        // keep-comment: a new sort shows the same images in another order, so it rewinds to page 1 but keeps the selection
+        onSortChange={(next: MediaSortValue) => update({ sort: next })}
       />
 
       <MediaSelectionBar
@@ -167,34 +186,18 @@ export default function MediaBrowse({ onTrailImagesChanged, onBatchStarted }: Pr
         </div>
       )}
 
-      <div className="text-muted-foreground flex items-center justify-between gap-4 text-xs">
-        <span>
-          {total === 0 ? "No images" : `${from}–${to} of ${total}`}
-          {library.data && library.data.totalSizeBytes > 0 ? ` · ${formatBytes(library.data.totalSizeBytes)}` : ""}
-        </span>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page === 1}
-            data-testid="previous-page"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            <ChevronLeft className="size-3.5" />
-            Previous
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!library.data?.hasMore || library.isPlaceholderData}
-            data-testid="next-page"
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-            <ChevronRight className="size-3.5" />
-          </Button>
-        </div>
-      </div>
+      <Pager
+        page={page}
+        hasMore={library.data?.hasMore ?? false}
+        busy={library.isPlaceholderData}
+        onChange={setPage}
+        summary={
+          <>
+            {total === 0 ? "No images" : `${from}–${to} of ${total}`}
+            {library.data && library.data.totalSizeBytes > 0 ? ` · ${formatBytes(library.data.totalSizeBytes)}` : ""}
+          </>
+        }
+      />
 
       {editing && <EditMetadataDialog key={editing.identifier} item={editing} onClose={() => setEditing(null)} />}
 

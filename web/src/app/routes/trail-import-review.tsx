@@ -1,11 +1,12 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { startTransition } from "react";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { NavLink, useParams, useSearchParams } from "react-router";
+import { NavLink, useParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
+import { useSearchState } from "@/hooks/use-search-state";
 import {
+  confidenceOrder,
   sessionQueryOptions,
   type Confidence,
   type Decision,
@@ -22,53 +23,29 @@ import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const DECISION_FILTERS = ["All", "Pending", "Accept", "Relink", "CreateNew", "Exclude", "Skip"] as const;
+const DECISIONS: Decision[] = ["Pending", "Accept", "Relink", "CreateNew", "Exclude", "Skip"];
+const DECISION_FILTERS = ["All", ...DECISIONS] as const;
+const CONFIDENCES: Confidence[] = [...confidenceOrder];
 
 // keep-comment: Pending is the right default while reviewing and shows an empty list once the session is applied
 function useReviewFilters(applied: boolean) {
-  const [params, setParams] = useSearchParams();
-  const defaultDecision = applied ? "All" : "Pending";
-  const confidence = (params.get("confidence") ?? undefined) as Confidence | undefined;
-  const decision = params.get("decision") ?? defaultDecision;
-  const page = Math.max(1, Number(params.get("page")) || 1);
+  const { values, page, update, setPage } = useSearchState({
+    confidence: "",
+    decision: applied ? "All" : "Pending",
+  });
   const filters: ProposalFilters = {
-    confidence,
-    decision: decision === "All" ? undefined : (decision as Decision),
+    confidence: CONFIDENCES.find((value) => value === values.confidence),
+    decision: DECISIONS.find((value) => value === values.decision),
   };
-
-  const change = (update: (next: URLSearchParams) => void) =>
-    startTransition(() =>
-      setParams((current) => {
-        const next = new URLSearchParams(current);
-        update(next);
-        return next;
-      }),
-    );
 
   return {
     filters,
-    decision,
+    decision: values.decision,
     page,
-    setConfidence: (value: Confidence | undefined) =>
-      change((next) => {
-        next.delete("page");
-        if (value) next.set("confidence", value);
-        else next.delete("confidence");
-      }),
-    setDecision: (value: string) =>
-      change((next) => {
-        next.delete("page");
-        if (value === defaultDecision) next.delete("decision");
-        else next.set("decision", value);
-      }),
-    setPage: (value: number) => change((next) => next.set("page", String(value))),
-    showAll: () =>
-      change((next) => {
-        next.delete("page");
-        next.delete("confidence");
-        if (defaultDecision === "All") next.delete("decision");
-        else next.set("decision", "All");
-      }),
+    setConfidence: (value: Confidence | undefined) => update({ confidence: value }),
+    setDecision: (value: string) => update({ decision: value }),
+    setPage,
+    showAll: () => update({ confidence: undefined, decision: "All" }),
   };
 }
 

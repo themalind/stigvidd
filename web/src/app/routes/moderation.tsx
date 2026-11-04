@@ -1,10 +1,10 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { startTransition, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Flag, Loader2 } from "lucide-react";
-import { useSearchParams } from "react-router";
+import { useSearchState } from "@/hooks/use-search-state";
 import type { ContentReportDetailResponse } from "@/api/generated/model";
 import { FilterRow } from "@/components/filter-row";
 import { QueryBoundary } from "@/components/query-boundary";
@@ -23,42 +23,25 @@ const STATUS_FILTERS = ["Pending", "Dismissed", "Upheld", "ContentExpired", "All
 const TYPE_FILTERS = ["All", "Review", "TrailObstacle", "HikeImage", "Event", "EventPost", "EventImage"] as const;
 const OUTCOME_FILTERS = ["All", "Hidden", "AlreadyHidden", "WithheldReporterDismissed"] as const;
 
-type FilterKey = "status" | "contentType" | "hideOutcome";
+const FILTER_DEFAULTS = { status: "Pending", contentType: "All", hideOutcome: "All" };
 
-// keep-comment: the status filter defaults to Pending, so "All" has to be written to the address explicitly
+type FilterKey = keyof typeof FILTER_DEFAULTS;
+
+const unlessAll = (value: string) => (value === "All" ? undefined : value);
+
 function useQueueFilters() {
-  const [params, setParams] = useSearchParams();
-  const status = params.get("status") ?? "Pending";
-  const contentType = params.get("contentType") ?? "All";
-  const hideOutcome = params.get("hideOutcome") ?? "All";
+  const { values, page, update, setPage } = useSearchState(FILTER_DEFAULTS);
 
   const filters: QueueFilters = {
-    status: status === "All" ? undefined : status,
-    contentType: contentType === "All" ? undefined : contentType,
-    hideOutcome: hideOutcome === "All" ? undefined : hideOutcome,
-    page: Math.max(1, Number(params.get("page")) || 1),
+    status: unlessAll(values.status),
+    contentType: unlessAll(values.contentType),
+    hideOutcome: unlessAll(values.hideOutcome),
+    page,
   };
 
-  const change = (update: (next: URLSearchParams) => void) =>
-    startTransition(() =>
-      setParams((current) => {
-        const next = new URLSearchParams(current);
-        update(next);
-        return next;
-      }),
-    );
+  const setFilter = (key: FilterKey, value: string) => update({ [key]: value });
 
-  const setFilter = (key: FilterKey, value: string) =>
-    change((next) => {
-      next.delete("page");
-      const isDefault = value === (key === "status" ? "Pending" : "All");
-      if (isDefault) next.delete(key);
-      else next.set(key, value);
-    });
-
-  const setPage = (page: number) => change((next) => next.set("page", String(page)));
-
-  return { filters, selected: { status, contentType, hideOutcome }, setFilter, setPage };
+  return { filters, selected: values, setFilter, setPage };
 }
 
 export default function ModerationPage() {

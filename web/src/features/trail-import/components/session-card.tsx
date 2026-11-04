@@ -4,6 +4,7 @@
 import { NavLink } from "react-router";
 import { Loader2, Play, Trash2 } from "lucide-react";
 import { useAnalyzeSession, useDeleteSession, type Session } from "@/features/trail-import/api/trail-import";
+import { useConfirm } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { paths } from "@/config/paths";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,14 +17,29 @@ export function SessionCard({ session }: { session: Session }) {
   const analyze = useAnalyzeSession();
   const remove = useDeleteSession();
   const busy = analyze.isPending || remove.isPending;
+  const [confirm, confirmDialog] = useConfirm();
 
-  function handleDelete() {
-    if (!window.confirm(`Delete ${session.fileName} and everything proposed from it?`)) return;
-    remove.mutate(session.id);
+  async function handleDelete() {
+    const sure = await confirm({
+      title: `Delete ${session.fileName}?`,
+      description: "Everything proposed from it goes too.",
+      confirmLabel: "Delete",
+      destructive: true,
+    });
+    if (sure) remove.mutate(session.id);
   }
+
+  const confirmDiscard = (message: string) =>
+    confirm({
+      title: "Run the analysis again?",
+      description: message,
+      confirmLabel: "Run it anyway",
+      destructive: true,
+    });
 
   return (
     <Card data-testid="session-card">
+      {confirmDialog}
       <CardHeader>
         <div className="flex flex-wrap items-center gap-3">
           <CardTitle className="text-base">{session.fileName}</CardTitle>
@@ -49,12 +65,7 @@ export function SessionCard({ session }: { session: Session }) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            analyze.mutate({
-              sessionId: session.id,
-              confirmDiscard: (message) => window.confirm(`${message}\n\nRun it anyway?`),
-            })
-          }
+          onClick={() => analyze.mutate({ sessionId: session.id, confirmDiscard })}
           disabled={busy || UNANALYSABLE.includes(session.status)}
         >
           {session.status === "Analyzing" ? <Loader2 className="animate-spin" /> : <Play />}

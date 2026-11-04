@@ -7,6 +7,7 @@ import { useMutationState, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Images, X } from "lucide-react";
 import type { AdminTrailListItemResponse, TrailImageResponse } from "@/api/generated/model";
+import { useConfirm } from "@/components/confirm-dialog";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,7 @@ function ImageGrid({ identifier, onEnlarge, onDeleted }: GridProps) {
   const upload = useAddTrailImages(identifier);
   const remove = useDeleteTrailImage(identifier);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [confirm, confirmDialog] = useConfirm();
   const images = trail.trailImagesResponse ?? [];
   const deleting = useMutationState({
     filters: { mutationKey: ["admin-trails", identifier, "delete-image"], status: "pending" },
@@ -101,13 +103,14 @@ function ImageGrid({ identifier, onEnlarge, onDeleted }: GridProps) {
     });
   }
 
-  function handleDelete(image: TrailImageResponse) {
-    if (!confirm("Delete this image?")) return;
+  async function handleDelete(image: TrailImageResponse) {
+    if (!(await confirm({ title: "Delete this image?", confirmLabel: "Delete", destructive: true }))) return;
     remove.mutate(image.identifier, { onSuccess: () => onDeleted(image.identifier) });
   }
 
   return (
     <div className="grid grid-cols-3 gap-3">
+      {confirmDialog}
       {images.map((img) => (
         <div key={img.identifier} className="group relative aspect-square overflow-hidden rounded-xs border">
           <img
