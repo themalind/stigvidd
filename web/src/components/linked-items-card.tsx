@@ -19,8 +19,8 @@ interface Props {
   searchLabel: string;
   linked: LinkItem[];
   available: LinkItem[];
-  onLink: (identifier: string) => Promise<void>;
-  onUnlink: (identifier: string) => Promise<void>;
+  onLink: (identifier: string) => void;
+  onUnlink: (identifier: string) => void;
 }
 
 const MAX_SUGGESTIONS = 8;
@@ -39,7 +39,6 @@ export default function LinkedItemsCard({
   onUnlink,
 }: Props) {
   const [query, setQuery] = useState("");
-  const [busy, setBusy] = useState<string | null>(null);
 
   const suggestions = useMemo(() => {
     const term = fold(query.trim());
@@ -50,15 +49,6 @@ export default function LinkedItemsCard({
       .filter((item) => fold(`${item.label} ${item.detail ?? ""}`).includes(term))
       .slice(0, MAX_SUGGESTIONS);
   }, [query, linked, available]);
-
-  async function run(identifier: string, action: (identifier: string) => Promise<void>) {
-    setBusy(identifier);
-    try {
-      await action(identifier);
-    } finally {
-      setBusy(null);
-    }
-  }
 
   return (
     <Card>
@@ -81,8 +71,7 @@ export default function LinkedItemsCard({
                   variant="ghost"
                   size="icon"
                   aria-label={`Unlink ${item.label}`}
-                  disabled={busy !== null}
-                  onClick={() => void run(item.identifier, onUnlink)}
+                  onClick={() => onUnlink(item.identifier)}
                 >
                   <X />
                 </Button>
@@ -113,8 +102,7 @@ export default function LinkedItemsCard({
                     variant="outline"
                     size="sm"
                     aria-label={`Link ${item.label}`}
-                    disabled={busy !== null}
-                    onClick={() => void run(item.identifier, onLink)}
+                    onClick={() => onLink(item.identifier)}
                   >
                     <Plus />
                     Link

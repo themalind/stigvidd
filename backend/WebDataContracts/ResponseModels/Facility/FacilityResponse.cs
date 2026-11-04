@@ -6,9 +6,9 @@ namespace WebDataContracts.ResponseModels.Facility;
 public class FacilityResponse
 {
     public required string Identifier { get; set; }
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
     public required int FacilityType { get; set; }
-    public bool IsAccessible { get; set; }
+    public required bool IsAccessible { get; set; }
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
     public string? Location { get; set; }
