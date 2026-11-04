@@ -122,6 +122,28 @@ describe("customFetch", () => {
       await expect(customFetch("/api/x", {})).rejects.toThrow('{"errors":{"Name":["req"]}}');
     });
 
+    it("carries the code of a coded ProblemDetails, beside its detail", async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        reply('{"status":409,"detail":"Already a member","code":"AlreadyMember"}', 409),
+      );
+
+      const error = await customFetch("/api/x", {}).catch((e: unknown) => e);
+
+      if (!(error instanceof ApiError)) throw new Error("expected an ApiError");
+      expect(error.message).toBe("Already a member");
+      expect(error.code).toBe("AlreadyMember");
+      expect(error.status).toBe(409);
+    });
+
+    it("has no code for a plain string refusal", async () => {
+      vi.mocked(fetch).mockResolvedValue(reply('"Trail is already linked"', 409));
+
+      const error = await customFetch("/api/x", {}).catch((e: unknown) => e);
+
+      if (!(error instanceof ApiError)) throw new Error("expected an ApiError");
+      expect(error.code).toBeUndefined();
+    });
+
     it("falls back to the status on an empty body", async () => {
       vi.mocked(fetch).mockResolvedValue(reply("", 500));
 
