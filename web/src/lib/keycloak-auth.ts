@@ -101,6 +101,11 @@ function persistTokens(tokens: KeycloakTokenResponse): void {
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh_token);
 }
 
+// keep-comment: false during the cold-start restore; a request then would race restoreSession's own refresh grant with the same refresh token
+export function hasSession(): boolean {
+  return accessToken !== null;
+}
+
 export function clearTokens(): void {
   accessToken = null;
   accessExpiresAt = 0;

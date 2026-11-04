@@ -5,6 +5,10 @@ import { ProtectedRoute } from "@/features/auth/components/protected-route";
 import { Loader2 } from "lucide-react";
 import { lazy, Suspense, type ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router";
+import { detailLoaders, onlyWhenParamsChange } from "./loaders";
+import { queryClient } from "./query-client";
+
+const loaders = detailLoaders(queryClient);
 
 const CityAreasPage = lazy(() => import("@/app/routes/city-areas"));
 const DashboardPage = lazy(() => import("@/app/routes/dashboard"));
@@ -90,6 +94,9 @@ export const router = createBrowserRouter([
           {
             path: "/trail-import/:sessionId",
             handle: { title: "Review Import" },
+            loader: loaders.trailImportSession,
+            shouldRevalidate: onlyWhenParamsChange,
+            HydrateFallback: PageFallback,
             element: withSuspense(TrailImportReviewPage),
           },
           {
@@ -105,6 +112,9 @@ export const router = createBrowserRouter([
           {
             path: "/hike-submissions/:identifier",
             handle: { title: "Review Submission" },
+            loader: loaders.hikeSubmission,
+            shouldRevalidate: onlyWhenParamsChange,
+            HydrateFallback: PageFallback,
             element: withSuspense(HikeSubmissionReviewPage),
           },
           {
@@ -115,6 +125,9 @@ export const router = createBrowserRouter([
           {
             path: "/mail-templates/:identifier",
             handle: { title: "Edit Mail Template" },
+            loader: loaders.mailTemplate,
+            shouldRevalidate: onlyWhenParamsChange,
+            HydrateFallback: PageFallback,
             element: withSuspense(MailTemplatePage),
           },
           {
