@@ -3,7 +3,7 @@
 
 import { Button } from "@/components/ui/button";
 import type { RouteEditor } from "@/features/hike-submissions/hooks/use-route-editor";
-import { hasSatellite } from "@/lib/map-style";
+import { hasSatellite } from "@/lib/maplibre";
 import type { EditMode } from "./submission-map";
 
 const MODES: { mode: EditMode; label: string }[] = [

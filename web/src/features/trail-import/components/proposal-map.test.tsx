@@ -8,7 +8,11 @@ import { maps } from "@/testing/fake-maplibre";
 import { ProposalMap } from "./proposal-map";
 
 vi.mock("maplibre-gl", () => import("@/testing/fake-maplibre"));
-vi.mock("@/lib/map-style", () => ({ hasSatellite: true, mapStyle: (satellite: boolean) => String(satellite) }));
+vi.mock("@/lib/maplibre", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/maplibre")>()),
+  hasSatellite: true,
+  mapStyle: (satellite: boolean) => String(satellite),
+}));
 
 const A = [
   [12.9, 57.7],

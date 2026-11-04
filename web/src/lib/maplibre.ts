@@ -1,7 +1,12 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { StyleSpecification } from "maplibre-gl";
+import maplibregl, {
+  type FitBoundsOptions,
+  type GeoJSONSource,
+  type Map as MapLibreMap,
+  type StyleSpecification,
+} from "maplibre-gl";
 
 // keep-comment: the app's MapTiler key is locked to a User-Agent a browser cannot send, so the admin needs its own origin-restricted key
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
@@ -26,4 +31,18 @@ export function mapStyle(satellite: boolean): string | StyleSpecification {
   if (!MAPTILER_KEY) return OSM_STYLE;
   const style = satellite ? "hybrid" : "outdoor-v2";
   return `https://api.maptiler.com/maps/${style}/style.json?key=${MAPTILER_KEY}`;
+}
+
+export function upsertSource(map: MapLibreMap, id: string, data: GeoJSON.FeatureCollection): void {
+  const source = map.getSource<GeoJSONSource>(id);
+  if (source) source.setData(data);
+  else map.addSource(id, { type: "geojson", data });
+}
+
+export function fitTo(map: MapLibreMap, points: GeoJSON.Position[], options: FitBoundsOptions): void {
+  if (points.length < 2) return;
+
+  const bounds = new maplibregl.LngLatBounds();
+  for (const [lng, lat] of points) bounds.extend([lng, lat]);
+  map.fitBounds(bounds, options);
 }

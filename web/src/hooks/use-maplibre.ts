@@ -2,25 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { type FitBoundsOptions, type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
+import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
-import { mapStyle } from "@/lib/map-style";
+import { fitTo, mapStyle } from "@/lib/maplibre";
 
 const BORAS: [number, number] = [12.94, 57.72];
-
-export function upsertSource(map: MapLibreMap, id: string, data: GeoJSON.FeatureCollection): void {
-  const source = map.getSource<GeoJSONSource>(id);
-  if (source) source.setData(data);
-  else map.addSource(id, { type: "geojson", data });
-}
-
-export function fitTo(map: MapLibreMap, points: GeoJSON.Position[], options: FitBoundsOptions): void {
-  if (points.length < 2) return;
-
-  const bounds = new maplibregl.LngLatBounds();
-  for (const [lng, lat] of points) bounds.extend([lng, lat]);
-  map.fitBounds(bounds, options);
-}
 
 interface Options {
   satellite: boolean;

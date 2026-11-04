@@ -4,7 +4,8 @@
 import type { MapLayerMouseEvent, Map as MapLibreMap, MapMouseEvent } from "maplibre-gl";
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { type Jump, type LngLat, midpoints } from "@/utils/geometry-edit";
-import { fitTo, upsertSource as setData, useMapLibre } from "@/hooks/use-maplibre";
+import { useMapLibre } from "@/hooks/use-maplibre";
+import { fitTo, upsertSource as setData } from "@/lib/maplibre";
 
 export type EditMode = "move" | "delete" | "cut" | "redraw" | "extend" | "start";
 
