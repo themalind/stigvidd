@@ -6,7 +6,7 @@ import { useMatches } from "react-router";
 import { isStaging } from "@/config/environment";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { DarkModeToggle } from "./dark-mode-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 type RouteHandle = {
@@ -37,7 +37,7 @@ export default function Header() {
         <h1 className="text-2xl">{currentTitle}</h1>
       </div>
       <div className="pr-1">
-        <DarkModeToggle />
+        <ThemeToggle />
       </div>
     </header>
   );
