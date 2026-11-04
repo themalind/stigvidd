@@ -22,7 +22,7 @@ public class MailTemplateResponse
 
     public string? Description { get; set; }
 
-    public DateTime LastUpdatedAt { get; set; }
+    public required DateTime LastUpdatedAt { get; set; }
 
     /// <summary>
     /// What this mail is for and when it is sent, from the catalogue rather than the
@@ -38,7 +38,7 @@ public class MailTemplateResponse
     /// declared key with no tokens would mean the opposite -- that it takes none, so any
     /// placeholder in it really is a mistake.
     /// </summary>
-    public bool IsKnown { get; set; }
+    public required bool IsKnown { get; set; }
 
     /// <summary>Every placeholder the caller supplies for this key.</summary>
     public required IReadOnlyCollection<MailTemplateTokenResponse> Tokens { get; set; }

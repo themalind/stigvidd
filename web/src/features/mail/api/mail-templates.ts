@@ -1,32 +1,33 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { MailTemplate, MailTemplateListItem, MailTemplatePreview, UpdateMailTemplateRequest } from "@/types/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  mailTemplatesGetAll,
-  mailTemplatesGetByIdentifier,
+  getMailTemplatesGetAllQueryKey,
+  getMailTemplatesGetAllSuspenseQueryOptions,
+  getMailTemplatesGetByIdentifierQueryKey,
+  getMailTemplatesGetByIdentifierSuspenseQueryOptions,
   mailTemplatesPreview,
   mailTemplatesUpdate,
 } from "@/api/generated/mail-templates/mail-templates";
+import type { PreviewMailTemplateRequest, UpdateMailTemplateRequest } from "@/api/generated/model";
 
-// Wrappers over the orval-generated client, matching the convention in src/features/trails/api/trail.ts: the
-// generated models are looser (nullable/optional) than the UI's hand-written types, so
-// responses are asserted back to those here. Auth and base URL come from the customFetch
-// mutator.
+export const mailTemplatesQueryOptions = () => getMailTemplatesGetAllSuspenseQueryOptions();
 
-export async function getMailTemplates(): Promise<MailTemplateListItem[]> {
-  return (await mailTemplatesGetAll()) as MailTemplateListItem[];
-}
+export const mailTemplateQueryOptions = (identifier: string) =>
+  getMailTemplatesGetByIdentifierSuspenseQueryOptions(identifier);
 
-export async function getMailTemplate(identifier: string): Promise<MailTemplate> {
-  return (await mailTemplatesGetByIdentifier(identifier)) as MailTemplate;
-}
+export function useSaveMailTemplate(identifier: string) {
+  const queryClient = useQueryClient();
 
-export async function updateMailTemplate(
-  identifier: string,
-  request: UpdateMailTemplateRequest,
-): Promise<MailTemplate> {
-  return (await mailTemplatesUpdate(identifier, request)) as MailTemplate;
+  return useMutation({
+    mutationFn: (request: UpdateMailTemplateRequest) => mailTemplatesUpdate(identifier, request),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(getMailTemplatesGetByIdentifierQueryKey(identifier), saved);
+      return queryClient.invalidateQueries({ queryKey: getMailTemplatesGetAllQueryKey() });
+    },
+    meta: { successMessage: "Template saved. The next mail sent will use it." },
+  });
 }
 
 /**
@@ -34,9 +35,8 @@ export async function updateMailTemplate(
  * values. Writes nothing -- and a draft that would fail to send fails here first, with the
  * message the enqueue would have produced.
  */
-export async function previewMailTemplate(
-  identifier: string,
-  draft: { subject: string; bodyHtml: string; bodyText: string },
-): Promise<MailTemplatePreview> {
-  return (await mailTemplatesPreview(identifier, draft)) as MailTemplatePreview;
+export function usePreviewMailTemplate(identifier: string) {
+  return useMutation({
+    mutationFn: (draft: PreviewMailTemplateRequest) => mailTemplatesPreview(identifier, draft),
+  });
 }

@@ -25,7 +25,7 @@ public class MailTemplateTokenResponse
     /// not an error, but for a token like the verification link it means the mail is useless,
     /// so the editor says so.
     /// </summary>
-    public bool IsUsed { get; set; }
+    public required bool IsUsed { get; set; }
 
     public static MailTemplateTokenResponse Create(
         string name, string label, string description, string sampleValue, bool isUsed) =>

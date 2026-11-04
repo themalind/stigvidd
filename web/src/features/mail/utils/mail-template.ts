@@ -18,7 +18,7 @@
 // rewrites it. Most of this file exists to detect that -- see
 // docs/notes/wysiwyg-over-operator-authored-html.md for what was measured.
 
-import type { MailTemplateToken } from "@/types/types";
+import type { MailTemplateTokenResponse } from "@/api/generated/model";
 
 /** Mirrors UpdateMailTemplateRequestValidator; over these the API rejects the whole request. */
 export const limits = {
@@ -628,7 +628,7 @@ export type TokenReport = {
  * A `known` list of null means the API does not know this template key either, so nothing in
  * it can honestly be called unknown.
  */
-export function reviewTokens(draft: TemplateDraft, known: readonly MailTemplateToken[] | null): TokenReport {
+export function reviewTokens(draft: TemplateDraft, known: readonly MailTemplateTokenResponse[] | null): TokenReport {
   // One pass per part rather than two. The parts are scanned separately and merged, never
   // concatenated: the token grammar tolerates whitespace inside the braces, so joining them
   // would let a "{{" ending the subject pair with a "}}" opening the body.

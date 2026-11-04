@@ -1,22 +1,29 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useParams, Link as RouterLink } from "react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AlertTriangle, Eye, Loader2, Save, Wand2 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
+import type { MailTemplateResponse } from "@/api/generated/model";
+import { Page } from "@/components/page";
+import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MailBodyEditor from "@/features/mail/components/mail-body-editor";
 import MailPreview from "@/features/mail/components/mail-preview";
 import MailSourceTextarea from "@/features/mail/components/mail-source-textarea";
 import TokenPalette from "@/features/mail/components/token-palette";
-import { getMailTemplate, previewMailTemplate, updateMailTemplate } from "@/features/mail/api/mail-templates";
+import {
+  mailTemplateQueryOptions,
+  usePreviewMailTemplate,
+  useSaveMailTemplate,
+} from "@/features/mail/api/mail-templates";
 import {
   detectLoss,
   htmlToPlainText,
@@ -27,29 +34,54 @@ import {
   verdictFor,
 } from "@/features/mail/utils/mail-template";
 import { roundTripThroughSchema } from "@/features/mail/components/mail-editor-schema";
-import type { MailTemplate, MailTemplatePreview } from "@/types/types";
 
 type Field = "subject" | "bodyHtml" | "bodyText";
 
 export default function MailTemplatePage() {
   const { identifier = "" } = useParams();
 
-  const [template, setTemplate] = useState<MailTemplate | null>(null);
-  const [loadFailed, setLoadFailed] = useState(false);
+  return (
+    <QueryBoundary resetKeys={[identifier]} errorFallback={() => <TemplateUnavailable />}>
+      <LoadedTemplate identifier={identifier} />
+    </QueryBoundary>
+  );
+}
 
-  const [subject, setSubject] = useState("");
-  const [bodyHtml, setBodyHtml] = useState("");
-  const [bodyText, setBodyText] = useState("");
-  const [description, setDescription] = useState("");
+function TemplateUnavailable() {
+  return (
+    <Page width="narrow">
+      <Card>
+        <CardHeader>
+          <CardTitle>Template not available</CardTitle>
+          <CardDescription>It could not be loaded, so there is nothing safe to edit here.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <RouterLink to="/mail-templates">Back to templates</RouterLink>
+          </Button>
+        </CardContent>
+      </Card>
+    </Page>
+  );
+}
 
-  // Derived from edit EVENTS, never by comparing strings against what was loaded. A
-  // string-derived flag would be true from the moment the page opened -- the editor cannot
-  // reproduce a stored body byte for byte -- and every visit would rewrite the row.
+function LoadedTemplate({ identifier }: { identifier: string }) {
+  const { data: template } = useSuspenseQuery(mailTemplateQueryOptions(identifier));
+
+  return <TemplateEditor key={identifier} identifier={identifier} template={template} />;
+}
+
+function TemplateEditor({ identifier, template }: { identifier: string; template: MailTemplateResponse }) {
+  const [subject, setSubject] = useState(template.subject);
+  const [bodyHtml, setBodyHtml] = useState(template.bodyHtml);
+  const [bodyText, setBodyText] = useState(template.bodyText);
+  const [description, setDescription] = useState(template.description ?? "");
+
+  // Set by edit events, not string comparison: the editor cannot reproduce a stored body byte for byte. keep-comment: non-obvious
   const [dirty, setDirty] = useState(false);
 
-  const [saving, setSaving] = useState(false);
-  const [previewing, setPreviewing] = useState(false);
-  const [preview, setPreview] = useState<MailTemplatePreview | null>(null);
+  const save = useSaveMailTemplate(identifier);
+  const preview = usePreviewMailTemplate(identifier);
 
   const [focused, setFocused] = useState<Field | null>(null);
   const subjectRef = useRef<HTMLInputElement>(null);
@@ -60,44 +92,21 @@ export default function MailTemplatePage() {
     editorRef.current = instance;
   }, []);
 
-  const load = useCallback(async () => {
-    try {
-      const loaded = await getMailTemplate(identifier);
-      setTemplate(loaded);
-      setSubject(loaded.subject);
-      setBodyHtml(loaded.bodyHtml);
-      setBodyText(loaded.bodyText);
-      setDescription(loaded.description ?? "");
-      setDirty(false);
-    } catch (err) {
-      setLoadFailed(true);
-      toast.error(err instanceof Error ? err.message : "Could not load the template.");
-    }
-  }, [identifier]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  // Against template.bodyHtml — the row as loaded — not the live draft. The verdict is a
-  // statement about the stored markup, and recomputing it from edited content would let it
-  // drift as the operator types (and would re-run a full headless parse each time).
+  // The verdict is about the stored markup, so it reads the loaded row, not the draft. keep-comment: non-obvious
   const roundTrip = useMemo(() => {
-    const stored = template?.bodyHtml ?? "";
+    const stored = template.bodyHtml;
     const rendered = roundTripThroughSchema(stored);
     const loss = detectLoss(stored, rendered);
 
     return { loss, verdict: verdictFor(stored, rendered, loss) };
-  }, [template?.bodyHtml]);
+  }, [template.bodyHtml]);
 
   const review = useMemo(
     () =>
       reviewTokens(
         { subject, bodyHtml, bodyText },
-        // null means "nothing declares this key", which is NOT the same as an empty token
-        // list. Passing [] here would condemn every placeholder in an orphaned row and
-        // refuse to save it -- the opposite of what the API does for the same row.
-        template && template.isKnown ? template.tokens : null,
+        // null = no declared key (orphan, API allows save); [] would block every placeholder. keep-comment: non-obvious
+        template.isKnown ? template.tokens : null,
       ),
     [subject, bodyHtml, bodyText, template],
   );
@@ -144,68 +153,19 @@ export default function MailTemplatePage() {
     }
   }
 
-  async function handlePreview() {
-    setPreviewing(true);
-    try {
-      // Through the API's real renderer, so a draft that would fail at enqueue fails here
-      // first -- with the same message, and before it is saved.
-      setPreview(await previewMailTemplate(identifier, { subject, bodyHtml, bodyText }));
-    } catch (err) {
-      setPreview(null);
-      toast.error(err instanceof Error ? err.message : "Could not render the preview.");
-    } finally {
-      setPreviewing(false);
-    }
+  function handlePreview() {
+    preview.mutate({ subject, bodyHtml, bodyText });
   }
 
-  async function handleSave() {
-    setSaving(true);
-    try {
-      const saved = await updateMailTemplate(identifier, {
-        subject,
-        bodyHtml,
-        bodyText,
-        description: description.trim() === "" ? null : description,
-      });
-      setTemplate(saved);
-      setDirty(false);
-      toast.success("Template saved. The next mail sent will use it.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save the template.");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (loadFailed) {
-    return (
-      <main className="container mx-auto max-w-3xl py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>Template not available</CardTitle>
-            <CardDescription>It could not be loaded, so there is nothing safe to edit here.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild variant="outline">
-              <RouterLink to="/mail-templates">Back to templates</RouterLink>
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    );
-  }
-
-  if (!template) {
-    return (
-      <main className="container mx-auto max-w-6xl space-y-4 py-10">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </main>
+  function handleSave() {
+    save.mutate(
+      { subject, bodyHtml, bodyText, description: description.trim() === "" ? null : description },
+      { onSuccess: () => setDirty(false) },
     );
   }
 
   return (
-    <main className="container mx-auto max-w-6xl space-y-6 py-10">
+    <Page width="wide">
       <Card>
         <CardHeader>
           <CardTitle className="font-mono">
@@ -370,22 +330,22 @@ export default function MailTemplatePage() {
 
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={handlePreview} disabled={previewing}>
-              {previewing ? (
+            <Button type="button" variant="outline" onClick={handlePreview} disabled={preview.isPending}>
+              {preview.isPending ? (
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               ) : (
                 <Eye className="size-4" aria-hidden="true" />
               )}
-              {previewing ? "Rendering…" : "Preview"}
+              {preview.isPending ? "Rendering…" : "Preview"}
             </Button>
 
-            <Button type="button" onClick={handleSave} disabled={!dirty || blocked || saving}>
-              {saving ? (
+            <Button type="button" onClick={handleSave} disabled={!dirty || blocked || save.isPending}>
+              {save.isPending ? (
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               ) : (
                 <Save className="size-4" aria-hidden="true" />
               )}
-              {saving ? "Saving…" : "Save changes"}
+              {save.isPending ? "Saving…" : "Save changes"}
             </Button>
           </div>
 
@@ -403,9 +363,9 @@ export default function MailTemplatePage() {
             </p>
           )}
 
-          {preview && <MailPreview preview={preview} />}
+          {preview.data && <MailPreview preview={preview.data} />}
         </CardContent>
       </Card>
-    </main>
+    </Page>
   );
 }
