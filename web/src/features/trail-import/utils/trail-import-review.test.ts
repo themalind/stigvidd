@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it, vi } from "vitest";
+import type { MatchConfidence } from "@/api/generated/model";
 import {
   canBulkDecide,
   canSelectAllMatching,
@@ -14,11 +15,11 @@ import {
   type SelectableProposal,
 } from "./trail-import-review";
 
-function proposal(id: number, confidence: string): SelectableProposal {
+function proposal(id: number, confidence: MatchConfidence): SelectableProposal {
   return { id, confidence };
 }
 
-function checkedOf(...entries: [number, string][]): Map<number, string> {
+function checkedOf(...entries: [number, MatchConfidence][]): Map<number, MatchConfidence> {
   return new Map(entries);
 }
 
@@ -37,8 +38,11 @@ describe("canBulkDecide", () => {
     expect(canBulkDecide(checkedOf([1, "High"], [2, "Unmatched"]))).toBe(false);
   });
 
+  // keep-comment: the type rules it out, but a bundle older than the API can still be sent a tier it has never heard of
   it("refuses a tier it has never heard of", () => {
-    expect(canBulkDecide(checkedOf([1, "Certain"], [2, "Probable"]))).toBe(false);
+    const fromANewerServer: MatchConfidence = JSON.parse('"Probable"');
+
+    expect(canBulkDecide(checkedOf([1, "Certain"], [2, fromANewerServer]))).toBe(false);
   });
 
   it("refuses an empty selection, so the button is not live with nothing chosen", () => {

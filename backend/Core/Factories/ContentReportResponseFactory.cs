@@ -6,6 +6,7 @@ using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
 using WebDataContracts.ResponseModels.ContentReport;
+using Contract = WebDataContracts.Enums;
 
 namespace Core.Factories;
 
@@ -26,7 +27,7 @@ public class ContentReportResponseFactory
             report.ContentIdentifier,
             report.Reason.ToString(),
             report.ReporterNote,
-            report.Status.ToString(),
+            report.Status.ToContract<Contract.ReportStatus>(),
             report.HideOutcome.ToString(),
             report.CreatedAt);
     }
@@ -40,7 +41,7 @@ public class ContentReportResponseFactory
             summary.TrailIdentifier,
             summary.Reason.ToString(),
             summary.ReporterNote,
-            summary.Status.ToString(),
+            summary.Status.ToContract<Contract.ReportStatus>(),
             summary.HideOutcome.ToString(),
             summary.ReporterNickName,
             summary.AuthorNickName,

@@ -11,6 +11,7 @@ using Core.Services;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
+using Contract = WebDataContracts.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NetTopologySuite.Geometries;
@@ -124,7 +125,7 @@ public class TrailImportServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.DuplicateOf.Should().HaveCount(1);
-        result.Value.Status.Should().Be(nameof(ImportSessionStatus.Uploaded));
+        result.Value.Status.Should().Be(Contract.ImportSessionStatus.Uploaded);
     }
 
     [Fact]

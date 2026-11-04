@@ -4,13 +4,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { ExternalLink } from "lucide-react";
-import {
-  useDecideProposal,
-  usePreview,
-  type Decision,
-  type LinkRole,
-  type Proposal,
-} from "@/features/trail-import/api/trail-import";
+import type { ProposalDecision, TrailSourceLinkRole } from "@/api/generated/model";
+import { useDecideProposal, usePreview, type Proposal } from "@/features/trail-import/api/trail-import";
 import {
   initialRole,
   km,
@@ -45,14 +40,14 @@ interface Picked {
   trailIdentifier?: string;
   name?: string;
   lengthKm?: number;
-  role?: LinkRole;
+  role?: TrailSourceLinkRole;
 }
 
 export function ProposalDetail({ sessionId, proposal, trails, onDecided, readOnly = false }: Props) {
   const preview = usePreview(sessionId, proposal.id);
   const decide = useDecideProposal(sessionId, proposal.id);
   const [note, setNote] = useState(proposal.note ?? "");
-  const [role, setRole] = useState<LinkRole>(initialRole(proposal));
+  const [role, setRole] = useState<TrailSourceLinkRole>(initialRole(proposal));
   const [relinking, setRelinking] = useState(false);
   const [creating, setCreating] = useState(false);
   const [rewriteLength, setRewriteLength] = useState(false);
@@ -63,7 +58,7 @@ export function ProposalDetail({ sessionId, proposal, trails, onDecided, readOnl
   const sourcePage = sourcePageOf(preview.data?.featureProperties ?? null);
   const settledAsAccept = proposal.decision === "Accept" && proposal.decidedRole === role && !rewriteLength;
 
-  function save(decision: Decision, picked: Picked = {}) {
+  function save(decision: ProposalDecision, picked: Picked = {}) {
     decide.mutate(
       {
         decision,
@@ -85,7 +80,7 @@ export function ProposalDetail({ sessionId, proposal, trails, onDecided, readOnl
   const accept = () => save("Accept", { lengthKm: rewriteLength ? lengthGap?.measured : undefined });
 
   // keep-comment: r and n only open a panel, so a keypress alone never relinks or creates a trail
-  function shortcut(decision: Decision) {
+  function shortcut(decision: ProposalDecision) {
     if (saving) return;
     if (decision === "Relink") return setRelinking(true);
     if (decision === "CreateNew") return setCreating(true);

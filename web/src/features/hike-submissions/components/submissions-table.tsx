@@ -8,10 +8,11 @@ import { paths } from "@/config/paths";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { submissionsQueryOptions, type SubmissionStatus } from "@/features/hike-submissions/api/hike-submissions";
+import type { HikeSubmissionStatus } from "@/api/generated/model";
+import { submissionsQueryOptions } from "@/features/hike-submissions/api/hike-submissions";
 import { DEFAULT_JUMP_METRES } from "@/utils/geometry-edit";
 
-export function SubmissionsTable({ status }: { status: SubmissionStatus }) {
+export function SubmissionsTable({ status }: { status: HikeSubmissionStatus }) {
   const { data: items } = useSuspenseQuery(submissionsQueryOptions(status));
 
   if (items.length === 0) {

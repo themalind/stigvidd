@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.MailOutbox;
 
 /// <summary>
@@ -16,7 +18,7 @@ public class OutboxEmailSummaryResponse
     // Which template produced this. Null for a row whose template was not recorded.
     public required string? TemplateKey { get; set; }
 
-    public required string Status { get; set; }
+    public required OutboxEmailStatus Status { get; set; }
     public required int Attempts { get; set; }
     public required DateTime NextAttemptAt { get; set; }
     public required DateTime? SentAt { get; set; }
@@ -42,7 +44,7 @@ public class OutboxEmailSummaryResponse
         string? toName,
         string subject,
         string? templateKey,
-        string status,
+        OutboxEmailStatus status,
         int attempts,
         DateTime nextAttemptAt,
         DateTime? sentAt,

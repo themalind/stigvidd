@@ -2,23 +2,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { ToneBadge, type Tone } from "@/components/tone-badge";
-import type { Confidence, Decision, SessionStatus } from "@/features/trail-import/api/trail-import";
+import type { ImportSessionStatus, MatchConfidence, ProposalDecision } from "@/api/generated/model";
 
-const confidenceTone: Record<string, Tone> = {
+const confidenceTone: Record<MatchConfidence, Tone> = {
   Certain: "ok",
   High: "okSoft",
   Medium: "warn",
   Unmatched: "muted",
 };
 
-const confidenceHint: Record<string, string> = {
+const confidenceHint: Record<MatchConfidence, string> = {
   Certain: "Identical geometry fingerprint",
   High: "Strong spatial overlap",
   Medium: "Plausible — needs a human",
   Unmatched: "No trail found",
 };
 
-export function ConfidenceBadge({ confidence }: { confidence: Confidence | string }) {
+export function ConfidenceBadge({ confidence }: { confidence: MatchConfidence }) {
   return (
     <ToneBadge tone={confidenceTone[confidence]} title={confidenceHint[confidence]}>
       {confidence}
@@ -26,7 +26,7 @@ export function ConfidenceBadge({ confidence }: { confidence: Confidence | strin
   );
 }
 
-const decisionTone: Record<string, Tone> = {
+const decisionTone: Record<ProposalDecision, Tone> = {
   Pending: "muted",
   Accept: "ok",
   Relink: "busy",
@@ -35,7 +35,7 @@ const decisionTone: Record<string, Tone> = {
   Skip: "muted",
 };
 
-export const decisionLabel: Record<string, string> = {
+export const decisionLabel: Record<ProposalDecision, string> = {
   Pending: "Undecided",
   Accept: "Accepted",
   Relink: "Relinked",
@@ -44,11 +44,11 @@ export const decisionLabel: Record<string, string> = {
   Skip: "Skipped",
 };
 
-export function DecisionBadge({ decision }: { decision: Decision | string }) {
-  return <ToneBadge tone={decisionTone[decision]}>{decisionLabel[decision] ?? decision}</ToneBadge>;
+export function DecisionBadge({ decision }: { decision: ProposalDecision }) {
+  return <ToneBadge tone={decisionTone[decision]}>{decisionLabel[decision]}</ToneBadge>;
 }
 
-const statusTone: Record<string, Tone> = {
+const statusTone: Record<ImportSessionStatus, Tone> = {
   Uploaded: "muted",
   Analyzing: "busy",
   AwaitingReview: "warn",
@@ -57,10 +57,10 @@ const statusTone: Record<string, Tone> = {
   Failed: "bad",
 };
 
-const statusLabel: Record<string, string> = {
+const statusLabel: Partial<Record<ImportSessionStatus, string>> = {
   AwaitingReview: "Awaiting review",
 };
 
-export function StatusBadge({ status }: { status: SessionStatus | string }) {
+export function StatusBadge({ status }: { status: ImportSessionStatus }) {
   return <ToneBadge tone={statusTone[status]}>{statusLabel[status] ?? status}</ToneBadge>;
 }

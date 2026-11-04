@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.TrailImport;
 
 // An uploaded file and how far it has got. Counts are only filled in once the analysis
@@ -13,7 +15,7 @@ public class TrailImportSessionResponse
     public required string FileName { get; set; }
     public required string FileHash { get; set; }
     public required long FileSizeBytes { get; set; }
-    public required string Status { get; set; }
+    public required ImportSessionStatus Status { get; set; }
     public required string? UploadedBy { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required DateTime? AnalyzedAt { get; set; }
@@ -36,7 +38,7 @@ public class TrailImportSessionResponse
         string fileName,
         string fileHash,
         long fileSizeBytes,
-        string status,
+        ImportSessionStatus status,
         string? uploadedBy,
         DateTime createdAt,
         DateTime? analyzedAt,

@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.TrailImport;
 
 // Everything needed to draw one proposal and judge it: both lines as coordinate pairs,
@@ -9,7 +11,7 @@ public class TrailImportPreviewResponse
 {
     public required int ProposalId { get; set; }
     public required string FeatureName { get; set; }
-    public required string Confidence { get; set; }
+    public required MatchConfidence Confidence { get; set; }
     public required string? MatchReason { get; set; }
     public required double CoverageForward { get; set; }
     public required double CoverageBackward { get; set; }
@@ -46,7 +48,7 @@ public class TrailImportPreviewResponse
     public static TrailImportPreviewResponse Create(
         int proposalId,
         string featureName,
-        string confidence,
+        MatchConfidence confidence,
         string? matchReason,
         double coverageForward,
         double coverageBackward,

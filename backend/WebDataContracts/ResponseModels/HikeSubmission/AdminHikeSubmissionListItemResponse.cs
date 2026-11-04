@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.HikeSubmission;
 
 public class AdminHikeSubmissionListItemResponse
@@ -12,6 +14,6 @@ public class AdminHikeSubmissionListItemResponse
     public required DateTime CreatedAt { get; set; }
     public required decimal TrailLength { get; set; }
     public required int ImageCount { get; set; }
-    public required string Status { get; set; }
+    public required HikeSubmissionStatus Status { get; set; }
     public required double LongestGapMetres { get; set; }
 }

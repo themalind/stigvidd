@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { AlertTriangle, Check, Copy } from "lucide-react";
-import type { LinkRole, Preview } from "@/features/trail-import/api/trail-import";
+import type { TrailSourceLinkRole } from "@/api/generated/model";
+import type { Preview } from "@/features/trail-import/api/trail-import";
 import { carrierOf } from "@/features/trail-import/utils/proposal-detail";
 import { Button } from "@/components/ui/button";
 
@@ -10,7 +11,7 @@ interface Props {
   sharing: Preview["sharingTheTrail"];
   canAccept: boolean;
   disabled: boolean;
-  onAccept: (role: LinkRole) => void;
+  onAccept: (role: TrailSourceLinkRole) => void;
 }
 
 export function SharingWarning({ sharing, canAccept, disabled, onAccept }: Props) {

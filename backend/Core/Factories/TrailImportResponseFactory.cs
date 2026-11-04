@@ -7,6 +7,7 @@ using Core.TrailImport.Source;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using WebDataContracts.ResponseModels.TrailImport;
+using Contract = WebDataContracts.Enums;
 
 namespace Core.Factories;
 
@@ -21,7 +22,7 @@ public class TrailImportResponseFactory
             session.FileName,
             session.FileHash,
             session.FileSizeBytes,
-            session.Status.ToString(),
+            session.Status.ToContract<Contract.ImportSessionStatus>(),
             session.UploadedBy,
             session.CreatedAt,
             session.AnalyzedAt,
@@ -49,7 +50,7 @@ public class TrailImportResponseFactory
     {
         return TrailImportApplyResponse.Create(
             session.Id,
-            session.Status.ToString(),
+            session.Status.ToContract<Contract.ImportSessionStatus>(),
             session.AppliedAt,
             report.TrailsCreated,
             report.TrailsUpdated,
@@ -70,7 +71,7 @@ public class TrailImportResponseFactory
         return TrailImportPreviewResponse.Create(
             proposal.Id,
             proposal.FeatureName,
-            proposal.Confidence.ToString(),
+            proposal.Confidence.ToContract<Contract.MatchConfidence>(),
             proposal.MatchReason,
             proposal.CoverageForward,
             proposal.CoverageBackward,

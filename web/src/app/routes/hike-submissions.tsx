@@ -6,21 +6,21 @@ import { Page, PageHeader } from "@/components/page";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { SubmissionStatus } from "@/features/hike-submissions/api/hike-submissions";
+import { HikeSubmissionStatus } from "@/api/generated/model";
 import { SubmissionsTable } from "@/features/hike-submissions/components/submissions-table";
 
-const STATUSES: SubmissionStatus[] = ["Pending", "Approved", "Rejected"];
-const STATUS_DEFAULT = { status: "Pending" };
+const STATUSES = Object.values(HikeSubmissionStatus);
+const STATUS_DEFAULT = { status: HikeSubmissionStatus.Pending };
 
-function isStatus(value: string | null): value is SubmissionStatus {
+function isStatus(value: string | null): value is HikeSubmissionStatus {
   return STATUSES.some((status) => status === value);
 }
 
 export default function HikeSubmissionsPage() {
   const { values, update } = useSearchState(STATUS_DEFAULT);
-  const status = isStatus(values.status) ? values.status : "Pending";
+  const status = isStatus(values.status) ? values.status : HikeSubmissionStatus.Pending;
 
-  const show = (which: SubmissionStatus) => update({ status: which });
+  const show = (which: HikeSubmissionStatus) => update({ status: which });
 
   return (
     <Page width="wide">

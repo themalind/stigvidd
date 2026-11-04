@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { confidenceOrder, type Confidence, type Session } from "@/features/trail-import/api/trail-import";
+import type { MatchConfidence } from "@/api/generated/model";
+import { confidenceOrder, type Session } from "@/features/trail-import/api/trail-import";
 import { countFor } from "@/features/trail-import/utils/trail-import-review";
 import { ConfidenceBadge } from "./badges";
 
@@ -9,8 +10,8 @@ const tiers = [...confidenceOrder].reverse();
 
 interface Props {
   counts: Session["counts"];
-  selected: Confidence | undefined;
-  onSelect: (confidence: Confidence | undefined) => void;
+  selected: MatchConfidence | undefined;
+  onSelect: (confidence: MatchConfidence | undefined) => void;
 }
 
 export function ConfidenceSummary({ counts, selected, onSelect }: Props) {

@@ -5,6 +5,7 @@ using Core.Interfaces.Repositories;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using WebDataContracts.ResponseModels.MailOutbox;
+using Contract = WebDataContracts.Enums;
 
 namespace Core.Factories;
 
@@ -21,7 +22,7 @@ public class MailOutboxResponseFactory
             summary.ToName,
             summary.Subject,
             summary.TemplateKey,
-            summary.Status.ToString(),
+            summary.Status.ToContract<Contract.OutboxEmailStatus>(),
             summary.Attempts,
             summary.NextAttemptAt,
             summary.SentAt,
@@ -43,7 +44,7 @@ public class MailOutboxResponseFactory
             email.ToName,
             email.Subject,
             email.TemplateKey,
-            email.Status.ToString(),
+            email.Status.ToContract<Contract.OutboxEmailStatus>(),
             email.Attempts,
             email.NextAttemptAt,
             email.SentAt,

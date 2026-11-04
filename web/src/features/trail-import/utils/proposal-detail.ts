@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { Decision, LinkRole, Preview, Proposal } from "@/features/trail-import/api/trail-import";
+import type { ProposalDecision, TrailSourceLinkRole } from "@/api/generated/model";
+import type { Preview, Proposal } from "@/features/trail-import/api/trail-import";
 
 export function percent(value: number): string {
   return `${Math.round(value * 100)}%`;
@@ -55,13 +56,13 @@ export function carrierOf(sharing: Preview["sharingTheTrail"]) {
   );
 }
 
-export function initialRole(proposal: Pick<Proposal, "decidedRole">): LinkRole {
+export function initialRole(proposal: Pick<Proposal, "decidedRole">): TrailSourceLinkRole {
   return proposal.decidedRole === "Duplicate" ? "Duplicate" : "Segment";
 }
 
 // keep-comment: a decision that would save the row exactly as it stands reads as the screen flinching
 export function repeatsDecision(
-  decision: Decision,
+  decision: ProposalDecision,
   proposal: Pick<Proposal, "decision">,
   settledAsAccept: boolean,
 ): boolean {

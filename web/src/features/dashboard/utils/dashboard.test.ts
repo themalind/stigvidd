@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import type { AdminTrailListItemResponse } from "@/api/generated/model";
+import type { AdminTrailListItemResponse, ImportSessionStatus } from "@/api/generated/model";
 import { importsAwaitingReview, relativeTime, share, trailStats } from "./dashboard";
 
 function trail(overrides: Partial<AdminTrailListItemResponse>): AdminTrailListItemResponse {
@@ -25,7 +25,7 @@ function trail(overrides: Partial<AdminTrailListItemResponse>): AdminTrailListIt
   };
 }
 
-function session(status: string) {
+function session(status: ImportSessionStatus) {
   return { status };
 }
 

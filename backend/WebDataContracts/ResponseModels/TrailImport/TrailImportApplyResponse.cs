@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.TrailImport;
 
 // What applying a session actually wrote. The same figures are stored on the session as
@@ -8,7 +10,7 @@ namespace WebDataContracts.ResponseModels.TrailImport;
 public class TrailImportApplyResponse
 {
     public required int SessionId { get; set; }
-    public required string Status { get; set; }
+    public required ImportSessionStatus Status { get; set; }
     public required DateTime? AppliedAt { get; set; }
 
     public required int TrailsCreated { get; set; }
@@ -27,7 +29,7 @@ public class TrailImportApplyResponse
 
     public static TrailImportApplyResponse Create(
         int sessionId,
-        string status,
+        ImportSessionStatus status,
         DateTime? appliedAt,
         int trailsCreated,
         int trailsUpdated,

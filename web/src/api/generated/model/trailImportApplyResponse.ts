@@ -5,11 +5,12 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
+import type { ImportSessionStatus } from "./importSessionStatus";
 import type { TrailImportApplyConflictResponse } from "./trailImportApplyConflictResponse";
 
 export interface TrailImportApplyResponse {
   sessionId: number;
-  status: string;
+  status: ImportSessionStatus;
   /** @nullable */
   appliedAt: string | null;
   trailsCreated: number;

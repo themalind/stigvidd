@@ -1,6 +1,8 @@
 ﻿// SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.HikeSubmission;
 
 public class AdminHikeSubmissionResponse
@@ -17,7 +19,7 @@ public class AdminHikeSubmissionResponse
     public required bool ShowSubmitterName { get; set; }
     public required string? SubmitterNickName { get; set; }
     public required DateTime TransferAcceptedAt { get; set; }
-    public required string Status { get; set; }
+    public required HikeSubmissionStatus Status { get; set; }
     public required string? RejectionReason { get; set; }
     public required string? DecidedBy { get; set; }
     public required DateTime? DecidedAt { get; set; }

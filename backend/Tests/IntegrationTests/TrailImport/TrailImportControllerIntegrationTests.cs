@@ -15,6 +15,7 @@ using System.Net.Http.Json;
 using System.Text;
 using WebDataContracts.RequestModels.TrailImport;
 using WebDataContracts.ResponseModels.TrailImport;
+using Contract = WebDataContracts.Enums;
 
 namespace IntegrationTests.TrailImport;
 
@@ -139,7 +140,7 @@ public class TrailImportControllerIntegrationTests : IClassFixture<StigViddWebAp
         // Assert
         created.StatusCode.Should().Be(HttpStatusCode.Created);
         session.Should().NotBeNull();
-        session.Status.Should().Be(nameof(ImportSessionStatus.Uploaded));
+        session.Status.Should().Be(Contract.ImportSessionStatus.Uploaded);
         session.FileName.Should().Be("spar_leder.json");
         session.FileHash.Should().HaveLength(64);
         session.FileSizeBytes.Should().BeGreaterThan(0);
