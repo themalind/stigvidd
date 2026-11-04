@@ -45,7 +45,7 @@ export function RelinkPicker({ trails, disabled, onPick, onCancel }: Props) {
           <button
             key={trail.identifier}
             type="button"
-            className="flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
+            className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent"
             disabled={disabled}
             onClick={() => onPick(trail.identifier)}
           >
