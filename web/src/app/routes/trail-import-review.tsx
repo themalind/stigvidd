@@ -5,13 +5,8 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { NavLink, useParams } from "react-router";
 import { ArrowLeft } from "lucide-react";
 import { useSearchState } from "@/hooks/use-search-state";
-import {
-  confidenceOrder,
-  sessionQueryOptions,
-  type Confidence,
-  type Decision,
-  type ProposalFilters,
-} from "@/features/trail-import/api/trail-import";
+import { ProposalDecision, type MatchConfidence } from "@/api/generated/model";
+import { confidenceOrder, sessionQueryOptions, type ProposalFilters } from "@/features/trail-import/api/trail-import";
 import { ApplyPanel } from "@/features/trail-import/components/apply-panel";
 import { decisionLabel, StatusBadge } from "@/features/trail-import/components/badges";
 import { ConfidenceSummary } from "@/features/trail-import/components/confidence-summary";
@@ -24,9 +19,9 @@ import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const DECISIONS: Decision[] = ["Pending", "Accept", "Relink", "CreateNew", "Exclude", "Skip"];
+const DECISIONS = Object.values(ProposalDecision);
 const DECISION_FILTERS = ["All", ...DECISIONS] as const;
-const CONFIDENCES: Confidence[] = [...confidenceOrder];
+const CONFIDENCES: MatchConfidence[] = [...confidenceOrder];
 
 // keep-comment: Pending is the right default while reviewing and shows an empty list once the session is applied
 function useReviewFilters(applied: boolean) {
@@ -43,7 +38,7 @@ function useReviewFilters(applied: boolean) {
     filters,
     decision: values.decision,
     page,
-    setConfidence: (value: Confidence | undefined) => update({ confidence: value }),
+    setConfidence: (value: MatchConfidence | undefined) => update({ confidence: value }),
     setDecision: (value: string) => update({ decision: value }),
     setPage,
     showAll: () => update({ confidence: undefined, decision: "All" }),

@@ -24,7 +24,7 @@ vi.mock("sonner", () => ({ toast: toasts }));
 import MediaReprocessJobs from "./media-reprocess-jobs";
 
 const JOBS = "/api/v1/admin/media/reprocess";
-const settled = { status: "Completed", pendingCount: 0 };
+const settled: Partial<MediaReprocessJobSummaryResponse> = { status: "Completed", pendingCount: 0 };
 
 let jobs: MediaReprocessJobSummaryResponse[] = [];
 

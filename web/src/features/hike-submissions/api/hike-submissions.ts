@@ -14,11 +14,13 @@ import {
   getAdminHikeSubmissionsGetSubmissionsSuspenseQueryOptions,
   getAdminHikeSubmissionsGetSubmissionSuspenseQueryOptions,
 } from "@/api/generated/admin-hike-submissions/admin-hike-submissions";
-import type { AdminHikeSubmissionResponse, UpdateHikeSubmissionRequest } from "@/api/generated/model";
+import type {
+  AdminHikeSubmissionResponse,
+  HikeSubmissionStatus,
+  UpdateHikeSubmissionRequest,
+} from "@/api/generated/model";
 
-export type SubmissionStatus = "Pending" | "Approved" | "Rejected";
-
-export const submissionsQueryOptions = (status: SubmissionStatus) =>
+export const submissionsQueryOptions = (status: HikeSubmissionStatus) =>
   getAdminHikeSubmissionsGetSubmissionsSuspenseQueryOptions({ status });
 
 export const submissionQueryOptions = (identifier: string) =>

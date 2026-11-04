@@ -15,6 +15,7 @@ using NetTopologySuite.Geometries;
 using System.Runtime.CompilerServices;
 using WebDataContracts.RequestModels.HikeSubmission;
 using WebDataContracts.ResponseModels.HikeSubmission;
+using Contract = WebDataContracts.Enums;
 
 namespace Core.Services;
 
@@ -166,7 +167,7 @@ public class HikeSubmissionService : IHikeSubmissionService
             Identifier = submission.Identifier,
             Name = submission.Name,
             TrailLength = submission.TrailLength,
-            Status = submission.Status.ToString(),
+            Status = submission.Status.ToContract<Contract.HikeSubmissionStatus>(),
             CreatedAt = submission.CreatedAt,
             SourceHikeIdentifier = hike.Identifier,
             ImageUrl = copied.Count != 0 ? _trailResponseFactory.PresentableBaseUrl + copied[0].ImageUrl : null,
@@ -225,7 +226,7 @@ public class HikeSubmissionService : IHikeSubmissionService
                     Identifier = s.Identifier,
                     Name = s.Name,
                     TrailLength = s.TrailLength,
-                    Status = s.Status.ToString(),
+                    Status = s.Status.ToContract<Contract.HikeSubmissionStatus>(),
                     RejectionReason = s.RejectionReason,
                     CreatedAt = s.CreatedAt,
                     DecidedAt = s.DecidedAt,
@@ -307,7 +308,7 @@ public class HikeSubmissionService : IHikeSubmissionService
                 CreatedAt = s.CreatedAt,
                 TrailLength = s.TrailLength,
                 ImageCount = s.ImageCount,
-                Status = s.Status.ToString(),
+                Status = s.Status.ToContract<Contract.HikeSubmissionStatus>(),
                 LongestGapMetres = Math.Round(s.LongestGapMetres, 1),
             })
             .ToList();
@@ -391,7 +392,7 @@ public class HikeSubmissionService : IHikeSubmissionService
             ShowSubmitterName = s.ShowSubmitterName,
             SubmitterNickName = s.SubmitterNickName,
             TransferAcceptedAt = s.TransferAcceptedAt,
-            Status = s.Status.ToString(),
+            Status = s.Status.ToContract<Contract.HikeSubmissionStatus>(),
             RejectionReason = s.RejectionReason,
             DecidedBy = s.DecidedBy,
             DecidedAt = s.DecidedAt,

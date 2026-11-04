@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.ContentReport;
 
 public class ContentReportSummaryResponse
@@ -11,7 +13,7 @@ public class ContentReportSummaryResponse
     public required string? TrailIdentifier { get; set; }
     public required string Reason { get; set; }
     public required string? ReporterNote { get; set; }
-    public required string Status { get; set; }
+    public required ReportStatus Status { get; set; }
 
     // Not the same as the status: a report can be queued without hiding anything, and the
     // queue has to say so or two rows with the same status look inconsistent in the app.
@@ -44,7 +46,7 @@ public class ContentReportSummaryResponse
         string? trailIdentifier,
         string reason,
         string? reporterNote,
-        string status,
+        ReportStatus status,
         string hideOutcome,
         string? reporterNickName,
         string? authorNickName,

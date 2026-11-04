@@ -10,6 +10,7 @@ using Infrastructure.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using WebDataContracts.RequestModels.Media;
+using Contract = WebDataContracts.Enums;
 
 namespace UnitTests.ServiceTests;
 
@@ -375,7 +376,7 @@ public class MediaReprocessServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.CancelledCount.Should().Be(2);
-        result.Value.Status.Should().Be("Completed");
+        result.Value.Status.Should().Be(Contract.MediaReprocessJobStatus.Completed);
     }
 
     [Fact]

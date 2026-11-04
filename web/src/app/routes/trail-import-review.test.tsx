@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useLocation } from "react-router";
+import type { ProposalDecision } from "@/api/generated/model";
 import type { Proposal, Session } from "@/features/trail-import/api/trail-import";
 import { diff, preview, proposal, session } from "@/testing/fixtures/trail-import";
 import { renderWithProviders } from "@/testing/render";
@@ -60,7 +61,7 @@ function renderPage(proposals: Proposal[], options: { total?: number; url?: stri
   for (const row of proposals) {
     api.mock.on("GET", `${PROPOSALS}/${row.id}/preview`, () => preview({ proposalId: row.id }));
     api.mock.on("POST", `${PROPOSALS}/${row.id}/decide`, (body) => {
-      const { decision } = body as { decision: string };
+      const { decision } = body as { decision: ProposalDecision };
       rows = rows.map((r) => (r.id === row.id ? { ...r, decision } : r));
       return undefined;
     });
@@ -334,7 +335,7 @@ describe("reviewing row by row", () => {
 });
 
 describe("an applied session", () => {
-  const appliedSession = { status: "Applied", appliedAt: "2026-08-01T10:00:00Z" };
+  const appliedSession: Partial<Session> = { status: "Applied", appliedAt: "2026-08-01T10:00:00Z" };
 
   it("shows every decision by default, since none is pending any more", async () => {
     renderPage([{ ...certain, decision: "Accept" }], { session: appliedSession });

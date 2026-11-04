@@ -7,6 +7,7 @@ using Core.Interfaces.Repositories;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using WebDataContracts.ResponseModels.MailOutbox;
+using Contract = WebDataContracts.Enums;
 
 namespace UnitTests.FactoryTests;
 
@@ -41,7 +42,7 @@ public class MailOutboxResponseFactoryTests
         var response = _factory.Create(summary);
 
         // Assert
-        response.Status.Should().Be("Cancelled");
+        response.Status.Should().Be(Contract.OutboxEmailStatus.Cancelled);
     }
 
     [Fact]

@@ -15,6 +15,7 @@ using System.Net.Http.Json;
 using WebDataContracts.RequestModels.Media;
 using WebDataContracts.ResponseModels.Media;
 using WebDataContracts.ResponseModels.Trail;
+using Contract = WebDataContracts.Enums;
 
 namespace IntegrationTests.Admin;
 
@@ -240,7 +241,7 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var job = await response.Content.ReadFromJsonAsync<MediaReprocessJobSummaryResponse>(TestContext.Current.CancellationToken);
         job.Should().NotBeNull();
-        job.Status.Should().Be("Pending");
+        job.Status.Should().Be(Contract.MediaReprocessJobStatus.Pending);
         job.TotalCount.Should().Be(1);
         job.PendingCount.Should().Be(1);
     }
@@ -338,7 +339,7 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var detail = await response.Content.ReadFromJsonAsync<MediaReprocessJobDetailResponse>(TestContext.Current.CancellationToken);
         detail.Should().NotBeNull();
-        detail.Items.Should().ContainSingle(i => i.MediaIdentifier == imageIdentifier && i.Status == "Pending");
+        detail.Items.Should().ContainSingle(i => i.MediaIdentifier == imageIdentifier && i.Status == Contract.MediaReprocessItemStatus.Pending);
     }
 
     [Fact]
@@ -363,7 +364,7 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         cancelled.Should().NotBeNull();
         cancelled.CancelledCount.Should().Be(1);
         cancelled.PendingCount.Should().Be(0);
-        cancelled.Status.Should().Be("Completed");
+        cancelled.Status.Should().Be(Contract.MediaReprocessJobStatus.Completed);
     }
 
     private async Task<MediaReprocessJobSummaryResponse> CreateJobAsync(HttpClient client, params string[] mediaIdentifiers)
@@ -421,7 +422,7 @@ public class AdminMediaControllerIntegrationTests : IClassFixture<StigViddWebApp
         var detail = await client.GetFromJsonAsync<MediaReprocessJobDetailResponse>(
             $"/api/v1/admin/media/reprocess/{job.Identifier}", TestContext.Current.CancellationToken);
         detail.Should().NotBeNull();
-        detail.Items.Should().ContainSingle(i => i.Status == "Pending" && i.LastError == null);
+        detail.Items.Should().ContainSingle(i => i.Status == Contract.MediaReprocessItemStatus.Pending && i.LastError == null);
     }
 
     [Fact]

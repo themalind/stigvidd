@@ -20,6 +20,8 @@ import {
 } from "@/api/generated/trail-import/trail-import";
 import type {
   DecideProposalRequest,
+  MatchConfidence,
+  ProposalDecision,
   TrailImportApplyResponse,
   TrailImportDiffResponse,
   TrailImportPreviewResponse,
@@ -29,12 +31,6 @@ import type {
 import { customFetch } from "@/api/mutator";
 import { underUrl } from "@/lib/react-query";
 
-export type Confidence = "Certain" | "High" | "Medium" | "Unmatched";
-export type Decision = "Pending" | "Accept" | "Relink" | "CreateNew" | "Exclude" | "Skip";
-/** What a linked feature contributes to the trail's route. */
-export type LinkRole = "Segment" | "Duplicate" | "Excluded";
-export type SessionStatus = "Uploaded" | "Analyzing" | "AwaitingReview" | "Applying" | "Applied" | "Failed";
-
 export type Proposal = TrailImportProposalResponse;
 export type Session = TrailImportSessionResponse;
 export type Preview = TrailImportPreviewResponse;
@@ -42,8 +38,8 @@ export type Diff = TrailImportDiffResponse;
 export type ApplyResult = TrailImportApplyResponse;
 
 export interface ProposalFilters {
-  confidence?: Confidence;
-  decision?: Decision;
+  confidence?: MatchConfidence;
+  decision?: ProposalDecision;
 }
 
 interface AnalyzeVariables {
@@ -52,7 +48,7 @@ interface AnalyzeVariables {
 }
 
 /** Ascending order of how much a human is needed. Drives sorting and the summary row. */
-export const confidenceOrder: Confidence[] = ["Unmatched", "Medium", "High", "Certain"];
+export const confidenceOrder: MatchConfidence[] = ["Unmatched", "Medium", "High", "Certain"];
 
 export const PROPOSALS_PAGE_SIZE = 50;
 const SELECT_ALL_PAGE_SIZE = 200;
@@ -173,7 +169,7 @@ export function useDecideBulk(sessionId: number) {
   const invalidate = useInvalidateSession();
 
   return useMutation({
-    mutationFn: ({ proposalIds, decision }: { proposalIds: number[]; decision: Decision }) =>
+    mutationFn: ({ proposalIds, decision }: { proposalIds: number[]; decision: ProposalDecision }) =>
       trailImportDecideBulk(sessionId, { proposalIds, decision }),
     onSuccess: ({ decided }, { decision }) => {
       toast.success(`${decided} proposal(s) set to ${decision}.`);

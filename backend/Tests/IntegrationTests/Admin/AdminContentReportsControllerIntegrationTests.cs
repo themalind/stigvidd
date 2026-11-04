@@ -13,6 +13,7 @@ using System.Net.Http.Json;
 using WebDataContracts.RequestModels.ContentReport;
 using WebDataContracts.ResponseModels.ContentReport;
 using WebDataContracts.ResponseModels.Review;
+using Contract = WebDataContracts.Enums;
 
 namespace IntegrationTests.Admin;
 
@@ -101,7 +102,7 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
         queue.Should().NotBeNull();
         queue.TotalCount.Should().Be(1);
         var row = queue.Items.Single();
-        row.Status.Should().Be(nameof(ReportStatus.Pending));
+        row.Status.Should().Be(Contract.ReportStatus.Pending);
         row.HideOutcome.Should().Be(nameof(ReportHideOutcome.Hidden));
         row.AuthorNickName.Should().Be("SkogsGreven");
         row.ReporterNickName.Should().Be("VandrarVennen");
@@ -161,7 +162,7 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var detail = await response.Content.ReadFromJsonAsync<ContentReportDetailResponse>(TestContext.Current.CancellationToken);
         detail.Should().NotBeNull();
-        detail.Report.Status.Should().Be(nameof(ReportStatus.Upheld));
+        detail.Report.Status.Should().Be(Contract.ReportStatus.Upheld);
         detail.Report.DecisionNote.Should().Be("Breaks the rules");
         detail.AuthorStrikes.Should().Be(1);
         detail.Report.ContentStillExists.Should().BeFalse();

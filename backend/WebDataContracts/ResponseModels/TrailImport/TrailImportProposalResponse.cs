@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.TrailImport;
 
 // One row in the review list. Confidence and decision go out as names, not numbers, so
@@ -10,13 +12,13 @@ public class TrailImportProposalResponse
     public required int Id { get; set; }
     public required string ExternalId { get; set; }
     public required string FeatureName { get; set; }
-    public required string Confidence { get; set; }
+    public required MatchConfidence Confidence { get; set; }
     public required double CoverageForward { get; set; }
     public required double CoverageBackward { get; set; }
     public required double? HausdorffMeters { get; set; }
     public required string? MatchReason { get; set; }
-    public required string Decision { get; set; }
-    public required string DecidedRole { get; set; }
+    public required ProposalDecision Decision { get; set; }
+    public required TrailSourceLinkRole DecidedRole { get; set; }
     public required int? SuggestedTrailId { get; set; }
     public required string? SuggestedTrailName { get; set; }
 
@@ -39,13 +41,13 @@ public class TrailImportProposalResponse
         int id,
         string externalId,
         string featureName,
-        string confidence,
+        MatchConfidence confidence,
         double coverageForward,
         double coverageBackward,
         double? hausdorffMeters,
         string? matchReason,
-        string decision,
-        string decidedRole,
+        ProposalDecision decision,
+        TrailSourceLinkRole decidedRole,
         int? suggestedTrailId,
         string? suggestedTrailName,
         int? nearestTrailId,

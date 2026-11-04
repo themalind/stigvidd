@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ImportSessionStatus } from "@/api/generated/model";
 import type { Session } from "@/features/trail-import/api/trail-import";
 import { pollWhileAnalysing } from "@/features/trail-import/api/trail-import";
 import { answerConfirm } from "@/testing/confirm";
@@ -221,11 +222,14 @@ describe("analysing", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 
-  it.each(["Analyzing", "Applying", "Applied"])("is not offered while the session is %s", async (status) => {
-    renderPage([session({ status })]);
+  it.each<ImportSessionStatus>(["Analyzing", "Applying", "Applied"])(
+    "is not offered while the session is %s",
+    async (status) => {
+      renderPage([session({ status })]);
 
-    expect(await analyseButton()).toBeDisabled();
-  });
+      expect(await analyseButton()).toBeDisabled();
+    },
+  );
 
   it("names a second run for what it is", async () => {
     renderPage([session({ status: "Uploaded", analyzedAt: null }), session({ id: 2 })]);

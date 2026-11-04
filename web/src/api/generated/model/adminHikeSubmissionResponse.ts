@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { HikeSubmissionImageResponse } from "./hikeSubmissionImageResponse";
+import type { HikeSubmissionStatus } from "./hikeSubmissionStatus";
 
 export interface AdminHikeSubmissionResponse {
   identifier: string;
@@ -21,7 +22,7 @@ export interface AdminHikeSubmissionResponse {
   /** @nullable */
   submitterNickName: string | null;
   transferAcceptedAt: string;
-  status: string;
+  status: HikeSubmissionStatus;
   /** @nullable */
   rejectionReason: string | null;
   /** @nullable */

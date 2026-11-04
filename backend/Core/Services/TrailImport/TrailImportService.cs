@@ -15,6 +15,7 @@ using NetTopologySuite.Geometries;
 using System.Net;
 using System.Text.Json;
 using WebDataContracts.ResponseModels.TrailImport;
+using Contract = WebDataContracts.Enums;
 
 namespace Core.Services.TrailImport;
 
@@ -492,8 +493,8 @@ public class TrailImportService : ITrailImportService
             .Select(r => TrailImportDiffWarningResponse.Create(
                 r.ProposalId,
                 r.FeatureName,
-                r.Decision.ToString(),
-                r.Confidence.ToString(),
+                r.Decision.ToContract<Contract.ProposalDecision>(),
+                r.Confidence.ToContract<Contract.MatchConfidence>(),
                 r.CoverageForward,
                 r.TargetTrailName));
 
@@ -617,13 +618,13 @@ public class TrailImportService : ITrailImportService
             summary.Id,
             summary.ExternalId,
             summary.FeatureName,
-            summary.Confidence.ToString(),
+            summary.Confidence.ToContract<Contract.MatchConfidence>(),
             summary.CoverageForward,
             summary.CoverageBackward,
             summary.HausdorffMetres,
             summary.MatchReason,
-            summary.Decision.ToString(),
-            summary.DecidedRole.ToString(),
+            summary.Decision.ToContract<Contract.ProposalDecision>(),
+            summary.DecidedRole.ToContract<Contract.TrailSourceLinkRole>(),
             summary.SuggestedTrailId,
             summary.SuggestedTrailName,
             summary.NearestTrailId,

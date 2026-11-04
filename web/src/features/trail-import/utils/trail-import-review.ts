@@ -7,30 +7,30 @@
 //
 // These are the guard rails between a reviewer and an irreversible write: which selections
 // may be batch-decided, and whether "select all" really means all of them.
-import type { Confidence } from "@/features/trail-import/api/trail-import";
+import type { MatchConfidence } from "@/api/generated/model";
 
 /**
  * Proposal id to its confidence tier — not a bare id set, because selecting across pages
  * means the row is no longer in view when the batch is checked for whether it may be
  * accepted.
  */
-export type CheckedProposals = ReadonlyMap<number, string>;
+export type CheckedProposals = ReadonlyMap<number, MatchConfidence>;
 
 /** All the selection rules need from a proposal. */
-export type SelectableProposal = { id: number; confidence: string };
+export type SelectableProposal = { id: number; confidence: MatchConfidence };
 
 // Only these two are ever worth a batch: the ones the geometry settled by itself.
-export const bulkTiers: Confidence[] = ["Certain", "High"];
+export const bulkTiers: MatchConfidence[] = ["Certain", "High"];
 
 /**
  * A batch may only be decided when every row in it was settled by the geometry. One
  * `Medium` in the selection is enough to refuse — those are the ones that wanted a human.
  */
 export function canBulkDecide(checked: CheckedProposals): boolean {
-  return checked.size > 0 && [...checked.values()].every((tier) => bulkTiers.includes(tier as Confidence));
+  return checked.size > 0 && [...checked.values()].every((tier) => bulkTiers.includes(tier));
 }
 
-export function toggleProposal(checked: CheckedProposals, proposal: SelectableProposal): Map<number, string> {
+export function toggleProposal(checked: CheckedProposals, proposal: SelectableProposal): Map<number, MatchConfidence> {
   const next = new Map(checked);
 
   if (next.has(proposal.id)) next.delete(proposal.id);
@@ -43,7 +43,7 @@ export function toggleProposal(checked: CheckedProposals, proposal: SelectablePr
 export function togglePageSelection(
   checked: CheckedProposals,
   proposals: readonly SelectableProposal[],
-): Map<number, string> {
+): Map<number, MatchConfidence> {
   const next = new Map(checked);
   const allOn = proposals.every((proposal) => next.has(proposal.id));
 
@@ -83,7 +83,7 @@ export type ConfidenceCounts = {
   unmatched?: number;
 } | null;
 
-export function countFor(counts: ConfidenceCounts | undefined, confidence: Confidence): number {
+export function countFor(counts: ConfidenceCounts | undefined, confidence: MatchConfidence): number {
   if (!counts) return 0;
 
   return (
@@ -107,7 +107,7 @@ export type ProposalPage = {
  * batch-decide a subset believing it was everything.
  */
 export type CollectOutcome =
-  | { complete: true; checked: Map<number, string> }
+  | { complete: true; checked: Map<number, MatchConfidence> }
   | { complete: false; pagesWalked: number };
 
 /**
@@ -119,7 +119,7 @@ export async function collectAllMatching(
   fetchPage: (page: number) => Promise<ProposalPage>,
   maxPages: number,
 ): Promise<CollectOutcome> {
-  const checked = new Map<number, string>();
+  const checked = new Map<number, MatchConfidence>();
 
   for (let cursor = 1; cursor <= maxPages; cursor++) {
     const paged = await fetchPage(cursor);

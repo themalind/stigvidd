@@ -5,20 +5,23 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
+import type { MatchConfidence } from "./matchConfidence";
+import type { ProposalDecision } from "./proposalDecision";
+import type { TrailSourceLinkRole } from "./trailSourceLinkRole";
 
 export interface TrailImportProposalResponse {
   id: number;
   externalId: string;
   featureName: string;
-  confidence: string;
+  confidence: MatchConfidence;
   coverageForward: number;
   coverageBackward: number;
   /** @nullable */
   hausdorffMeters: number | null;
   /** @nullable */
   matchReason: string | null;
-  decision: string;
-  decidedRole: string;
+  decision: ProposalDecision;
+  decidedRole: TrailSourceLinkRole;
   /** @nullable */
   suggestedTrailId: number | null;
   /** @nullable */

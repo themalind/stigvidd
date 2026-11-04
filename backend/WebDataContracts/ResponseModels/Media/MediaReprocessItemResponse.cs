@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.Media;
 
 public class MediaReprocessItemResponse
@@ -11,8 +13,7 @@ public class MediaReprocessItemResponse
     /// <summary>"Trail" | "Facility"</summary>
     public required string OwnerType { get; set; }
 
-    /// <summary>"Pending" | "Processing" | "Succeeded" | "Failed" | "Cancelled"</summary>
-    public required string Status { get; set; }
+    public required MediaReprocessItemStatus Status { get; set; }
 
     public required string? LastError { get; set; }
     public required DateTime CreatedAt { get; set; }
@@ -22,7 +23,7 @@ public class MediaReprocessItemResponse
         string identifier,
         string mediaIdentifier,
         string ownerType,
-        string status,
+        MediaReprocessItemStatus status,
         string? lastError,
         DateTime createdAt,
         DateTime lastUpdatedAt) => new()

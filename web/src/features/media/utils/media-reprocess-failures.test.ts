@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import type { MediaReprocessItemResponse } from "@/api/generated/model";
+import type { MediaReprocessItemResponse, MediaReprocessItemStatus } from "@/api/generated/model";
 import { failedItem } from "@/testing/fixtures/media";
 import { groupFailures } from "./media-reprocess-failures";
 
-const item = (mediaIdentifier: string, status: string, lastError?: string | null): MediaReprocessItemResponse => ({
+const item = (
+  mediaIdentifier: string,
+  status: MediaReprocessItemStatus,
+  lastError?: string | null,
+): MediaReprocessItemResponse => ({
   ...failedItem(mediaIdentifier, lastError ?? null),
   status,
 });
