@@ -8,8 +8,8 @@
 import type { ReporterStatisticResponse } from "./reporterStatisticResponse";
 
 export interface PagedResultOfReporterStatisticResponse {
-  items?: ReporterStatisticResponse[];
-  page?: number;
-  hasMore?: boolean;
-  totalCount?: number;
+  items: ReporterStatisticResponse[];
+  page: number;
+  hasMore: boolean;
+  totalCount: number;
 }

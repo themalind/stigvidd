@@ -8,8 +8,8 @@
 import type { OutboxEmailSummaryResponse } from "./outboxEmailSummaryResponse";
 
 export interface PagedResultOfOutboxEmailSummaryResponse {
-  items?: OutboxEmailSummaryResponse[];
-  page?: number;
-  hasMore?: boolean;
-  totalCount?: number;
+  items: OutboxEmailSummaryResponse[];
+  page: number;
+  hasMore: boolean;
+  totalCount: number;
 }

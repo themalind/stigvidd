@@ -8,8 +8,8 @@
 import type { TrailImportProposalResponse } from "./trailImportProposalResponse";
 
 export interface PagedResultOfTrailImportProposalResponse {
-  items?: TrailImportProposalResponse[];
-  page?: number;
-  hasMore?: boolean;
-  totalCount?: number;
+  items: TrailImportProposalResponse[];
+  page: number;
+  hasMore: boolean;
+  totalCount: number;
 }

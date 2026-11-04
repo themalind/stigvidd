@@ -3,21 +3,15 @@
 
 import {
   adminContentReportsDecide,
-  adminContentReportsGetAuthors,
   adminContentReportsGetCounts,
   adminContentReportsGetReport,
-  adminContentReportsGetReporters,
   adminContentReportsGetReports,
 } from "@/api/generated/admin-content-reports/admin-content-reports";
 import type {
-  AuthorStatisticResponse,
   ContentReportCountsResponse,
   ContentReportDetailResponse,
   ContentReportSummaryResponse,
-  PagedResultOfAuthorStatisticResponse,
   PagedResultOfContentReportSummaryResponse,
-  PagedResultOfReporterStatisticResponse,
-  ReporterStatisticResponse,
 } from "@/api/generated/model";
 
 // Wrappers over the generated admin client, following the same convention as
@@ -54,17 +48,4 @@ export async function decideReport(
   decisionNote?: string,
 ): Promise<ReportDetail> {
   return adminContentReportsDecide(identifier, { decision, decisionNote });
-}
-
-export type ReporterStatistic = ReporterStatisticResponse;
-export type AuthorStatistic = AuthorStatisticResponse;
-
-/** Who reports, most dismissed first. */
-export async function getReporters(page: number, pageSize: number): Promise<PagedResultOfReporterStatisticResponse> {
-  return adminContentReportsGetReporters({ page, pageSize });
-}
-
-/** Strikes per author on distinct content, most first. */
-export async function getAuthors(page: number, pageSize: number): Promise<PagedResultOfAuthorStatisticResponse> {
-  return adminContentReportsGetAuthors({ page, pageSize });
 }

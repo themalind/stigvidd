@@ -1,32 +1,27 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, Users } from "lucide-react";
+import { startTransition, useState, type ReactNode } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import type { AuthorStatisticResponse } from "@/api/generated/model";
+import { authorsQueryOptions, reportersQueryOptions, useUnbanUser } from "@/features/users/api/users";
+import { BanSheet, type BanTarget } from "@/features/users/components/ban-sheet";
 import {
-  getAuthors,
-  getReporters,
-  type AuthorStatistic,
-  type ReporterStatistic,
-} from "@/features/moderation/api/content-reports";
-import {
-  displayName,
   emptyExplanation,
   reporterAccuracy,
   strikeSeverity,
   totalStrikes,
   withheldNote,
   withheldReporters,
-} from "@/features/moderation/utils/moderation-statistics";
-import { unbanUser } from "@/features/users/api/users";
-import { BanSheet, type BanTarget } from "@/features/users/components/ban-sheet";
+} from "@/features/users/utils/user-statistics";
+import { Page, PageHeader } from "@/components/page";
+import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const PageSize = 25;
+import { displayName } from "@/utils/format";
 
 const severityClass: Record<string, string> = {
   none: "text-muted-foreground",
@@ -36,11 +31,8 @@ const severityClass: Record<string, string> = {
 
 export default function UsersPage() {
   return (
-    <main className="flex flex-col gap-4 p-4">
-      <header className="flex items-center gap-3">
-        <Users className="size-5" />
-        <h1 className="text-lg font-semibold">Users</h1>
-      </header>
+    <Page width="wide">
+      <PageHeader title="Users" description="Who reports, and whose content gets removed." />
 
       <Tabs defaultValue="reporters">
         <TabsList>
@@ -49,71 +41,32 @@ export default function UsersPage() {
         </TabsList>
 
         <TabsContent value="reporters">
-          <ReportersTab />
+          <PagedTab>{(page, setPage) => <ReportersTable page={page} onPageChange={setPage} />}</PagedTab>
         </TabsContent>
         <TabsContent value="authors">
-          <AuthorsTab />
+          <PagedTab>{(page, setPage) => <AuthorsTable page={page} onPageChange={setPage} />}</PagedTab>
         </TabsContent>
       </Tabs>
-    </main>
+    </Page>
   );
 }
 
-type PagedStatistics<T> = {
-  items?: T[];
-  totalCount?: number;
-  hasMore?: boolean;
-};
-
-// Both tabs load the same way. State is set from the promise callback, and a response that
-// arrives after the page moved on is dropped rather than rendered over the newer one.
-function usePagedStatistics<T>(
-  fetchPage: (page: number, pageSize: number) => Promise<PagedStatistics<T>>,
-  page: number,
-  failureMessage: string,
-) {
-  const [rows, setRows] = useState<T[] | null>(null);
-  const [total, setTotal] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  const [reloads, setReloads] = useState(0);
-
-  useEffect(() => {
-    let current = true;
-
-    fetchPage(page, PageSize)
-      .then((paged) => {
-        if (!current) return;
-
-        setRows(paged.items ?? []);
-        setTotal(paged.totalCount ?? 0);
-        setHasMore(paged.hasMore ?? false);
-      })
-      .catch((error: unknown) => {
-        if (!current) return;
-
-        toast.error(error instanceof Error ? error.message : failureMessage);
-      });
-
-    return () => {
-      current = false;
-    };
-  }, [fetchPage, page, failureMessage, reloads]);
-
-  // Bumped after a ban or a lifted ban; the row's buttons are read off the response.
-  const reload = useCallback(() => setReloads((count) => count + 1), []);
-
-  return { rows, total, hasMore, reload };
-}
-
-function ReportersTab() {
+// keep-comment: the page lives outside the boundary so a failed page keeps its number on retry
+function PagedTab({ children }: { children: (page: number, setPage: (page: number) => void) => ReactNode }) {
   const [page, setPage] = useState(1);
-  const { rows, total, hasMore } = usePagedStatistics<ReporterStatistic>(
-    getReporters,
-    page,
-    "The reporters could not be loaded.",
-  );
+  const changePage = (next: number) => startTransition(() => setPage(next));
 
-  if (rows === null) return <LoadingRows />;
+  return <QueryBoundary fallback={<LoadingRows />}>{children(page, changePage)}</QueryBoundary>;
+}
+
+interface TableProps {
+  page: number;
+  onPageChange: (page: number) => void;
+}
+
+function ReportersTable({ page, onPageChange }: TableProps) {
+  const { data } = useSuspenseQuery(reportersQueryOptions(page));
+  const rows = data.items;
 
   if (rows.length === 0) return <Empty>{emptyExplanation("reporters")}</Empty>;
 
@@ -159,60 +112,35 @@ function ReportersTab() {
                     </span>
                   )}
                 </TableCell>
-                <TableCell className="text-right">{row.total ?? 0}</TableCell>
-                <TableCell className="text-right">{row.pending ?? 0}</TableCell>
-                <TableCell className="text-right">{row.dismissed ?? 0}</TableCell>
-                <TableCell className="text-right">{row.upheld ?? 0}</TableCell>
+                <TableCell className="text-right">{row.total}</TableCell>
+                <TableCell className="text-right">{row.pending}</TableCell>
+                <TableCell className="text-right">{row.dismissed}</TableCell>
+                <TableCell className="text-right">{row.upheld}</TableCell>
                 <TableCell className="text-right" data-testid="reporter-accuracy">
                   {accuracy === null ? "Nothing decided" : `${accuracy}%`}
                 </TableCell>
-                <TableCell>{row.lastReportedAt ? new Date(row.lastReportedAt).toLocaleString() : ""}</TableCell>
+                <TableCell>{new Date(row.lastReportedAt).toLocaleString()}</TableCell>
               </TableRow>
             );
           })}
         </TableBody>
       </Table>
 
-      <Pager page={page} hasMore={hasMore} onChange={setPage} label={`${total} reporter${total === 1 ? "" : "s"}`} />
+      <Pager page={page} hasMore={data.hasMore} onChange={onPageChange} label={count(data.totalCount, "reporter")} />
     </div>
   );
 }
 
-function AuthorsTab() {
-  const [page, setPage] = useState(1);
+function AuthorsTable({ page, onPageChange }: TableProps) {
+  const { data } = useSuspenseQuery(authorsQueryOptions(page));
   const [banning, setBanning] = useState<BanTarget | null>(null);
-  const [lifting, setLifting] = useState<string | null>(null);
-  const { rows, total, hasMore, reload } = usePagedStatistics<AuthorStatistic>(
-    getAuthors,
-    page,
-    "The authors could not be loaded.",
-  );
-
-  async function unban(author: AuthorStatistic) {
-    if (!author.identifier) return;
-
-    setLifting(author.identifier);
-
-    try {
-      await unbanUser(author.identifier);
-      toast.success(`${displayName(author.nickName)} can write again.`);
-      reload();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The ban could not be lifted.");
-    } finally {
-      setLifting(null);
-    }
-  }
-
-  if (rows === null) return <LoadingRows />;
+  const rows = data.items;
 
   if (rows.length === 0) return <Empty>{emptyExplanation("authors")}</Empty>;
 
   return (
     <div className="flex flex-col gap-2">
       <Table>
-        {/* A strike is one piece of content, however many people reported it. Saying so
-            here keeps the list from being read as a report count. */}
         <TableCaption>
           {totalStrikes(rows)} strikes on this page. One strike is one piece of content removed, however many people
           reported it.
@@ -233,63 +161,77 @@ function AuthorsTab() {
                 data-testid="author-strikes"
                 className={`text-right ${severityClass[strikeSeverity(row.strikes)]}`}
               >
-                {row.strikes ?? 0}
+                {row.strikes}
               </TableCell>
               <TableCell data-testid="author-bans" className="text-right">
-                {row.banCount ?? 0}
+                {row.banCount}
               </TableCell>
               <TableCell className="text-right">
-                {row.bannedAt ? (
-                  <span className="flex items-center justify-end gap-2">
-                    <span data-testid="banned-since" className="text-muted-foreground text-xs">
-                      Banned {new Date(row.bannedAt).toLocaleDateString()}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      data-testid="unban-author"
-                      disabled={lifting === row.identifier}
-                      onClick={() => void unban(row)}
-                    >
-                      {lifting === row.identifier && <Loader2 className="size-4 animate-spin" />}
-                      Lift ban
-                    </Button>
-                  </span>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    data-testid="ban-author"
-                    disabled={!row.identifier}
-                    title={row.identifier ? undefined : "This account is already deleted."}
-                    onClick={() =>
-                      row.identifier &&
-                      setBanning({
-                        identifier: row.identifier,
-                        nickName: row.nickName,
-                        strikes: row.strikes,
-                      })
-                    }
-                  >
-                    Ban
-                  </Button>
-                )}
+                <AccountAction author={row} onBan={setBanning} />
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
-      <Pager page={page} hasMore={hasMore} onChange={setPage} label={`${total} author${total === 1 ? "" : "s"}`} />
+      <Pager page={page} hasMore={data.hasMore} onChange={onPageChange} label={count(data.totalCount, "author")} />
 
-      {banning && <BanSheet target={banning} onClose={() => setBanning(null)} onBanned={reload} />}
+      {banning && <BanSheet target={banning} onClose={() => setBanning(null)} />}
     </div>
   );
+}
+
+function AccountAction({ author, onBan }: { author: AuthorStatisticResponse; onBan: (target: BanTarget) => void }) {
+  const unban = useUnbanUser();
+  const { identifier, nickName, strikes, bannedAt } = author;
+
+  if (!identifier) {
+    return (
+      <Button variant="outline" size="sm" data-testid="ban-author" disabled title="This account is already deleted.">
+        Ban
+      </Button>
+    );
+  }
+
+  if (!bannedAt) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        data-testid="ban-author"
+        onClick={() => onBan({ identifier, nickName, strikes })}
+      >
+        Ban
+      </Button>
+    );
+  }
+
+  return (
+    <span className="flex items-center justify-end gap-2">
+      <span data-testid="banned-since" className="text-muted-foreground text-xs">
+        Banned {new Date(bannedAt).toLocaleDateString()}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        data-testid="unban-author"
+        disabled={unban.isPending}
+        onClick={() => unban.mutate({ identifier, nickName })}
+      >
+        {unban.isPending && <Loader2 className="size-4 animate-spin" />}
+        Lift ban
+      </Button>
+    </span>
+  );
+}
+
+function count(total: number, noun: string) {
+  return `${total} ${noun}${total === 1 ? "" : "s"}`;
 }
 
 function LoadingRows() {
   return (
-    <div className="flex flex-col gap-2 pt-2">
+    <div data-testid="loading-rows" className="flex flex-col gap-2 pt-2">
       <Skeleton className="h-8 w-full" />
       <Skeleton className="h-8 w-full" />
       <Skeleton className="h-8 w-full" />
@@ -297,7 +239,7 @@ function LoadingRows() {
   );
 }
 
-function Empty({ children }: { children: React.ReactNode }) {
+function Empty({ children }: { children: ReactNode }) {
   return (
     <div data-testid="empty-tab" className="rounded-md border border-dashed p-6 text-sm text-muted-foreground">
       {children}
@@ -322,6 +264,7 @@ function Pager({
         size="sm"
         variant="outline"
         data-testid="previous-page"
+        aria-label="Previous page"
         disabled={page <= 1}
         onClick={() => onChange(Math.max(page - 1, 1))}
       >
@@ -334,6 +277,7 @@ function Pager({
         size="sm"
         variant="outline"
         data-testid="next-page"
+        aria-label="Next page"
         disabled={!hasMore}
         onClick={() => onChange(page + 1)}
       >

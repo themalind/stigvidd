@@ -24,7 +24,7 @@ import {
   upholdEnabled,
 } from "@/features/moderation/utils/moderation-review";
 import { Badge } from "@/components/ui/badge";
-import { unbanUser } from "@/features/users/api/users";
+import { useUnbanUser } from "@/features/users/api/users";
 import { BanSheet } from "@/features/users/components/ban-sheet";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -74,7 +74,6 @@ export default function ModerationPage() {
   const [decisionNote, setDecisionNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [banOpen, setBanOpen] = useState(false);
-  const [lifting, setLifting] = useState(false);
 
   const filters = useMemo(
     () => ({
@@ -164,21 +163,17 @@ export default function ModerationPage() {
     }
   }, []);
 
-  const unban = useCallback(async () => {
+  const unbanUser = useUnbanUser();
+
+  function unban() {
     if (!report?.authorIdentifier) return;
 
-    setLifting(true);
-
-    try {
-      await unbanUser(report.authorIdentifier);
-      toast.success("The account can write again.");
-      await reloadReport(report.identifier);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The ban could not be lifted.");
-    } finally {
-      setLifting(false);
-    }
-  }, [report, reloadReport]);
+    const identifier = report.identifier;
+    unbanUser.mutate(
+      { identifier: report.authorIdentifier, nickName: report.authorNickName },
+      { onSuccess: () => void reloadReport(identifier) },
+    );
+  }
 
   const decide = useCallback(
     async (decision: "Dismiss" | "Uphold") => {
@@ -404,10 +399,10 @@ export default function ModerationPage() {
                         size="sm"
                         className="mt-3"
                         data-testid="unban-author"
-                        disabled={lifting}
-                        onClick={() => void unban()}
+                        disabled={unbanUser.isPending}
+                        onClick={unban}
                       >
-                        {lifting && <Loader2 className="size-4 animate-spin" />}
+                        {unbanUser.isPending && <Loader2 className="size-4 animate-spin" />}
                         Lift the ban
                       </Button>
                     </>

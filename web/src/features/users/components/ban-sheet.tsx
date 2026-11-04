@@ -2,17 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-import { banUser } from "@/features/users/api/users";
-import { displayName } from "@/features/moderation/utils/moderation-statistics";
+import { useBanUser, type UserTarget } from "@/features/users/api/users";
+import { displayName } from "@/utils/format";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
-export interface BanTarget {
-  identifier: string;
-  nickName?: string | null;
+export interface BanTarget extends UserTarget {
   strikes?: number | null;
 }
 
@@ -20,27 +17,24 @@ interface Props {
   target: BanTarget;
   initialReason?: string;
   onClose: () => void;
-  onBanned: () => void;
+  onBanned?: () => void;
 }
 
 export function BanSheet({ target, initialReason = "", onClose, onBanned }: Props) {
   const [reason, setReason] = useState(initialReason);
-  const [saving, setSaving] = useState(false);
+  const ban = useBanUser();
   const strikes = target.strikes ?? 0;
 
-  async function ban() {
-    setSaving(true);
-
-    try {
-      await banUser(target.identifier, reason.trim() || undefined);
-      toast.success(`${displayName(target.nickName)} can no longer write in the app.`);
-      onBanned();
-      onClose();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The account could not be banned.");
-    } finally {
-      setSaving(false);
-    }
+  function confirm() {
+    ban.mutate(
+      { target, reason: reason.trim() || undefined },
+      {
+        onSuccess: () => {
+          onBanned?.();
+          onClose();
+        },
+      },
+    );
   }
 
   return (
@@ -66,8 +60,8 @@ export function BanSheet({ target, initialReason = "", onClose, onBanned }: Prop
         </div>
 
         <SheetFooter>
-          <Button variant="destructive" data-testid="confirm-ban" disabled={saving} onClick={() => void ban()}>
-            {saving && <Loader2 className="size-4 animate-spin" />}
+          <Button variant="destructive" data-testid="confirm-ban" disabled={ban.isPending} onClick={confirm}>
+            {ban.isPending && <Loader2 className="size-4 animate-spin" />}
             Ban account
           </Button>
           <Button variant="outline" onClick={onClose}>

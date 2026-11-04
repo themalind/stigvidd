@@ -8,8 +8,8 @@
 import type { ContentReportSummaryResponse } from "./contentReportSummaryResponse";
 
 export interface PagedResultOfContentReportSummaryResponse {
-  items?: ContentReportSummaryResponse[];
-  page?: number;
-  hasMore?: boolean;
-  totalCount?: number;
+  items: ContentReportSummaryResponse[];
+  page: number;
+  hasMore: boolean;
+  totalCount: number;
 }
