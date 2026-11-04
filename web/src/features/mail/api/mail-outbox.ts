@@ -16,13 +16,13 @@ import {
   getAdminMailOutboxGetCountsSuspenseQueryOptions,
 } from "@/api/generated/admin-mail-outbox/admin-mail-outbox";
 
-export const OUTBOX_PAGE_SIZE = 25;
-
 export interface OutboxFilters {
   status?: string;
   recipient?: string;
   page: number;
 }
+
+export const OUTBOX_PAGE_SIZE = 25;
 
 export const outboxMailsQueryOptions = ({ status, recipient, page }: OutboxFilters) =>
   getAdminMailOutboxGetAllSuspenseQueryOptions({ status, recipient, page, pageSize: OUTBOX_PAGE_SIZE });

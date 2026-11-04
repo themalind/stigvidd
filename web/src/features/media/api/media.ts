@@ -29,6 +29,15 @@ import { groupFailures } from "@/features/media/utils/media-reprocess-failures";
 import type { TargetType } from "@/features/media/utils/media-upload";
 import type { ReprocessTarget } from "@/features/media/utils/media-reprocess-target";
 
+export type UploadRequest = {
+  targetType: TargetType;
+  targetId: string;
+  files: File[];
+  options: ImageProcessingOptions;
+};
+
+export type ReprocessJobSummary = MediaReprocessJobSummaryResponse;
+
 const ADMIN_MEDIA = getAdminMediaGetAllUrl();
 const REPROCESS_JOBS = getAdminMediaGetReprocessJobsUrl();
 const POLL_MS = 3000;
@@ -65,13 +74,6 @@ export function useInvalidateMedia() {
 
   return () => queryClient.invalidateQueries(underUrl(ADMIN_MEDIA));
 }
-
-export type UploadRequest = {
-  targetType: TargetType;
-  targetId: string;
-  files: File[];
-  options: ImageProcessingOptions;
-};
 
 async function upload({ targetType, targetId, files, options }: UploadRequest): Promise<string> {
   if (targetType === "trail-symbol") {
@@ -126,8 +128,6 @@ export function useUpdateMediaMetadata() {
     meta: { successMessage: "Metadata saved." },
   });
 }
-
-export type ReprocessJobSummary = MediaReprocessJobSummaryResponse;
 
 const isActive = (job: ReprocessJobSummary) => job.status === "Pending" || job.status === "Processing";
 

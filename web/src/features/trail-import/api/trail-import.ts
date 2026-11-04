@@ -35,23 +35,28 @@ export type Decision = "Pending" | "Accept" | "Relink" | "CreateNew" | "Exclude"
 export type LinkRole = "Segment" | "Duplicate" | "Excluded";
 export type SessionStatus = "Uploaded" | "Analyzing" | "AwaitingReview" | "Applying" | "Applied" | "Failed";
 
-/** Ascending order of how much a human is needed. Drives sorting and the summary row. */
-export const confidenceOrder: Confidence[] = ["Unmatched", "Medium", "High", "Certain"];
-
 export type Proposal = TrailImportProposalResponse;
 export type Session = TrailImportSessionResponse;
 export type Preview = TrailImportPreviewResponse;
 export type Diff = TrailImportDiffResponse;
 export type ApplyResult = TrailImportApplyResponse;
 
-export const PROPOSALS_PAGE_SIZE = 50;
-const SELECT_ALL_PAGE_SIZE = 200;
-const ANALYSING_POLL_MS = 4000;
-
 export interface ProposalFilters {
   confidence?: Confidence;
   decision?: Decision;
 }
+
+interface AnalyzeVariables {
+  sessionId: number;
+  confirmDiscard: (message: string) => Promise<boolean>;
+}
+
+/** Ascending order of how much a human is needed. Drives sorting and the summary row. */
+export const confidenceOrder: Confidence[] = ["Unmatched", "Medium", "High", "Certain"];
+
+export const PROPOSALS_PAGE_SIZE = 50;
+const SELECT_ALL_PAGE_SIZE = 200;
+const ANALYSING_POLL_MS = 4000;
 
 const SESSIONS_URL = getTrailImportGetSessionsQueryKey()[0];
 
@@ -120,11 +125,6 @@ export function useCreateSession() {
 // keep-comment: the API refuses to discard decided proposals unless forced, and says how many
 function isDiscardRefusal(error: unknown): error is Error {
   return error instanceof Error && error.message.includes("discard");
-}
-
-interface AnalyzeVariables {
-  sessionId: number;
-  confirmDiscard: (message: string) => Promise<boolean>;
 }
 
 export function useAnalyzeSession() {
