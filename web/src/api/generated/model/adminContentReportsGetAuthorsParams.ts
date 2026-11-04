@@ -7,6 +7,6 @@
  */
 
 export type AdminContentReportsGetAuthorsParams = {
-page?: number;
-pageSize?: number;
+  page?: number;
+  pageSize?: number;
 };

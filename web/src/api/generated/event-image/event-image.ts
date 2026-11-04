@@ -5,161 +5,148 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation
-} from '@tanstack/react-query';
-import type {
-  MutationFunction,
-  QueryClient,
-  UseMutationOptions,
-  UseMutationResult
-} from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
+import type { MutationFunction, QueryClient, UseMutationOptions, UseMutationResult } from "@tanstack/react-query";
 
-import type {
-  EventImageResponse,
-  EventImageSetImageBody
-} from '../model';
+import type { EventImageResponse, EventImageSetImageBody } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
+export const getEventImageSetImageUrl = (identifier: string) => {
+  return `/api/v1/events/${identifier}/image`;
+};
 
-
-export const getEventImageSetImageUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/events/${identifier}/image`
-}
-
-export const eventImageSetImage = async (identifier: string,
-    eventImageSetImageBody?: EventImageSetImageBody, options?: RequestInit): Promise<EventImageResponse> => {
-    const formData = new FormData();
-if(eventImageSetImageBody?.image !== undefined && eventImageSetImageBody.image !== null) {
- formData.append(`image`, eventImageSetImageBody.image);
- }
-if(eventImageSetImageBody?.focusY !== undefined && eventImageSetImageBody.focusY !== null) {
- formData.append(`focusY`, eventImageSetImageBody.focusY.toString())
- }
-
-  return customFetch<EventImageResponse>(getEventImageSetImageUrl(identifier),
-  {
-    ...options,
-    method: 'POST'
-    ,
-    body: formData
+export const eventImageSetImage = async (
+  identifier: string,
+  eventImageSetImageBody?: EventImageSetImageBody,
+  options?: RequestInit,
+): Promise<EventImageResponse> => {
+  const formData = new FormData();
+  if (eventImageSetImageBody?.image !== undefined && eventImageSetImageBody.image !== null) {
+    formData.append(`image`, eventImageSetImageBody.image);
   }
-);}
+  if (eventImageSetImageBody?.focusY !== undefined && eventImageSetImageBody.focusY !== null) {
+    formData.append(`focusY`, eventImageSetImageBody.focusY.toString());
+  }
 
+  return customFetch<EventImageResponse>(getEventImageSetImageUrl(identifier), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
 
+export const getEventImageSetImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventImageSetImage>>,
+    TError,
+    { identifier: string; data?: EventImageSetImageBody },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventImageSetImage>>,
+  TError,
+  { identifier: string; data?: EventImageSetImageBody },
+  TContext
+> => {
+  const mutationKey = ["eventImageSetImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventImageSetImage>>,
+    { identifier: string; data?: EventImageSetImageBody }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return eventImageSetImage(identifier, data, requestOptions);
+  };
 
-export const getEventImageSetImageMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError,{identifier: string;data?: EventImageSetImageBody}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError,{identifier: string;data?: EventImageSetImageBody}, TContext> => {
+  return { mutationFn, ...mutationOptions };
+};
 
-const mutationKey = ['eventImageSetImage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export type EventImageSetImageMutationResult = NonNullable<Awaited<ReturnType<typeof eventImageSetImage>>>;
+export type EventImageSetImageMutationBody = EventImageSetImageBody | undefined;
+export type EventImageSetImageMutationError = unknown;
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventImageSetImage>>, {identifier: string;data?: EventImageSetImageBody}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  eventImageSetImage(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventImageSetImageMutationResult = NonNullable<Awaited<ReturnType<typeof eventImageSetImage>>>
-    export type EventImageSetImageMutationBody = EventImageSetImageBody | undefined
-    export type EventImageSetImageMutationError = unknown
-
-    export const useEventImageSetImage = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError,{identifier: string;data?: EventImageSetImageBody}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventImageSetImage>>,
-        TError,
-        {identifier: string;data?: EventImageSetImageBody},
-        TContext
-      > => {
-      return useMutation(getEventImageSetImageMutationOptions(options), queryClient);
-    }
-    export const getEventImageDeleteImageUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/events/${identifier}/image`
-}
+export const useEventImageSetImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventImageSetImage>>,
+      TError,
+      { identifier: string; data?: EventImageSetImageBody },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventImageSetImage>>,
+  TError,
+  { identifier: string; data?: EventImageSetImageBody },
+  TContext
+> => {
+  return useMutation(getEventImageSetImageMutationOptions(options), queryClient);
+};
+export const getEventImageDeleteImageUrl = (identifier: string) => {
+  return `/api/v1/events/${identifier}/image`;
+};
 
 export const eventImageDeleteImage = async (identifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventImageDeleteImageUrl(identifier),
-  {
+  return customFetch<Blob>(getEventImageDeleteImageUrl(identifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getEventImageDeleteImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventImageDeleteImage>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, { identifier: string }, TContext> => {
+  const mutationKey = ["eventImageDeleteImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventImageDeleteImage>>, { identifier: string }> = (
+    props,
+  ) => {
+    const { identifier } = props ?? {};
 
+    return eventImageDeleteImage(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type EventImageDeleteImageMutationResult = NonNullable<Awaited<ReturnType<typeof eventImageDeleteImage>>>;
 
+export type EventImageDeleteImageMutationError = unknown;
 
-export const getEventImageDeleteImageMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['eventImageDeleteImage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventImageDeleteImage>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  eventImageDeleteImage(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventImageDeleteImageMutationResult = NonNullable<Awaited<ReturnType<typeof eventImageDeleteImage>>>
-
-    export type EventImageDeleteImageMutationError = unknown
-
-    export const useEventImageDeleteImage = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventImageDeleteImage>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getEventImageDeleteImageMutationOptions(options), queryClient);
-    }
+export const useEventImageDeleteImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventImageDeleteImage>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, { identifier: string }, TContext> => {
+  return useMutation(getEventImageDeleteImageMutationOptions(options), queryClient);
+};

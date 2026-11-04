@@ -7,30 +7,30 @@
  */
 
 export type EventsGetEventsParams = {
-/**
- * @nullable
- */
-Trail?: string | null;
-/**
- * @nullable
- */
-Organizer?: string | null;
-/**
- * @nullable
- */
-Lat?: number | null;
-/**
- * @nullable
- */
-Lon?: number | null;
-/**
- * @nullable
- */
-RadiusKm?: number | null;
-Limit?: number;
-/**
- * @nullable
- */
-Cursor?: string | null;
-ExcludeMine?: boolean;
+  /**
+   * @nullable
+   */
+  Trail?: string | null;
+  /**
+   * @nullable
+   */
+  Organizer?: string | null;
+  /**
+   * @nullable
+   */
+  Lat?: number | null;
+  /**
+   * @nullable
+   */
+  Lon?: number | null;
+  /**
+   * @nullable
+   */
+  RadiusKm?: number | null;
+  Limit?: number;
+  /**
+   * @nullable
+   */
+  Cursor?: string | null;
+  ExcludeMine?: boolean;
 };

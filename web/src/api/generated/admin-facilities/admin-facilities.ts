@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,30 +20,27 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   AdminFacilitiesAddFacilityImagesBody,
   CreateFacilityRequest,
   FacilityImageResponse,
   FacilityResponse,
-  UpdateFacilityRequest
-} from '../model';
+  UpdateFacilityRequest,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -58,498 +51,572 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getAdminFacilitiesGetAllUrl = () => {
+  return `/api/v1/admin/facilities`;
+};
 
-
-
-
-  return `/api/v1/admin/facilities`
-}
-
-export const adminFacilitiesGetAll = async ( options?: RequestInit): Promise<FacilityResponse[]> => {
-
-  return customFetch<FacilityResponse[]>(getAdminFacilitiesGetAllUrl(),
-  {
+export const adminFacilitiesGetAll = async (options?: RequestInit): Promise<FacilityResponse[]> => {
+  return customFetch<FacilityResponse[]>(getAdminFacilitiesGetAllUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getAdminFacilitiesGetAllQueryKey = () => {
-    return [
-    `/api/v1/admin/facilities`
-    ] as const;
-    }
+  return [`/api/v1/admin/facilities`] as const;
+};
 
+export const getAdminFacilitiesGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getAdminFacilitiesGetAllQueryOptions = <TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getAdminFacilitiesGetAllQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminFacilitiesGetAll>>> = ({ signal }) =>
+    adminFacilitiesGetAll({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminFacilitiesGetAllQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminFacilitiesGetAll>>> = ({ signal }) => adminFacilitiesGetAll({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminFacilitiesGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesGetAll>>>
-export type AdminFacilitiesGetAllQueryError = unknown
-
+export type AdminFacilitiesGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesGetAll>>>;
+export type AdminFacilitiesGetAllQueryError = unknown;
 
 export function useAdminFacilitiesGetAll<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>> & Pick<
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
           TError,
           Awaited<ReturnType<typeof adminFacilitiesGetAll>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminFacilitiesGetAll<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>> & Pick<
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
           TError,
           Awaited<ReturnType<typeof adminFacilitiesGetAll>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminFacilitiesGetAll<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useAdminFacilitiesGetAll<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminFacilitiesGetAllQueryOptions(options);
 
-  const queryOptions = getAdminFacilitiesGetAllQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminFacilitiesGetAllSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getAdminFacilitiesGetAllQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminFacilitiesGetAll>>> = ({ signal }) =>
+    adminFacilitiesGetAll({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminFacilitiesGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesGetAll>>>;
+export type AdminFacilitiesGetAllSuspenseQueryError = unknown;
 
-export const getAdminFacilitiesGetAllSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+export function useAdminFacilitiesGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminFacilitiesGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminFacilitiesGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+export function useAdminFacilitiesGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminFacilitiesGetAllSuspenseQueryOptions(options);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminFacilitiesGetAllQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminFacilitiesGetAll>>> = ({ signal }) => adminFacilitiesGetAll({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminFacilitiesGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesGetAll>>>
-export type AdminFacilitiesGetAllSuspenseQueryError = unknown
-
-
-export function useAdminFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminFacilitiesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminFacilitiesGetAllSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-
-
-
-
 
 export const getAdminFacilitiesCreateUrl = () => {
+  return `/api/v1/admin/facilities`;
+};
 
-
-
-
-  return `/api/v1/admin/facilities`
-}
-
-export const adminFacilitiesCreate = async (createFacilityRequest: CreateFacilityRequest, options?: RequestInit): Promise<FacilityResponse> => {
-
-  return customFetch<FacilityResponse>(getAdminFacilitiesCreateUrl(),
-  {
+export const adminFacilitiesCreate = async (
+  createFacilityRequest: CreateFacilityRequest,
+  options?: RequestInit,
+): Promise<FacilityResponse> => {
+  return customFetch<FacilityResponse>(getAdminFacilitiesCreateUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(createFacilityRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createFacilityRequest),
+  });
+};
 
+export const getAdminFacilitiesCreateMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminFacilitiesCreate>>,
+    TError,
+    { data: CreateFacilityRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminFacilitiesCreate>>,
+  TError,
+  { data: CreateFacilityRequest },
+  TContext
+> => {
+  const mutationKey = ["adminFacilitiesCreate"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminFacilitiesCreate>>,
+    { data: CreateFacilityRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return adminFacilitiesCreate(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminFacilitiesCreateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesCreate>>, TError,{data: CreateFacilityRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesCreate>>, TError,{data: CreateFacilityRequest}, TContext> => {
+export type AdminFacilitiesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesCreate>>>;
+export type AdminFacilitiesCreateMutationBody = CreateFacilityRequest;
+export type AdminFacilitiesCreateMutationError = unknown;
 
-const mutationKey = ['adminFacilitiesCreate'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useAdminFacilitiesCreate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminFacilitiesCreate>>,
+      TError,
+      { data: CreateFacilityRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminFacilitiesCreate>>,
+  TError,
+  { data: CreateFacilityRequest },
+  TContext
+> => {
+  return useMutation(getAdminFacilitiesCreateMutationOptions(options), queryClient);
+};
+export const getAdminFacilitiesUpdateUrl = (identifier: string) => {
+  return `/api/v1/admin/facilities/${identifier}`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminFacilitiesCreate>>, {data: CreateFacilityRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  adminFacilitiesCreate(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminFacilitiesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesCreate>>>
-    export type AdminFacilitiesCreateMutationBody = CreateFacilityRequest
-    export type AdminFacilitiesCreateMutationError = unknown
-
-    export const useAdminFacilitiesCreate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesCreate>>, TError,{data: CreateFacilityRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminFacilitiesCreate>>,
-        TError,
-        {data: CreateFacilityRequest},
-        TContext
-      > => {
-      return useMutation(getAdminFacilitiesCreateMutationOptions(options), queryClient);
-    }
-    export const getAdminFacilitiesUpdateUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/facilities/${identifier}`
-}
-
-export const adminFacilitiesUpdate = async (identifier: string,
-    updateFacilityRequest: UpdateFacilityRequest, options?: RequestInit): Promise<FacilityResponse> => {
-
-  return customFetch<FacilityResponse>(getAdminFacilitiesUpdateUrl(identifier),
-  {
+export const adminFacilitiesUpdate = async (
+  identifier: string,
+  updateFacilityRequest: UpdateFacilityRequest,
+  options?: RequestInit,
+): Promise<FacilityResponse> => {
+  return customFetch<FacilityResponse>(getAdminFacilitiesUpdateUrl(identifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(updateFacilityRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateFacilityRequest),
+  });
+};
 
+export const getAdminFacilitiesUpdateMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
+    TError,
+    { identifier: string; data: UpdateFacilityRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
+  TError,
+  { identifier: string; data: UpdateFacilityRequest },
+  TContext
+> => {
+  const mutationKey = ["adminFacilitiesUpdate"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
+    { identifier: string; data: UpdateFacilityRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminFacilitiesUpdate(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminFacilitiesUpdateMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesUpdate>>, TError,{identifier: string;data: UpdateFacilityRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesUpdate>>, TError,{identifier: string;data: UpdateFacilityRequest}, TContext> => {
+export type AdminFacilitiesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesUpdate>>>;
+export type AdminFacilitiesUpdateMutationBody = UpdateFacilityRequest;
+export type AdminFacilitiesUpdateMutationError = unknown;
 
-const mutationKey = ['adminFacilitiesUpdate'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminFacilitiesUpdate>>, {identifier: string;data: UpdateFacilityRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminFacilitiesUpdate(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminFacilitiesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesUpdate>>>
-    export type AdminFacilitiesUpdateMutationBody = UpdateFacilityRequest
-    export type AdminFacilitiesUpdateMutationError = unknown
-
-    export const useAdminFacilitiesUpdate = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesUpdate>>, TError,{identifier: string;data: UpdateFacilityRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
-        TError,
-        {identifier: string;data: UpdateFacilityRequest},
-        TContext
-      > => {
-      return useMutation(getAdminFacilitiesUpdateMutationOptions(options), queryClient);
-    }
-    export const getAdminFacilitiesDeleteUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/facilities/${identifier}`
-}
+export const useAdminFacilitiesUpdate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
+      TError,
+      { identifier: string; data: UpdateFacilityRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
+  TError,
+  { identifier: string; data: UpdateFacilityRequest },
+  TContext
+> => {
+  return useMutation(getAdminFacilitiesUpdateMutationOptions(options), queryClient);
+};
+export const getAdminFacilitiesDeleteUrl = (identifier: string) => {
+  return `/api/v1/admin/facilities/${identifier}`;
+};
 
 export const adminFacilitiesDelete = async (identifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminFacilitiesDeleteUrl(identifier),
-  {
+  return customFetch<Blob>(getAdminFacilitiesDeleteUrl(identifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getAdminFacilitiesDeleteMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminFacilitiesDelete>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesDelete>>, TError, { identifier: string }, TContext> => {
+  const mutationKey = ["adminFacilitiesDelete"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminFacilitiesDelete>>, { identifier: string }> = (
+    props,
+  ) => {
+    const { identifier } = props ?? {};
+
+    return adminFacilitiesDelete(identifier, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminFacilitiesDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesDelete>>>;
+
+export type AdminFacilitiesDeleteMutationError = unknown;
+
+export const useAdminFacilitiesDelete = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminFacilitiesDelete>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof adminFacilitiesDelete>>, TError, { identifier: string }, TContext> => {
+  return useMutation(getAdminFacilitiesDeleteMutationOptions(options), queryClient);
+};
+export const getAdminFacilitiesAddFacilityImagesUrl = (identifier: string) => {
+  return `/api/v1/admin/facilities/${identifier}/images`;
+};
+
+export const adminFacilitiesAddFacilityImages = async (
+  identifier: string,
+  adminFacilitiesAddFacilityImagesBody?: AdminFacilitiesAddFacilityImagesBody,
+  options?: RequestInit,
+): Promise<FacilityImageResponse[]> => {
+  const formData = new FormData();
+  if (
+    adminFacilitiesAddFacilityImagesBody?.images !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.images !== null
+  ) {
+    adminFacilitiesAddFacilityImagesBody?.images.forEach((value) => formData.append(`images`, value));
   }
-);}
+  if (
+    adminFacilitiesAddFacilityImagesBody?.MaxWidth !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.MaxWidth !== null
+  ) {
+    formData.append(`MaxWidth`, adminFacilitiesAddFacilityImagesBody.MaxWidth.toString());
+  }
+  if (
+    adminFacilitiesAddFacilityImagesBody?.MaxHeight !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.MaxHeight !== null
+  ) {
+    formData.append(`MaxHeight`, adminFacilitiesAddFacilityImagesBody.MaxHeight.toString());
+  }
+  if (
+    adminFacilitiesAddFacilityImagesBody?.Quality !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.Quality !== null
+  ) {
+    formData.append(`Quality`, adminFacilitiesAddFacilityImagesBody.Quality.toString());
+  }
+  if (
+    adminFacilitiesAddFacilityImagesBody?.Format !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.Format !== null
+  ) {
+    formData.append(`Format`, adminFacilitiesAddFacilityImagesBody.Format);
+  }
+  if (
+    adminFacilitiesAddFacilityImagesBody?.CropX !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.CropX !== null
+  ) {
+    formData.append(`CropX`, adminFacilitiesAddFacilityImagesBody.CropX.toString());
+  }
+  if (
+    adminFacilitiesAddFacilityImagesBody?.CropY !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.CropY !== null
+  ) {
+    formData.append(`CropY`, adminFacilitiesAddFacilityImagesBody.CropY.toString());
+  }
+  if (
+    adminFacilitiesAddFacilityImagesBody?.CropWidth !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.CropWidth !== null
+  ) {
+    formData.append(`CropWidth`, adminFacilitiesAddFacilityImagesBody.CropWidth.toString());
+  }
+  if (
+    adminFacilitiesAddFacilityImagesBody?.CropHeight !== undefined &&
+    adminFacilitiesAddFacilityImagesBody.CropHeight !== null
+  ) {
+    formData.append(`CropHeight`, adminFacilitiesAddFacilityImagesBody.CropHeight.toString());
+  }
 
-
-
-
-
-export const getAdminFacilitiesDeleteMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesDelete>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesDelete>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['adminFacilitiesDelete'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminFacilitiesDelete>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  adminFacilitiesDelete(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminFacilitiesDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesDelete>>>
-
-    export type AdminFacilitiesDeleteMutationError = unknown
-
-    export const useAdminFacilitiesDelete = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesDelete>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminFacilitiesDelete>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminFacilitiesDeleteMutationOptions(options), queryClient);
-    }
-    export const getAdminFacilitiesAddFacilityImagesUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/facilities/${identifier}/images`
-}
-
-export const adminFacilitiesAddFacilityImages = async (identifier: string,
-    adminFacilitiesAddFacilityImagesBody?: AdminFacilitiesAddFacilityImagesBody, options?: RequestInit): Promise<FacilityImageResponse[]> => {
-    const formData = new FormData();
-if(adminFacilitiesAddFacilityImagesBody?.images !== undefined && adminFacilitiesAddFacilityImagesBody.images !== null) {
- adminFacilitiesAddFacilityImagesBody?.images.forEach(value => formData.append(`images`, value));
- }
-if(adminFacilitiesAddFacilityImagesBody?.MaxWidth !== undefined && adminFacilitiesAddFacilityImagesBody.MaxWidth !== null) {
- formData.append(`MaxWidth`, adminFacilitiesAddFacilityImagesBody.MaxWidth.toString())
- }
-if(adminFacilitiesAddFacilityImagesBody?.MaxHeight !== undefined && adminFacilitiesAddFacilityImagesBody.MaxHeight !== null) {
- formData.append(`MaxHeight`, adminFacilitiesAddFacilityImagesBody.MaxHeight.toString())
- }
-if(adminFacilitiesAddFacilityImagesBody?.Quality !== undefined && adminFacilitiesAddFacilityImagesBody.Quality !== null) {
- formData.append(`Quality`, adminFacilitiesAddFacilityImagesBody.Quality.toString())
- }
-if(adminFacilitiesAddFacilityImagesBody?.Format !== undefined && adminFacilitiesAddFacilityImagesBody.Format !== null) {
- formData.append(`Format`, adminFacilitiesAddFacilityImagesBody.Format);
- }
-if(adminFacilitiesAddFacilityImagesBody?.CropX !== undefined && adminFacilitiesAddFacilityImagesBody.CropX !== null) {
- formData.append(`CropX`, adminFacilitiesAddFacilityImagesBody.CropX.toString())
- }
-if(adminFacilitiesAddFacilityImagesBody?.CropY !== undefined && adminFacilitiesAddFacilityImagesBody.CropY !== null) {
- formData.append(`CropY`, adminFacilitiesAddFacilityImagesBody.CropY.toString())
- }
-if(adminFacilitiesAddFacilityImagesBody?.CropWidth !== undefined && adminFacilitiesAddFacilityImagesBody.CropWidth !== null) {
- formData.append(`CropWidth`, adminFacilitiesAddFacilityImagesBody.CropWidth.toString())
- }
-if(adminFacilitiesAddFacilityImagesBody?.CropHeight !== undefined && adminFacilitiesAddFacilityImagesBody.CropHeight !== null) {
- formData.append(`CropHeight`, adminFacilitiesAddFacilityImagesBody.CropHeight.toString())
- }
-
-  return customFetch<FacilityImageResponse[]>(getAdminFacilitiesAddFacilityImagesUrl(identifier),
-  {
+  return customFetch<FacilityImageResponse[]>(getAdminFacilitiesAddFacilityImagesUrl(identifier), {
     ...options,
-    method: 'POST'
-    ,
-    body: formData
-  }
-);}
+    method: "POST",
+    body: formData,
+  });
+};
 
+export const getAdminFacilitiesAddFacilityImagesMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>,
+    TError,
+    { identifier: string; data?: AdminFacilitiesAddFacilityImagesBody },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>,
+  TError,
+  { identifier: string; data?: AdminFacilitiesAddFacilityImagesBody },
+  TContext
+> => {
+  const mutationKey = ["adminFacilitiesAddFacilityImages"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>,
+    { identifier: string; data?: AdminFacilitiesAddFacilityImagesBody }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminFacilitiesAddFacilityImages(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminFacilitiesAddFacilityImagesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>, TError,{identifier: string;data?: AdminFacilitiesAddFacilityImagesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>, TError,{identifier: string;data?: AdminFacilitiesAddFacilityImagesBody}, TContext> => {
+export type AdminFacilitiesAddFacilityImagesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>
+>;
+export type AdminFacilitiesAddFacilityImagesMutationBody = AdminFacilitiesAddFacilityImagesBody | undefined;
+export type AdminFacilitiesAddFacilityImagesMutationError = unknown;
 
-const mutationKey = ['adminFacilitiesAddFacilityImages'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useAdminFacilitiesAddFacilityImages = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>,
+      TError,
+      { identifier: string; data?: AdminFacilitiesAddFacilityImagesBody },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>,
+  TError,
+  { identifier: string; data?: AdminFacilitiesAddFacilityImagesBody },
+  TContext
+> => {
+  return useMutation(getAdminFacilitiesAddFacilityImagesMutationOptions(options), queryClient);
+};
+export const getAdminFacilitiesDeleteFacilityImageUrl = (imageIdentifier: string) => {
+  return `/api/v1/admin/facilities/images/${imageIdentifier}`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>, {identifier: string;data?: AdminFacilitiesAddFacilityImagesBody}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminFacilitiesAddFacilityImages(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminFacilitiesAddFacilityImagesMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>>
-    export type AdminFacilitiesAddFacilityImagesMutationBody = AdminFacilitiesAddFacilityImagesBody | undefined
-    export type AdminFacilitiesAddFacilityImagesMutationError = unknown
-
-    export const useAdminFacilitiesAddFacilityImages = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>, TError,{identifier: string;data?: AdminFacilitiesAddFacilityImagesBody}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminFacilitiesAddFacilityImages>>,
-        TError,
-        {identifier: string;data?: AdminFacilitiesAddFacilityImagesBody},
-        TContext
-      > => {
-      return useMutation(getAdminFacilitiesAddFacilityImagesMutationOptions(options), queryClient);
-    }
-    export const getAdminFacilitiesDeleteFacilityImageUrl = (imageIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/facilities/images/${imageIdentifier}`
-}
-
-export const adminFacilitiesDeleteFacilityImage = async (imageIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminFacilitiesDeleteFacilityImageUrl(imageIdentifier),
-  {
+export const adminFacilitiesDeleteFacilityImage = async (
+  imageIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminFacilitiesDeleteFacilityImageUrl(imageIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getAdminFacilitiesDeleteFacilityImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>,
+    TError,
+    { imageIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>,
+  TError,
+  { imageIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminFacilitiesDeleteFacilityImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>,
+    { imageIdentifier: string }
+  > = (props) => {
+    const { imageIdentifier } = props ?? {};
 
+    return adminFacilitiesDeleteFacilityImage(imageIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminFacilitiesDeleteFacilityImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>
+>;
 
+export type AdminFacilitiesDeleteFacilityImageMutationError = unknown;
 
-export const getAdminFacilitiesDeleteFacilityImageMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>, TError,{imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>, TError,{imageIdentifier: string}, TContext> => {
-
-const mutationKey = ['adminFacilitiesDeleteFacilityImage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>, {imageIdentifier: string}> = (props) => {
-          const {imageIdentifier} = props ?? {};
-
-          return  adminFacilitiesDeleteFacilityImage(imageIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminFacilitiesDeleteFacilityImageMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>>
-
-    export type AdminFacilitiesDeleteFacilityImageMutationError = unknown
-
-    export const useAdminFacilitiesDeleteFacilityImage = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>, TError,{imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>,
-        TError,
-        {imageIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminFacilitiesDeleteFacilityImageMutationOptions(options), queryClient);
-    }
+export const useAdminFacilitiesDeleteFacilityImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>,
+      TError,
+      { imageIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminFacilitiesDeleteFacilityImage>>,
+  TError,
+  { imageIdentifier: string },
+  TContext
+> => {
+  return useMutation(getAdminFacilitiesDeleteFacilityImageMutationOptions(options), queryClient);
+};

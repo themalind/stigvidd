@@ -7,9 +7,9 @@
  */
 
 export type EventPostsGetPostsParams = {
-Limit?: number;
-/**
- * @nullable
- */
-Cursor?: string | null;
+  Limit?: number;
+  /**
+   * @nullable
+   */
+  Cursor?: string | null;
 };

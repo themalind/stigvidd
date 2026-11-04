@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,8 +20,8 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   AccountVerifyEmailByLinkParams,
@@ -33,22 +29,19 @@ import type {
   RegisterRequest,
   ResendVerificationRequest,
   UserResponse,
-  VerifyEmailRequest
-} from '../model';
+  VerifyEmailRequest,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -59,411 +52,491 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getAccountRegisterUrl = () => {
+  return `/api/v1/Account/register`;
+};
 
-
-
-
-  return `/api/v1/Account/register`
-}
-
-export const accountRegister = async (registerRequest: RegisterRequest, options?: RequestInit): Promise<UserResponse> => {
-
-  return customFetch<UserResponse>(getAccountRegisterUrl(),
-  {
+export const accountRegister = async (
+  registerRequest: RegisterRequest,
+  options?: RequestInit,
+): Promise<UserResponse> => {
+  return customFetch<UserResponse>(getAccountRegisterUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(registerRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(registerRequest),
+  });
+};
 
+export const getAccountRegisterMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof accountRegister>>,
+    TError,
+    { data: RegisterRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof accountRegister>>, TError, { data: RegisterRequest }, TContext> => {
+  const mutationKey = ["accountRegister"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountRegister>>, { data: RegisterRequest }> = (
+    props,
+  ) => {
+    const { data } = props ?? {};
 
+    return accountRegister(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAccountRegisterMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountRegister>>, TError,{data: RegisterRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountRegister>>, TError,{data: RegisterRequest}, TContext> => {
+export type AccountRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof accountRegister>>>;
+export type AccountRegisterMutationBody = RegisterRequest;
+export type AccountRegisterMutationError = unknown;
 
-const mutationKey = ['accountRegister'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useAccountRegister = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof accountRegister>>,
+      TError,
+      { data: RegisterRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof accountRegister>>, TError, { data: RegisterRequest }, TContext> => {
+  return useMutation(getAccountRegisterMutationOptions(options), queryClient);
+};
+export const getAccountForgotPasswordUrl = () => {
+  return `/api/v1/Account/forgot-password`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountRegister>>, {data: RegisterRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  accountRegister(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof accountRegister>>>
-    export type AccountRegisterMutationBody = RegisterRequest
-    export type AccountRegisterMutationError = unknown
-
-    export const useAccountRegister = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountRegister>>, TError,{data: RegisterRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountRegister>>,
-        TError,
-        {data: RegisterRequest},
-        TContext
-      > => {
-      return useMutation(getAccountRegisterMutationOptions(options), queryClient);
-    }
-    export const getAccountForgotPasswordUrl = () => {
-
-
-
-
-  return `/api/v1/Account/forgot-password`
-}
-
-export const accountForgotPassword = async (forgotPasswordRequest: ForgotPasswordRequest, options?: RequestInit): Promise<void> => {
-
-  return customFetch<void>(getAccountForgotPasswordUrl(),
-  {
+export const accountForgotPassword = async (
+  forgotPasswordRequest: ForgotPasswordRequest,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getAccountForgotPasswordUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(forgotPasswordRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(forgotPasswordRequest),
+  });
+};
 
+export const getAccountForgotPasswordMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof accountForgotPassword>>,
+    TError,
+    { data: ForgotPasswordRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof accountForgotPassword>>,
+  TError,
+  { data: ForgotPasswordRequest },
+  TContext
+> => {
+  const mutationKey = ["accountForgotPassword"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof accountForgotPassword>>,
+    { data: ForgotPasswordRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return accountForgotPassword(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAccountForgotPasswordMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountForgotPassword>>, TError,{data: ForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountForgotPassword>>, TError,{data: ForgotPasswordRequest}, TContext> => {
+export type AccountForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof accountForgotPassword>>>;
+export type AccountForgotPasswordMutationBody = ForgotPasswordRequest;
+export type AccountForgotPasswordMutationError = unknown;
 
-const mutationKey = ['accountForgotPassword'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountForgotPassword>>, {data: ForgotPasswordRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  accountForgotPassword(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof accountForgotPassword>>>
-    export type AccountForgotPasswordMutationBody = ForgotPasswordRequest
-    export type AccountForgotPasswordMutationError = unknown
-
-    export const useAccountForgotPassword = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountForgotPassword>>, TError,{data: ForgotPasswordRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountForgotPassword>>,
-        TError,
-        {data: ForgotPasswordRequest},
-        TContext
-      > => {
-      return useMutation(getAccountForgotPasswordMutationOptions(options), queryClient);
-    }
-    export const getAccountVerifyEmailByLinkUrl = (params?: AccountVerifyEmailByLinkParams,) => {
+export const useAccountForgotPassword = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof accountForgotPassword>>,
+      TError,
+      { data: ForgotPasswordRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof accountForgotPassword>>,
+  TError,
+  { data: ForgotPasswordRequest },
+  TContext
+> => {
+  return useMutation(getAccountForgotPasswordMutationOptions(options), queryClient);
+};
+export const getAccountVerifyEmailByLinkUrl = (params?: AccountVerifyEmailByLinkParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/Account/verify-email?${stringifiedParams}` : `/api/v1/Account/verify-email`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/Account/verify-email?${stringifiedParams}`
+    : `/api/v1/Account/verify-email`;
+};
 
-export const accountVerifyEmailByLink = async (params?: AccountVerifyEmailByLinkParams, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAccountVerifyEmailByLinkUrl(params),
-  {
+export const accountVerifyEmailByLink = async (
+  params?: AccountVerifyEmailByLinkParams,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAccountVerifyEmailByLinkUrl(params), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAccountVerifyEmailByLinkQueryKey = (params?: AccountVerifyEmailByLinkParams) => {
+  return [`/api/v1/Account/verify-email`, ...(params ? [params] : [])] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAccountVerifyEmailByLinkQueryKey = (params?: AccountVerifyEmailByLinkParams,) => {
-    return [
-    `/api/v1/Account/verify-email`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getAccountVerifyEmailByLinkQueryOptions = <TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAccountVerifyEmailByLinkQueryOptions = <
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAccountVerifyEmailByLinkQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getAccountVerifyEmailByLinkQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof accountVerifyEmailByLink>>> = ({ signal }) =>
+    accountVerifyEmailByLink(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AccountVerifyEmailByLinkQueryResult = NonNullable<Awaited<ReturnType<typeof accountVerifyEmailByLink>>>;
+export type AccountVerifyEmailByLinkQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof accountVerifyEmailByLink>>> = ({ signal }) => accountVerifyEmailByLink(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AccountVerifyEmailByLinkQueryResult = NonNullable<Awaited<ReturnType<typeof accountVerifyEmailByLink>>>
-export type AccountVerifyEmailByLinkQueryError = unknown
-
-
-export function useAccountVerifyEmailByLink<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params: undefined |  AccountVerifyEmailByLinkParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>> & Pick<
+export function useAccountVerifyEmailByLink<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params: undefined | AccountVerifyEmailByLinkParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
           TError,
           Awaited<ReturnType<typeof accountVerifyEmailByLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAccountVerifyEmailByLink<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAccountVerifyEmailByLink<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
           TError,
           Awaited<ReturnType<typeof accountVerifyEmailByLink>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAccountVerifyEmailByLink<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAccountVerifyEmailByLink<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAccountVerifyEmailByLink<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAccountVerifyEmailByLink<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAccountVerifyEmailByLinkQueryOptions(params, options);
 
-  const queryOptions = getAccountVerifyEmailByLinkQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAccountVerifyEmailByLinkSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAccountVerifyEmailByLinkSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAccountVerifyEmailByLinkQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getAccountVerifyEmailByLinkQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof accountVerifyEmailByLink>>> = ({ signal }) =>
+    accountVerifyEmailByLink(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AccountVerifyEmailByLinkSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof accountVerifyEmailByLink>>
+>;
+export type AccountVerifyEmailByLinkSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof accountVerifyEmailByLink>>> = ({ signal }) => accountVerifyEmailByLink(params, { signal, ...requestOptions });
+export function useAccountVerifyEmailByLinkSuspense<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params: undefined | AccountVerifyEmailByLinkParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAccountVerifyEmailByLinkSuspense<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAccountVerifyEmailByLinkSuspense<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAccountVerifyEmailByLinkSuspense<
+  TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>,
+  TError = unknown,
+>(
+  params?: AccountVerifyEmailByLinkParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAccountVerifyEmailByLinkSuspenseQueryOptions(params, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AccountVerifyEmailByLinkSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof accountVerifyEmailByLink>>>
-export type AccountVerifyEmailByLinkSuspenseQueryError = unknown
-
-
-export function useAccountVerifyEmailByLinkSuspense<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params: undefined |  AccountVerifyEmailByLinkParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAccountVerifyEmailByLinkSuspense<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAccountVerifyEmailByLinkSuspense<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAccountVerifyEmailByLinkSuspense<TData = Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError = unknown>(
- params?: AccountVerifyEmailByLinkParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accountVerifyEmailByLink>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAccountVerifyEmailByLinkSuspenseQueryOptions(params,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-
-
-
-
 
 export const getAccountVerifyEmailByCodeUrl = () => {
+  return `/api/v1/Account/verify-email`;
+};
 
-
-
-
-  return `/api/v1/Account/verify-email`
-}
-
-export const accountVerifyEmailByCode = async (verifyEmailRequest: VerifyEmailRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAccountVerifyEmailByCodeUrl(),
-  {
+export const accountVerifyEmailByCode = async (
+  verifyEmailRequest: VerifyEmailRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAccountVerifyEmailByCodeUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(verifyEmailRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(verifyEmailRequest),
+  });
+};
 
+export const getAccountVerifyEmailByCodeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
+    TError,
+    { data: VerifyEmailRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
+  TError,
+  { data: VerifyEmailRequest },
+  TContext
+> => {
+  const mutationKey = ["accountVerifyEmailByCode"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
+    { data: VerifyEmailRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return accountVerifyEmailByCode(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAccountVerifyEmailByCodeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError,{data: VerifyEmailRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError,{data: VerifyEmailRequest}, TContext> => {
+export type AccountVerifyEmailByCodeMutationResult = NonNullable<Awaited<ReturnType<typeof accountVerifyEmailByCode>>>;
+export type AccountVerifyEmailByCodeMutationBody = VerifyEmailRequest;
+export type AccountVerifyEmailByCodeMutationError = unknown;
 
-const mutationKey = ['accountVerifyEmailByCode'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useAccountVerifyEmailByCode = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
+      TError,
+      { data: VerifyEmailRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
+  TError,
+  { data: VerifyEmailRequest },
+  TContext
+> => {
+  return useMutation(getAccountVerifyEmailByCodeMutationOptions(options), queryClient);
+};
+export const getAccountResendVerificationUrl = () => {
+  return `/api/v1/Account/resend-verification`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, {data: VerifyEmailRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  accountVerifyEmailByCode(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountVerifyEmailByCodeMutationResult = NonNullable<Awaited<ReturnType<typeof accountVerifyEmailByCode>>>
-    export type AccountVerifyEmailByCodeMutationBody = VerifyEmailRequest
-    export type AccountVerifyEmailByCodeMutationError = unknown
-
-    export const useAccountVerifyEmailByCode = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountVerifyEmailByCode>>, TError,{data: VerifyEmailRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountVerifyEmailByCode>>,
-        TError,
-        {data: VerifyEmailRequest},
-        TContext
-      > => {
-      return useMutation(getAccountVerifyEmailByCodeMutationOptions(options), queryClient);
-    }
-    export const getAccountResendVerificationUrl = () => {
-
-
-
-
-  return `/api/v1/Account/resend-verification`
-}
-
-export const accountResendVerification = async (resendVerificationRequest: ResendVerificationRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAccountResendVerificationUrl(),
-  {
+export const accountResendVerification = async (
+  resendVerificationRequest: ResendVerificationRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAccountResendVerificationUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(resendVerificationRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(resendVerificationRequest),
+  });
+};
 
+export const getAccountResendVerificationMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof accountResendVerification>>,
+    TError,
+    { data: ResendVerificationRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof accountResendVerification>>,
+  TError,
+  { data: ResendVerificationRequest },
+  TContext
+> => {
+  const mutationKey = ["accountResendVerification"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof accountResendVerification>>,
+    { data: ResendVerificationRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return accountResendVerification(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAccountResendVerificationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError,{data: ResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError,{data: ResendVerificationRequest}, TContext> => {
+export type AccountResendVerificationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof accountResendVerification>>
+>;
+export type AccountResendVerificationMutationBody = ResendVerificationRequest;
+export type AccountResendVerificationMutationError = unknown;
 
-const mutationKey = ['accountResendVerification'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof accountResendVerification>>, {data: ResendVerificationRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  accountResendVerification(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AccountResendVerificationMutationResult = NonNullable<Awaited<ReturnType<typeof accountResendVerification>>>
-    export type AccountResendVerificationMutationBody = ResendVerificationRequest
-    export type AccountResendVerificationMutationError = unknown
-
-    export const useAccountResendVerification = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof accountResendVerification>>, TError,{data: ResendVerificationRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof accountResendVerification>>,
-        TError,
-        {data: ResendVerificationRequest},
-        TContext
-      > => {
-      return useMutation(getAccountResendVerificationMutationOptions(options), queryClient);
-    }
+export const useAccountResendVerification = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof accountResendVerification>>,
+      TError,
+      { data: ResendVerificationRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof accountResendVerification>>,
+  TError,
+  { data: ResendVerificationRequest },
+  TContext
+> => {
+  return useMutation(getAccountResendVerificationMutationOptions(options), queryClient);
+};

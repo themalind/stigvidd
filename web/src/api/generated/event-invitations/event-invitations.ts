@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,27 +20,21 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
-import type {
-  EventInvitationResponse,
-  EventInviteRequest
-} from '../model';
+import type { EventInvitationResponse, EventInviteRequest } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -54,408 +44,470 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getEventInvitationsInviteUrl = (identifier: string,) => {
+export const getEventInvitationsInviteUrl = (identifier: string) => {
+  return `/api/v1/events/${identifier}/invite`;
+};
 
-
-
-
-  return `/api/v1/events/${identifier}/invite`
-}
-
-export const eventInvitationsInvite = async (identifier: string,
-    eventInviteRequest: EventInviteRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventInvitationsInviteUrl(identifier),
-  {
+export const eventInvitationsInvite = async (
+  identifier: string,
+  eventInviteRequest: EventInviteRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getEventInvitationsInviteUrl(identifier), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(eventInviteRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventInviteRequest),
+  });
+};
 
+export const getEventInvitationsInviteMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventInvitationsInvite>>,
+    TError,
+    { identifier: string; data: EventInviteRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventInvitationsInvite>>,
+  TError,
+  { identifier: string; data: EventInviteRequest },
+  TContext
+> => {
+  const mutationKey = ["eventInvitationsInvite"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventInvitationsInvite>>,
+    { identifier: string; data: EventInviteRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return eventInvitationsInvite(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getEventInvitationsInviteMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsInvite>>, TError,{identifier: string;data: EventInviteRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsInvite>>, TError,{identifier: string;data: EventInviteRequest}, TContext> => {
+export type EventInvitationsInviteMutationResult = NonNullable<Awaited<ReturnType<typeof eventInvitationsInvite>>>;
+export type EventInvitationsInviteMutationBody = EventInviteRequest;
+export type EventInvitationsInviteMutationError = unknown;
 
-const mutationKey = ['eventInvitationsInvite'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useEventInvitationsInvite = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventInvitationsInvite>>,
+      TError,
+      { identifier: string; data: EventInviteRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventInvitationsInvite>>,
+  TError,
+  { identifier: string; data: EventInviteRequest },
+  TContext
+> => {
+  return useMutation(getEventInvitationsInviteMutationOptions(options), queryClient);
+};
+export const getEventInvitationsGetInvitationsUrl = () => {
+  return `/api/v1/events/invitations`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventInvitationsInvite>>, {identifier: string;data: EventInviteRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  eventInvitationsInvite(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventInvitationsInviteMutationResult = NonNullable<Awaited<ReturnType<typeof eventInvitationsInvite>>>
-    export type EventInvitationsInviteMutationBody = EventInviteRequest
-    export type EventInvitationsInviteMutationError = unknown
-
-    export const useEventInvitationsInvite = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsInvite>>, TError,{identifier: string;data: EventInviteRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventInvitationsInvite>>,
-        TError,
-        {identifier: string;data: EventInviteRequest},
-        TContext
-      > => {
-      return useMutation(getEventInvitationsInviteMutationOptions(options), queryClient);
-    }
-    export const getEventInvitationsGetInvitationsUrl = () => {
-
-
-
-
-  return `/api/v1/events/invitations`
-}
-
-export const eventInvitationsGetInvitations = async ( options?: RequestInit): Promise<EventInvitationResponse[]> => {
-
-  return customFetch<EventInvitationResponse[]>(getEventInvitationsGetInvitationsUrl(),
-  {
+export const eventInvitationsGetInvitations = async (options?: RequestInit): Promise<EventInvitationResponse[]> => {
+  return customFetch<EventInvitationResponse[]>(getEventInvitationsGetInvitationsUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getEventInvitationsGetInvitationsQueryKey = () => {
-    return [
-    `/api/v1/events/invitations`
-    ] as const;
-    }
+  return [`/api/v1/events/invitations`] as const;
+};
 
+export const getEventInvitationsGetInvitationsQueryOptions = <
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getEventInvitationsGetInvitationsQueryOptions = <TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getEventInvitationsGetInvitationsQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>> = ({ signal }) =>
+    eventInvitationsGetInvitations({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getEventInvitationsGetInvitationsQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type EventInvitationsGetInvitationsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof eventInvitationsGetInvitations>>
+>;
+export type EventInvitationsGetInvitationsQueryError = unknown;
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>> = ({ signal }) => eventInvitationsGetInvitations({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventInvitationsGetInvitationsQueryResult = NonNullable<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>>
-export type EventInvitationsGetInvitationsQueryError = unknown
-
-
-export function useEventInvitationsGetInvitations<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>> & Pick<
+export function useEventInvitationsGetInvitations<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
           TError,
           Awaited<ReturnType<typeof eventInvitationsGetInvitations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventInvitationsGetInvitations<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useEventInvitationsGetInvitations<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
           TError,
           Awaited<ReturnType<typeof eventInvitationsGetInvitations>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventInvitationsGetInvitations<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useEventInvitationsGetInvitations<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useEventInvitationsGetInvitations<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useEventInvitationsGetInvitations<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getEventInvitationsGetInvitationsQueryOptions(options);
 
-  const queryOptions = getEventInvitationsGetInvitationsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventInvitationsGetInvitationsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventInvitationsGetInvitationsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>> = ({ signal }) => eventInvitationsGetInvitations({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventInvitationsGetInvitationsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>>
-export type EventInvitationsGetInvitationsSuspenseQueryError = unknown
-
-
-export function useEventInvitationsGetInvitationsSuspense<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventInvitationsGetInvitationsSuspense<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventInvitationsGetInvitationsSuspense<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventInvitationsGetInvitationsSuspense<TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventInvitationsGetInvitationsSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getEventInvitationsGetInvitationsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getEventInvitationsGetInvitationsQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>> = ({ signal }) =>
+    eventInvitationsGetInvitations({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type EventInvitationsGetInvitationsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof eventInvitationsGetInvitations>>
+>;
+export type EventInvitationsGetInvitationsSuspenseQueryError = unknown;
 
-export const getEventInvitationsAcceptInvitationUrl = (identifier: string,) => {
+export function useEventInvitationsGetInvitationsSuspense<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useEventInvitationsGetInvitationsSuspense<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useEventInvitationsGetInvitationsSuspense<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useEventInvitationsGetInvitationsSuspense<
+  TData = Awaited<ReturnType<typeof eventInvitationsGetInvitations>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventInvitationsGetInvitations>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getEventInvitationsGetInvitationsSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-  return `/api/v1/events/invitations/${identifier}/accept`
+  return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getEventInvitationsAcceptInvitationUrl = (identifier: string) => {
+  return `/api/v1/events/invitations/${identifier}/accept`;
+};
 
 export const eventInvitationsAcceptInvitation = async (identifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventInvitationsAcceptInvitationUrl(identifier),
-  {
+  return customFetch<Blob>(getEventInvitationsAcceptInvitationUrl(identifier), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getEventInvitationsAcceptInvitationMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>,
+  TError,
+  { identifier: string },
+  TContext
+> => {
+  const mutationKey = ["eventInvitationsAcceptInvitation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>,
+    { identifier: string }
+  > = (props) => {
+    const { identifier } = props ?? {};
 
+    return eventInvitationsAcceptInvitation(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type EventInvitationsAcceptInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>
+>;
 
+export type EventInvitationsAcceptInvitationMutationError = unknown;
 
-export const getEventInvitationsAcceptInvitationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['eventInvitationsAcceptInvitation'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  eventInvitationsAcceptInvitation(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventInvitationsAcceptInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>>
-
-    export type EventInvitationsAcceptInvitationMutationError = unknown
-
-    export const useEventInvitationsAcceptInvitation = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getEventInvitationsAcceptInvitationMutationOptions(options), queryClient);
-    }
-    export const getEventInvitationsDeclineInvitationUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/events/invitations/${identifier}`
-}
+export const useEventInvitationsAcceptInvitation = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventInvitationsAcceptInvitation>>,
+  TError,
+  { identifier: string },
+  TContext
+> => {
+  return useMutation(getEventInvitationsAcceptInvitationMutationOptions(options), queryClient);
+};
+export const getEventInvitationsDeclineInvitationUrl = (identifier: string) => {
+  return `/api/v1/events/invitations/${identifier}`;
+};
 
 export const eventInvitationsDeclineInvitation = async (identifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventInvitationsDeclineInvitationUrl(identifier),
-  {
+  return customFetch<Blob>(getEventInvitationsDeclineInvitationUrl(identifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getEventInvitationsDeclineInvitationMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>,
+  TError,
+  { identifier: string },
+  TContext
+> => {
+  const mutationKey = ["eventInvitationsDeclineInvitation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>,
+    { identifier: string }
+  > = (props) => {
+    const { identifier } = props ?? {};
 
+    return eventInvitationsDeclineInvitation(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type EventInvitationsDeclineInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>
+>;
 
+export type EventInvitationsDeclineInvitationMutationError = unknown;
 
-export const getEventInvitationsDeclineInvitationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>, TError,{identifier: string}, TContext> => {
+export const useEventInvitationsDeclineInvitation = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>,
+  TError,
+  { identifier: string },
+  TContext
+> => {
+  return useMutation(getEventInvitationsDeclineInvitationMutationOptions(options), queryClient);
+};
+export const getEventInvitationsRevokeInvitationUrl = (identifier: string, inviteeIdentifier: string) => {
+  return `/api/v1/events/${identifier}/invitations/${inviteeIdentifier}`;
+};
 
-const mutationKey = ['eventInvitationsDeclineInvitation'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  eventInvitationsDeclineInvitation(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventInvitationsDeclineInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>>
-
-    export type EventInvitationsDeclineInvitationMutationError = unknown
-
-    export const useEventInvitationsDeclineInvitation = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventInvitationsDeclineInvitation>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getEventInvitationsDeclineInvitationMutationOptions(options), queryClient);
-    }
-    export const getEventInvitationsRevokeInvitationUrl = (identifier: string,
-    inviteeIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/events/${identifier}/invitations/${inviteeIdentifier}`
-}
-
-export const eventInvitationsRevokeInvitation = async (identifier: string,
-    inviteeIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventInvitationsRevokeInvitationUrl(identifier,inviteeIdentifier),
-  {
+export const eventInvitationsRevokeInvitation = async (
+  identifier: string,
+  inviteeIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getEventInvitationsRevokeInvitationUrl(identifier, inviteeIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getEventInvitationsRevokeInvitationMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>,
+    TError,
+    { identifier: string; inviteeIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>,
+  TError,
+  { identifier: string; inviteeIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["eventInvitationsRevokeInvitation"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>,
+    { identifier: string; inviteeIdentifier: string }
+  > = (props) => {
+    const { identifier, inviteeIdentifier } = props ?? {};
 
+    return eventInvitationsRevokeInvitation(identifier, inviteeIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type EventInvitationsRevokeInvitationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>
+>;
 
+export type EventInvitationsRevokeInvitationMutationError = unknown;
 
-export const getEventInvitationsRevokeInvitationMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>, TError,{identifier: string;inviteeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>, TError,{identifier: string;inviteeIdentifier: string}, TContext> => {
-
-const mutationKey = ['eventInvitationsRevokeInvitation'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>, {identifier: string;inviteeIdentifier: string}> = (props) => {
-          const {identifier,inviteeIdentifier} = props ?? {};
-
-          return  eventInvitationsRevokeInvitation(identifier,inviteeIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventInvitationsRevokeInvitationMutationResult = NonNullable<Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>>
-
-    export type EventInvitationsRevokeInvitationMutationError = unknown
-
-    export const useEventInvitationsRevokeInvitation = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>, TError,{identifier: string;inviteeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>,
-        TError,
-        {identifier: string;inviteeIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getEventInvitationsRevokeInvitationMutationOptions(options), queryClient);
-    }
+export const useEventInvitationsRevokeInvitation = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>,
+      TError,
+      { identifier: string; inviteeIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventInvitationsRevokeInvitation>>,
+  TError,
+  { identifier: string; inviteeIdentifier: string },
+  TContext
+> => {
+  return useMutation(getEventInvitationsRevokeInvitationMutationOptions(options), queryClient);
+};

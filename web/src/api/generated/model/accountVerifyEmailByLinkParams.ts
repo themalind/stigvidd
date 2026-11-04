@@ -7,8 +7,8 @@
  */
 
 export type AccountVerifyEmailByLinkParams = {
-/**
- * @nullable
- */
-token?: string | null;
+  /**
+   * @nullable
+   */
+  token?: string | null;
 };

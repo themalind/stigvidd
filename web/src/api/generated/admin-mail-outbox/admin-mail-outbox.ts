@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,8 +20,8 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   AdminMailOutboxGetAllParams,
@@ -35,22 +31,19 @@ import type {
   OutboxEmailDetailResponse,
   PagedResultOfOutboxEmailSummaryResponse,
   ProblemDetails,
-  PurgeMailOutboxRequest
-} from '../model';
+  PurgeMailOutboxRequest,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -60,786 +53,970 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getAdminMailOutboxGetAllUrl = (params?: AdminMailOutboxGetAllParams,) => {
+export const getAdminMailOutboxGetAllUrl = (params?: AdminMailOutboxGetAllParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/admin/mail-outbox?${stringifiedParams}` : `/api/v1/admin/mail-outbox`
-}
+  return stringifiedParams.length > 0 ? `/api/v1/admin/mail-outbox?${stringifiedParams}` : `/api/v1/admin/mail-outbox`;
+};
 
-export const adminMailOutboxGetAll = async (params?: AdminMailOutboxGetAllParams, options?: RequestInit): Promise<PagedResultOfOutboxEmailSummaryResponse> => {
-
-  return customFetch<PagedResultOfOutboxEmailSummaryResponse>(getAdminMailOutboxGetAllUrl(params),
-  {
+export const adminMailOutboxGetAll = async (
+  params?: AdminMailOutboxGetAllParams,
+  options?: RequestInit,
+): Promise<PagedResultOfOutboxEmailSummaryResponse> => {
+  return customFetch<PagedResultOfOutboxEmailSummaryResponse>(getAdminMailOutboxGetAllUrl(params), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAdminMailOutboxGetAllQueryKey = (params?: AdminMailOutboxGetAllParams) => {
+  return [`/api/v1/admin/mail-outbox`, ...(params ? [params] : [])] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAdminMailOutboxGetAllQueryKey = (params?: AdminMailOutboxGetAllParams,) => {
-    return [
-    `/api/v1/admin/mail-outbox`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getAdminMailOutboxGetAllQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminMailOutboxGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+  TError = unknown,
+>(
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetAllQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetAllQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetAll>>> = ({ signal }) =>
+    adminMailOutboxGetAll(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetAll>>> = ({ signal }) => adminMailOutboxGetAll(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetAll>>>
-export type AdminMailOutboxGetAllQueryError = unknown
-
+export type AdminMailOutboxGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetAll>>>;
+export type AdminMailOutboxGetAllQueryError = unknown;
 
 export function useAdminMailOutboxGetAll<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params: undefined |  AdminMailOutboxGetAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>> & Pick<
+  params: undefined | AdminMailOutboxGetAllParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetAll>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminMailOutboxGetAll<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>> & Pick<
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetAll>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useAdminMailOutboxGetAll<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useAdminMailOutboxGetAll<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetAllQueryOptions(params, options);
 
-  const queryOptions = getAdminMailOutboxGetAllQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminMailOutboxGetAllSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminMailOutboxGetAllSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+  TError = unknown,
+>(
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetAllQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetAllQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetAll>>> = ({ signal }) =>
+    adminMailOutboxGetAll(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminMailOutboxGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetAll>>>;
+export type AdminMailOutboxGetAllSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetAll>>> = ({ signal }) => adminMailOutboxGetAll(params, { signal, ...requestOptions });
+export function useAdminMailOutboxGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+  TError = unknown,
+>(
+  params: undefined | AdminMailOutboxGetAllParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+  TError = unknown,
+>(
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+  TError = unknown,
+>(
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminMailOutboxGetAllSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>,
+  TError = unknown,
+>(
+  params?: AdminMailOutboxGetAllParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetAllSuspenseQueryOptions(params, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetAll>>>
-export type AdminMailOutboxGetAllSuspenseQueryError = unknown
-
-
-export function useAdminMailOutboxGetAllSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params: undefined |  AdminMailOutboxGetAllParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetAllSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetAllSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMailOutboxGetAllSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError = unknown>(
- params?: AdminMailOutboxGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMailOutboxGetAllSuspenseQueryOptions(params,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-
-
-
-
 
 export const getAdminMailOutboxGetCountsUrl = () => {
+  return `/api/v1/admin/mail-outbox/counts`;
+};
 
-
-
-
-  return `/api/v1/admin/mail-outbox/counts`
-}
-
-export const adminMailOutboxGetCounts = async ( options?: RequestInit): Promise<MailOutboxCountsResponse> => {
-
-  return customFetch<MailOutboxCountsResponse>(getAdminMailOutboxGetCountsUrl(),
-  {
+export const adminMailOutboxGetCounts = async (options?: RequestInit): Promise<MailOutboxCountsResponse> => {
+  return customFetch<MailOutboxCountsResponse>(getAdminMailOutboxGetCountsUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getAdminMailOutboxGetCountsQueryKey = () => {
-    return [
-    `/api/v1/admin/mail-outbox/counts`
-    ] as const;
-    }
+  return [`/api/v1/admin/mail-outbox/counts`] as const;
+};
 
+export const getAdminMailOutboxGetCountsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getAdminMailOutboxGetCountsQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetCountsQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>> = ({ signal }) =>
+    adminMailOutboxGetCounts({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetCountsQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminMailOutboxGetCountsQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>>;
+export type AdminMailOutboxGetCountsQueryError = unknown;
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>> = ({ signal }) => adminMailOutboxGetCounts({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetCountsQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>>
-export type AdminMailOutboxGetCountsQueryError = unknown
-
-
-export function useAdminMailOutboxGetCounts<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>> & Pick<
+export function useAdminMailOutboxGetCounts<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetCounts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetCounts<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetCounts<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetCounts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetCounts<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetCounts<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminMailOutboxGetCounts<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminMailOutboxGetCounts<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetCountsQueryOptions(options);
 
-  const queryOptions = getAdminMailOutboxGetCountsQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminMailOutboxGetCountsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetCountsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>> = ({ signal }) => adminMailOutboxGetCounts({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetCountsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>>
-export type AdminMailOutboxGetCountsSuspenseQueryError = unknown
-
-
-export function useAdminMailOutboxGetCountsSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetCountsSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetCountsSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMailOutboxGetCountsSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMailOutboxGetCountsSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminMailOutboxGetCountsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetCountsQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>> = ({ signal }) =>
+    adminMailOutboxGetCounts({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminMailOutboxGetCountsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminMailOutboxGetCounts>>
+>;
+export type AdminMailOutboxGetCountsSuspenseQueryError = unknown;
 
-export const getAdminMailOutboxGetByIdentifierUrl = (identifier: string,) => {
+export function useAdminMailOutboxGetCountsSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetCountsSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetCountsSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminMailOutboxGetCountsSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetCounts>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetCounts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetCountsSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-  return `/api/v1/admin/mail-outbox/${identifier}`
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const adminMailOutboxGetByIdentifier = async (identifier: string, options?: RequestInit): Promise<OutboxEmailDetailResponse> => {
+export const getAdminMailOutboxGetByIdentifierUrl = (identifier: string) => {
+  return `/api/v1/admin/mail-outbox/${identifier}`;
+};
 
-  return customFetch<OutboxEmailDetailResponse>(getAdminMailOutboxGetByIdentifierUrl(identifier),
-  {
+export const adminMailOutboxGetByIdentifier = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<OutboxEmailDetailResponse> => {
+  return customFetch<OutboxEmailDetailResponse>(getAdminMailOutboxGetByIdentifierUrl(identifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAdminMailOutboxGetByIdentifierQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/mail-outbox/${identifier}`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAdminMailOutboxGetByIdentifierQueryKey = (identifier: string,) => {
-    return [
-    `/api/v1/admin/mail-outbox/${identifier}`
-    ] as const;
-    }
-
-
-export const getAdminMailOutboxGetByIdentifierQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminMailOutboxGetByIdentifierQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetByIdentifierQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetByIdentifierQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>> = ({ signal }) =>
+    adminMailOutboxGetByIdentifier(identifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type AdminMailOutboxGetByIdentifierQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>
+>;
+export type AdminMailOutboxGetByIdentifierQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>> = ({ signal }) => adminMailOutboxGetByIdentifier(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetByIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>>
-export type AdminMailOutboxGetByIdentifierQueryError = unknown
-
-
-export function useAdminMailOutboxGetByIdentifier<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>> & Pick<
+export function useAdminMailOutboxGetByIdentifier<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetByIdentifier<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetByIdentifier<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetByIdentifier<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetByIdentifier<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminMailOutboxGetByIdentifier<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminMailOutboxGetByIdentifier<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetByIdentifierQueryOptions(identifier, options);
 
-  const queryOptions = getAdminMailOutboxGetByIdentifierQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminMailOutboxGetByIdentifierSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminMailOutboxGetByIdentifierSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetByIdentifierQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetByIdentifierQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>> = ({ signal }) =>
+    adminMailOutboxGetByIdentifier(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminMailOutboxGetByIdentifierSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>
+>;
+export type AdminMailOutboxGetByIdentifierSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>> = ({ signal }) => adminMailOutboxGetByIdentifier(identifier, { signal, ...requestOptions });
+export function useAdminMailOutboxGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminMailOutboxGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetByIdentifierSuspenseQueryOptions(identifier, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetByIdentifierSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>>
-export type AdminMailOutboxGetByIdentifierSuspenseQueryError = unknown
-
-
-export function useAdminMailOutboxGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMailOutboxGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMailOutboxGetByIdentifierSuspenseQueryOptions(identifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminMailOutboxGetBodyUrl = (identifier: string) => {
+  return `/api/v1/admin/mail-outbox/${identifier}/body`;
+};
 
-
-
-
-
-export const getAdminMailOutboxGetBodyUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/mail-outbox/${identifier}/body`
-}
-
-export const adminMailOutboxGetBody = async (identifier: string, options?: RequestInit): Promise<OutboxEmailBodyResponse> => {
-
-  return customFetch<OutboxEmailBodyResponse>(getAdminMailOutboxGetBodyUrl(identifier),
-  {
+export const adminMailOutboxGetBody = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<OutboxEmailBodyResponse> => {
+  return customFetch<OutboxEmailBodyResponse>(getAdminMailOutboxGetBodyUrl(identifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAdminMailOutboxGetBodyQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/mail-outbox/${identifier}/body`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAdminMailOutboxGetBodyQueryKey = (identifier: string,) => {
-    return [
-    `/api/v1/admin/mail-outbox/${identifier}/body`
-    ] as const;
-    }
-
-
-export const getAdminMailOutboxGetBodyQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminMailOutboxGetBodyQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetBodyQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetBodyQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetBody>>> = ({ signal }) =>
+    adminMailOutboxGetBody(identifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type AdminMailOutboxGetBodyQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetBody>>>;
+export type AdminMailOutboxGetBodyQueryError = ProblemDetails;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetBody>>> = ({ signal }) => adminMailOutboxGetBody(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetBodyQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetBody>>>
-export type AdminMailOutboxGetBodyQueryError = ProblemDetails
-
-
-export function useAdminMailOutboxGetBody<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>> & Pick<
+export function useAdminMailOutboxGetBody<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetBody>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetBody<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetBody<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
           TError,
           Awaited<ReturnType<typeof adminMailOutboxGetBody>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetBody<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetBody<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminMailOutboxGetBody<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminMailOutboxGetBody<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetBodyQueryOptions(identifier, options);
 
-  const queryOptions = getAdminMailOutboxGetBodyQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminMailOutboxGetBodySuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminMailOutboxGetBodySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminMailOutboxGetBodyQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminMailOutboxGetBodyQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetBody>>> = ({ signal }) =>
+    adminMailOutboxGetBody(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminMailOutboxGetBodySuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetBody>>>;
+export type AdminMailOutboxGetBodySuspenseQueryError = ProblemDetails;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMailOutboxGetBody>>> = ({ signal }) => adminMailOutboxGetBody(identifier, { signal, ...requestOptions });
+export function useAdminMailOutboxGetBodySuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetBodySuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminMailOutboxGetBodySuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminMailOutboxGetBodySuspense<
+  TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>,
+  TError = ProblemDetails,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminMailOutboxGetBodySuspenseQueryOptions(identifier, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMailOutboxGetBodySuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxGetBody>>>
-export type AdminMailOutboxGetBodySuspenseQueryError = ProblemDetails
-
-
-export function useAdminMailOutboxGetBodySuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetBodySuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMailOutboxGetBodySuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMailOutboxGetBodySuspense<TData = Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMailOutboxGetBody>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMailOutboxGetBodySuspenseQueryOptions(identifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminMailOutboxRetryUrl = (identifier: string) => {
+  return `/api/v1/admin/mail-outbox/${identifier}/retry`;
+};
 
-
-
-
-
-export const getAdminMailOutboxRetryUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/mail-outbox/${identifier}/retry`
-}
-
-export const adminMailOutboxRetry = async (identifier: string, options?: RequestInit): Promise<OutboxEmailDetailResponse> => {
-
-  return customFetch<OutboxEmailDetailResponse>(getAdminMailOutboxRetryUrl(identifier),
-  {
+export const adminMailOutboxRetry = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<OutboxEmailDetailResponse> => {
+  return customFetch<OutboxEmailDetailResponse>(getAdminMailOutboxRetryUrl(identifier), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getAdminMailOutboxRetryMutationOptions = <TError = ProblemDetails, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminMailOutboxRetry>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxRetry>>, TError, { identifier: string }, TContext> => {
+  const mutationKey = ["adminMailOutboxRetry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMailOutboxRetry>>, { identifier: string }> = (
+    props,
+  ) => {
+    const { identifier } = props ?? {};
 
+    return adminMailOutboxRetry(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminMailOutboxRetryMutationResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxRetry>>>;
 
+export type AdminMailOutboxRetryMutationError = ProblemDetails;
 
-export const getAdminMailOutboxRetryMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxRetry>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxRetry>>, TError,{identifier: string}, TContext> => {
+export const useAdminMailOutboxRetry = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminMailOutboxRetry>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof adminMailOutboxRetry>>, TError, { identifier: string }, TContext> => {
+  return useMutation(getAdminMailOutboxRetryMutationOptions(options), queryClient);
+};
+export const getAdminMailOutboxCancelUrl = (identifier: string) => {
+  return `/api/v1/admin/mail-outbox/${identifier}/cancel`;
+};
 
-const mutationKey = ['adminMailOutboxRetry'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMailOutboxRetry>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  adminMailOutboxRetry(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminMailOutboxRetryMutationResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxRetry>>>
-
-    export type AdminMailOutboxRetryMutationError = ProblemDetails
-
-    export const useAdminMailOutboxRetry = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxRetry>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminMailOutboxRetry>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminMailOutboxRetryMutationOptions(options), queryClient);
-    }
-    export const getAdminMailOutboxCancelUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/mail-outbox/${identifier}/cancel`
-}
-
-export const adminMailOutboxCancel = async (identifier: string, options?: RequestInit): Promise<OutboxEmailDetailResponse> => {
-
-  return customFetch<OutboxEmailDetailResponse>(getAdminMailOutboxCancelUrl(identifier),
-  {
+export const adminMailOutboxCancel = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<OutboxEmailDetailResponse> => {
+  return customFetch<OutboxEmailDetailResponse>(getAdminMailOutboxCancelUrl(identifier), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getAdminMailOutboxCancelMutationOptions = <TError = ProblemDetails, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminMailOutboxCancel>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxCancel>>, TError, { identifier: string }, TContext> => {
+  const mutationKey = ["adminMailOutboxCancel"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMailOutboxCancel>>, { identifier: string }> = (
+    props,
+  ) => {
+    const { identifier } = props ?? {};
 
+    return adminMailOutboxCancel(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminMailOutboxCancelMutationResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxCancel>>>;
 
+export type AdminMailOutboxCancelMutationError = ProblemDetails;
 
-export const getAdminMailOutboxCancelMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxCancel>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxCancel>>, TError,{identifier: string}, TContext> => {
+export const useAdminMailOutboxCancel = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminMailOutboxCancel>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof adminMailOutboxCancel>>, TError, { identifier: string }, TContext> => {
+  return useMutation(getAdminMailOutboxCancelMutationOptions(options), queryClient);
+};
+export const getAdminMailOutboxPurgeUrl = () => {
+  return `/api/v1/admin/mail-outbox/purge`;
+};
 
-const mutationKey = ['adminMailOutboxCancel'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMailOutboxCancel>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  adminMailOutboxCancel(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminMailOutboxCancelMutationResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxCancel>>>
-
-    export type AdminMailOutboxCancelMutationError = ProblemDetails
-
-    export const useAdminMailOutboxCancel = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxCancel>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminMailOutboxCancel>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminMailOutboxCancelMutationOptions(options), queryClient);
-    }
-    export const getAdminMailOutboxPurgeUrl = () => {
-
-
-
-
-  return `/api/v1/admin/mail-outbox/purge`
-}
-
-export const adminMailOutboxPurge = async (purgeMailOutboxRequest: PurgeMailOutboxRequest, options?: RequestInit): Promise<MailOutboxPurgeResponse> => {
-
-  return customFetch<MailOutboxPurgeResponse>(getAdminMailOutboxPurgeUrl(),
-  {
+export const adminMailOutboxPurge = async (
+  purgeMailOutboxRequest: PurgeMailOutboxRequest,
+  options?: RequestInit,
+): Promise<MailOutboxPurgeResponse> => {
+  return customFetch<MailOutboxPurgeResponse>(getAdminMailOutboxPurgeUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(purgeMailOutboxRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(purgeMailOutboxRequest),
+  });
+};
 
+export const getAdminMailOutboxPurgeMutationOptions = <TError = ProblemDetails, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminMailOutboxPurge>>,
+    TError,
+    { data: PurgeMailOutboxRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminMailOutboxPurge>>,
+  TError,
+  { data: PurgeMailOutboxRequest },
+  TContext
+> => {
+  const mutationKey = ["adminMailOutboxPurge"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminMailOutboxPurge>>,
+    { data: PurgeMailOutboxRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return adminMailOutboxPurge(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminMailOutboxPurgeMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxPurge>>, TError,{data: PurgeMailOutboxRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxPurge>>, TError,{data: PurgeMailOutboxRequest}, TContext> => {
+export type AdminMailOutboxPurgeMutationResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxPurge>>>;
+export type AdminMailOutboxPurgeMutationBody = PurgeMailOutboxRequest;
+export type AdminMailOutboxPurgeMutationError = ProblemDetails;
 
-const mutationKey = ['adminMailOutboxPurge'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMailOutboxPurge>>, {data: PurgeMailOutboxRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  adminMailOutboxPurge(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminMailOutboxPurgeMutationResult = NonNullable<Awaited<ReturnType<typeof adminMailOutboxPurge>>>
-    export type AdminMailOutboxPurgeMutationBody = PurgeMailOutboxRequest
-    export type AdminMailOutboxPurgeMutationError = ProblemDetails
-
-    export const useAdminMailOutboxPurge = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMailOutboxPurge>>, TError,{data: PurgeMailOutboxRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminMailOutboxPurge>>,
-        TError,
-        {data: PurgeMailOutboxRequest},
-        TContext
-      > => {
-      return useMutation(getAdminMailOutboxPurgeMutationOptions(options), queryClient);
-    }
+export const useAdminMailOutboxPurge = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminMailOutboxPurge>>,
+      TError,
+      { data: PurgeMailOutboxRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminMailOutboxPurge>>,
+  TError,
+  { data: PurgeMailOutboxRequest },
+  TContext
+> => {
+  return useMutation(getAdminMailOutboxPurgeMutationOptions(options), queryClient);
+};

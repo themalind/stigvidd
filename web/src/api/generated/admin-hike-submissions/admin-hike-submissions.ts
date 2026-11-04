@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,8 +20,8 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   AdminHikeSubmissionListItemResponse,
@@ -35,22 +31,19 @@ import type {
   RejectHikeSubmissionRequest,
   SimilarTrailResponse,
   UpdateHikeSubmissionGeometryRequest,
-  UpdateHikeSubmissionRequest
-} from '../model';
+  UpdateHikeSubmissionRequest,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -60,773 +53,1030 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getAdminHikeSubmissionsGetSubmissionsUrl = (params?: AdminHikeSubmissionsGetSubmissionsParams,) => {
+export const getAdminHikeSubmissionsGetSubmissionsUrl = (params?: AdminHikeSubmissionsGetSubmissionsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/admin/hike-submissions?${stringifiedParams}` : `/api/v1/admin/hike-submissions`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/admin/hike-submissions?${stringifiedParams}`
+    : `/api/v1/admin/hike-submissions`;
+};
 
-export const adminHikeSubmissionsGetSubmissions = async (params?: AdminHikeSubmissionsGetSubmissionsParams, options?: RequestInit): Promise<AdminHikeSubmissionListItemResponse[]> => {
-
-  return customFetch<AdminHikeSubmissionListItemResponse[]>(getAdminHikeSubmissionsGetSubmissionsUrl(params),
-  {
+export const adminHikeSubmissionsGetSubmissions = async (
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: RequestInit,
+): Promise<AdminHikeSubmissionListItemResponse[]> => {
+  return customFetch<AdminHikeSubmissionListItemResponse[]>(getAdminHikeSubmissionsGetSubmissionsUrl(params), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAdminHikeSubmissionsGetSubmissionsQueryKey = (params?: AdminHikeSubmissionsGetSubmissionsParams) => {
+  return [`/api/v1/admin/hike-submissions`, ...(params ? [params] : [])] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAdminHikeSubmissionsGetSubmissionsQueryKey = (params?: AdminHikeSubmissionsGetSubmissionsParams,) => {
-    return [
-    `/api/v1/admin/hike-submissions`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getAdminHikeSubmissionsGetSubmissionsQueryOptions = <TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminHikeSubmissionsGetSubmissionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionsQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionsQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>> = ({ signal }) =>
+    adminHikeSubmissionsGetSubmissions(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminHikeSubmissionsGetSubmissionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>
+>;
+export type AdminHikeSubmissionsGetSubmissionsQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>> = ({ signal }) => adminHikeSubmissionsGetSubmissions(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminHikeSubmissionsGetSubmissionsQueryResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>>
-export type AdminHikeSubmissionsGetSubmissionsQueryError = unknown
-
-
-export function useAdminHikeSubmissionsGetSubmissions<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params: undefined |  AdminHikeSubmissionsGetSubmissionsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>> & Pick<
+export function useAdminHikeSubmissionsGetSubmissions<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params: undefined | AdminHikeSubmissionsGetSubmissionsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
           TError,
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmissions<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmissions<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
           TError,
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmissions<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmissions<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminHikeSubmissionsGetSubmissions<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminHikeSubmissionsGetSubmissions<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminHikeSubmissionsGetSubmissionsQueryOptions(params, options);
 
-  const queryOptions = getAdminHikeSubmissionsGetSubmissionsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminHikeSubmissionsGetSubmissionsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminHikeSubmissionsGetSubmissionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionsQueryKey(params);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionsQueryKey(params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>> = ({ signal }) =>
+    adminHikeSubmissionsGetSubmissions(params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminHikeSubmissionsGetSubmissionsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>
+>;
+export type AdminHikeSubmissionsGetSubmissionsSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>> = ({ signal }) => adminHikeSubmissionsGetSubmissions(params, { signal, ...requestOptions });
+export function useAdminHikeSubmissionsGetSubmissionsSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params: undefined | AdminHikeSubmissionsGetSubmissionsParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmissionsSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmissionsSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminHikeSubmissionsGetSubmissionsSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>,
+  TError = unknown,
+>(
+  params?: AdminHikeSubmissionsGetSubmissionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminHikeSubmissionsGetSubmissionsSuspenseQueryOptions(params, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminHikeSubmissionsGetSubmissionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>>
-export type AdminHikeSubmissionsGetSubmissionsSuspenseQueryError = unknown
-
-
-export function useAdminHikeSubmissionsGetSubmissionsSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params: undefined |  AdminHikeSubmissionsGetSubmissionsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmissionsSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmissionsSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminHikeSubmissionsGetSubmissionsSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError = unknown>(
- params?: AdminHikeSubmissionsGetSubmissionsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmissions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminHikeSubmissionsGetSubmissionsSuspenseQueryOptions(params,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminHikeSubmissionsGetSubmissionUrl = (identifier: string) => {
+  return `/api/v1/admin/hike-submissions/${identifier}`;
+};
 
-
-
-
-
-export const getAdminHikeSubmissionsGetSubmissionUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/hike-submissions/${identifier}`
-}
-
-export const adminHikeSubmissionsGetSubmission = async (identifier: string, options?: RequestInit): Promise<AdminHikeSubmissionResponse> => {
-
-  return customFetch<AdminHikeSubmissionResponse>(getAdminHikeSubmissionsGetSubmissionUrl(identifier),
-  {
+export const adminHikeSubmissionsGetSubmission = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<AdminHikeSubmissionResponse> => {
+  return customFetch<AdminHikeSubmissionResponse>(getAdminHikeSubmissionsGetSubmissionUrl(identifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getAdminHikeSubmissionsGetSubmissionQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/hike-submissions/${identifier}`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getAdminHikeSubmissionsGetSubmissionQueryKey = (identifier: string,) => {
-    return [
-    `/api/v1/admin/hike-submissions/${identifier}`
-    ] as const;
-    }
-
-
-export const getAdminHikeSubmissionsGetSubmissionQueryOptions = <TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminHikeSubmissionsGetSubmissionQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>> = ({ signal }) =>
+    adminHikeSubmissionsGetSubmission(identifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type AdminHikeSubmissionsGetSubmissionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>
+>;
+export type AdminHikeSubmissionsGetSubmissionQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>> = ({ signal }) => adminHikeSubmissionsGetSubmission(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminHikeSubmissionsGetSubmissionQueryResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>>
-export type AdminHikeSubmissionsGetSubmissionQueryError = unknown
-
-
-export function useAdminHikeSubmissionsGetSubmission<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>> & Pick<
+export function useAdminHikeSubmissionsGetSubmission<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
           TError,
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmission<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmission<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
           TError,
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmission<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmission<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminHikeSubmissionsGetSubmission<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminHikeSubmissionsGetSubmission<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminHikeSubmissionsGetSubmissionQueryOptions(identifier, options);
 
-  const queryOptions = getAdminHikeSubmissionsGetSubmissionQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminHikeSubmissionsGetSubmissionSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>> = ({ signal }) => adminHikeSubmissionsGetSubmission(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminHikeSubmissionsGetSubmissionSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>>
-export type AdminHikeSubmissionsGetSubmissionSuspenseQueryError = unknown
-
-
-export function useAdminHikeSubmissionsGetSubmissionSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmissionSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSubmissionSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminHikeSubmissionsGetSubmissionSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminHikeSubmissionsGetSubmissionSuspenseQueryOptions(identifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminHikeSubmissionsUpdateSubmissionUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/hike-submissions/${identifier}`
-}
-
-export const adminHikeSubmissionsUpdateSubmission = async (identifier: string,
-    updateHikeSubmissionRequest: UpdateHikeSubmissionRequest, options?: RequestInit): Promise<AdminHikeSubmissionResponse> => {
-
-  return customFetch<AdminHikeSubmissionResponse>(getAdminHikeSubmissionsUpdateSubmissionUrl(identifier),
-  {
-    ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(updateHikeSubmissionRequest)
-  }
-);}
-
-
-
-
-
-export const getAdminHikeSubmissionsUpdateSubmissionMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>, TError,{identifier: string;data: UpdateHikeSubmissionRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>, TError,{identifier: string;data: UpdateHikeSubmissionRequest}, TContext> => {
-
-const mutationKey = ['adminHikeSubmissionsUpdateSubmission'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>, {identifier: string;data: UpdateHikeSubmissionRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminHikeSubmissionsUpdateSubmission(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminHikeSubmissionsUpdateSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>>
-    export type AdminHikeSubmissionsUpdateSubmissionMutationBody = UpdateHikeSubmissionRequest
-    export type AdminHikeSubmissionsUpdateSubmissionMutationError = unknown
-
-    export const useAdminHikeSubmissionsUpdateSubmission = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>, TError,{identifier: string;data: UpdateHikeSubmissionRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>,
-        TError,
-        {identifier: string;data: UpdateHikeSubmissionRequest},
-        TContext
-      > => {
-      return useMutation(getAdminHikeSubmissionsUpdateSubmissionMutationOptions(options), queryClient);
-    }
-    export const getAdminHikeSubmissionsGetSimilarRoutesUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/hike-submissions/${identifier}/similar-routes`
-}
-
-export const adminHikeSubmissionsGetSimilarRoutes = async (identifier: string, options?: RequestInit): Promise<SimilarTrailResponse[]> => {
-
-  return customFetch<SimilarTrailResponse[]>(getAdminHikeSubmissionsGetSimilarRoutesUrl(identifier),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getAdminHikeSubmissionsGetSimilarRoutesQueryKey = (identifier: string,) => {
-    return [
-    `/api/v1/admin/hike-submissions/${identifier}/similar-routes`
-    ] as const;
-    }
-
-
-export const getAdminHikeSubmissionsGetSimilarRoutesQueryOptions = <TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminHikeSubmissionsGetSubmissionSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSubmissionQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSimilarRoutesQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>> = ({ signal }) =>
+    adminHikeSubmissionsGetSubmission(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminHikeSubmissionsGetSubmissionSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>
+>;
+export type AdminHikeSubmissionsGetSubmissionSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>> = ({ signal }) => adminHikeSubmissionsGetSimilarRoutes(identifier, { signal, ...requestOptions });
+export function useAdminHikeSubmissionsGetSubmissionSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmissionSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSubmissionSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminHikeSubmissionsGetSubmissionSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSubmission>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminHikeSubmissionsGetSubmissionSuspenseQueryOptions(identifier, options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export type AdminHikeSubmissionsGetSimilarRoutesQueryResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>>
-export type AdminHikeSubmissionsGetSimilarRoutesQueryError = unknown
+export const getAdminHikeSubmissionsUpdateSubmissionUrl = (identifier: string) => {
+  return `/api/v1/admin/hike-submissions/${identifier}`;
+};
 
+export const adminHikeSubmissionsUpdateSubmission = async (
+  identifier: string,
+  updateHikeSubmissionRequest: UpdateHikeSubmissionRequest,
+  options?: RequestInit,
+): Promise<AdminHikeSubmissionResponse> => {
+  return customFetch<AdminHikeSubmissionResponse>(getAdminHikeSubmissionsUpdateSubmissionUrl(identifier), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateHikeSubmissionRequest),
+  });
+};
 
-export function useAdminHikeSubmissionsGetSimilarRoutes<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>> & Pick<
+export const getAdminHikeSubmissionsUpdateSubmissionMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>,
+    TError,
+    { identifier: string; data: UpdateHikeSubmissionRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>,
+  TError,
+  { identifier: string; data: UpdateHikeSubmissionRequest },
+  TContext
+> => {
+  const mutationKey = ["adminHikeSubmissionsUpdateSubmission"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>,
+    { identifier: string; data: UpdateHikeSubmissionRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
+
+    return adminHikeSubmissionsUpdateSubmission(identifier, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminHikeSubmissionsUpdateSubmissionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>
+>;
+export type AdminHikeSubmissionsUpdateSubmissionMutationBody = UpdateHikeSubmissionRequest;
+export type AdminHikeSubmissionsUpdateSubmissionMutationError = unknown;
+
+export const useAdminHikeSubmissionsUpdateSubmission = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>,
+      TError,
+      { identifier: string; data: UpdateHikeSubmissionRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmission>>,
+  TError,
+  { identifier: string; data: UpdateHikeSubmissionRequest },
+  TContext
+> => {
+  return useMutation(getAdminHikeSubmissionsUpdateSubmissionMutationOptions(options), queryClient);
+};
+export const getAdminHikeSubmissionsGetSimilarRoutesUrl = (identifier: string) => {
+  return `/api/v1/admin/hike-submissions/${identifier}/similar-routes`;
+};
+
+export const adminHikeSubmissionsGetSimilarRoutes = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<SimilarTrailResponse[]> => {
+  return customFetch<SimilarTrailResponse[]>(getAdminHikeSubmissionsGetSimilarRoutesUrl(identifier), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminHikeSubmissionsGetSimilarRoutesQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/hike-submissions/${identifier}/similar-routes`] as const;
+};
+
+export const getAdminHikeSubmissionsGetSimilarRoutesQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSimilarRoutesQueryKey(identifier);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>> = ({ signal }) =>
+    adminHikeSubmissionsGetSimilarRoutes(identifier, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type AdminHikeSubmissionsGetSimilarRoutesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>
+>;
+export type AdminHikeSubmissionsGetSimilarRoutesQueryError = unknown;
+
+export function useAdminHikeSubmissionsGetSimilarRoutes<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
           TError,
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSimilarRoutes<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSimilarRoutes<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
           TError,
           Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSimilarRoutes<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSimilarRoutes<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useAdminHikeSubmissionsGetSimilarRoutes<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useAdminHikeSubmissionsGetSimilarRoutes<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminHikeSubmissionsGetSimilarRoutesQueryOptions(identifier, options);
 
-  const queryOptions = getAdminHikeSubmissionsGetSimilarRoutesQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getAdminHikeSubmissionsGetSimilarRoutesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getAdminHikeSubmissionsGetSimilarRoutesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSimilarRoutesQueryKey(identifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getAdminHikeSubmissionsGetSimilarRoutesQueryKey(identifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>> = ({ signal }) =>
+    adminHikeSubmissionsGetSimilarRoutes(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type AdminHikeSubmissionsGetSimilarRoutesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>
+>;
+export type AdminHikeSubmissionsGetSimilarRoutesSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>> = ({ signal }) => adminHikeSubmissionsGetSimilarRoutes(identifier, { signal, ...requestOptions });
+export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<
+  TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminHikeSubmissionsGetSimilarRoutesSuspenseQueryOptions(identifier, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminHikeSubmissionsGetSimilarRoutesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>>
-export type AdminHikeSubmissionsGetSimilarRoutesSuspenseQueryError = unknown
-
-
-export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminHikeSubmissionsGetSimilarRoutesSuspense<TData = Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminHikeSubmissionsGetSimilarRoutes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminHikeSubmissionsGetSimilarRoutesSuspenseQueryOptions(identifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getAdminHikeSubmissionsUpdateSubmissionGeometryUrl = (identifier: string) => {
+  return `/api/v1/admin/hike-submissions/${identifier}/geometry`;
+};
 
-
-
-
-
-export const getAdminHikeSubmissionsUpdateSubmissionGeometryUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/hike-submissions/${identifier}/geometry`
-}
-
-export const adminHikeSubmissionsUpdateSubmissionGeometry = async (identifier: string,
-    updateHikeSubmissionGeometryRequest: UpdateHikeSubmissionGeometryRequest, options?: RequestInit): Promise<AdminHikeSubmissionResponse> => {
-
-  return customFetch<AdminHikeSubmissionResponse>(getAdminHikeSubmissionsUpdateSubmissionGeometryUrl(identifier),
-  {
+export const adminHikeSubmissionsUpdateSubmissionGeometry = async (
+  identifier: string,
+  updateHikeSubmissionGeometryRequest: UpdateHikeSubmissionGeometryRequest,
+  options?: RequestInit,
+): Promise<AdminHikeSubmissionResponse> => {
+  return customFetch<AdminHikeSubmissionResponse>(getAdminHikeSubmissionsUpdateSubmissionGeometryUrl(identifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(updateHikeSubmissionGeometryRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateHikeSubmissionGeometryRequest),
+  });
+};
 
+export const getAdminHikeSubmissionsUpdateSubmissionGeometryMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>,
+    TError,
+    { identifier: string; data: UpdateHikeSubmissionGeometryRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>,
+  TError,
+  { identifier: string; data: UpdateHikeSubmissionGeometryRequest },
+  TContext
+> => {
+  const mutationKey = ["adminHikeSubmissionsUpdateSubmissionGeometry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>,
+    { identifier: string; data: UpdateHikeSubmissionGeometryRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminHikeSubmissionsUpdateSubmissionGeometry(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminHikeSubmissionsUpdateSubmissionGeometryMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>, TError,{identifier: string;data: UpdateHikeSubmissionGeometryRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>, TError,{identifier: string;data: UpdateHikeSubmissionGeometryRequest}, TContext> => {
+export type AdminHikeSubmissionsUpdateSubmissionGeometryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>
+>;
+export type AdminHikeSubmissionsUpdateSubmissionGeometryMutationBody = UpdateHikeSubmissionGeometryRequest;
+export type AdminHikeSubmissionsUpdateSubmissionGeometryMutationError = unknown;
 
-const mutationKey = ['adminHikeSubmissionsUpdateSubmissionGeometry'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useAdminHikeSubmissionsUpdateSubmissionGeometry = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>,
+      TError,
+      { identifier: string; data: UpdateHikeSubmissionGeometryRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>,
+  TError,
+  { identifier: string; data: UpdateHikeSubmissionGeometryRequest },
+  TContext
+> => {
+  return useMutation(getAdminHikeSubmissionsUpdateSubmissionGeometryMutationOptions(options), queryClient);
+};
+export const getAdminHikeSubmissionsDeleteSubmissionImageUrl = (identifier: string, imageIdentifier: string) => {
+  return `/api/v1/admin/hike-submissions/${identifier}/images/${imageIdentifier}`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>, {identifier: string;data: UpdateHikeSubmissionGeometryRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminHikeSubmissionsUpdateSubmissionGeometry(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminHikeSubmissionsUpdateSubmissionGeometryMutationResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>>
-    export type AdminHikeSubmissionsUpdateSubmissionGeometryMutationBody = UpdateHikeSubmissionGeometryRequest
-    export type AdminHikeSubmissionsUpdateSubmissionGeometryMutationError = unknown
-
-    export const useAdminHikeSubmissionsUpdateSubmissionGeometry = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>, TError,{identifier: string;data: UpdateHikeSubmissionGeometryRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminHikeSubmissionsUpdateSubmissionGeometry>>,
-        TError,
-        {identifier: string;data: UpdateHikeSubmissionGeometryRequest},
-        TContext
-      > => {
-      return useMutation(getAdminHikeSubmissionsUpdateSubmissionGeometryMutationOptions(options), queryClient);
-    }
-    export const getAdminHikeSubmissionsDeleteSubmissionImageUrl = (identifier: string,
-    imageIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/hike-submissions/${identifier}/images/${imageIdentifier}`
-}
-
-export const adminHikeSubmissionsDeleteSubmissionImage = async (identifier: string,
-    imageIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminHikeSubmissionsDeleteSubmissionImageUrl(identifier,imageIdentifier),
-  {
+export const adminHikeSubmissionsDeleteSubmissionImage = async (
+  identifier: string,
+  imageIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminHikeSubmissionsDeleteSubmissionImageUrl(identifier, imageIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getAdminHikeSubmissionsDeleteSubmissionImageMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>,
+    TError,
+    { identifier: string; imageIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>,
+  TError,
+  { identifier: string; imageIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminHikeSubmissionsDeleteSubmissionImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>,
+    { identifier: string; imageIdentifier: string }
+  > = (props) => {
+    const { identifier, imageIdentifier } = props ?? {};
 
+    return adminHikeSubmissionsDeleteSubmissionImage(identifier, imageIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminHikeSubmissionsDeleteSubmissionImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>
+>;
 
+export type AdminHikeSubmissionsDeleteSubmissionImageMutationError = unknown;
 
-export const getAdminHikeSubmissionsDeleteSubmissionImageMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>, TError,{identifier: string;imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>, TError,{identifier: string;imageIdentifier: string}, TContext> => {
+export const useAdminHikeSubmissionsDeleteSubmissionImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>,
+      TError,
+      { identifier: string; imageIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>,
+  TError,
+  { identifier: string; imageIdentifier: string },
+  TContext
+> => {
+  return useMutation(getAdminHikeSubmissionsDeleteSubmissionImageMutationOptions(options), queryClient);
+};
+export const getAdminHikeSubmissionsApproveSubmissionUrl = (identifier: string) => {
+  return `/api/v1/admin/hike-submissions/${identifier}/approve`;
+};
 
-const mutationKey = ['adminHikeSubmissionsDeleteSubmissionImage'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>, {identifier: string;imageIdentifier: string}> = (props) => {
-          const {identifier,imageIdentifier} = props ?? {};
-
-          return  adminHikeSubmissionsDeleteSubmissionImage(identifier,imageIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminHikeSubmissionsDeleteSubmissionImageMutationResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>>
-
-    export type AdminHikeSubmissionsDeleteSubmissionImageMutationError = unknown
-
-    export const useAdminHikeSubmissionsDeleteSubmissionImage = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>, TError,{identifier: string;imageIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminHikeSubmissionsDeleteSubmissionImage>>,
-        TError,
-        {identifier: string;imageIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminHikeSubmissionsDeleteSubmissionImageMutationOptions(options), queryClient);
-    }
-    export const getAdminHikeSubmissionsApproveSubmissionUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/hike-submissions/${identifier}/approve`
-}
-
-export const adminHikeSubmissionsApproveSubmission = async (identifier: string, options?: RequestInit): Promise<ApproveHikeSubmissionResponse> => {
-
-  return customFetch<ApproveHikeSubmissionResponse>(getAdminHikeSubmissionsApproveSubmissionUrl(identifier),
-  {
+export const adminHikeSubmissionsApproveSubmission = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<ApproveHikeSubmissionResponse> => {
+  return customFetch<ApproveHikeSubmissionResponse>(getAdminHikeSubmissionsApproveSubmissionUrl(identifier), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getAdminHikeSubmissionsApproveSubmissionMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>,
+  TError,
+  { identifier: string },
+  TContext
+> => {
+  const mutationKey = ["adminHikeSubmissionsApproveSubmission"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>,
+    { identifier: string }
+  > = (props) => {
+    const { identifier } = props ?? {};
 
+    return adminHikeSubmissionsApproveSubmission(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminHikeSubmissionsApproveSubmissionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>
+>;
 
+export type AdminHikeSubmissionsApproveSubmissionMutationError = unknown;
 
-export const getAdminHikeSubmissionsApproveSubmissionMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>, TError,{identifier: string}, TContext> => {
+export const useAdminHikeSubmissionsApproveSubmission = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>,
+  TError,
+  { identifier: string },
+  TContext
+> => {
+  return useMutation(getAdminHikeSubmissionsApproveSubmissionMutationOptions(options), queryClient);
+};
+export const getAdminHikeSubmissionsRejectSubmissionUrl = (identifier: string) => {
+  return `/api/v1/admin/hike-submissions/${identifier}/reject`;
+};
 
-const mutationKey = ['adminHikeSubmissionsApproveSubmission'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  adminHikeSubmissionsApproveSubmission(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminHikeSubmissionsApproveSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>>
-
-    export type AdminHikeSubmissionsApproveSubmissionMutationError = unknown
-
-    export const useAdminHikeSubmissionsApproveSubmission = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminHikeSubmissionsApproveSubmission>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminHikeSubmissionsApproveSubmissionMutationOptions(options), queryClient);
-    }
-    export const getAdminHikeSubmissionsRejectSubmissionUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/hike-submissions/${identifier}/reject`
-}
-
-export const adminHikeSubmissionsRejectSubmission = async (identifier: string,
-    rejectHikeSubmissionRequest: RejectHikeSubmissionRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminHikeSubmissionsRejectSubmissionUrl(identifier),
-  {
+export const adminHikeSubmissionsRejectSubmission = async (
+  identifier: string,
+  rejectHikeSubmissionRequest: RejectHikeSubmissionRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminHikeSubmissionsRejectSubmissionUrl(identifier), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(rejectHikeSubmissionRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(rejectHikeSubmissionRequest),
+  });
+};
 
+export const getAdminHikeSubmissionsRejectSubmissionMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>,
+    TError,
+    { identifier: string; data: RejectHikeSubmissionRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>,
+  TError,
+  { identifier: string; data: RejectHikeSubmissionRequest },
+  TContext
+> => {
+  const mutationKey = ["adminHikeSubmissionsRejectSubmission"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>,
+    { identifier: string; data: RejectHikeSubmissionRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminHikeSubmissionsRejectSubmission(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminHikeSubmissionsRejectSubmissionMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>, TError,{identifier: string;data: RejectHikeSubmissionRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>, TError,{identifier: string;data: RejectHikeSubmissionRequest}, TContext> => {
+export type AdminHikeSubmissionsRejectSubmissionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>
+>;
+export type AdminHikeSubmissionsRejectSubmissionMutationBody = RejectHikeSubmissionRequest;
+export type AdminHikeSubmissionsRejectSubmissionMutationError = unknown;
 
-const mutationKey = ['adminHikeSubmissionsRejectSubmission'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>, {identifier: string;data: RejectHikeSubmissionRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  adminHikeSubmissionsRejectSubmission(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminHikeSubmissionsRejectSubmissionMutationResult = NonNullable<Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>>
-    export type AdminHikeSubmissionsRejectSubmissionMutationBody = RejectHikeSubmissionRequest
-    export type AdminHikeSubmissionsRejectSubmissionMutationError = unknown
-
-    export const useAdminHikeSubmissionsRejectSubmission = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>, TError,{identifier: string;data: RejectHikeSubmissionRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>,
-        TError,
-        {identifier: string;data: RejectHikeSubmissionRequest},
-        TContext
-      > => {
-      return useMutation(getAdminHikeSubmissionsRejectSubmissionMutationOptions(options), queryClient);
-    }
+export const useAdminHikeSubmissionsRejectSubmission = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>,
+      TError,
+      { identifier: string; data: RejectHikeSubmissionRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminHikeSubmissionsRejectSubmission>>,
+  TError,
+  { identifier: string; data: RejectHikeSubmissionRequest },
+  TContext
+> => {
+  return useMutation(getAdminHikeSubmissionsRejectSubmissionMutationOptions(options), queryClient);
+};

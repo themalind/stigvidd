@@ -7,10 +7,10 @@
  */
 
 export type EventsGetMyEventsParams = {
-Past?: boolean;
-Limit?: number;
-/**
- * @nullable
- */
-Cursor?: string | null;
+  Past?: boolean;
+  Limit?: number;
+  /**
+   * @nullable
+   */
+  Cursor?: string | null;
 };

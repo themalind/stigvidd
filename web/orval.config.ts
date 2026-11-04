@@ -63,6 +63,8 @@ export default defineConfig({
       schemas: "src/api/generated/model",
       client: "react-query", // @tanstack/react-query — already a dependency
       httpClient: "fetch", // no axios in the project; use native fetch
+      // keep-comment: formats through prettier's API with the pinned devDependency, so CI's regenerate-and-diff stays byte-identical
+      formatter: "prettier",
       override: {
         mutator: { path: "src/api/mutator.ts", name: "customFetch" },
         // Hooks return the DTO directly instead of { data, status, headers }.

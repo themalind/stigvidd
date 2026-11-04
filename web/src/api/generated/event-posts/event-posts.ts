@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,8 +20,8 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   EventBoardResponse,
@@ -33,22 +29,19 @@ import type {
   EventPostRequest,
   EventPostResponse,
   EventPostsGetPostsParams,
-  EventPostsReadRequest
-} from '../model';
+  EventPostsReadRequest,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -58,493 +51,559 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getEventPostsGetPostsUrl = (identifier: string,
-    params?: EventPostsGetPostsParams,) => {
+export const getEventPostsGetPostsUrl = (identifier: string, params?: EventPostsGetPostsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/events/${identifier}/posts?${stringifiedParams}` : `/api/v1/events/${identifier}/posts`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/events/${identifier}/posts?${stringifiedParams}`
+    : `/api/v1/events/${identifier}/posts`;
+};
 
-export const eventPostsGetPosts = async (identifier: string,
-    params?: EventPostsGetPostsParams, options?: RequestInit): Promise<EventBoardResponse> => {
-
-  return customFetch<EventBoardResponse>(getEventPostsGetPostsUrl(identifier,params),
-  {
+export const eventPostsGetPosts = async (
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: RequestInit,
+): Promise<EventBoardResponse> => {
+  return customFetch<EventBoardResponse>(getEventPostsGetPostsUrl(identifier, params), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getEventPostsGetPostsQueryKey = (identifier: string, params?: EventPostsGetPostsParams) => {
+  return [`/api/v1/events/${identifier}/posts`, ...(params ? [params] : [])] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getEventPostsGetPostsQueryKey = (identifier: string,
-    params?: EventPostsGetPostsParams,) => {
-    return [
-    `/api/v1/events/${identifier}/posts`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getEventPostsGetPostsQueryOptions = <TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getEventPostsGetPostsQueryOptions = <
+  TData = Awaited<ReturnType<typeof eventPostsGetPosts>>,
+  TError = unknown,
+>(
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getEventPostsGetPostsQueryKey(identifier, params);
 
-  const queryKey =  queryOptions?.queryKey ?? getEventPostsGetPostsQueryKey(identifier,params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof eventPostsGetPosts>>> = ({ signal }) =>
+    eventPostsGetPosts(identifier, params, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventPostsGetPosts>>> = ({ signal }) => eventPostsGetPosts(identifier,params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventPostsGetPostsQueryResult = NonNullable<Awaited<ReturnType<typeof eventPostsGetPosts>>>
-export type EventPostsGetPostsQueryError = unknown
-
+export type EventPostsGetPostsQueryResult = NonNullable<Awaited<ReturnType<typeof eventPostsGetPosts>>>;
+export type EventPostsGetPostsQueryError = unknown;
 
 export function useEventPostsGetPosts<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params: undefined |  EventPostsGetPostsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>> & Pick<
+  identifier: string,
+  params: undefined | EventPostsGetPostsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof eventPostsGetPosts>>,
           TError,
           Awaited<ReturnType<typeof eventPostsGetPosts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useEventPostsGetPosts<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>> & Pick<
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof eventPostsGetPosts>>,
           TError,
           Awaited<ReturnType<typeof eventPostsGetPosts>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useEventPostsGetPosts<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useEventPostsGetPosts<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getEventPostsGetPostsQueryOptions(identifier, params, options);
 
-  const queryOptions = getEventPostsGetPostsQueryOptions(identifier,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getEventPostsGetPostsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getEventPostsGetPostsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof eventPostsGetPosts>>,
+  TError = unknown,
+>(
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getEventPostsGetPostsQueryKey(identifier, params);
 
-  const queryKey =  queryOptions?.queryKey ?? getEventPostsGetPostsQueryKey(identifier,params);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof eventPostsGetPosts>>> = ({ signal }) =>
+    eventPostsGetPosts(identifier, params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof eventPostsGetPosts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventPostsGetPosts>>> = ({ signal }) => eventPostsGetPosts(identifier,params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventPostsGetPostsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof eventPostsGetPosts>>>
-export type EventPostsGetPostsSuspenseQueryError = unknown
-
+export type EventPostsGetPostsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof eventPostsGetPosts>>>;
+export type EventPostsGetPostsSuspenseQueryError = unknown;
 
 export function useEventPostsGetPostsSuspense<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params: undefined |  EventPostsGetPostsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  identifier: string,
+  params: undefined | EventPostsGetPostsParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useEventPostsGetPostsSuspense<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useEventPostsGetPostsSuspense<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
 export function useEventPostsGetPostsSuspense<TData = Awaited<ReturnType<typeof eventPostsGetPosts>>, TError = unknown>(
- identifier: string,
-    params?: EventPostsGetPostsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  identifier: string,
+  params?: EventPostsGetPostsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof eventPostsGetPosts>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getEventPostsGetPostsSuspenseQueryOptions(identifier, params, options);
 
-  const queryOptions = getEventPostsGetPostsSuspenseQueryOptions(identifier,params,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getEventPostsCreatePostUrl = (identifier: string) => {
+  return `/api/v1/events/${identifier}/posts`;
+};
 
-
-
-
-
-export const getEventPostsCreatePostUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/events/${identifier}/posts`
-}
-
-export const eventPostsCreatePost = async (identifier: string,
-    eventPostRequest: EventPostRequest, options?: RequestInit): Promise<EventPostResponse> => {
-
-  return customFetch<EventPostResponse>(getEventPostsCreatePostUrl(identifier),
-  {
+export const eventPostsCreatePost = async (
+  identifier: string,
+  eventPostRequest: EventPostRequest,
+  options?: RequestInit,
+): Promise<EventPostResponse> => {
+  return customFetch<EventPostResponse>(getEventPostsCreatePostUrl(identifier), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(eventPostRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventPostRequest),
+  });
+};
 
+export const getEventPostsCreatePostMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventPostsCreatePost>>,
+    TError,
+    { identifier: string; data: EventPostRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventPostsCreatePost>>,
+  TError,
+  { identifier: string; data: EventPostRequest },
+  TContext
+> => {
+  const mutationKey = ["eventPostsCreatePost"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventPostsCreatePost>>,
+    { identifier: string; data: EventPostRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return eventPostsCreatePost(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getEventPostsCreatePostMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsCreatePost>>, TError,{identifier: string;data: EventPostRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventPostsCreatePost>>, TError,{identifier: string;data: EventPostRequest}, TContext> => {
+export type EventPostsCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsCreatePost>>>;
+export type EventPostsCreatePostMutationBody = EventPostRequest;
+export type EventPostsCreatePostMutationError = unknown;
 
-const mutationKey = ['eventPostsCreatePost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useEventPostsCreatePost = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventPostsCreatePost>>,
+      TError,
+      { identifier: string; data: EventPostRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventPostsCreatePost>>,
+  TError,
+  { identifier: string; data: EventPostRequest },
+  TContext
+> => {
+  return useMutation(getEventPostsCreatePostMutationOptions(options), queryClient);
+};
+export const getEventPostsMarkPostsReadUrl = (identifier: string) => {
+  return `/api/v1/events/${identifier}/posts/read`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventPostsCreatePost>>, {identifier: string;data: EventPostRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  eventPostsCreatePost(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventPostsCreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsCreatePost>>>
-    export type EventPostsCreatePostMutationBody = EventPostRequest
-    export type EventPostsCreatePostMutationError = unknown
-
-    export const useEventPostsCreatePost = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsCreatePost>>, TError,{identifier: string;data: EventPostRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventPostsCreatePost>>,
-        TError,
-        {identifier: string;data: EventPostRequest},
-        TContext
-      > => {
-      return useMutation(getEventPostsCreatePostMutationOptions(options), queryClient);
-    }
-    export const getEventPostsMarkPostsReadUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/events/${identifier}/posts/read`
-}
-
-export const eventPostsMarkPostsRead = async (identifier: string,
-    eventPostsReadRequest: EventPostsReadRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventPostsMarkPostsReadUrl(identifier),
-  {
+export const eventPostsMarkPostsRead = async (
+  identifier: string,
+  eventPostsReadRequest: EventPostsReadRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getEventPostsMarkPostsReadUrl(identifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(eventPostsReadRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventPostsReadRequest),
+  });
+};
 
+export const getEventPostsMarkPostsReadMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventPostsMarkPostsRead>>,
+    TError,
+    { identifier: string; data: EventPostsReadRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventPostsMarkPostsRead>>,
+  TError,
+  { identifier: string; data: EventPostsReadRequest },
+  TContext
+> => {
+  const mutationKey = ["eventPostsMarkPostsRead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventPostsMarkPostsRead>>,
+    { identifier: string; data: EventPostsReadRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return eventPostsMarkPostsRead(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getEventPostsMarkPostsReadMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsMarkPostsRead>>, TError,{identifier: string;data: EventPostsReadRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventPostsMarkPostsRead>>, TError,{identifier: string;data: EventPostsReadRequest}, TContext> => {
+export type EventPostsMarkPostsReadMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsMarkPostsRead>>>;
+export type EventPostsMarkPostsReadMutationBody = EventPostsReadRequest;
+export type EventPostsMarkPostsReadMutationError = unknown;
 
-const mutationKey = ['eventPostsMarkPostsRead'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useEventPostsMarkPostsRead = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventPostsMarkPostsRead>>,
+      TError,
+      { identifier: string; data: EventPostsReadRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventPostsMarkPostsRead>>,
+  TError,
+  { identifier: string; data: EventPostsReadRequest },
+  TContext
+> => {
+  return useMutation(getEventPostsMarkPostsReadMutationOptions(options), queryClient);
+};
+export const getEventPostsUpdatePostUrl = (postIdentifier: string) => {
+  return `/api/v1/events/posts/${postIdentifier}`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventPostsMarkPostsRead>>, {identifier: string;data: EventPostsReadRequest}> = (props) => {
-          const {identifier,data} = props ?? {};
-
-          return  eventPostsMarkPostsRead(identifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventPostsMarkPostsReadMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsMarkPostsRead>>>
-    export type EventPostsMarkPostsReadMutationBody = EventPostsReadRequest
-    export type EventPostsMarkPostsReadMutationError = unknown
-
-    export const useEventPostsMarkPostsRead = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsMarkPostsRead>>, TError,{identifier: string;data: EventPostsReadRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventPostsMarkPostsRead>>,
-        TError,
-        {identifier: string;data: EventPostsReadRequest},
-        TContext
-      > => {
-      return useMutation(getEventPostsMarkPostsReadMutationOptions(options), queryClient);
-    }
-    export const getEventPostsUpdatePostUrl = (postIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/events/posts/${postIdentifier}`
-}
-
-export const eventPostsUpdatePost = async (postIdentifier: string,
-    eventPostRequest: EventPostRequest, options?: RequestInit): Promise<EventPostResponse> => {
-
-  return customFetch<EventPostResponse>(getEventPostsUpdatePostUrl(postIdentifier),
-  {
+export const eventPostsUpdatePost = async (
+  postIdentifier: string,
+  eventPostRequest: EventPostRequest,
+  options?: RequestInit,
+): Promise<EventPostResponse> => {
+  return customFetch<EventPostResponse>(getEventPostsUpdatePostUrl(postIdentifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(eventPostRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventPostRequest),
+  });
+};
 
+export const getEventPostsUpdatePostMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventPostsUpdatePost>>,
+    TError,
+    { postIdentifier: string; data: EventPostRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventPostsUpdatePost>>,
+  TError,
+  { postIdentifier: string; data: EventPostRequest },
+  TContext
+> => {
+  const mutationKey = ["eventPostsUpdatePost"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventPostsUpdatePost>>,
+    { postIdentifier: string; data: EventPostRequest }
+  > = (props) => {
+    const { postIdentifier, data } = props ?? {};
 
+    return eventPostsUpdatePost(postIdentifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getEventPostsUpdatePostMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsUpdatePost>>, TError,{postIdentifier: string;data: EventPostRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventPostsUpdatePost>>, TError,{postIdentifier: string;data: EventPostRequest}, TContext> => {
+export type EventPostsUpdatePostMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsUpdatePost>>>;
+export type EventPostsUpdatePostMutationBody = EventPostRequest;
+export type EventPostsUpdatePostMutationError = unknown;
 
-const mutationKey = ['eventPostsUpdatePost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventPostsUpdatePost>>, {postIdentifier: string;data: EventPostRequest}> = (props) => {
-          const {postIdentifier,data} = props ?? {};
-
-          return  eventPostsUpdatePost(postIdentifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventPostsUpdatePostMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsUpdatePost>>>
-    export type EventPostsUpdatePostMutationBody = EventPostRequest
-    export type EventPostsUpdatePostMutationError = unknown
-
-    export const useEventPostsUpdatePost = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsUpdatePost>>, TError,{postIdentifier: string;data: EventPostRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventPostsUpdatePost>>,
-        TError,
-        {postIdentifier: string;data: EventPostRequest},
-        TContext
-      > => {
-      return useMutation(getEventPostsUpdatePostMutationOptions(options), queryClient);
-    }
-    export const getEventPostsDeletePostUrl = (postIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/events/posts/${postIdentifier}`
-}
+export const useEventPostsUpdatePost = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventPostsUpdatePost>>,
+      TError,
+      { postIdentifier: string; data: EventPostRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventPostsUpdatePost>>,
+  TError,
+  { postIdentifier: string; data: EventPostRequest },
+  TContext
+> => {
+  return useMutation(getEventPostsUpdatePostMutationOptions(options), queryClient);
+};
+export const getEventPostsDeletePostUrl = (postIdentifier: string) => {
+  return `/api/v1/events/posts/${postIdentifier}`;
+};
 
 export const eventPostsDeletePost = async (postIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventPostsDeletePostUrl(postIdentifier),
-  {
+  return customFetch<Blob>(getEventPostsDeletePostUrl(postIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getEventPostsDeletePostMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventPostsDeletePost>>,
+    TError,
+    { postIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventPostsDeletePost>>,
+  TError,
+  { postIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["eventPostsDeletePost"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventPostsDeletePost>>, { postIdentifier: string }> = (
+    props,
+  ) => {
+    const { postIdentifier } = props ?? {};
 
+    return eventPostsDeletePost(postIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type EventPostsDeletePostMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsDeletePost>>>;
 
+export type EventPostsDeletePostMutationError = unknown;
 
-export const getEventPostsDeletePostMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsDeletePost>>, TError,{postIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventPostsDeletePost>>, TError,{postIdentifier: string}, TContext> => {
+export const useEventPostsDeletePost = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventPostsDeletePost>>,
+      TError,
+      { postIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventPostsDeletePost>>,
+  TError,
+  { postIdentifier: string },
+  TContext
+> => {
+  return useMutation(getEventPostsDeletePostMutationOptions(options), queryClient);
+};
+export const getEventPostsSetPostPinnedUrl = (postIdentifier: string) => {
+  return `/api/v1/events/posts/${postIdentifier}/pin`;
+};
 
-const mutationKey = ['eventPostsDeletePost'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventPostsDeletePost>>, {postIdentifier: string}> = (props) => {
-          const {postIdentifier} = props ?? {};
-
-          return  eventPostsDeletePost(postIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventPostsDeletePostMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsDeletePost>>>
-
-    export type EventPostsDeletePostMutationError = unknown
-
-    export const useEventPostsDeletePost = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsDeletePost>>, TError,{postIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventPostsDeletePost>>,
-        TError,
-        {postIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getEventPostsDeletePostMutationOptions(options), queryClient);
-    }
-    export const getEventPostsSetPostPinnedUrl = (postIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/events/posts/${postIdentifier}/pin`
-}
-
-export const eventPostsSetPostPinned = async (postIdentifier: string,
-    eventPostPinRequest: EventPostPinRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventPostsSetPostPinnedUrl(postIdentifier),
-  {
+export const eventPostsSetPostPinned = async (
+  postIdentifier: string,
+  eventPostPinRequest: EventPostPinRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getEventPostsSetPostPinnedUrl(postIdentifier), {
     ...options,
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(eventPostPinRequest)
-  }
-);}
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(eventPostPinRequest),
+  });
+};
 
+export const getEventPostsSetPostPinnedMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventPostsSetPostPinned>>,
+    TError,
+    { postIdentifier: string; data: EventPostPinRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventPostsSetPostPinned>>,
+  TError,
+  { postIdentifier: string; data: EventPostPinRequest },
+  TContext
+> => {
+  const mutationKey = ["eventPostsSetPostPinned"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventPostsSetPostPinned>>,
+    { postIdentifier: string; data: EventPostPinRequest }
+  > = (props) => {
+    const { postIdentifier, data } = props ?? {};
 
+    return eventPostsSetPostPinned(postIdentifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getEventPostsSetPostPinnedMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsSetPostPinned>>, TError,{postIdentifier: string;data: EventPostPinRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof eventPostsSetPostPinned>>, TError,{postIdentifier: string;data: EventPostPinRequest}, TContext> => {
+export type EventPostsSetPostPinnedMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsSetPostPinned>>>;
+export type EventPostsSetPostPinnedMutationBody = EventPostPinRequest;
+export type EventPostsSetPostPinnedMutationError = unknown;
 
-const mutationKey = ['eventPostsSetPostPinned'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventPostsSetPostPinned>>, {postIdentifier: string;data: EventPostPinRequest}> = (props) => {
-          const {postIdentifier,data} = props ?? {};
-
-          return  eventPostsSetPostPinned(postIdentifier,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type EventPostsSetPostPinnedMutationResult = NonNullable<Awaited<ReturnType<typeof eventPostsSetPostPinned>>>
-    export type EventPostsSetPostPinnedMutationBody = EventPostPinRequest
-    export type EventPostsSetPostPinnedMutationError = unknown
-
-    export const useEventPostsSetPostPinned = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof eventPostsSetPostPinned>>, TError,{postIdentifier: string;data: EventPostPinRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof eventPostsSetPostPinned>>,
-        TError,
-        {postIdentifier: string;data: EventPostPinRequest},
-        TContext
-      > => {
-      return useMutation(getEventPostsSetPostPinnedMutationOptions(options), queryClient);
-    }
+export const useEventPostsSetPostPinned = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventPostsSetPostPinned>>,
+      TError,
+      { postIdentifier: string; data: EventPostPinRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventPostsSetPostPinned>>,
+  TError,
+  { postIdentifier: string; data: EventPostPinRequest },
+  TContext
+> => {
+  return useMutation(getEventPostsSetPostPinnedMutationOptions(options), queryClient);
+};

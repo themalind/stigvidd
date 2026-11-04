@@ -5,11 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery,
-  useSuspenseQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -24,27 +20,21 @@ import type {
   UseQueryOptions,
   UseQueryResult,
   UseSuspenseQueryOptions,
-  UseSuspenseQueryResult
-} from '@tanstack/react-query';
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
-import type {
-  HikeShareRecipientResponse,
-  ReshareSharedHikeRequest
-} from '../model';
+import type { HikeShareRecipientResponse, ReshareSharedHikeRequest } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -55,696 +45,913 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getHikeShareRecipientGetHikesSharedWithUserUrl = () => {
+  return `/api/v1/HikeShareRecipient`;
+};
 
-
-
-
-  return `/api/v1/HikeShareRecipient`
-}
-
-export const hikeShareRecipientGetHikesSharedWithUser = async ( options?: RequestInit): Promise<HikeShareRecipientResponse[]> => {
-
-  return customFetch<HikeShareRecipientResponse[]>(getHikeShareRecipientGetHikesSharedWithUserUrl(),
-  {
+export const hikeShareRecipientGetHikesSharedWithUser = async (
+  options?: RequestInit,
+): Promise<HikeShareRecipientResponse[]> => {
+  return customFetch<HikeShareRecipientResponse[]>(getHikeShareRecipientGetHikesSharedWithUserUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getHikeShareRecipientGetHikesSharedWithUserQueryKey = () => {
-    return [
-    `/api/v1/HikeShareRecipient`
-    ] as const;
-    }
+  return [`/api/v1/HikeShareRecipient`] as const;
+};
 
+export const getHikeShareRecipientGetHikesSharedWithUserQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getHikeShareRecipientGetHikesSharedWithUserQueryOptions = <TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getHikeShareRecipientGetHikesSharedWithUserQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>> = ({ signal }) =>
+    hikeShareRecipientGetHikesSharedWithUser({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getHikeShareRecipientGetHikesSharedWithUserQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type HikeShareRecipientGetHikesSharedWithUserQueryResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>
+>;
+export type HikeShareRecipientGetHikesSharedWithUserQueryError = unknown;
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>> = ({ signal }) => hikeShareRecipientGetHikesSharedWithUser({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikeShareRecipientGetHikesSharedWithUserQueryResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>>
-export type HikeShareRecipientGetHikesSharedWithUserQueryError = unknown
-
-
-export function useHikeShareRecipientGetHikesSharedWithUser<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>> & Pick<
+export function useHikeShareRecipientGetHikesSharedWithUser<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
           TError,
           Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetHikesSharedWithUser<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetHikesSharedWithUser<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
           TError,
           Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetHikesSharedWithUser<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetHikesSharedWithUser<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useHikeShareRecipientGetHikesSharedWithUser<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useHikeShareRecipientGetHikesSharedWithUser<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikeShareRecipientGetHikesSharedWithUserQueryOptions(options);
 
-  const queryOptions = getHikeShareRecipientGetHikesSharedWithUserQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getHikeShareRecipientGetHikesSharedWithUserSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getHikeShareRecipientGetHikesSharedWithUserQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>> = ({ signal }) => hikeShareRecipientGetHikesSharedWithUser({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikeShareRecipientGetHikesSharedWithUserSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>>
-export type HikeShareRecipientGetHikesSharedWithUserSuspenseQueryError = unknown
-
-
-export function useHikeShareRecipientGetHikesSharedWithUserSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetHikesSharedWithUserSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetHikesSharedWithUserSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useHikeShareRecipientGetHikesSharedWithUserSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getHikeShareRecipientGetHikesSharedWithUserSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getHikeShareRecipientGetHikesSharedWithUserSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getHikeShareRecipientGetHikesSharedWithUserQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>> = ({ signal }) =>
+    hikeShareRecipientGetHikesSharedWithUser({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type HikeShareRecipientGetHikesSharedWithUserSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>
+>;
+export type HikeShareRecipientGetHikesSharedWithUserSuspenseQueryError = unknown;
 
-export const getHikeShareRecipientGetIncomingPendingShareUrl = (hikeIdentifier: string,) => {
+export function useHikeShareRecipientGetHikesSharedWithUserSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetHikesSharedWithUserSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetHikesSharedWithUserSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useHikeShareRecipientGetHikesSharedWithUserSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetHikesSharedWithUser>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikeShareRecipientGetHikesSharedWithUserSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-  return `/api/v1/HikeShareRecipient/incoming/${hikeIdentifier}`
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const hikeShareRecipientGetIncomingPendingShare = async (hikeIdentifier: string, options?: RequestInit): Promise<HikeShareRecipientResponse> => {
+export const getHikeShareRecipientGetIncomingPendingShareUrl = (hikeIdentifier: string) => {
+  return `/api/v1/HikeShareRecipient/incoming/${hikeIdentifier}`;
+};
 
-  return customFetch<HikeShareRecipientResponse>(getHikeShareRecipientGetIncomingPendingShareUrl(hikeIdentifier),
-  {
+export const hikeShareRecipientGetIncomingPendingShare = async (
+  hikeIdentifier: string,
+  options?: RequestInit,
+): Promise<HikeShareRecipientResponse> => {
+  return customFetch<HikeShareRecipientResponse>(getHikeShareRecipientGetIncomingPendingShareUrl(hikeIdentifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getHikeShareRecipientGetIncomingPendingShareQueryKey = (hikeIdentifier: string) => {
+  return [`/api/v1/HikeShareRecipient/incoming/${hikeIdentifier}`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getHikeShareRecipientGetIncomingPendingShareQueryKey = (hikeIdentifier: string,) => {
-    return [
-    `/api/v1/HikeShareRecipient/incoming/${hikeIdentifier}`
-    ] as const;
-    }
-
-
-export const getHikeShareRecipientGetIncomingPendingShareQueryOptions = <TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getHikeShareRecipientGetIncomingPendingShareQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getHikeShareRecipientGetIncomingPendingShareQueryKey(hikeIdentifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getHikeShareRecipientGetIncomingPendingShareQueryKey(hikeIdentifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>> = ({ signal }) =>
+    hikeShareRecipientGetIncomingPendingShare(hikeIdentifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: hikeIdentifier !== null && hikeIdentifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type HikeShareRecipientGetIncomingPendingShareQueryResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>
+>;
+export type HikeShareRecipientGetIncomingPendingShareQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>> = ({ signal }) => hikeShareRecipientGetIncomingPendingShare(hikeIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: hikeIdentifier !== null && hikeIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikeShareRecipientGetIncomingPendingShareQueryResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>>
-export type HikeShareRecipientGetIncomingPendingShareQueryError = unknown
-
-
-export function useHikeShareRecipientGetIncomingPendingShare<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>> & Pick<
+export function useHikeShareRecipientGetIncomingPendingShare<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    > &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
           TError,
           Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetIncomingPendingShare<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetIncomingPendingShare<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    > &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
           TError,
           Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetIncomingPendingShare<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetIncomingPendingShare<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useHikeShareRecipientGetIncomingPendingShare<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useHikeShareRecipientGetIncomingPendingShare<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikeShareRecipientGetIncomingPendingShareQueryOptions(hikeIdentifier, options);
 
-  const queryOptions = getHikeShareRecipientGetIncomingPendingShareQueryOptions(hikeIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-
-
-
-
-
-export const getHikeShareRecipientGetIncomingPendingShareSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getHikeShareRecipientGetIncomingPendingShareSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getHikeShareRecipientGetIncomingPendingShareQueryKey(hikeIdentifier);
 
-  const queryKey =  queryOptions?.queryKey ?? getHikeShareRecipientGetIncomingPendingShareQueryKey(hikeIdentifier);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>> = ({ signal }) =>
+    hikeShareRecipientGetIncomingPendingShare(hikeIdentifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type HikeShareRecipientGetIncomingPendingShareSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>
+>;
+export type HikeShareRecipientGetIncomingPendingShareSuspenseQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>> = ({ signal }) => hikeShareRecipientGetIncomingPendingShare(hikeIdentifier, { signal, ...requestOptions });
+export function useHikeShareRecipientGetIncomingPendingShareSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetIncomingPendingShareSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetIncomingPendingShareSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useHikeShareRecipientGetIncomingPendingShareSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>,
+  TError = unknown,
+>(
+  hikeIdentifier: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikeShareRecipientGetIncomingPendingShareSuspenseQueryOptions(hikeIdentifier, options);
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikeShareRecipientGetIncomingPendingShareSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>>
-export type HikeShareRecipientGetIncomingPendingShareSuspenseQueryError = unknown
-
-
-export function useHikeShareRecipientGetIncomingPendingShareSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetIncomingPendingShareSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetIncomingPendingShareSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useHikeShareRecipientGetIncomingPendingShareSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError = unknown>(
- hikeIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetIncomingPendingShare>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getHikeShareRecipientGetIncomingPendingShareSuspenseQueryOptions(hikeIdentifier,options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
-
-
-
-
-
 
 export const getHikeShareRecipientGetPendingSharesUrl = () => {
+  return `/api/v1/HikeShareRecipient/incoming`;
+};
 
-
-
-
-  return `/api/v1/HikeShareRecipient/incoming`
-}
-
-export const hikeShareRecipientGetPendingShares = async ( options?: RequestInit): Promise<HikeShareRecipientResponse[]> => {
-
-  return customFetch<HikeShareRecipientResponse[]>(getHikeShareRecipientGetPendingSharesUrl(),
-  {
+export const hikeShareRecipientGetPendingShares = async (
+  options?: RequestInit,
+): Promise<HikeShareRecipientResponse[]> => {
+  return customFetch<HikeShareRecipientResponse[]>(getHikeShareRecipientGetPendingSharesUrl(), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
+    method: "GET",
+  });
+};
 
 export const getHikeShareRecipientGetPendingSharesQueryKey = () => {
-    return [
-    `/api/v1/HikeShareRecipient/incoming`
-    ] as const;
-    }
+  return [`/api/v1/HikeShareRecipient/incoming`] as const;
+};
 
+export const getHikeShareRecipientGetPendingSharesQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-export const getHikeShareRecipientGetPendingSharesQueryOptions = <TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+  const queryKey = queryOptions?.queryKey ?? getHikeShareRecipientGetPendingSharesQueryKey();
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>> = ({ signal }) =>
+    hikeShareRecipientGetPendingShares({ signal, ...requestOptions });
 
-  const queryKey =  queryOptions?.queryKey ?? getHikeShareRecipientGetPendingSharesQueryKey();
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type HikeShareRecipientGetPendingSharesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>
+>;
+export type HikeShareRecipientGetPendingSharesQueryError = unknown;
 
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>> = ({ signal }) => hikeShareRecipientGetPendingShares({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikeShareRecipientGetPendingSharesQueryResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>>
-export type HikeShareRecipientGetPendingSharesQueryError = unknown
-
-
-export function useHikeShareRecipientGetPendingShares<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>> & Pick<
+export function useHikeShareRecipientGetPendingShares<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
           TError,
           Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetPendingShares<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>> & Pick<
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetPendingShares<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
           TError,
           Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetPendingShares<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetPendingShares<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useHikeShareRecipientGetPendingShares<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useHikeShareRecipientGetPendingShares<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikeShareRecipientGetPendingSharesQueryOptions(options);
 
-  const queryOptions = getHikeShareRecipientGetPendingSharesQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getHikeShareRecipientGetPendingSharesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getHikeShareRecipientGetPendingSharesQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>> = ({ signal }) => hikeShareRecipientGetPendingShares({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type HikeShareRecipientGetPendingSharesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>>
-export type HikeShareRecipientGetPendingSharesSuspenseQueryError = unknown
-
-
-export function useHikeShareRecipientGetPendingSharesSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetPendingSharesSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useHikeShareRecipientGetPendingSharesSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useHikeShareRecipientGetPendingSharesSuspense<TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError = unknown>(
-  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getHikeShareRecipientGetPendingSharesSuspenseQueryOptions(options)
-
-  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getHikeShareRecipientGetPendingSharesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getHikeShareRecipientGetPendingSharesQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>> = ({ signal }) =>
+    hikeShareRecipientGetPendingShares({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type HikeShareRecipientGetPendingSharesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>
+>;
+export type HikeShareRecipientGetPendingSharesSuspenseQueryError = unknown;
 
-export const getHikeShareRecipientAcceptSharedHikeUrl = (hikeIdentifier: string,) => {
+export function useHikeShareRecipientGetPendingSharesSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetPendingSharesSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHikeShareRecipientGetPendingSharesSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useHikeShareRecipientGetPendingSharesSuspense<
+  TData = Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof hikeShareRecipientGetPendingShares>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHikeShareRecipientGetPendingSharesSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-  return `/api/v1/HikeShareRecipient/accept/${hikeIdentifier}`
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const hikeShareRecipientAcceptSharedHike = async (hikeIdentifier: string, options?: RequestInit): Promise<Blob> => {
+export const getHikeShareRecipientAcceptSharedHikeUrl = (hikeIdentifier: string) => {
+  return `/api/v1/HikeShareRecipient/accept/${hikeIdentifier}`;
+};
 
-  return customFetch<Blob>(getHikeShareRecipientAcceptSharedHikeUrl(hikeIdentifier),
-  {
+export const hikeShareRecipientAcceptSharedHike = async (
+  hikeIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getHikeShareRecipientAcceptSharedHikeUrl(hikeIdentifier), {
     ...options,
-    method: 'PUT'
+    method: "PUT",
+  });
+};
 
+export const getHikeShareRecipientAcceptSharedHikeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>,
+    TError,
+    { hikeIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>,
+  TError,
+  { hikeIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["hikeShareRecipientAcceptSharedHike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>,
+    { hikeIdentifier: string }
+  > = (props) => {
+    const { hikeIdentifier } = props ?? {};
 
+    return hikeShareRecipientAcceptSharedHike(hikeIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type HikeShareRecipientAcceptSharedHikeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>
+>;
 
+export type HikeShareRecipientAcceptSharedHikeMutationError = unknown;
 
-export const getHikeShareRecipientAcceptSharedHikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>, TError,{hikeIdentifier: string}, TContext> => {
+export const useHikeShareRecipientAcceptSharedHike = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>,
+      TError,
+      { hikeIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>,
+  TError,
+  { hikeIdentifier: string },
+  TContext
+> => {
+  return useMutation(getHikeShareRecipientAcceptSharedHikeMutationOptions(options), queryClient);
+};
+export const getHikeShareRecipientReshareSharedHikeUrl = () => {
+  return `/api/v1/HikeShareRecipient/re-share`;
+};
 
-const mutationKey = ['hikeShareRecipientAcceptSharedHike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>, {hikeIdentifier: string}> = (props) => {
-          const {hikeIdentifier} = props ?? {};
-
-          return  hikeShareRecipientAcceptSharedHike(hikeIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikeShareRecipientAcceptSharedHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>>
-
-    export type HikeShareRecipientAcceptSharedHikeMutationError = unknown
-
-    export const useHikeShareRecipientAcceptSharedHike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikeShareRecipientAcceptSharedHike>>,
-        TError,
-        {hikeIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getHikeShareRecipientAcceptSharedHikeMutationOptions(options), queryClient);
-    }
-    export const getHikeShareRecipientReshareSharedHikeUrl = () => {
-
-
-
-
-  return `/api/v1/HikeShareRecipient/re-share`
-}
-
-export const hikeShareRecipientReshareSharedHike = async (reshareSharedHikeRequest: ReshareSharedHikeRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getHikeShareRecipientReshareSharedHikeUrl(),
-  {
+export const hikeShareRecipientReshareSharedHike = async (
+  reshareSharedHikeRequest: ReshareSharedHikeRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getHikeShareRecipientReshareSharedHikeUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(reshareSharedHikeRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reshareSharedHikeRequest),
+  });
+};
 
+export const getHikeShareRecipientReshareSharedHikeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>,
+    TError,
+    { data: ReshareSharedHikeRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>,
+  TError,
+  { data: ReshareSharedHikeRequest },
+  TContext
+> => {
+  const mutationKey = ["hikeShareRecipientReshareSharedHike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>,
+    { data: ReshareSharedHikeRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return hikeShareRecipientReshareSharedHike(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getHikeShareRecipientReshareSharedHikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>, TError,{data: ReshareSharedHikeRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>, TError,{data: ReshareSharedHikeRequest}, TContext> => {
+export type HikeShareRecipientReshareSharedHikeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>
+>;
+export type HikeShareRecipientReshareSharedHikeMutationBody = ReshareSharedHikeRequest;
+export type HikeShareRecipientReshareSharedHikeMutationError = unknown;
 
-const mutationKey = ['hikeShareRecipientReshareSharedHike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export const useHikeShareRecipientReshareSharedHike = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>,
+      TError,
+      { data: ReshareSharedHikeRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>,
+  TError,
+  { data: ReshareSharedHikeRequest },
+  TContext
+> => {
+  return useMutation(getHikeShareRecipientReshareSharedHikeMutationOptions(options), queryClient);
+};
+export const getHikeShareRecipientRejectSharedHikeUrl = (hikeIdentifier: string) => {
+  return `/api/v1/HikeShareRecipient/reject/${hikeIdentifier}`;
+};
 
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>, {data: ReshareSharedHikeRequest}> = (props) => {
-          const {data} = props ?? {};
-
-          return  hikeShareRecipientReshareSharedHike(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikeShareRecipientReshareSharedHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>>
-    export type HikeShareRecipientReshareSharedHikeMutationBody = ReshareSharedHikeRequest
-    export type HikeShareRecipientReshareSharedHikeMutationError = unknown
-
-    export const useHikeShareRecipientReshareSharedHike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>, TError,{data: ReshareSharedHikeRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikeShareRecipientReshareSharedHike>>,
-        TError,
-        {data: ReshareSharedHikeRequest},
-        TContext
-      > => {
-      return useMutation(getHikeShareRecipientReshareSharedHikeMutationOptions(options), queryClient);
-    }
-    export const getHikeShareRecipientRejectSharedHikeUrl = (hikeIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/HikeShareRecipient/reject/${hikeIdentifier}`
-}
-
-export const hikeShareRecipientRejectSharedHike = async (hikeIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getHikeShareRecipientRejectSharedHikeUrl(hikeIdentifier),
-  {
+export const hikeShareRecipientRejectSharedHike = async (
+  hikeIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getHikeShareRecipientRejectSharedHikeUrl(hikeIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getHikeShareRecipientRejectSharedHikeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>,
+    TError,
+    { hikeIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>,
+  TError,
+  { hikeIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["hikeShareRecipientRejectSharedHike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>,
+    { hikeIdentifier: string }
+  > = (props) => {
+    const { hikeIdentifier } = props ?? {};
 
+    return hikeShareRecipientRejectSharedHike(hikeIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type HikeShareRecipientRejectSharedHikeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>
+>;
 
+export type HikeShareRecipientRejectSharedHikeMutationError = unknown;
 
-export const getHikeShareRecipientRejectSharedHikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>, TError,{hikeIdentifier: string}, TContext> => {
+export const useHikeShareRecipientRejectSharedHike = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>,
+      TError,
+      { hikeIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>,
+  TError,
+  { hikeIdentifier: string },
+  TContext
+> => {
+  return useMutation(getHikeShareRecipientRejectSharedHikeMutationOptions(options), queryClient);
+};
+export const getHikeShareRecipientRemoveSharedHikeUrl = (hikeIdentifier: string) => {
+  return `/api/v1/HikeShareRecipient/${hikeIdentifier}`;
+};
 
-const mutationKey = ['hikeShareRecipientRejectSharedHike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>, {hikeIdentifier: string}> = (props) => {
-          const {hikeIdentifier} = props ?? {};
-
-          return  hikeShareRecipientRejectSharedHike(hikeIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikeShareRecipientRejectSharedHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>>
-
-    export type HikeShareRecipientRejectSharedHikeMutationError = unknown
-
-    export const useHikeShareRecipientRejectSharedHike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikeShareRecipientRejectSharedHike>>,
-        TError,
-        {hikeIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getHikeShareRecipientRejectSharedHikeMutationOptions(options), queryClient);
-    }
-    export const getHikeShareRecipientRemoveSharedHikeUrl = (hikeIdentifier: string,) => {
-
-
-
-
-  return `/api/v1/HikeShareRecipient/${hikeIdentifier}`
-}
-
-export const hikeShareRecipientRemoveSharedHike = async (hikeIdentifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getHikeShareRecipientRemoveSharedHikeUrl(hikeIdentifier),
-  {
+export const hikeShareRecipientRemoveSharedHike = async (
+  hikeIdentifier: string,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getHikeShareRecipientRemoveSharedHikeUrl(hikeIdentifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getHikeShareRecipientRemoveSharedHikeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>,
+    TError,
+    { hikeIdentifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>,
+  TError,
+  { hikeIdentifier: string },
+  TContext
+> => {
+  const mutationKey = ["hikeShareRecipientRemoveSharedHike"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>,
+    { hikeIdentifier: string }
+  > = (props) => {
+    const { hikeIdentifier } = props ?? {};
 
+    return hikeShareRecipientRemoveSharedHike(hikeIdentifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type HikeShareRecipientRemoveSharedHikeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>
+>;
 
+export type HikeShareRecipientRemoveSharedHikeMutationError = unknown;
 
-export const getHikeShareRecipientRemoveSharedHikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>, TError,{hikeIdentifier: string}, TContext> => {
-
-const mutationKey = ['hikeShareRecipientRemoveSharedHike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>, {hikeIdentifier: string}> = (props) => {
-          const {hikeIdentifier} = props ?? {};
-
-          return  hikeShareRecipientRemoveSharedHike(hikeIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type HikeShareRecipientRemoveSharedHikeMutationResult = NonNullable<Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>>
-
-    export type HikeShareRecipientRemoveSharedHikeMutationError = unknown
-
-    export const useHikeShareRecipientRemoveSharedHike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>, TError,{hikeIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>,
-        TError,
-        {hikeIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getHikeShareRecipientRemoveSharedHikeMutationOptions(options), queryClient);
-    }
+export const useHikeShareRecipientRemoveSharedHike = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>,
+      TError,
+      { hikeIdentifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof hikeShareRecipientRemoveSharedHike>>,
+  TError,
+  { hikeIdentifier: string },
+  TContext
+> => {
+  return useMutation(getHikeShareRecipientRemoveSharedHikeMutationOptions(options), queryClient);
+};

@@ -7,62 +7,62 @@
  */
 
 export type AdminMediaGetAllParams = {
-Page?: number;
-PageSize?: number;
-/**
- * @nullable
- */
-Sort?: string | null;
-/**
- * @nullable
- */
-OwnerType?: string | null;
-/**
- * @nullable
- */
-OwnerIdentifier?: string | null;
-/**
- * @nullable
- */
-Format?: string | null;
-/**
- * @nullable
- */
-MinWidth?: number | null;
-/**
- * @nullable
- */
-MaxWidth?: number | null;
-/**
- * @nullable
- */
-MinHeight?: number | null;
-/**
- * @nullable
- */
-MaxHeight?: number | null;
-/**
- * @nullable
- */
-MinSizeBytes?: number | null;
-/**
- * @nullable
- */
-MaxSizeBytes?: number | null;
-/**
- * @nullable
- */
-CreatedFrom?: string | null;
-/**
- * @nullable
- */
-CreatedTo?: string | null;
-/**
- * @nullable
- */
-TargetMaxWidth?: number | null;
-/**
- * @nullable
- */
-TargetFormat?: string | null;
+  Page?: number;
+  PageSize?: number;
+  /**
+   * @nullable
+   */
+  Sort?: string | null;
+  /**
+   * @nullable
+   */
+  OwnerType?: string | null;
+  /**
+   * @nullable
+   */
+  OwnerIdentifier?: string | null;
+  /**
+   * @nullable
+   */
+  Format?: string | null;
+  /**
+   * @nullable
+   */
+  MinWidth?: number | null;
+  /**
+   * @nullable
+   */
+  MaxWidth?: number | null;
+  /**
+   * @nullable
+   */
+  MinHeight?: number | null;
+  /**
+   * @nullable
+   */
+  MaxHeight?: number | null;
+  /**
+   * @nullable
+   */
+  MinSizeBytes?: number | null;
+  /**
+   * @nullable
+   */
+  MaxSizeBytes?: number | null;
+  /**
+   * @nullable
+   */
+  CreatedFrom?: string | null;
+  /**
+   * @nullable
+   */
+  CreatedTo?: string | null;
+  /**
+   * @nullable
+   */
+  TargetMaxWidth?: number | null;
+  /**
+   * @nullable
+   */
+  TargetFormat?: string | null;
 };

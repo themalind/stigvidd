@@ -7,5 +7,5 @@
  */
 
 export type AdminExportParams = {
-anonymize?: boolean;
+  anonymize?: boolean;
 };
