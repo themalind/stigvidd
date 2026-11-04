@@ -7,15 +7,15 @@
  */
 
 export interface TrailImportCountsResponse {
-  total?: number;
-  certain?: number;
-  high?: number;
-  medium?: number;
-  unmatched?: number;
-  pending?: number;
-  accepted?: number;
-  relinked?: number;
-  createNew?: number;
-  excluded?: number;
-  skipped?: number;
+  total: number;
+  certain: number;
+  high: number;
+  medium: number;
+  unmatched: number;
+  pending: number;
+  accepted: number;
+  relinked: number;
+  createNew: number;
+  excluded: number;
+  skipped: number;
 }

@@ -10,38 +10,38 @@ public class TrailImportPreviewResponse
     public required int ProposalId { get; set; }
     public required string FeatureName { get; set; }
     public required string Confidence { get; set; }
-    public string? MatchReason { get; set; }
-    public double CoverageForward { get; set; }
-    public double CoverageBackward { get; set; }
-    public double? HausdorffMeters { get; set; }
+    public required string? MatchReason { get; set; }
+    public required double CoverageForward { get; set; }
+    public required double CoverageBackward { get; set; }
+    public required double? HausdorffMeters { get; set; }
 
     // [longitude, latitude] pairs, the order GeoJSON uses.
     public required IReadOnlyList<double[]> FeatureCoordinates { get; set; }
-    public decimal FeatureLengthKm { get; set; }
+    public required decimal FeatureLengthKm { get; set; }
 
     // What the source writes in sparlangd, when it states a unit at all.
-    public decimal? SourceStatedLengthKm { get; set; }
-    public bool SourceLengthDisagrees { get; set; }
+    public required decimal? SourceStatedLengthKm { get; set; }
+    public required bool SourceLengthDisagrees { get; set; }
 
-    public IReadOnlyList<double[]>? TrailCoordinates { get; set; }
-    public int? TrailId { get; set; }
-    public string? TrailIdentifier { get; set; }
-    public string? TrailName { get; set; }
-    public decimal? TrailCuratedLengthKm { get; set; }
-    public decimal? TrailMeasuredLengthKm { get; set; }
-    public bool? TrailIsVerified { get; set; }
+    public required IReadOnlyList<double[]>? TrailCoordinates { get; set; }
+    public required int? TrailId { get; set; }
+    public required string? TrailIdentifier { get; set; }
+    public required string? TrailName { get; set; }
+    public required decimal? TrailCuratedLengthKm { get; set; }
+    public required decimal? TrailMeasuredLengthKm { get; set; }
+    public required bool? TrailIsVerified { get; set; }
 
     // True when the trail above is only the nearest one, not a match the reviewer may
     // accept. The view has to say so, or the drawing reads as a suggestion.
-    public bool TrailIsNearestOnly { get; set; }
+    public required bool TrailIsNearestOnly { get; set; }
 
     // The feature's own properties as they stood in the file, so the reviewer can see
     // what the sync read without opening the export.
-    public string? FeatureProperties { get; set; }
+    public required string? FeatureProperties { get; set; }
 
     // Other features in this session aiming at the same trail. Empty for all but a handful:
     // the source repeats a trail now and then, and only one copy may carry its geometry.
-    public IReadOnlyList<TrailImportSiblingResponse> SharingTheTrail { get; set; } = [];
+    public required IReadOnlyList<TrailImportSiblingResponse> SharingTheTrail { get; set; }
 
     public static TrailImportPreviewResponse Create(
         int proposalId,
@@ -70,7 +70,16 @@ public class TrailImportPreviewResponse
             FeatureLengthKm = featureLengthKm,
             SourceStatedLengthKm = sourceStatedLengthKm,
             SourceLengthDisagrees = sourceLengthDisagrees,
-            FeatureProperties = featureProperties
+            FeatureProperties = featureProperties,
+            TrailCoordinates = null,
+            TrailId = null,
+            TrailIdentifier = null,
+            TrailName = null,
+            TrailCuratedLengthKm = null,
+            TrailMeasuredLengthKm = null,
+            TrailIsVerified = null,
+            TrailIsNearestOnly = false,
+            SharingTheTrail = []
         };
     }
 }

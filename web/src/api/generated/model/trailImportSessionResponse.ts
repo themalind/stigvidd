@@ -14,20 +14,20 @@ export interface TrailImportSessionResponse {
   source: string;
   fileName: string;
   fileHash: string;
-  fileSizeBytes?: number;
+  fileSizeBytes: number;
   status: string;
   /** @nullable */
-  uploadedBy?: string | null;
-  createdAt?: string;
+  uploadedBy: string | null;
+  createdAt: string;
   /** @nullable */
-  analyzedAt?: string | null;
+  analyzedAt: string | null;
   /** @nullable */
-  appliedAt?: string | null;
-  featureCount?: number;
+  appliedAt: string | null;
+  featureCount: number;
   /** @nullable */
-  errorMessage?: string | null;
-  counts?: TrailImportCountsResponse | null;
-  applied?: TrailImportApplyResponse | null;
+  errorMessage: string | null;
+  counts: TrailImportCountsResponse | null;
+  applied: TrailImportApplyResponse | null;
   /** @nullable */
   duplicateOf?: string[] | null;
 }

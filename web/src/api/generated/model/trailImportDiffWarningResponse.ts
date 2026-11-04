@@ -11,7 +11,7 @@ export interface TrailImportDiffWarningResponse {
   featureName: string;
   decision: string;
   confidence: string;
-  coverageForward?: number;
+  coverageForward: number;
   /** @nullable */
-  trailName?: string | null;
+  trailName: string | null;
 }

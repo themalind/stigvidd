@@ -12,32 +12,32 @@ export interface TrailImportPreviewResponse {
   featureName: string;
   confidence: string;
   /** @nullable */
-  matchReason?: string | null;
-  coverageForward?: number;
-  coverageBackward?: number;
+  matchReason: string | null;
+  coverageForward: number;
+  coverageBackward: number;
   /** @nullable */
-  hausdorffMeters?: number | null;
+  hausdorffMeters: number | null;
   featureCoordinates: number[][];
-  featureLengthKm?: number;
+  featureLengthKm: number;
   /** @nullable */
-  sourceStatedLengthKm?: number | null;
-  sourceLengthDisagrees?: boolean;
+  sourceStatedLengthKm: number | null;
+  sourceLengthDisagrees: boolean;
   /** @nullable */
-  trailCoordinates?: number[][] | null;
+  trailCoordinates: number[][] | null;
   /** @nullable */
-  trailId?: number | null;
+  trailId: number | null;
   /** @nullable */
-  trailIdentifier?: string | null;
+  trailIdentifier: string | null;
   /** @nullable */
-  trailName?: string | null;
+  trailName: string | null;
   /** @nullable */
-  trailCuratedLengthKm?: number | null;
+  trailCuratedLengthKm: number | null;
   /** @nullable */
-  trailMeasuredLengthKm?: number | null;
+  trailMeasuredLengthKm: number | null;
   /** @nullable */
-  trailIsVerified?: boolean | null;
-  trailIsNearestOnly?: boolean;
+  trailIsVerified: boolean | null;
+  trailIsNearestOnly: boolean;
   /** @nullable */
-  featureProperties?: string | null;
-  sharingTheTrail?: TrailImportSiblingResponse[];
+  featureProperties: string | null;
+  sharingTheTrail: TrailImportSiblingResponse[];
 }

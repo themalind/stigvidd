@@ -9,17 +9,17 @@ public class TrailImportApplyResponse
 {
     public required int SessionId { get; set; }
     public required string Status { get; set; }
-    public DateTime? AppliedAt { get; set; }
+    public required DateTime? AppliedAt { get; set; }
 
-    public int TrailsCreated { get; set; }
-    public int TrailsUpdated { get; set; }
-    public int LinksWritten { get; set; }
-    public int FeaturesExcluded { get; set; }
+    public required int TrailsCreated { get; set; }
+    public required int TrailsUpdated { get; set; }
+    public required int LinksWritten { get; set; }
+    public required int FeaturesExcluded { get; set; }
 
     // Existing trails the decisions linked to. TrailsUpdated counts the subset that also
     // changed, which on a first sync is none of them. Null on a session applied before
     // this figure was recorded.
-    public int? TrailsLinked { get; set; }
+    public required int? TrailsLinked { get; set; }
 
     // Source-owned fields where both sides had changed. Ours stands; these are for a human
     // to look at.
