@@ -4,6 +4,8 @@
 import { getValidAccessToken } from "@/lib/keycloak-auth";
 import { logger } from "@/lib/telemetry";
 
+export type ApiRequest = { method: string; endpoint: string };
+
 /**
  * Single request choke point for the orval-generated API client (see
  * `orval.config.ts`). Reproduces the two conventions the hand-written `fetch`
@@ -56,8 +58,6 @@ export class ApiError extends Error {
     this.code = code;
   }
 }
-
-export type ApiRequest = { method: string; endpoint: string };
 
 export function describeRequest(path: string, method: string | undefined): ApiRequest {
   const query = path.search(/[?#]/);

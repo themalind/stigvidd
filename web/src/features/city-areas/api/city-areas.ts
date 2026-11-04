@@ -16,13 +16,13 @@ import type {
   AdminCityAreaTrailResponse,
 } from "@/api/generated/model";
 
-export const cityAreasQueryOptions = () => getAdminCityAreasGetAllSuspenseQueryOptions();
-
 interface LinkChange<TItem> {
   area: string;
   item: TItem;
   linked: boolean;
 }
+
+export const cityAreasQueryOptions = () => getAdminCityAreasGetAllSuspenseQueryOptions();
 
 function toggle<T extends { identifier: string }>(items: T[], item: T, linked: boolean): T[] {
   const rest = items.filter((existing) => existing.identifier !== item.identifier);

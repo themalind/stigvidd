@@ -12,14 +12,6 @@ import { adminUsersBanUser, adminUsersUnbanUser } from "@/api/generated/admin-us
 import { underUrl } from "@/lib/react-query";
 import { displayName } from "@/utils/format";
 
-export const PAGE_SIZE = 25;
-
-export const reportersQueryOptions = (page: number) =>
-  getAdminContentReportsGetReportersSuspenseQueryOptions({ page, pageSize: PAGE_SIZE });
-
-export const authorsQueryOptions = (page: number) =>
-  getAdminContentReportsGetAuthorsSuspenseQueryOptions({ page, pageSize: PAGE_SIZE });
-
 export interface UserTarget {
   identifier: string;
   nickName?: string | null;
@@ -29,6 +21,14 @@ interface BanVariables {
   target: UserTarget;
   reason?: string;
 }
+
+export const PAGE_SIZE = 25;
+
+export const reportersQueryOptions = (page: number) =>
+  getAdminContentReportsGetReportersSuspenseQueryOptions({ page, pageSize: PAGE_SIZE });
+
+export const authorsQueryOptions = (page: number) =>
+  getAdminContentReportsGetAuthorsSuspenseQueryOptions({ page, pageSize: PAGE_SIZE });
 
 // keep-comment: reports about the author show the ban too; the page that shows them invalidates those itself
 function useInvalidateAuthors() {

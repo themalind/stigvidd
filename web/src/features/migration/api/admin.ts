@@ -8,14 +8,14 @@ import { describeRequest, logRefused, logUnanswered } from "@/api/mutator";
 // export (binary zip) and import (raw file upload) use raw fetch here. Auth
 // follows the same Keycloak-bearer convention as the mutator.
 
+export type ImportOutcome = { message: string; notes: string[] };
+
 const apiBase = () => import.meta.env.VITE_API_URL as string;
 
 async function authHeaders(): Promise<Record<string, string>> {
   const token = await getValidAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
-
-export type ImportOutcome = { message: string; notes: string[] };
 
 /** Downloads a migration archive and saves it to the user's disk. */
 export async function exportData({ anonymize = false }: { anonymize?: boolean } = {}): Promise<void> {

@@ -14,8 +14,6 @@ import {
 } from "@/api/generated/admin-content-reports/admin-content-reports";
 import { underUrl } from "@/lib/react-query";
 
-export const REPORTS_PAGE_SIZE = 25;
-
 export interface QueueFilters {
   status?: string;
   contentType?: string;
@@ -24,6 +22,8 @@ export interface QueueFilters {
 }
 
 export type Decision = "Dismiss" | "Uphold";
+
+export const REPORTS_PAGE_SIZE = 25;
 
 export const reportsQueryOptions = ({ page, ...filters }: QueueFilters) =>
   getAdminContentReportsGetReportsSuspenseQueryOptions({ ...filters, page, pageSize: REPORTS_PAGE_SIZE });
