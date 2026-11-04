@@ -1,11 +1,10 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import type { Map as MapLibreMap } from "maplibre-gl";
+import { useEffect } from "react";
 import type { Jump, LngLat } from "@/utils/geometry-edit";
-import { mapStyle } from "@/lib/map-style";
+import { upsertSource, useMapLibre } from "@/hooks/use-maplibre";
 
 type Props = {
   path: LngLat[];
@@ -46,11 +45,7 @@ function sources(path: LngLat[], gaps: Jump[]): Record<string, GeoJSON.FeatureCo
 }
 
 function draw(map: MapLibreMap, path: LngLat[], gaps: Jump[]) {
-  for (const [id, data] of Object.entries(sources(path, gaps))) {
-    const source = map.getSource(id) as GeoJSONSource | undefined;
-    if (source) source.setData(data);
-    else map.addSource(id, { type: "geojson", data });
-  }
+  for (const [id, data] of Object.entries(sources(path, gaps))) upsertSource(map, id, data);
 
   if (map.getLayer("line-casing")) return;
 
@@ -99,49 +94,16 @@ function draw(map: MapLibreMap, path: LngLat[], gaps: Jump[]) {
   });
 }
 
-export function TrailPathMap(props: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  const propsRef = useRef(props);
-
-  useLayoutEffect(() => {
-    propsRef.current = props;
+export function TrailPathMap({ path, gaps, satellite }: Props) {
+  const { containerRef, redraw } = useMapLibre({
+    satellite,
+    zoom: 13,
+    draw: (map) => draw(map, path, gaps),
+    fitPoints: () => path,
+    fitPadding: 50,
   });
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const { path, satellite } = propsRef.current;
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: mapStyle(satellite),
-      center: path[0] ?? [12.94, 57.72],
-      zoom: 13,
-    });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
-    mapRef.current = map;
-
-    let fitted = false;
-    map.on("style.load", () => {
-      const { path, gaps } = propsRef.current;
-      draw(map, path, gaps);
-      if (!fitted && path.length > 1) {
-        const bounds = new maplibregl.LngLatBounds(path[0], path[0]);
-        path.forEach((p) => bounds.extend(p));
-        map.fitBounds(bounds, { padding: 50, duration: 0 });
-        fitted = true;
-      }
-    });
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    mapRef.current?.setStyle(mapStyle(props.satellite));
-  }, [props.satellite]);
+  useEffect(() => redraw(), [redraw, path, gaps]);
 
   return (
     <div className="relative h-[520px] w-full overflow-hidden rounded-[5px] border">

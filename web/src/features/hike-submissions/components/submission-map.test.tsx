@@ -3,67 +3,11 @@
 
 import { render } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
+import { maps } from "@/testing/fake-maplibre";
 import type { LngLat } from "@/utils/geometry-edit";
 import { handlesOf, SubmissionMap } from "./submission-map";
 
-const { maps, FakeMap } = vi.hoisted(() => {
-  const maps: InstanceType<typeof FakeMap>[] = [];
-
-  class FakeMap {
-    handlers: Record<string, (() => void)[]> = {};
-    sources: Record<string, unknown> = {};
-    layers: string[] = [];
-    styles: { diff?: boolean }[] = [];
-    constructor() {
-      maps.push(this);
-    }
-    on(event: string, layerOrHandler: unknown, handler?: () => void) {
-      const fn = (handler ?? layerOrHandler) as () => void;
-      (this.handlers[event] ??= []).push(fn);
-    }
-    emit(event: string) {
-      this.handlers[event]?.forEach((fn) => fn());
-    }
-    isStyleLoaded() {
-      return false;
-    }
-    setStyle(_style: unknown, options?: { diff?: boolean }) {
-      this.styles.push(options ?? {});
-    }
-    getSource(id: string) {
-      return id in this.sources ? { setData: (data: unknown) => (this.sources[id] = data) } : undefined;
-    }
-    addSource(id: string, spec: { data: unknown }) {
-      this.sources[id] = spec.data;
-    }
-    getLayer(id: string) {
-      return this.layers.includes(id) ? {} : undefined;
-    }
-    addLayer(layer: { id: string }) {
-      this.layers.push(layer.id);
-    }
-    addControl() {}
-    fitBounds() {}
-    getCanvas() {
-      return { style: {} };
-    }
-    remove() {}
-  }
-
-  return { maps, FakeMap };
-});
-
-vi.mock("maplibre-gl", () => {
-  class LngLatBounds {
-    extend() {
-      return this;
-    }
-  }
-  class Control {}
-  return {
-    default: { Map: FakeMap, LngLatBounds, NavigationControl: Control, ScaleControl: Control },
-  };
-});
+vi.mock("maplibre-gl", () => import("@/testing/fake-maplibre"));
 
 const PATH: LngLat[] = [
   [12.9, 57.7],
@@ -143,9 +87,7 @@ it("redraws after the satellite toggle replaces the style", () => {
       onMapClick={vi.fn()}
     />,
   );
-  map.layers = [];
-  map.sources = {};
-  map.emit("style.load");
+  map.loadStyle();
 
   expect(map.styles.at(-1)).toEqual({ diff: false });
   expect(map.layers).toContain("kept-line");
