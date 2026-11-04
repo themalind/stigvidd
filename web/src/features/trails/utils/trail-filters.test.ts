@@ -145,13 +145,40 @@ describe("trailCities", () => {
 });
 
 describe("filtersFromSearch", () => {
-  it("presets the status, missing and sort filters from the URL", () => {
-    const filters = filtersFromSearch(new URLSearchParams("status=Inactive&missing=ExampleImages&sort=Newest"));
+  const emptySearch = {
+    city: "All",
+    status: "All",
+    classification: "All",
+    accessibility: "All",
+    missing: "All",
+    updatedWithinDays: "All",
+    sort: "Name",
+  };
 
-    expect(filters).toEqual({ ...emptyTrailFilters, status: "Inactive", missing: "ExampleImages", sort: "Newest" });
+  it("reads the chosen filters from the address", () => {
+    const filters = filtersFromSearch({
+      status: "Inactive",
+      missing: "ExampleImages",
+      sort: "Newest",
+      city: "Borås",
+      accessibility: "Accessible",
+      updatedWithinDays: "7",
+    });
+
+    expect(filters).toEqual({
+      ...emptySearch,
+      status: "Inactive",
+      missing: "ExampleImages",
+      sort: "Newest",
+      city: "Borås",
+      accessibility: "Accessible",
+      updatedWithinDays: "7",
+    });
   });
 
   it("ignores values it does not know", () => {
-    expect(filtersFromSearch(new URLSearchParams("status=Deleted&missing=x"))).toEqual(emptyTrailFilters);
+    expect(
+      filtersFromSearch({ status: "Deleted", missing: "x", accessibility: "x", updatedWithinDays: "3", sort: "x" }),
+    ).toEqual(emptySearch);
   });
 });

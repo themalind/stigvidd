@@ -114,12 +114,35 @@ export const TRAIL_STATUSES = [
   { value: "Inactive", label: "Inactive" },
 ] as const;
 
-export function filtersFromSearch(params: URLSearchParams): TrailFilterState {
+export const TRAIL_ACCESSIBILITY = [
+  { value: "All", label: "Any accessibility" },
+  { value: "Accessible", label: "Accessible" },
+  { value: "NotAccessible", label: "Not accessible" },
+] as const;
+
+export type TrailTextFilters = Pick<TrailFilterState, "query" | "minKm" | "maxKm">;
+export type TrailSearchFilters = Omit<TrailFilterState, keyof TrailTextFilters>;
+
+// keep-comment: the choices live in the address; free text stays out of it, so typing adds no history entries
+export const trailSearchDefaults: Record<keyof TrailSearchFilters, string> = {
+  city: emptyTrailFilters.city,
+  status: emptyTrailFilters.status,
+  classification: emptyTrailFilters.classification,
+  accessibility: emptyTrailFilters.accessibility,
+  missing: emptyTrailFilters.missing,
+  updatedWithinDays: emptyTrailFilters.updatedWithinDays,
+  sort: emptyTrailFilters.sort,
+};
+
+export function filtersFromSearch(values: Partial<Record<keyof TrailSearchFilters, string>>): TrailSearchFilters {
   return {
-    ...emptyTrailFilters,
-    status: oneOf(params.get("status"), TRAIL_STATUSES) ?? emptyTrailFilters.status,
-    missing: oneOf(params.get("missing"), TRAIL_MISSING) ?? emptyTrailFilters.missing,
-    sort: oneOf(params.get("sort"), TRAIL_SORTS) ?? emptyTrailFilters.sort,
+    city: values.city ?? emptyTrailFilters.city,
+    classification: values.classification ?? emptyTrailFilters.classification,
+    status: oneOf(values.status ?? null, TRAIL_STATUSES) ?? emptyTrailFilters.status,
+    accessibility: oneOf(values.accessibility ?? null, TRAIL_ACCESSIBILITY) ?? emptyTrailFilters.accessibility,
+    missing: oneOf(values.missing ?? null, TRAIL_MISSING) ?? emptyTrailFilters.missing,
+    updatedWithinDays: oneOf(values.updatedWithinDays ?? null, TRAIL_UPDATED) ?? emptyTrailFilters.updatedWithinDays,
+    sort: oneOf(values.sort ?? null, TRAIL_SORTS) ?? emptyTrailFilters.sort,
   };
 }
 
