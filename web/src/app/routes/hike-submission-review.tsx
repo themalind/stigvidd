@@ -6,6 +6,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import type { AdminHikeSubmissionResponse } from "@/api/generated/model";
+import { Page } from "@/components/page";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ export default function HikeSubmissionReviewPage() {
   const { identifier = "" } = useParams();
 
   return (
-    <main className="mx-auto w-full max-w-[1500px] space-y-5 px-4 py-8">
+    <Page width="full" className="space-y-5 py-8">
       <QueryBoundary
         fallback={
           <div className="space-y-4">
@@ -70,7 +71,7 @@ export default function HikeSubmissionReviewPage() {
       >
         <Review key={identifier} identifier={identifier} />
       </QueryBoundary>
-    </main>
+    </Page>
   );
 }
 

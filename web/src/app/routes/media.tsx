@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useQuery } from "@tanstack/react-query";
+import { Page } from "@/components/page";
 import { QueryBoundary } from "@/components/query-boundary";
 import { useSearchState } from "@/hooks/use-search-state";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,27 +35,25 @@ export default function MediaPage() {
   const onTrailImagesChanged = () => void invalidateTrails();
 
   return (
-    <main>
-      <div className="container mx-auto py-10">
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="upload">Upload</TabsTrigger>
-            <TabsTrigger value="browse">Browse</TabsTrigger>
-            <TabsTrigger value="jobs">Batch jobs</TabsTrigger>
-          </TabsList>
-          <TabsContent value="upload">
-            <UploadTab onTrailImagesChanged={onTrailImagesChanged} />
-          </TabsContent>
-          <TabsContent value="browse">
-            <MediaBrowse onTrailImagesChanged={onTrailImagesChanged} onBatchStarted={() => setTab("jobs")} />
-          </TabsContent>
-          <TabsContent value="jobs">
-            <QueryBoundary>
-              <MediaReprocessJobs />
-            </QueryBoundary>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </main>
+    <Page width="full">
+      <Tabs value={tab} onValueChange={setTab}>
+        <TabsList className="mb-6">
+          <TabsTrigger value="upload">Upload</TabsTrigger>
+          <TabsTrigger value="browse">Browse</TabsTrigger>
+          <TabsTrigger value="jobs">Batch jobs</TabsTrigger>
+        </TabsList>
+        <TabsContent value="upload">
+          <UploadTab onTrailImagesChanged={onTrailImagesChanged} />
+        </TabsContent>
+        <TabsContent value="browse">
+          <MediaBrowse onTrailImagesChanged={onTrailImagesChanged} onBatchStarted={() => setTab("jobs")} />
+        </TabsContent>
+        <TabsContent value="jobs">
+          <QueryBoundary>
+            <MediaReprocessJobs />
+          </QueryBoundary>
+        </TabsContent>
+      </Tabs>
+    </Page>
   );
 }
