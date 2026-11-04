@@ -19,36 +19,41 @@ import { logger } from "@/lib/telemetry";
  * `ToActionResult`, or a ProblemDetails object when model binding rejected the body.
  * Both are worth showing; the status code on its own tells the operator nothing.
  */
-async function errorMessage(response: Response): Promise<string> {
+async function readError(response: Response): Promise<{ message: string; code?: string }> {
   const fallback = `HTTP error ${response.status}`;
   const text = await response.text().catch(() => "");
 
-  if (!text) return fallback;
+  if (!text) return { message: fallback };
 
   try {
     const body: unknown = JSON.parse(text);
 
-    if (typeof body === "string") return body || fallback;
+    if (typeof body === "string") return { message: body || fallback };
 
     if (body && typeof body === "object") {
-      const { message, detail, title } = body as Record<string, unknown>;
+      const { message, detail, title, code } = body as Record<string, unknown>;
       const named = [message, detail, title].find((value) => typeof value === "string" && value.length > 0);
-      if (named) return named as string;
+      const coded = typeof code === "string" ? code : undefined;
+      if (named) return { message: named as string, code: coded };
+      if (coded) return { message: text.slice(0, 300), code: coded };
     }
   } catch {
     // Not JSON — the raw body is the best there is.
   }
 
-  return text.slice(0, 300) || fallback;
+  return { message: text.slice(0, 300) || fallback };
 }
 
+// keep-comment: code is set when the API answers with a coded ProblemDetails, so the UI can branch on the reason rather than its wording
 export class ApiError extends Error {
   readonly status: number;
+  readonly code?: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -95,9 +100,9 @@ export const customFetch = async <T>(url: string, options: RequestInit): Promise
   }
 
   if (!response.ok) {
-    const message = await errorMessage(response);
+    const { message, code } = await readError(response);
     logRefused(request, response.status, message);
-    throw new ApiError(message, response.status);
+    throw new ApiError(message, response.status, code);
   }
 
   // 204/205/304 carry no body; everything else is JSON from the API.
