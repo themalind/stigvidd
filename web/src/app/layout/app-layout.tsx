@@ -7,6 +7,16 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { Outlet, useLocation } from "react-router";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Page } from "@/components/page";
+import { LoadingState } from "@/components/loading-state";
+
+function PageLoading() {
+  return (
+    <Page>
+      <LoadingState rows={4} />
+    </Page>
+  );
+}
 
 export default function Layout() {
   const { pathname } = useLocation();
@@ -16,7 +26,7 @@ export default function Layout() {
       <AppSidebar />
       <SidebarInset>
         <Header />
-        <QueryBoundary resetKeys={[pathname]}>
+        <QueryBoundary resetKeys={[pathname]} fallback={<PageLoading />}>
           <Outlet />
         </QueryBoundary>
       </SidebarInset>

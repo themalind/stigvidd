@@ -17,6 +17,7 @@ import { ConfidenceSummary } from "@/features/trail-import/components/confidence
 import { ProposalQueue } from "@/features/trail-import/components/proposal-queue";
 import { trailsQueryOptions, useInvalidateTrailQueries } from "@/features/trails/api/trail";
 import { FilterRow } from "@/components/filter-row";
+import { paths } from "@/config/paths";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -136,7 +137,7 @@ export default function TrailImportReviewPage() {
     <main>
       <div className="container mx-auto space-y-4 py-6">
         <Button asChild variant="ghost" size="sm">
-          <NavLink to="/trail-import">
+          <NavLink to={paths.trailImport}>
             <ArrowLeft />
             Sessions
           </NavLink>

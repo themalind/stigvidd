@@ -10,6 +10,7 @@ import { QueryBoundary } from "@/components/query-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { paths } from "@/config/paths";
 import {
   submissionQueryOptions,
   useSaveSubmissionDetails,
@@ -34,7 +35,7 @@ import { useInvalidateTrailQueries } from "@/features/trails/api/trail";
 import TrailImagesDialog from "@/features/trails/components/trail-images-dialog";
 import { type LngLat, parseCoordinates, serializeCoordinates } from "@/utils/geometry-edit";
 
-const LIST = "/hike-submissions";
+const LIST = paths.hikeSubmissions;
 
 function BackLink() {
   return (

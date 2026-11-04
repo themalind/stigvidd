@@ -7,6 +7,7 @@ import { AlertTriangle, ChevronRight, Circle } from "lucide-react";
 import type { MailTemplateListItemResponse } from "@/api/generated/model";
 import { EmptyState } from "@/components/empty-state";
 import { Page, PageHeader } from "@/components/page";
+import { paths } from "@/config/paths";
 import { Badge } from "@/components/ui/badge";
 import { mailTemplatesQueryOptions } from "@/features/mail/api/mail-templates";
 
@@ -36,7 +37,7 @@ export default function MailTemplatesPage() {
 function TemplateRow({ template }: { template: MailTemplateListItemResponse }) {
   return (
     <Link
-      to={`/mail-templates/${template.identifier}`}
+      to={paths.mailTemplate(template.identifier)}
       className="block rounded-xs border border-input p-4 transition-colors hover:bg-accent/50"
     >
       <div className="flex items-start justify-between gap-4">

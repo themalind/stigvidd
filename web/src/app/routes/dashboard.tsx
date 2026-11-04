@@ -11,6 +11,7 @@ import { outboxCountsQueryOptions } from "@/features/mail/api/mail-outbox";
 import { reportCountsQueryOptions } from "@/features/moderation/api/content-reports";
 import { sessionsQueryOptions } from "@/features/trail-import/api/trail-import";
 import { Page } from "@/components/page";
+import { paths } from "@/config/paths";
 import { trailsQueryOptions } from "@/features/trails/api/trail";
 
 const LIVE = { refetchInterval: 60_000 };
@@ -61,25 +62,25 @@ export default function DashboardPage() {
           <AttentionCard
             label="Reports to moderate"
             value={pick(reports, (c) => c.pending)}
-            to="/moderation"
+            to={paths.moderation}
             icon={Flag}
           />
           <AttentionCard
             label="Failed mails"
             value={pick(outbox, (c) => c.failed)}
-            to="/mail-outbox?status=Failed"
+            to={paths.mailOutbox({ status: "Failed" })}
             icon={MailWarning}
           />
           <AttentionCard
             label="Imports awaiting review"
             value={pick(sessions, importsAwaitingReview)}
-            to="/trail-import"
+            to={paths.trailImport}
             icon={Upload}
           />
           <AttentionCard
             label="Trails with example images"
             value={pick(trails, (t) => t.withExampleImages)}
-            to="/trails?missing=ExampleImages"
+            to={paths.trails({ missing: "ExampleImages" })}
             icon={ImageOff}
           />
         </div>
@@ -108,7 +109,7 @@ export default function DashboardPage() {
             label="Trails"
             value={pick(trails, (t) => t.total)}
             detail={stats ? `${stats.total - stats.inactive} active in the app` : undefined}
-            to="/trails"
+            to={paths.trails()}
             icon={Mountain}
             tone="emerald"
           />
@@ -116,7 +117,7 @@ export default function DashboardPage() {
             label="Inactive trails"
             value={pick(trails, (t) => t.inactive)}
             detail="hidden in the app"
-            to="/trails?status=Inactive"
+            to={paths.trails({ status: "Inactive" })}
             icon={EyeOff}
             tone="amber"
           />
@@ -153,25 +154,25 @@ export default function DashboardPage() {
                   label="Active in the app"
                   percent={share(stats.total - stats.inactive, stats.total)}
                   tone="emerald"
-                  to="/trails?status=Inactive"
+                  to={paths.trails({ status: "Inactive" })}
                 />
                 <HealthBar
                   label="Have images"
                   percent={share(stats.total - stats.withoutImages, stats.total)}
                   tone="sky"
-                  to="/trails?missing=Images"
+                  to={paths.trails({ missing: "Images" })}
                 />
                 <HealthBar
                   label="Real photos, not examples"
                   percent={share(stats.total - stats.withExampleImages, stats.total)}
                   tone="violet"
-                  to="/trails?missing=ExampleImages"
+                  to={paths.trails({ missing: "ExampleImages" })}
                 />
                 <HealthBar
                   label="Have a short description"
                   percent={share(stats.total - stats.withoutDescription, stats.total)}
                   tone="amber"
-                  to="/trails?missing=Description"
+                  to={paths.trails({ missing: "Description" })}
                 />
               </>
             ) : (

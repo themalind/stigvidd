@@ -6,6 +6,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { Link, useSearchParams } from "react-router";
 import { Page, PageHeader } from "@/components/page";
+import { paths } from "@/config/paths";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -117,7 +118,7 @@ function SubmissionsTable({ status }: { status: SubmissionStatus }) {
               </TableCell>
               <TableCell className="text-right">
                 <Link
-                  to={`/hike-submissions/${item.identifier}`}
+                  to={paths.hikeSubmission(item.identifier)}
                   className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
                 >
                   {status === "Approved" ? "Edit" : "Review"}

@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { NavLink } from "react-router";
 import type { ApplyResult, Session } from "@/features/trail-import/api/trail-import";
 import { Button } from "@/components/ui/button";
+import { paths } from "@/config/paths";
 import { formatDateTime } from "@/utils/format";
 
 export function Figure({ value, label }: { value: number; label: string }) {
@@ -80,7 +81,7 @@ export function AppliedReceipt({ session, onShowCreated }: { session: Session; o
               </Button>
             )}
             <Button size="sm" variant="ghost" asChild>
-              <NavLink to="/trail-import">
+              <NavLink to={paths.trailImport}>
                 <ArrowLeft />
                 Back to sessions
               </NavLink>

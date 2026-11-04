@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { NavLink } from "react-router";
+import { paths } from "@/config/paths";
 
 export default function NotFoundPage() {
   return (
     <div className="flex flex-col gap-2 p-4">
       <p>404 - Nothing here...</p>
-      <NavLink to={"/"}>Home</NavLink>
+      <NavLink to={paths.login}>Home</NavLink>
     </div>
   );
 }

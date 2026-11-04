@@ -9,6 +9,7 @@ import { AlertTriangle, Eye, Loader2, Save, Wand2 } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import type { MailTemplateResponse } from "@/api/generated/model";
 import { Page } from "@/components/page";
+import { paths } from "@/config/paths";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +58,7 @@ function TemplateUnavailable() {
         </CardHeader>
         <CardContent>
           <Button asChild variant="outline">
-            <RouterLink to="/mail-templates">Back to templates</RouterLink>
+            <RouterLink to={paths.mailTemplates}>Back to templates</RouterLink>
           </Button>
         </CardContent>
       </Card>
