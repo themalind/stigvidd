@@ -9,28 +9,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const customFetch = vi.hoisted(() => vi.fn());
 vi.mock("@/api/mutator", () => ({ customFetch }));
 
-// Editing a trail is admin-only, so these four moved to api/v1/admin/trails and are
+// Editing a trail is admin-only, so these moved to api/v1/admin/trails and are
 // generated into their own module. Mocking only the public one would leave the real
 // admin module in play and the URL assertions below would silently test nothing.
 const generatedAdmin = vi.hoisted(() => ({
   adminTrailsGetAllTrails: vi.fn(),
-  adminTrailsGetTrail: vi.fn(),
-  adminTrailsSetTrailVerified: vi.fn(),
-  adminTrailsUpdateTrail: vi.fn(),
   getAdminTrailsAddTrailImagesUrl: vi.fn((id: string) => `/api/v1/admin/trails/${id}/images`),
   getAdminTrailsDeleteTrailImageUrl: vi.fn((id: string) => `/api/v1/admin/trails/images/${id}`),
   getAdminTrailsSetTrailSymbolUrl: vi.fn((id: string) => `/api/v1/admin/trails/${id}/symbol`),
 }));
 vi.mock("@/api/generated/admin-trails/admin-trails", () => generatedAdmin);
 
-import {
-  addTrailImages,
-  deleteTrailImage,
-  getAllTrails,
-  getTrailByIdentifier,
-  setTrailSymbol,
-  setTrailVerified,
-} from "./trail";
+import { addTrailImages, deleteTrailImage, getAllTrails, setTrailSymbol } from "./trail";
 
 function png(name: string) {
   return new File([name], name, { type: "image/png" });
@@ -49,23 +39,6 @@ describe("getAllTrails", () => {
     generatedAdmin.adminTrailsGetAllTrails.mockResolvedValue([{ identifier: "abc" }]);
 
     await expect(getAllTrails()).resolves.toEqual([{ identifier: "abc" }]);
-  });
-});
-
-describe("getTrailByIdentifier", () => {
-  it("reads the admin detail, which includes inactive trails", async () => {
-    generatedAdmin.adminTrailsGetTrail.mockResolvedValue({ identifier: "abc" });
-
-    await expect(getTrailByIdentifier({ identifier: "abc" })).resolves.toEqual({ identifier: "abc" });
-    expect(generatedAdmin.adminTrailsGetTrail).toHaveBeenCalledWith("abc");
-  });
-});
-
-describe("setTrailVerified", () => {
-  it("sends the flag for the trail", async () => {
-    await setTrailVerified("abc", false);
-
-    expect(generatedAdmin.adminTrailsSetTrailVerified).toHaveBeenCalledWith("abc", { isVerified: false });
   });
 });
 

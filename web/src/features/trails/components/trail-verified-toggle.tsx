@@ -1,41 +1,31 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { setTrailVerified } from "@/features/trails/api/trail";
-import type { AdminTrailListItem } from "@/types/types";
-import { useState } from "react";
 import { toast } from "sonner";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSetTrailVerified } from "@/features/trails/api/trail";
 
 interface Props {
-  data: AdminTrailListItem;
-  onChange?: (isVerified: boolean) => void;
+  data: Pick<AdminTrailListItemResponse, "identifier" | "name" | "isVerified">;
 }
 
-export default function TrailVerifiedToggle({ data, onChange }: Props) {
-  const [isVerified, setIsVerified] = useState(data.isVerified);
-  const [saving, setSaving] = useState(false);
+export default function TrailVerifiedToggle({ data }: Props) {
+  const setVerified = useSetTrailVerified(data);
 
-  async function handleChange(checked: boolean) {
-    setSaving(true);
-    try {
-      await setTrailVerified(data.identifier, checked);
-      setIsVerified(checked);
-      onChange?.(checked);
-      toast.success(checked ? `${data.name} is now active in the app.` : `${data.name} is now hidden from the app.`);
-    } catch {
-      toast.error(`Failed to update ${data.name}.`);
-    } finally {
-      setSaving(false);
-    }
+  function handleChange(checked: boolean) {
+    setVerified.mutate(checked, {
+      onSuccess: () =>
+        toast.success(checked ? `${data.name} is now active in the app.` : `${data.name} is now hidden from the app.`),
+    });
   }
 
   return (
     <Checkbox
       aria-label={`Active: ${data.name}`}
-      checked={isVerified}
-      disabled={saving}
-      onCheckedChange={(checked) => void handleChange(checked === true)}
+      checked={data.isVerified}
+      disabled={setVerified.isPending}
+      onCheckedChange={(checked) => handleChange(checked === true)}
     />
   );
 }

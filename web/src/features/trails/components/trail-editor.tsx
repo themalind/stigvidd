@@ -1,12 +1,15 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-  CLASSIFICATION,
-  type TrailShortInfoResponse,
-  type UpdateTrailLinkRequest,
-  type UpdateTrailRequest,
-} from "@/types/types";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import type {
+  AdminTrailListItemResponse,
+  TrailResponse,
+  UpdateTrailLinkRequest,
+  UpdateTrailRequest,
+} from "@/api/generated/model";
+import { CLASSIFICATION } from "@/types/types";
+import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -33,36 +36,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { Edit, Plus, X } from "lucide-react";
 import { useState } from "react";
-import { getTrailByIdentifier, updateTrail } from "@/features/trails/api/trail";
-import { toast } from "sonner";
+import { trailQueryOptions, useUpdateTrail } from "@/features/trails/api/trail";
 import { Separator } from "@/components/ui/separator";
 
 interface Props {
-  data: TrailShortInfoResponse;
+  data: Pick<AdminTrailListItemResponse, "identifier">;
   selected: boolean;
 }
 
-const emptyForm = (): UpdateTrailRequest => ({
-  name: "",
-  trailLength: 0,
-  classification: 0,
-  accessibility: false,
-  accessibilityInfo: "",
-  trailSymbol: "",
-  description: "",
-  fullDescription: "",
-  tags: "",
-  city: "",
+const toForm = (trail: TrailResponse): UpdateTrailRequest => ({
+  name: trail.name ?? "",
+  trailLength: trail.trailLength ?? 0,
+  classification: trail.classification ?? 0,
+  accessibility: trail.accessibility ?? false,
+  accessibilityInfo: trail.accessibilityInfo ?? "",
+  trailSymbol: trail.trailSymbol ?? "",
+  description: trail.description ?? "",
+  fullDescription: trail.fullDescription ?? "",
+  tags: trail.tags ?? "",
+  city: trail.city ?? "",
   visitorInformation: {
-    gettingThere: "",
-    publicTransport: "",
-    parking: "",
-    illumination: false,
-    illuminationText: "",
-    maintainedBy: "",
-    winterMaintenance: false,
+    gettingThere: trail.visitorInformation?.gettingThere ?? "",
+    publicTransport: trail.visitorInformation?.publicTransport ?? "",
+    parking: trail.visitorInformation?.parking ?? "",
+    illumination: trail.visitorInformation?.illumination ?? false,
+    illuminationText: trail.visitorInformation?.illuminationText ?? "",
+    maintainedBy: trail.visitorInformation?.maintainedBy ?? "",
+    winterMaintenance: trail.visitorInformation?.winterMaintenance ?? false,
   },
-  links: [],
+  links: (trail.trailLinksResponse ?? []).map(({ identifier, title, link }) => ({ identifier, title, link })),
 });
 
 // Mirrors the max lengths in UpdateTrailRequestValidator; over these the API
@@ -108,69 +110,31 @@ function FieldHeader({ label, value, max }: { label: string; value: string; max:
   );
 }
 
-export default function TrailEditor({ data, selected }: Props) {
-  const [formData, setFormData] = useState<UpdateTrailRequest>(emptyForm);
-  const [loading, setLoading] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
-  async function handleOpenChange(open: boolean) {
-    if (!open) return;
-    setLoading(true);
-    setLoaded(false);
-    try {
-      const trail = await getTrailByIdentifier({ identifier: data.identifier });
-      setFormData({
-        name: trail.name,
-        trailLength: trail.trailLength,
-        classification: trail.classification,
-        accessibility: trail.accessibility,
-        accessibilityInfo: trail.accessibilityInfo,
-        trailSymbol: trail.trailSymbol,
-        description: trail.description,
-        fullDescription: trail.fullDescription,
-        tags: trail.tags,
-        city: trail.city,
-        visitorInformation: {
-          gettingThere: trail.visitorInformation?.gettingThere ?? "",
-          publicTransport: trail.visitorInformation?.publicTransport ?? "",
-          parking: trail.visitorInformation?.parking ?? "",
-          illumination: trail.visitorInformation?.illumination ?? false,
-          illuminationText: trail.visitorInformation?.illuminationText ?? "",
-          maintainedBy: trail.visitorInformation?.maintainedBy ?? "",
-          winterMaintenance: trail.visitorInformation?.winterMaintenance ?? false,
-        },
-        links: (trail.trailLinksResponse ?? []).map(({ identifier, title, link }) => ({ identifier, title, link })),
-      });
-      setLoaded(true);
-    } catch {
-      toast.error("Failed to load trail data.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const links = formData.links ?? [];
-  const linksValid = links.every((link) => linkProblem(link) === null);
-
-  function setLink(index: number, patch: Partial<UpdateTrailLinkRequest>) {
-    setFormData({ ...formData, links: links.map((link, i) => (i === index ? { ...link, ...patch } : link)) });
-  }
-
-  async function handleSubmit() {
-    setSubmitting(true);
-    try {
-      await updateTrail(data.identifier, formData);
-      toast.success("Trail updated successfully.");
-    } catch {
-      toast.error("Failed to update trail.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
+function EditorFooter({ canSave, saving, onSave }: { canSave: boolean; saving: boolean; onSave?: () => void }) {
   return (
-    <Sheet onOpenChange={handleOpenChange}>
+    <SheetFooter>
+      <Button onClick={onSave} disabled={!canSave || saving}>
+        {saving ? "Saving..." : "Save changes"}
+      </Button>
+      <SheetClose asChild>
+        <Button variant="outline">Close</Button>
+      </SheetClose>
+    </SheetFooter>
+  );
+}
+
+function EditorMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <div className="flex flex-1 items-center justify-center px-4">{children}</div>
+      <EditorFooter canSave={false} saving={false} />
+    </>
+  );
+}
+
+export default function TrailEditor({ data, selected }: Props) {
+  return (
+    <Sheet>
       <SheetTrigger asChild>
         {selected ? (
           <Button variant="ghost">
@@ -188,331 +152,351 @@ export default function TrailEditor({ data, selected }: Props) {
           </SheetDescription>
         </SheetHeader>
 
-        {loading ? (
-          <div className="flex flex-1 items-center justify-center">
-            <p className="text-muted-foreground text-sm">Loading...</p>
-          </div>
-        ) : !loaded ? (
-          <div className="flex flex-1 items-center justify-center px-4">
-            <p className="text-muted-foreground text-sm">
-              This trail could not be loaded, so there is nothing to edit. Close the panel and open it again.
-            </p>
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto">
-            <div className="grid auto-rows-min gap-4 px-4">
-              <div className="flex flex-col gap-2">
-                <p>Name</p>
-                <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+        <QueryBoundary
+          fallback={
+            <EditorMessage>
+              <p className="text-muted-foreground text-sm">Loading...</p>
+            </EditorMessage>
+          }
+          errorFallback={({ retry }) => (
+            <EditorMessage>
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-muted-foreground text-sm">
+                  This trail could not be loaded, so there is nothing to edit.
+                </p>
+                <Button size="sm" variant="outline" onClick={retry}>
+                  Try again
+                </Button>
               </div>
-              <div className="flex flex-col gap-2">
-                <p>Trail Length (km)</p>
-                <Input
-                  type="number"
-                  min={0}
-                  step={0.1}
-                  value={formData.trailLength}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      trailLength: Number(e.target.value),
-                    })
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader label="City" value={formData.city ?? ""} max={LIMITS.city} />
-                <Input
-                  value={formData.city ?? ""}
-                  maxLength={LIMITS.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <p>Classification</p>
-                <Select
-                  value={formData.classification?.toString() ?? "0"}
-                  onValueChange={(v) => setFormData({ ...formData, classification: Number(v) })}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Difficulty</SelectLabel>
-                      {Object.entries(CLASSIFICATION)
-                        .reverse()
-                        .map(([key, value]) => (
-                          <SelectItem key={key} value={key}>
-                            {value}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="accessibility"
-                  checked={formData.accessibility ?? false}
-                  onCheckedChange={(checked) =>
-                    setFormData({
-                      ...formData,
-                      accessibility: checked === true,
-                    })
-                  }
-                />
-                <p>Accessible</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Accessibility Info"
-                  value={formData.accessibilityInfo ?? ""}
-                  max={LIMITS.accessibilityInfo}
-                />
-                <Input
-                  value={formData.accessibilityInfo ?? ""}
-                  maxLength={LIMITS.accessibilityInfo}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      accessibilityInfo: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader label="Trail Symbol" value={formData.trailSymbol ?? ""} max={LIMITS.trailSymbol} />
-                <Input
-                  value={formData.trailSymbol ?? ""}
-                  maxLength={LIMITS.trailSymbol}
-                  onChange={(e) => setFormData({ ...formData, trailSymbol: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader label="Description" value={formData.description ?? ""} max={LIMITS.description} />
-                <Textarea
-                  value={formData.description ?? ""}
-                  maxLength={LIMITS.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Full Description"
-                  value={formData.fullDescription ?? ""}
-                  max={LIMITS.fullDescription}
-                />
-                <Textarea
-                  value={formData.fullDescription ?? ""}
-                  maxLength={LIMITS.fullDescription}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      fullDescription: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <p>Tags</p>
-                <TagInput value={formData.tags ?? ""} onChange={(tags) => setFormData({ ...formData, tags })} />
-              </div>
-
-              <Separator className="mt-3" />
-
-              <p className="font-semibold">Visitor Information</p>
-
-              <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Getting There"
-                  value={formData.visitorInformation?.gettingThere ?? ""}
-                  max={LIMITS.gettingThere}
-                />
-                <Textarea
-                  value={formData.visitorInformation?.gettingThere ?? ""}
-                  maxLength={LIMITS.gettingThere}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      visitorInformation: {
-                        ...formData.visitorInformation,
-                        gettingThere: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Public Transport"
-                  value={formData.visitorInformation?.publicTransport ?? ""}
-                  max={LIMITS.publicTransport}
-                />
-                <Textarea
-                  value={formData.visitorInformation?.publicTransport ?? ""}
-                  maxLength={LIMITS.publicTransport}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      visitorInformation: {
-                        ...formData.visitorInformation,
-                        publicTransport: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader label="Parking" value={formData.visitorInformation?.parking ?? ""} max={LIMITS.parking} />
-                <Textarea
-                  value={formData.visitorInformation?.parking ?? ""}
-                  maxLength={LIMITS.parking}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      visitorInformation: {
-                        ...formData.visitorInformation,
-                        parking: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="illumination"
-                  checked={formData.visitorInformation?.illumination ?? false}
-                  onCheckedChange={(checked) =>
-                    setFormData({
-                      ...formData,
-                      visitorInformation: {
-                        ...formData.visitorInformation,
-                        illumination: checked === true,
-                      },
-                    })
-                  }
-                />
-                <p>Illuminated</p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Illumination Info"
-                  value={formData.visitorInformation?.illuminationText ?? ""}
-                  max={LIMITS.illuminationText}
-                />
-                <Input
-                  value={formData.visitorInformation?.illuminationText ?? ""}
-                  maxLength={LIMITS.illuminationText}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      visitorInformation: {
-                        ...formData.visitorInformation,
-                        illuminationText: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <FieldHeader
-                  label="Maintained By"
-                  value={formData.visitorInformation?.maintainedBy ?? ""}
-                  max={LIMITS.maintainedBy}
-                />
-                <Input
-                  value={formData.visitorInformation?.maintainedBy ?? ""}
-                  maxLength={LIMITS.maintainedBy}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      visitorInformation: {
-                        ...formData.visitorInformation,
-                        maintainedBy: e.target.value,
-                      },
-                    })
-                  }
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="winterMaintenance"
-                  checked={formData.visitorInformation?.winterMaintenance ?? false}
-                  onCheckedChange={(checked) =>
-                    setFormData({
-                      ...formData,
-                      visitorInformation: {
-                        ...formData.visitorInformation,
-                        winterMaintenance: checked === true,
-                      },
-                    })
-                  }
-                />
-                <p>Winter Maintenance</p>
-              </div>
-
-              <Separator className="mt-3" />
-
-              <p className="font-semibold">Links</p>
-
-              {links.length === 0 ? <p className="text-muted-foreground text-sm">No links yet.</p> : null}
-
-              {links.map((link, index) => {
-                const problem = linkProblem(link);
-                return (
-                  <div key={link.identifier ?? `new-${index}`} className="flex flex-col gap-2 rounded-[5px] border p-3">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        aria-label={`Link ${index + 1} title`}
-                        placeholder="Title"
-                        value={link.title}
-                        maxLength={LIMITS.linkTitle}
-                        onChange={(e) => setLink(index, { title: e.target.value })}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Remove link ${index + 1}`}
-                        onClick={() => setFormData({ ...formData, links: links.filter((_, i) => i !== index) })}
-                      >
-                        <X />
-                      </Button>
-                    </div>
-                    <Input
-                      aria-label={`Link ${index + 1} address`}
-                      placeholder="https://"
-                      type="url"
-                      value={link.link}
-                      maxLength={LIMITS.link}
-                      onChange={(e) => setLink(index, { link: e.target.value })}
-                    />
-                    {problem ? <p className="text-destructive text-xs">{problem}</p> : null}
-                  </div>
-                );
-              })}
-
-              <Button
-                variant="outline"
-                className="mb-4 self-start"
-                onClick={() => setFormData({ ...formData, links: [...links, { title: "", link: "" }] })}
-              >
-                <Plus />
-                Add link
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <SheetFooter>
-          <Button onClick={handleSubmit} disabled={submitting || loading || !loaded || !linksValid}>
-            {submitting ? "Saving..." : "Save changes"}
-          </Button>
-          <SheetClose asChild>
-            <Button variant="outline">Close</Button>
-          </SheetClose>
-        </SheetFooter>
+            </EditorMessage>
+          )}
+        >
+          <LoadedTrail identifier={data.identifier} />
+        </QueryBoundary>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function LoadedTrail({ identifier }: { identifier: string }) {
+  const { data: trail } = useSuspenseQuery(trailQueryOptions(identifier));
+
+  return <TrailForm key={identifier} identifier={identifier} trail={trail} />;
+}
+
+function TrailForm({ identifier, trail }: { identifier: string; trail: TrailResponse }) {
+  const [formData, setFormData] = useState<UpdateTrailRequest>(() => toForm(trail));
+  const save = useUpdateTrail(identifier);
+
+  const links = formData.links ?? [];
+  const linksValid = links.every((link) => linkProblem(link) === null);
+
+  function setLink(index: number, patch: Partial<UpdateTrailLinkRequest>) {
+    setFormData({ ...formData, links: links.map((link, i) => (i === index ? { ...link, ...patch } : link)) });
+  }
+
+  return (
+    <>
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid auto-rows-min gap-4 px-4">
+          <div className="flex flex-col gap-2">
+            <p>Name</p>
+            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p>Trail Length (km)</p>
+            <Input
+              type="number"
+              min={0}
+              step={0.1}
+              value={formData.trailLength}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  trailLength: Number(e.target.value),
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader label="City" value={formData.city ?? ""} max={LIMITS.city} />
+            <Input
+              value={formData.city ?? ""}
+              maxLength={LIMITS.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p>Classification</p>
+            <Select
+              value={formData.classification?.toString() ?? "0"}
+              onValueChange={(v) => setFormData({ ...formData, classification: Number(v) })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Difficulty</SelectLabel>
+                  {Object.entries(CLASSIFICATION)
+                    .reverse()
+                    .map(([key, value]) => (
+                      <SelectItem key={key} value={key}>
+                        {value}
+                      </SelectItem>
+                    ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="accessibility"
+              checked={formData.accessibility ?? false}
+              onCheckedChange={(checked) =>
+                setFormData({
+                  ...formData,
+                  accessibility: checked === true,
+                })
+              }
+            />
+            <p>Accessible</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader
+              label="Accessibility Info"
+              value={formData.accessibilityInfo ?? ""}
+              max={LIMITS.accessibilityInfo}
+            />
+            <Input
+              value={formData.accessibilityInfo ?? ""}
+              maxLength={LIMITS.accessibilityInfo}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  accessibilityInfo: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader label="Trail Symbol" value={formData.trailSymbol ?? ""} max={LIMITS.trailSymbol} />
+            <Input
+              value={formData.trailSymbol ?? ""}
+              maxLength={LIMITS.trailSymbol}
+              onChange={(e) => setFormData({ ...formData, trailSymbol: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader label="Description" value={formData.description ?? ""} max={LIMITS.description} />
+            <Textarea
+              value={formData.description ?? ""}
+              maxLength={LIMITS.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader label="Full Description" value={formData.fullDescription ?? ""} max={LIMITS.fullDescription} />
+            <Textarea
+              value={formData.fullDescription ?? ""}
+              maxLength={LIMITS.fullDescription}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  fullDescription: e.target.value,
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <p>Tags</p>
+            <TagInput value={formData.tags ?? ""} onChange={(tags) => setFormData({ ...formData, tags })} />
+          </div>
+
+          <Separator className="mt-3" />
+
+          <p className="font-semibold">Visitor Information</p>
+
+          <div className="flex flex-col gap-2">
+            <FieldHeader
+              label="Getting There"
+              value={formData.visitorInformation?.gettingThere ?? ""}
+              max={LIMITS.gettingThere}
+            />
+            <Textarea
+              value={formData.visitorInformation?.gettingThere ?? ""}
+              maxLength={LIMITS.gettingThere}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  visitorInformation: {
+                    ...formData.visitorInformation,
+                    gettingThere: e.target.value,
+                  },
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader
+              label="Public Transport"
+              value={formData.visitorInformation?.publicTransport ?? ""}
+              max={LIMITS.publicTransport}
+            />
+            <Textarea
+              value={formData.visitorInformation?.publicTransport ?? ""}
+              maxLength={LIMITS.publicTransport}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  visitorInformation: {
+                    ...formData.visitorInformation,
+                    publicTransport: e.target.value,
+                  },
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader label="Parking" value={formData.visitorInformation?.parking ?? ""} max={LIMITS.parking} />
+            <Textarea
+              value={formData.visitorInformation?.parking ?? ""}
+              maxLength={LIMITS.parking}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  visitorInformation: {
+                    ...formData.visitorInformation,
+                    parking: e.target.value,
+                  },
+                })
+              }
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="illumination"
+              checked={formData.visitorInformation?.illumination ?? false}
+              onCheckedChange={(checked) =>
+                setFormData({
+                  ...formData,
+                  visitorInformation: {
+                    ...formData.visitorInformation,
+                    illumination: checked === true,
+                  },
+                })
+              }
+            />
+            <p>Illuminated</p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader
+              label="Illumination Info"
+              value={formData.visitorInformation?.illuminationText ?? ""}
+              max={LIMITS.illuminationText}
+            />
+            <Input
+              value={formData.visitorInformation?.illuminationText ?? ""}
+              maxLength={LIMITS.illuminationText}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  visitorInformation: {
+                    ...formData.visitorInformation,
+                    illuminationText: e.target.value,
+                  },
+                })
+              }
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <FieldHeader
+              label="Maintained By"
+              value={formData.visitorInformation?.maintainedBy ?? ""}
+              max={LIMITS.maintainedBy}
+            />
+            <Input
+              value={formData.visitorInformation?.maintainedBy ?? ""}
+              maxLength={LIMITS.maintainedBy}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  visitorInformation: {
+                    ...formData.visitorInformation,
+                    maintainedBy: e.target.value,
+                  },
+                })
+              }
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="winterMaintenance"
+              checked={formData.visitorInformation?.winterMaintenance ?? false}
+              onCheckedChange={(checked) =>
+                setFormData({
+                  ...formData,
+                  visitorInformation: {
+                    ...formData.visitorInformation,
+                    winterMaintenance: checked === true,
+                  },
+                })
+              }
+            />
+            <p>Winter Maintenance</p>
+          </div>
+
+          <Separator className="mt-3" />
+
+          <p className="font-semibold">Links</p>
+
+          {links.length === 0 ? <p className="text-muted-foreground text-sm">No links yet.</p> : null}
+
+          {links.map((link, index) => {
+            const problem = linkProblem(link);
+            return (
+              <div key={link.identifier ?? `new-${index}`} className="flex flex-col gap-2 rounded-[5px] border p-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    aria-label={`Link ${index + 1} title`}
+                    placeholder="Title"
+                    value={link.title}
+                    maxLength={LIMITS.linkTitle}
+                    onChange={(e) => setLink(index, { title: e.target.value })}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remove link ${index + 1}`}
+                    onClick={() => setFormData({ ...formData, links: links.filter((_, i) => i !== index) })}
+                  >
+                    <X />
+                  </Button>
+                </div>
+                <Input
+                  aria-label={`Link ${index + 1} address`}
+                  placeholder="https://"
+                  type="url"
+                  value={link.link}
+                  maxLength={LIMITS.link}
+                  onChange={(e) => setLink(index, { link: e.target.value })}
+                />
+                {problem ? <p className="text-destructive text-xs">{problem}</p> : null}
+              </div>
+            );
+          })}
+
+          <Button
+            variant="outline"
+            className="mb-4 self-start"
+            onClick={() => setFormData({ ...formData, links: [...links, { title: "", link: "" }] })}
+          >
+            <Plus />
+            Add link
+          </Button>
+        </div>
+      </div>
+      <EditorFooter canSave={linksValid} saving={save.isPending} onSave={() => save.mutate(formData)} />
+    </>
   );
 }

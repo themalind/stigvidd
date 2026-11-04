@@ -4,43 +4,27 @@
 import { Dialog } from "radix-ui";
 import { Route } from "lucide-react";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
-import { getTrailPath } from "@/features/trails/api/trail";
-import { findJumps, formatMetres, pathLengthMetres, type LngLat } from "@/utils/geometry-edit";
-import type { AdminTrailListItem } from "@/types/types";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { QueryBoundary } from "@/components/query-boundary";
+import { trailPathQueryOptions } from "@/features/trails/api/trail";
+import { findJumps, formatMetres, pathLengthMetres } from "@/utils/geometry-edit";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
 import { hasSatellite } from "@/features/hike-submissions/components/map-style";
 import { TrailPathMap } from "./trail-path-map";
 import { Button } from "@/components/ui/button";
 
 interface Props {
-  data: Pick<AdminTrailListItem, "identifier" | "name" | "trailLength">;
+  data: Pick<AdminTrailListItemResponse, "identifier" | "name" | "trailLength">;
 }
 
 // keep-comment: imported trails are sparser than GPS recordings, so DEFAULT_JUMP_METRES (40) would flag most of them
 const GAP_METRES = 250;
 
 export default function TrailPathDialog({ data }: Props) {
-  const [path, setPath] = useState<LngLat[] | null>(null);
-  const [loading, setLoading] = useState(false);
   const [satellite, setSatellite] = useState(false);
 
-  const gaps = useMemo(() => (path ? findJumps(path, GAP_METRES) : []), [path]);
-
-  async function handleOpenChange(open: boolean) {
-    if (!open) return;
-    setLoading(true);
-    setPath(null);
-    try {
-      setPath(await getTrailPath(data.identifier));
-    } catch {
-      toast.error("Failed to load the trail's coordinates.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <Dialog.Root onOpenChange={handleOpenChange}>
+    <Dialog.Root>
       <Dialog.Trigger asChild>
         <Button variant="ghost" size="icon" aria-label="Show trail on map" title="Show trail on map">
           <Route />
@@ -63,35 +47,19 @@ export default function TrailPathDialog({ data }: Props) {
             )}
           </div>
 
-          {loading ? (
-            <p className="text-muted-foreground text-sm">Loading...</p>
-          ) : !path ? (
-            <p className="text-muted-foreground text-sm">The coordinates could not be loaded.</p>
-          ) : path.length < 2 ? (
-            <p className="text-muted-foreground text-sm">This trail has no line to draw.</p>
-          ) : (
-            <>
-              <dl className="mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                <div className="flex gap-1">
-                  <dt className="text-muted-foreground">Points</dt>
-                  <dd>{path.length}</dd>
-                </div>
-                <div className="flex gap-1">
-                  <dt className="text-muted-foreground">Measured length</dt>
-                  <dd>{formatMetres(pathLengthMetres(path))}</dd>
-                </div>
-                <div className="flex gap-1">
-                  <dt className="text-muted-foreground">Stated length</dt>
-                  <dd>{data.trailLength} km</dd>
-                </div>
-                <div className="flex gap-1">
-                  <dt className="text-muted-foreground">Gaps over {GAP_METRES} m</dt>
-                  <dd className={gaps.length > 0 ? "text-destructive" : undefined}>{gaps.length}</dd>
-                </div>
-              </dl>
-              <TrailPathMap path={path} gaps={gaps} satellite={satellite} />
-            </>
-          )}
+          <QueryBoundary
+            fallback={<p className="text-muted-foreground text-sm">Loading...</p>}
+            errorFallback={({ retry }) => (
+              <div className="flex items-center gap-3">
+                <p className="text-muted-foreground text-sm">The coordinates could not be loaded.</p>
+                <Button size="sm" variant="outline" onClick={retry}>
+                  Try again
+                </Button>
+              </div>
+            )}
+          >
+            <TrailPath data={data} satellite={satellite} />
+          </QueryBoundary>
 
           <div className="mt-4 flex justify-end">
             <Dialog.Close asChild>
@@ -101,5 +69,38 @@ export default function TrailPathDialog({ data }: Props) {
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+function TrailPath({ data, satellite }: Props & { satellite: boolean }) {
+  const { data: path } = useSuspenseQuery(trailPathQueryOptions(data.identifier));
+  const gaps = useMemo(() => findJumps(path, GAP_METRES), [path]);
+
+  if (path.length < 2) {
+    return <p className="text-muted-foreground text-sm">This trail has no line to draw.</p>;
+  }
+
+  return (
+    <>
+      <dl className="mb-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+        <div className="flex gap-1">
+          <dt className="text-muted-foreground">Points</dt>
+          <dd>{path.length}</dd>
+        </div>
+        <div className="flex gap-1">
+          <dt className="text-muted-foreground">Measured length</dt>
+          <dd>{formatMetres(pathLengthMetres(path))}</dd>
+        </div>
+        <div className="flex gap-1">
+          <dt className="text-muted-foreground">Stated length</dt>
+          <dd>{data.trailLength} km</dd>
+        </div>
+        <div className="flex gap-1">
+          <dt className="text-muted-foreground">Gaps over {GAP_METRES} m</dt>
+          <dd className={gaps.length > 0 ? "text-destructive" : undefined}>{gaps.length}</dd>
+        </div>
+      </dl>
+      <TrailPathMap path={path} gaps={gaps} satellite={satellite} />
+    </>
   );
 }

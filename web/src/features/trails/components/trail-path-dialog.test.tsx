@@ -2,15 +2,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/api/mutator";
+import { renderWithProviders } from "@/testing/render";
 import type { Jump, LngLat } from "@/utils/geometry-edit";
 
-const api = vi.hoisted(() => ({ getTrailPath: vi.fn() }));
-vi.mock("@/features/trails/api/trail", () => api);
-
-const toasted = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
-vi.mock("sonner", () => ({ toast: toasted }));
+const api = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
+});
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: api.mock.customFetch,
+}));
 
 const drawn = vi.hoisted(() => ({ path: null as LngLat[] | null, gaps: null as Jump[] | null }));
 vi.mock("./trail-path-map", () => ({
@@ -23,6 +28,7 @@ vi.mock("./trail-path-map", () => ({
 
 import TrailPathDialog from "./trail-path-dialog";
 
+const PATH = "/api/v1/admin/trails/trail-1/path";
 const trail = { identifier: "trail-1", name: "Knalleleden", trailLength: 3 };
 
 // keep-comment: 0.001° of latitude is about 111 m, so only the last step (about 1.1 km) is a gap
@@ -36,23 +42,39 @@ const path: LngLat[] = [
 const open = () => userEvent.click(screen.getByRole("button", { name: "Show trail on map" }));
 
 beforeEach(() => {
+  api.mock.reset();
   drawn.path = null;
   drawn.gaps = null;
-  api.getTrailPath.mockResolvedValue(path);
+  api.mock.on("GET", PATH, () => ({ coordinates: path }));
 });
 
 describe("TrailPathDialog", () => {
+  it("fetches nothing until it is opened", () => {
+    renderWithProviders(<TrailPathDialog data={trail} />);
+
+    expect(api.mock.calls).toHaveLength(0);
+  });
+
   it("fetches the trail's path when opened and draws it", async () => {
-    render(<TrailPathDialog data={trail} />);
+    renderWithProviders(<TrailPathDialog data={trail} />);
     await open();
 
     expect(await screen.findByTestId("trail-path-map")).toBeInTheDocument();
-    expect(api.getTrailPath).toHaveBeenCalledWith("trail-1");
+    expect(drawn.path).toEqual(path);
+  });
+
+  it("drops a coordinate that is not a longitude/latitude pair", async () => {
+    api.mock.on("GET", PATH, () => ({ coordinates: [...path, [12.94]] }));
+
+    renderWithProviders(<TrailPathDialog data={trail} />);
+    await open();
+    await screen.findByTestId("trail-path-map");
+
     expect(drawn.path).toEqual(path);
   });
 
   it("summarises the points and flags the long gap", async () => {
-    render(<TrailPathDialog data={trail} />);
+    renderWithProviders(<TrailPathDialog data={trail} />);
     await open();
     await screen.findByTestId("trail-path-map");
 
@@ -63,22 +85,28 @@ describe("TrailPathDialog", () => {
   });
 
   it("says there is nothing to draw for a trail without a line", async () => {
-    api.getTrailPath.mockResolvedValue([]);
+    api.mock.on("GET", PATH, () => ({ coordinates: [] }));
 
-    render(<TrailPathDialog data={trail} />);
+    renderWithProviders(<TrailPathDialog data={trail} />);
     await open();
 
     expect(await screen.findByText("This trail has no line to draw.")).toBeVisible();
     expect(screen.queryByTestId("trail-path-map")).not.toBeInTheDocument();
   });
 
-  it("reports a failed load instead of an empty map", async () => {
-    api.getTrailPath.mockRejectedValue(new Error("offline"));
+  it("reports a failed load instead of an empty map, and can try again", async () => {
+    api.mock.on("GET", PATH, () => {
+      throw new ApiError("Not found", 404);
+    });
 
-    render(<TrailPathDialog data={trail} />);
+    renderWithProviders(<TrailPathDialog data={trail} />);
     await open();
 
     expect(await screen.findByText("The coordinates could not be loaded.")).toBeVisible();
-    expect(toasted.error).toHaveBeenCalledWith("Failed to load the trail's coordinates.");
+
+    api.mock.on("GET", PATH, () => ({ coordinates: path }));
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    await waitFor(() => expect(screen.getByTestId("trail-path-map")).toBeInTheDocument());
   });
 });

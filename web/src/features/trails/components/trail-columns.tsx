@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { AdminTrailListItem, TableColumn } from "@/types/types";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
+import type { TableColumn } from "@/types/types";
 
-export const trailColumns: TableColumn<AdminTrailListItem>[] = [
+export const trailColumns: TableColumn<AdminTrailListItemResponse>[] = [
   { label: "Name", key: "name", type: "text" },
   { label: "City", key: "city", type: "text" },
   { label: "Length", key: "trailLength", type: "number" },

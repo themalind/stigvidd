@@ -2,61 +2,43 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { TrailResponse, TrailShortInfoResponse, UpdateTrailRequest } from "@/types/types";
+import type { TrailResponse, UpdateTrailRequest } from "@/api/generated/model";
+import { ApiError } from "@/api/mutator";
+import { trailDetail } from "@/testing/fixtures/trails";
+import { renderWithProviders } from "@/testing/render";
 
-const api = vi.hoisted(() => ({
-  getTrailByIdentifier: vi.fn(),
-  updateTrail: vi.fn(),
+const api = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
+});
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: api.mock.customFetch,
 }));
-vi.mock("@/features/trails/api/trail", () => api);
 
 const toasted = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasted }));
 
 import TrailEditor from "./trail-editor";
 
-const short: TrailShortInfoResponse = {
-  identifier: "trail-1",
-  name: "Knalleleden",
-  trailLength: 42,
-  classification: 2,
-  accessibility: false,
-  city: "Borås",
-} as TrailShortInfoResponse;
+const TRAIL = "/api/v1/admin/trails/trail-1";
+const short = { identifier: "trail-1" };
+const full = trailDetail();
 
-const full = {
-  identifier: "trail-1",
-  name: "Knalleleden",
-  trailLength: 42,
-  classification: 2,
-  accessibility: true,
-  accessibilityInfo: "Gravel throughout",
-  trailSymbol: "symbol.png",
-  description: "A long walk",
-  fullDescription: "A very long walk",
-  tags: '["forest"]',
-  city: "Borås",
-  visitorInformation: {
-    gettingThere: "Bus 100",
-    publicTransport: "Yes",
-    parking: "By the church",
-    illumination: true,
-    illuminationText: "First 3 km",
-    maintainedBy: "Borås stad",
-    winterMaintenance: false,
-  },
-  trailLinksResponse: [{ identifier: "link-1", title: "Borås Stad", link: "https://www.boras.se" }],
-} as TrailResponse;
+const render = (ui: React.ReactElement) => renderWithProviders(ui);
+const puts = () => api.mock.calls.filter((call) => call.method === "PUT");
+const sent = () => puts()[0].body as UpdateTrailRequest;
 
 const open = () => userEvent.click(screen.getByRole("button"));
 const saveButton = () => screen.getByRole("button", { name: /Save changes/ });
-const sent = () => api.updateTrail.mock.calls[0][1] as UpdateTrailRequest;
 
 beforeEach(() => {
-  api.getTrailByIdentifier.mockResolvedValue(full);
-  api.updateTrail.mockResolvedValue(full);
+  vi.clearAllMocks();
+  api.mock.reset();
+  api.mock.on("GET", TRAIL, () => full);
+  api.mock.on("PUT", TRAIL, () => full);
 });
 
 describe("TrailEditor", () => {
@@ -71,11 +53,7 @@ describe("TrailEditor", () => {
 
     await open();
 
-    await waitFor(() =>
-      expect(api.getTrailByIdentifier).toHaveBeenCalledWith({
-        identifier: "trail-1",
-      }),
-    );
+    await waitFor(() => expect(api.mock.calls.filter((call) => call.path === TRAIL)).toHaveLength(1));
   });
 
   it("fills the form from the trail rather than from the row", async () => {
@@ -96,8 +74,7 @@ describe("TrailEditor", () => {
     await userEvent.type(name, "Knalleleden norr");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalledOnce());
-    expect(api.updateTrail.mock.calls[0][0]).toBe("trail-1");
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent()).toMatchObject({
       name: "Knalleleden norr",
       trailLength: 42,
@@ -114,7 +91,9 @@ describe("TrailEditor", () => {
    */
   describe("when the trail could not be loaded", () => {
     beforeEach(() => {
-      api.getTrailByIdentifier.mockRejectedValue(new Error("offline"));
+      api.mock.on("GET", TRAIL, () => {
+        throw new ApiError("Not found", 404);
+      });
     });
 
     it("says so instead of showing an empty form", async () => {
@@ -123,7 +102,6 @@ describe("TrailEditor", () => {
 
       expect(await screen.findByText(/could not be loaded/)).toBeVisible();
       expect(screen.queryByDisplayValue("Knalleleden")).not.toBeInTheDocument();
-      expect(toasted.error).toHaveBeenCalledWith("Failed to load trail data.");
     });
 
     it("will not save the empty form over the trail", async () => {
@@ -134,16 +112,19 @@ describe("TrailEditor", () => {
 
       await userEvent.click(saveButton());
 
-      expect(api.updateTrail).not.toHaveBeenCalled();
+      expect(puts()).toHaveLength(0);
     });
   });
 
   it("keeps Save out of reach while the trail is still on its way", async () => {
     let arrive: (trail: TrailResponse) => void = () => {};
-    api.getTrailByIdentifier.mockReturnValue(
-      new Promise<TrailResponse>((resolve) => {
-        arrive = resolve;
-      }),
+    api.mock.on(
+      "GET",
+      TRAIL,
+      () =>
+        new Promise<TrailResponse>((resolve) => {
+          arrive = resolve;
+        }),
     );
 
     render(<TrailEditor data={short} selected />);
@@ -158,7 +139,9 @@ describe("TrailEditor", () => {
   });
 
   it("reports a save that failed rather than a save that did not happen", async () => {
-    api.updateTrail.mockRejectedValue(new Error("409"));
+    api.mock.on("PUT", TRAIL, () => {
+      throw new ApiError("Conflict", 409);
+    });
 
     render(<TrailEditor data={short} selected />);
     await open();
@@ -170,7 +153,9 @@ describe("TrailEditor", () => {
   });
 
   it("lets go of the button again after a save that failed", async () => {
-    api.updateTrail.mockRejectedValue(new Error("409"));
+    api.mock.on("PUT", TRAIL, () => {
+      throw new ApiError("Conflict", 409);
+    });
 
     render(<TrailEditor data={short} selected />);
     await open();
@@ -189,7 +174,7 @@ describe("TrailEditor", () => {
     await userEvent.type(length, "12.5");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().trailLength).toBe(12.5);
   });
 
@@ -204,7 +189,7 @@ describe("TrailEditor", () => {
     await userEvent.type(parking, "By the lake");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().visitorInformation).toEqual({
       gettingThere: "Bus 100",
       publicTransport: "Yes",
@@ -217,17 +202,14 @@ describe("TrailEditor", () => {
   });
 
   it("fills a missing visitor block rather than sending nothing for it", async () => {
-    api.getTrailByIdentifier.mockResolvedValue({
-      ...full,
-      visitorInformation: null,
-    } as unknown as TrailResponse);
+    api.mock.on("GET", TRAIL, () => ({ ...full, visitorInformation: null }));
 
     render(<TrailEditor data={short} selected />);
     await open();
     await screen.findByDisplayValue("Knalleleden");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().visitorInformation).toEqual({
       gettingThere: "",
       publicTransport: "",
@@ -254,7 +236,7 @@ describe("TrailEditor", () => {
 
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().trailSymbol).toHaveLength(40);
   });
 
@@ -264,7 +246,7 @@ describe("TrailEditor", () => {
     await screen.findByDisplayValue("Borås Stad");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().links).toEqual([{ identifier: "link-1", title: "Borås Stad", link: "https://www.boras.se" }]);
   });
 
@@ -278,7 +260,7 @@ describe("TrailEditor", () => {
     await userEvent.type(screen.getByLabelText("Link 2 address"), "https://example.com/karta");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().links).toEqual([
       { identifier: "link-1", title: "Borås Stad", link: "https://www.boras.se" },
       { title: "Karta", link: "https://example.com/karta" },
@@ -293,7 +275,7 @@ describe("TrailEditor", () => {
     await userEvent.click(screen.getByRole("button", { name: "Remove link 1" }));
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().links).toEqual([]);
   });
 
@@ -320,7 +302,37 @@ describe("TrailEditor", () => {
     await userEvent.type(screen.getByPlaceholderText("Add tag and press Enter"), "moss");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateTrail).toHaveBeenCalled());
+    await waitFor(() => expect(puts()).toHaveLength(1));
     expect(sent().tags).toBe('["forest","moss"]');
+  });
+  it("can try again after a failed load, and then edit", async () => {
+    api.mock.on("GET", TRAIL, () => {
+      throw new ApiError("Not found", 404);
+    });
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByText(/could not be loaded/);
+
+    api.mock.on("GET", TRAIL, () => full);
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+    expect(await screen.findByDisplayValue("Knalleleden")).toBeVisible();
+    expect(saveButton()).toBeEnabled();
+  });
+
+  it("keeps what the server saved, and marks the trail list stale", async () => {
+    api.mock.on("PUT", TRAIL, (request) => ({ ...full, ...(request as object) }));
+    const { client } = render(<TrailEditor data={short} selected />);
+    client.setQueryData(["/api/v1/admin/trails"], []);
+    await open();
+
+    const name = await screen.findByDisplayValue("Knalleleden");
+    await userEvent.clear(name);
+    await userEvent.type(name, "Knalleleden norr");
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(toasted.success).toHaveBeenCalledWith("Trail updated successfully."));
+    expect(client.getQueryData<TrailResponse>([TRAIL])?.name).toBe("Knalleleden norr");
+    expect(client.getQueryState(["/api/v1/admin/trails"])?.isInvalidated).toBe(true);
   });
 });

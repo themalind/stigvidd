@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { Session } from "@/features/trail-import/api/trail-import";
-import type { AdminTrailListItem } from "@/types/types";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
 
 export type TrailStats = {
   total: number;
@@ -12,7 +12,7 @@ export type TrailStats = {
   withoutDescription: number;
 };
 
-export function trailStats(trails: AdminTrailListItem[]): TrailStats {
+export function trailStats(trails: AdminTrailListItemResponse[]): TrailStats {
   return {
     total: trails.length,
     inactive: trails.filter((t) => !t.isVerified).length,

@@ -35,6 +35,7 @@ import type {
   SetTrailVerifiedRequest,
   TrailImageResponse,
   TrailResponse,
+  TrailSymbolResponse,
   UpdateTrailRequest
 } from '../model';
 
@@ -794,7 +795,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 }
 
 export const adminTrailsSetTrailSymbol = async (identifier: string,
-    adminTrailsSetTrailSymbolBody?: AdminTrailsSetTrailSymbolBody, options?: RequestInit): Promise<string> => {
+    adminTrailsSetTrailSymbolBody?: AdminTrailsSetTrailSymbolBody, options?: RequestInit): Promise<TrailSymbolResponse> => {
     const formData = new FormData();
 if(adminTrailsSetTrailSymbolBody?.ContentType !== undefined && adminTrailsSetTrailSymbolBody.ContentType !== null) {
  formData.append(`ContentType`, adminTrailsSetTrailSymbolBody.ContentType);
@@ -839,7 +840,7 @@ if(adminTrailsSetTrailSymbolBody?.CropHeight !== undefined && adminTrailsSetTrai
  formData.append(`CropHeight`, adminTrailsSetTrailSymbolBody.CropHeight.toString())
  }
 
-  return customFetch<string>(getAdminTrailsSetTrailSymbolUrl(identifier),
+  return customFetch<TrailSymbolResponse>(getAdminTrailsSetTrailSymbolUrl(identifier),
   {
     ...options,
     method: 'POST'

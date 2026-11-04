@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { AdminTrailListItem } from "@/types/types";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
 
 export const TRAIL_MISSING = [
   { value: "All", label: "Missing anything" },
@@ -69,7 +69,7 @@ function km(value: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-function isMissing(trail: AdminTrailListItem, missing: TrailFilterState["missing"]): boolean {
+function isMissing(trail: AdminTrailListItemResponse, missing: TrailFilterState["missing"]): boolean {
   switch (missing) {
     case "Images":
       return !trail.hasImages;
@@ -86,8 +86,10 @@ function isMissing(trail: AdminTrailListItem, missing: TrailFilterState["missing
   }
 }
 
-function compare(sort: TrailFilterState["sort"]): (a: AdminTrailListItem, b: AdminTrailListItem) => number {
-  const byName = (a: AdminTrailListItem, b: AdminTrailListItem) => a.name.localeCompare(b.name, "sv");
+function compare(
+  sort: TrailFilterState["sort"],
+): (a: AdminTrailListItemResponse, b: AdminTrailListItemResponse) => number {
+  const byName = (a: AdminTrailListItemResponse, b: AdminTrailListItemResponse) => a.name.localeCompare(b.name, "sv");
   switch (sort) {
     case "Newest":
       return (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt) || byName(a, b);
@@ -121,17 +123,17 @@ export function filtersFromSearch(params: URLSearchParams): TrailFilterState {
   };
 }
 
-export function trailCities(trails: AdminTrailListItem[]): string[] {
+export function trailCities(trails: AdminTrailListItemResponse[]): string[] {
   return [...new Set(trails.map((t) => t.city).filter((city) => city.trim() !== ""))].sort((a, b) =>
     a.localeCompare(b, "sv"),
   );
 }
 
 export function filterTrails(
-  trails: AdminTrailListItem[],
+  trails: AdminTrailListItemResponse[],
   filters: TrailFilterState,
   now: number = Date.now(),
-): AdminTrailListItem[] {
+): AdminTrailListItemResponse[] {
   const terms = fold(filters.query).split(/\s+/).filter(Boolean);
   const minKm = km(filters.minKm);
   const maxKm = km(filters.maxKm);
