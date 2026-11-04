@@ -4,6 +4,7 @@
 using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WebDataContracts.ResponseModels.CityArea;
 
 namespace StigviddAPI.Controllers
 {
@@ -20,7 +21,7 @@ namespace StigviddAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll(CancellationToken ctoken)
+        public async Task<ActionResult<IReadOnlyCollection<CityAreaResponse>>> GetAll(CancellationToken ctoken)
         {
             var result = await _cityAreaService.GetAllAsync(ctoken);
 
@@ -34,7 +35,7 @@ namespace StigviddAPI.Controllers
 
         [HttpGet]
         [Route("{identifier}")]
-        public async Task<IActionResult> GetByIdentifier([FromRoute] string identifier, CancellationToken ctoken)
+        public async Task<ActionResult<CityAreaResponse>> GetByIdentifier([FromRoute] string identifier, CancellationToken ctoken)
         {
             var result = await _cityAreaService.GetByIdentifierAsync(identifier, ctoken);
 

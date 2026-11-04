@@ -61,4 +61,32 @@ public class CityAreaResponseFactory
     {
         return cityAreas.Select(Create).ToList();
     }
+
+    public IReadOnlyCollection<AdminCityAreaResponse> CreateAdmin(IReadOnlyCollection<AdminCityAreaProjection> cityAreas)
+    {
+        return cityAreas
+            .Select(area => new AdminCityAreaResponse
+            {
+                Identifier = area.Identifier,
+                Name = area.Name,
+                Location = area.Location,
+                Facilities = area.Facilities
+                    .Select(f => new AdminCityAreaFacilityResponse
+                    {
+                        Identifier = f.Identifier,
+                        Name = f.Name,
+                        FacilityType = f.FacilityType
+                    })
+                    .ToList(),
+                Trails = area.Trails
+                    .Select(t => new AdminCityAreaTrailResponse
+                    {
+                        Identifier = t.Identifier,
+                        Name = t.Name,
+                        IsVerified = t.IsVerified
+                    })
+                    .ToList()
+            })
+            .ToList();
+    }
 }

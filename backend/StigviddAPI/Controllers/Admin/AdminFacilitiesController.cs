@@ -27,6 +27,19 @@ public class AdminFacilitiesController : StigViddController
         _facilityService = facilityService;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyCollection<FacilityResponse>>> GetAll(CancellationToken ctoken)
+    {
+        var result = await _facilityService.GetAllIncludingUnmappedAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPost]
     public async Task<ActionResult<FacilityResponse>> Create([FromBody] CreateFacilityRequest request, CancellationToken ctoken)
     {

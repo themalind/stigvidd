@@ -59,6 +59,26 @@ public class FacilityRepository : IFacilityRepository
         }
     }
 
+    public async Task<RepositoryResult<IReadOnlyCollection<Facility>>> GetAllIncludingUnmappedAsync(CancellationToken ctoken)
+    {
+        try
+        {
+            using var dbContext = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var facilities = await dbContext.Facilities
+                .AsNoTracking()
+                .OrderBy(f => f.Name)
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<Facility>>.Success(facilities);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "FacilityRepository: GetAllIncludingUnmappedAsync -> Something went wrong when fetching all facilities.");
+            return RepositoryResult<IReadOnlyCollection<Facility>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<Facility>> GetByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         try

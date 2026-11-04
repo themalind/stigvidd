@@ -52,6 +52,8 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 - `"AdminOnly"` is an unchecked string; `EndpointAuthorizationTests` pins it and every route behind it.
 - Nullable warnings are errors. **Never use the null-forgiving `!`** in C# or TS, tests included. C# tests:
   `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`.
+  A many-to-many join (`CityAreaFacility`, `CityAreaTrail`) needs no nullable navigation: query/add rows via
+  `context.Set<Dictionary<string, object>>("CityAreaFacility")` + `EF.Property<int>(row, "CityAreaId")` (`CityAreaRepository.SetLinkAsync`).
 - Geometry is SRID 4326, built only via `GeoPointFactory.FromLonLat(lon, lat)`. Any other
   `WithSRID(...)` is a bug. Lat/long travel as a pair ([note](docs/notes/srid-4326.md)).
 - Tests: xunit.v3 + **AwesomeAssertions** (never FluentAssertions) + Moq. Every token is
