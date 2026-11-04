@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./auth-context";
 import { getStigviddUser } from "@/features/auth/api/user";
@@ -80,19 +80,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.clear();
   }, [queryClient]);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        stigviddUser,
-        isLoading,
-        isAuthenticated: user !== null,
-        getToken: getValidAccessToken,
-        login,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      stigviddUser,
+      isLoading,
+      isAuthenticated: user !== null,
+      getToken: getValidAccessToken,
+      login,
+      logout,
+    }),
+    [user, stigviddUser, isLoading, login, logout],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
