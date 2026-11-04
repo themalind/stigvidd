@@ -65,8 +65,8 @@ export type FacilityResponse = {
   name: string;
   facilityType: number;
   isAccessible: boolean;
-  latitude: number;
-  longitude: number;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 /** Server-side processing knobs sent as multipart form fields alongside an upload. */

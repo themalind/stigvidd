@@ -2,23 +2,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { FacilityResponse, ImageProcessingOptions, TrailImageResponse } from "@/types/types";
-import { getFacilitiesGetAllUrl } from "./generated/facilities/facilities";
-// Facility image management is admin-only and lives under api/v1/admin/facilities.
 import {
+  adminFacilitiesGetAll,
   getAdminFacilitiesAddFacilityImagesUrl,
   getAdminFacilitiesDeleteFacilityImageUrl,
 } from "./generated/admin-facilities/admin-facilities";
 import { customFetch } from "./mutator";
 import { appendProcessingOptions } from "./image-options";
 
-// See trail.ts for the wrapper rationale. The generated facility GET/DELETE
-// functions are typed `Blob` (the backend didn't annotate those responses), so
-// they go through the URL builder + `customFetch` mutator with the real types.
-
+// The admin list, as the public one drops facilities without coordinates. keep-comment: two endpoints look interchangeable
 export async function getAllFacilities(): Promise<FacilityResponse[]> {
-  return customFetch<FacilityResponse[]>(getFacilitiesGetAllUrl(), {
-    method: "GET",
-  });
+  return (await adminFacilitiesGetAll()) as FacilityResponse[];
 }
 
 export async function uploadFacilityImages(

@@ -1,7 +1,19 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { DatabaseBackup, Flag, Gauge, Images, Mail, Route, Send, Settings2, Upload, Users } from "lucide-react";
+import {
+  DatabaseBackup,
+  Flag,
+  Gauge,
+  Images,
+  Mail,
+  MapPinned,
+  Route,
+  Send,
+  Settings2,
+  Upload,
+  Users,
+} from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "../ui/sidebar";
 import { NavLink } from "react-router";
 
@@ -23,6 +35,14 @@ export default function NavMain() {
               <NavLink to={"/trails"}>
                 <Settings2 />
                 <span>Trails</span>
+              </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <NavLink to={"/areas"}>
+                <MapPinned />
+                <span>Areas</span>
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
