@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import type { MailTemplateToken } from "@/types/types";
+import type { MailTemplateTokenResponse } from "@/api/generated/model";
 import {
   buttonLinkStyle,
   codeParagraphStyle,
@@ -296,7 +296,7 @@ describe("style recognition", () => {
 });
 
 describe("reviewTokens", () => {
-  const known: MailTemplateToken[] = [
+  const known: MailTemplateTokenResponse[] = [
     { name: "NickName", label: "Nickname", description: "", sampleValue: "Ralf", isUsed: false },
     { name: "VerificationUrl", label: "Link", description: "", sampleValue: "https://x", isUsed: false },
   ];

@@ -11,5 +11,5 @@ export interface MailTemplateTokenResponse {
   label: string;
   description: string;
   sampleValue: string;
-  isUsed?: boolean;
+  isUsed: boolean;
 }

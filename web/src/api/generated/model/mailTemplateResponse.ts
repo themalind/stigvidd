@@ -16,10 +16,10 @@ export interface MailTemplateResponse {
   bodyText: string;
   /** @nullable */
   description?: string | null;
-  lastUpdatedAt?: string;
+  lastUpdatedAt: string;
   /** @nullable */
   purpose?: string | null;
-  isKnown?: boolean;
+  isKnown: boolean;
   tokens: MailTemplateTokenResponse[];
   unknownTokens: string[];
   missingTokens: string[];

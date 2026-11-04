@@ -2,28 +2,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import MailTemplatePage from "./mail-template";
-import type { MailTemplate } from "@/types/types";
+import type { MailTemplateResponse } from "@/api/generated/model";
+import { ApiError } from "@/api/mutator";
+import { renderWithProviders } from "@/testing/render";
 
-const api = vi.hoisted(() => ({
-  getMailTemplate: vi.fn(),
-  updateMailTemplate: vi.fn(),
-  previewMailTemplate: vi.fn(),
+const api = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
+});
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: api.mock.customFetch,
 }));
-vi.mock("@/features/mail/api/mail-templates", () => api);
 
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast: toasts }));
 
-vi.mock("react-router", () => ({
-  useParams: () => ({ identifier: "tpl-1" }),
-  Link: ({ children }: { children: React.ReactNode }) => <a href="#">{children}</a>,
-}));
+import MailTemplatePage from "./mail-template";
+
+const TEMPLATE = "/api/v1/admin/mail-templates/tpl-1";
+const PREVIEW = `${TEMPLATE}/preview`;
+
+function renderPage() {
+  return renderWithProviders(<MailTemplatePage />, {
+    initialEntries: ["/mail-templates/tpl-1"],
+    path: "/mail-templates/:identifier",
+  });
+}
+
+const savedBodies = () => api.mock.calls.filter((call) => call.method === "PUT").map((call) => call.body);
 
 // The seeded verify-email row, which is the one with a production caller.
-function template(overrides: Partial<MailTemplate> = {}): MailTemplate {
+function template(overrides: Partial<MailTemplateResponse> = {}): MailTemplateResponse {
   return {
     identifier: "tpl-1",
     key: "verify-email",
@@ -85,15 +97,14 @@ function messageStartingWith(prefix: string) {
 }
 
 beforeEach(() => {
-  api.getMailTemplate.mockResolvedValue(template());
-  api.updateMailTemplate.mockImplementation((_id: string, request: unknown) =>
-    Promise.resolve({ ...template(), ...(request as object) }),
-  );
-  api.previewMailTemplate.mockResolvedValue({
+  api.mock.reset();
+  api.mock.on("GET", TEMPLATE, () => template());
+  api.mock.on("PUT", TEMPLATE, (request) => ({ ...template(), ...(request as object) }));
+  api.mock.on("POST", PREVIEW, () => ({
     subject: "Bekräfta din e-postadress",
     bodyHtml: "<p>Hej Ralf</p>",
     bodyText: "Hej Ralf",
-  });
+  }));
 });
 
 /**
@@ -104,18 +115,18 @@ beforeEach(() => {
  */
 describe("the guard against rewriting a template nobody edited", () => {
   it("cannot be saved until something is actually edited", async () => {
-    render(<MailTemplatePage />);
+    renderPage();
 
     await screen.findByDisplayValue("Bekräfta din e-postadress");
 
     expect(saveButton()).toBeDisabled();
-    expect(api.updateMailTemplate).not.toHaveBeenCalled();
+    expect(savedBodies()).toHaveLength(0);
   });
 
   it("stays unsaveable even after the visual editor has loaded and normalised the body", async () => {
     // Loading the body into the editor re-serialises it (the stored newlines go, the CSSOM
     // rewrites style values). None of that is an edit, and none of it may enable the button.
-    render(<MailTemplatePage />);
+    renderPage();
 
     await screen.findByDisplayValue("Bekräfta din e-postadress");
     await waitFor(() => expect(document.querySelector(".ProseMirror")).not.toBeNull());
@@ -128,7 +139,7 @@ describe("the guard against rewriting a template nobody edited", () => {
     // announced itself as a change, an operator who only wanted to READ the markup would
     // leave the template dirty, and the next click of Save would write a body they never
     // touched.
-    render(<MailTemplatePage />);
+    renderPage();
     await screen.findByDisplayValue("Bekräfta din e-postadress");
 
     await userEvent.click(screen.getByRole("tab", { name: "HTML source" }));
@@ -138,7 +149,7 @@ describe("the guard against rewriting a template nobody edited", () => {
   });
 
   it("keeps an edit made in the source view when switching to the visual one", async () => {
-    render(<MailTemplatePage />);
+    renderPage();
     await screen.findByDisplayValue("Bekräfta din e-postadress");
 
     await typeIntoSource("<p>Hej {{NickName}}, nytt innehåll</p>");
@@ -155,7 +166,7 @@ describe("the guard against rewriting a template nobody edited", () => {
   });
 
   it("becomes saveable once the operator changes something", async () => {
-    render(<MailTemplatePage />);
+    renderPage();
 
     await userEvent.type(await screen.findByLabelText("Subject"), "!");
 
@@ -163,19 +174,32 @@ describe("the guard against rewriting a template nobody edited", () => {
   });
 
   it("sends exactly what is on screen", async () => {
-    render(<MailTemplatePage />);
+    renderPage();
 
     await userEvent.type(await screen.findByLabelText("Subject"), "!");
     await userEvent.click(saveButton());
 
-    await waitFor(() => expect(api.updateMailTemplate).toHaveBeenCalledOnce());
+    await waitFor(() => expect(savedBodies()).toHaveLength(1));
 
-    expect(api.updateMailTemplate).toHaveBeenCalledWith("tpl-1", {
+    expect(savedBodies()[0]).toEqual({
       subject: "Bekräfta din e-postadress!",
       bodyHtml: expect.stringContaining("{{VerificationUrl}}"),
       bodyText: expect.stringContaining("{{NickName}}"),
       description: "Skickas vid registrering.",
     });
+  });
+});
+
+describe("after a save", () => {
+  it("is clean again and says the next mail uses it", async () => {
+    renderPage();
+
+    await userEvent.type(await screen.findByLabelText("Subject"), "!");
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith("Template saved. The next mail sent will use it."));
+    expect(saveButton()).toBeDisabled();
+    expect(screen.getByDisplayValue("Bekräfta din e-postadress!")).toBeInTheDocument();
   });
 });
 
@@ -185,7 +209,7 @@ describe("the guard against rewriting a template nobody edited", () => {
  */
 describe("placeholder guard rails", () => {
   it("refuses to save a placeholder this template does not supply, and names it", async () => {
-    render(<MailTemplatePage />);
+    renderPage();
     await screen.findByDisplayValue("Bekräfta din e-postadress");
 
     await typeIntoSource("<p>Hej {{NickNmae}}</p>");
@@ -198,7 +222,7 @@ describe("placeholder guard rails", () => {
   });
 
   it("shows an unrecognised placeholder in the palette with the consequence spelled out", async () => {
-    render(<MailTemplatePage />);
+    renderPage();
     await screen.findByDisplayValue("Bekräfta din e-postadress");
 
     await typeIntoSource("<p>{{Nonsense}}</p>");
@@ -211,7 +235,7 @@ describe("placeholder guard rails", () => {
     // This renders perfectly well — the renderer ignores a model key the copy does not use.
     // It just mails somebody a verification with no way to verify, which is the operator's
     // call to make and not the page's to refuse.
-    render(<MailTemplatePage />);
+    renderPage();
     await screen.findByDisplayValue("Bekräfta din e-postadress");
 
     // Both bodies: a placeholder still present in the plain-text half is still going out, so
@@ -237,21 +261,21 @@ describe("placeholder guard rails", () => {
 
 describe("the preview", () => {
   it("renders the draft through the API rather than guessing locally", async () => {
-    render(<MailTemplatePage />);
+    renderPage();
 
     await userEvent.click(await screen.findByRole("button", { name: /Preview/ }));
 
-    await waitFor(() => expect(api.previewMailTemplate).toHaveBeenCalledOnce());
+    await waitFor(() => expect(api.mock.calls.some((call) => call.path === PREVIEW)).toBe(true));
 
     expect(await screen.findByTitle("Mail preview")).toBeInTheDocument();
   });
 
   it("surfaces the server's refusal instead of showing a stale preview", async () => {
-    api.previewMailTemplate.mockRejectedValue(
-      new Error("The mail template uses the placeholder '{{Nope}}' but the model has no value for it."),
-    );
+    api.mock.on("POST", PREVIEW, () => {
+      throw new ApiError("The mail template uses the placeholder '{{Nope}}' but the model has no value for it.", 400);
+    });
 
-    render(<MailTemplatePage />);
+    renderPage();
 
     await userEvent.click(await screen.findByRole("button", { name: /Preview/ }));
 
@@ -264,7 +288,7 @@ describe("the plain-text body", () => {
   it("is only rewritten from the HTML when the operator asks", async () => {
     // BodyText is required and may well have been hand-tuned. Regenerating it on save would
     // throw that away without anybody choosing to.
-    render(<MailTemplatePage />);
+    renderPage();
 
     await userEvent.click(await screen.findByRole("tab", { name: "Plain text" }));
 
@@ -279,11 +303,11 @@ describe("the plain-text body", () => {
 
 describe("a template no code sends", () => {
   it("says so, and does not condemn the placeholders it happens to use", async () => {
-    api.getMailTemplate.mockResolvedValue(
+    api.mock.on("GET", TEMPLATE, () =>
       template({ key: "orphan", purpose: null, isKnown: false, tokens: [], missingTokens: [] }),
     );
 
-    render(<MailTemplatePage />);
+    renderPage();
 
     expect(await screen.findByText(/No code declares this template key/)).toBeInTheDocument();
     expect(screen.queryByText(/Saving is blocked/)).not.toBeInTheDocument();
@@ -294,9 +318,11 @@ describe("when the template cannot be loaded", () => {
   it("offers no editor at all rather than a blank form over live copy", async () => {
     // The trail editor once shipped a live Save button over a blank form after a failed
     // load; one click overwrote the record. Not repeating that here.
-    api.getMailTemplate.mockRejectedValue(new Error("nope"));
+    api.mock.on("GET", TEMPLATE, () => {
+      throw new ApiError("Not found", 404);
+    });
 
-    render(<MailTemplatePage />);
+    renderPage();
 
     expect(await screen.findByText("Template not available")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Save changes/ })).not.toBeInTheDocument();

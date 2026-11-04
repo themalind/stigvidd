@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { tokenText } from "@/features/mail/utils/mail-template";
-import type { MailTemplateToken } from "@/types/types";
+import type { MailTemplateTokenResponse } from "@/api/generated/model";
 
 type Props = {
-  tokens: MailTemplateToken[];
+  tokens: MailTemplateTokenResponse[];
   /** Lower-cased names the draft uses right now, from reviewTokens. */
   used: Set<string>;
   /** Names in the draft that this template's caller does not supply. */

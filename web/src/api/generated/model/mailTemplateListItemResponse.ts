@@ -13,8 +13,8 @@ export interface MailTemplateListItemResponse {
   subject: string;
   /** @nullable */
   description?: string | null;
-  lastUpdatedAt?: string;
-  isKnown?: boolean;
-  unknownTokenCount?: number;
-  missingTokenCount?: number;
+  lastUpdatedAt: string;
+  isKnown: boolean;
+  unknownTokenCount: number;
+  missingTokenCount: number;
 }

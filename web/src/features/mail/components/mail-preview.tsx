@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { MailTemplatePreview } from "@/types/types";
+import type { MailTemplatePreviewResponse } from "@/api/generated/model";
 
-type Props = { preview: MailTemplatePreview };
+type Props = { preview: MailTemplatePreviewResponse };
 
 /**
  * The rendered draft, in a sandboxed iframe.

@@ -36,13 +36,13 @@ import {
 } from "@/features/mail/utils/mail-template";
 import { mailEditorExtensions } from "./mail-editor-schema";
 import MailSourceTextarea from "./mail-source-textarea";
-import type { MailTemplateToken } from "@/types/types";
+import type { MailTemplateTokenResponse } from "@/api/generated/model";
 import { cn } from "@/lib/utils";
 
 type Props = {
   value: string;
   onChange: (bodyHtml: string) => void;
-  tokens: MailTemplateToken[];
+  tokens: MailTemplateTokenResponse[];
   /**
    * What a trip through the schema would do to the body AS STORED. Computed by the page from
    * the loaded row rather than here, so that switching tabs — which unmounts this component —
@@ -289,7 +289,7 @@ function LinkControl({
   currentHref,
 }: {
   editor: Editor;
-  tokens: MailTemplateToken[];
+  tokens: MailTemplateTokenResponse[];
   currentHref?: string;
 }) {
   const [href, setHref] = useState("");

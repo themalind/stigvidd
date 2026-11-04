@@ -19,19 +19,19 @@ public class MailTemplateListItemResponse
 
     public string? Description { get; set; }
 
-    public DateTime LastUpdatedAt { get; set; }
+    public required DateTime LastUpdatedAt { get; set; }
 
     /// <summary>
     /// Whether any C# caller declares this key. False means the row is orphaned -- nothing
     /// sends it -- which is worth showing rather than hiding.
     /// </summary>
-    public bool IsKnown { get; set; }
+    public required bool IsKnown { get; set; }
 
     /// <summary>Placeholders used that the caller does not supply. Any at all stops the mail.</summary>
-    public int UnknownTokenCount { get; set; }
+    public required int UnknownTokenCount { get; set; }
 
     /// <summary>Placeholders supplied but unused. Renders fine; may mean a useless mail.</summary>
-    public int MissingTokenCount { get; set; }
+    public required int MissingTokenCount { get; set; }
 
     public static MailTemplateListItemResponse Create(
         string identifier,
