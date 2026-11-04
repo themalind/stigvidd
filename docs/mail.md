@@ -354,7 +354,7 @@ moment the page opened. See
 | `Core/Services/Mail/MailTemplateAdminService.cs` | the editor's read/update/preview, and the unknown-placeholder refusal |
 | `Core/Services/Mail/MailHtmlPolicy.cs` | the email-safe markup allowlist a save is checked against |
 | `StigviddAPI/Controllers/Admin/MailTemplatesController.cs` | `api/v1/admin/mail-templates`, admin-only |
-| `web/src/lib/mail-template.ts` | the editor's pure rules: the token grammar, the HTML scanner, loss detection |
+| `web/src/features/mail/utils/mail-template.ts` | the editor's pure rules: the token grammar, the HTML scanner, loss detection |
 | `Core/Services/Mail/MailOutboxQueue.cs` | the `Channel<int>` trigger |
 | `Core/Services/Mail/SmtpMailSender.cs` | MailKit; STARTTLS on 587 |
 | `Core/Services/Mail/LoggingMailSender.cs` | the no-op used when `Smtp:Host` is absent |
@@ -363,7 +363,7 @@ moment the page opened. See
 | `StigviddAPI/BackgroundServices/MailOutboxRetentionService.cs` | the retention run: clear settled bodies, then delete past-window rows |
 | `Core/Services/Mail/MailOutboxAdminService.cs` | the admin read/retry/cancel/purge, and the body route's redaction refusal |
 | `StigviddAPI/Controllers/Admin/AdminMailOutboxController.cs` | `api/v1/admin/mail-outbox`, admin-only; logs retry, cancel, purge and every body read |
-| `web/src/lib/mail-outbox.ts` | the outbox page's pure rules: what may be retried, revealed, and what a purge says |
+| `web/src/features/mail/utils/mail-outbox.ts` | the outbox page's pure rules: what may be retried, revealed, and what a purge says |
 
 Related: [observability](observability.md) for where the logs go,
 [push-notifications](push-notifications.md) for the other notification channel, and

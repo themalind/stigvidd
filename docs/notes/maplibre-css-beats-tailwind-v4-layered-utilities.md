@@ -1,7 +1,7 @@
 # A MapLibre container sized with Tailwind `absolute inset-0` renders at height 0 in web/
 
 Measured 2026-10-16 in `web/` (Tailwind 4.1, maplibre-gl 5.6), on the hike-submission review map
-([submission-map.tsx](../../web/src/components/hike-submissions/submission-map.tsx)).
+([submission-map.tsx](../../web/src/features/hike-submissions/components/submission-map.tsx)).
 
 **Symptom:** the map area is empty. In dark mode it is the same colour as the page, so it looks like
 nothing rendered. Absolutely positioned overlays in the same wrapper, like the legend, still show, so

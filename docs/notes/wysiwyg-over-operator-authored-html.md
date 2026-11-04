@@ -67,7 +67,7 @@ doing this and a real browser does it too. Two consequences worth keeping:
 ## Detect loss, do not compare for equality
 
 Asking *are these equal* is useless: it fires on 100% of real inputs and gets switched off on
-day one. `detectLoss` in [`web/src/lib/mail-template.ts`](../../web/src/lib/mail-template.ts)
+day one. `detectLoss` in [`web/src/features/mail/utils/mail-template.ts`](../../web/src/features/mail/utils/mail-template.ts)
 asks the answerable question instead — **did anything disappear** (tokens, elements,
 attributes, wording) — which is blind to formatting by construction. Three verdicts follow:
 `identical`, `equivalent` (nothing lost, bytes differ — normal) and `lossy` (open the HTML

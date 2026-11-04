@@ -4,10 +4,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./App.tsx";
-import Providers from "./app/providers.tsx";
-import { initTelemetry } from "./services/telemetry.ts";
-import { isStaging } from "./lib/environment.ts";
+import App from "@/app/app.tsx";
+import Providers from "@/app/provider.tsx";
+import { initTelemetry } from "@/lib/telemetry.ts";
+import { isStaging } from "@/config/environment.ts";
 
 // At module scope, before the first render, so an error thrown while React is still
 // mounting is already covered. No-ops entirely unless VITE_OO_LOGS_* are configured.

@@ -1,7 +1,7 @@
 # vi.useFakeTimers() leaves a web component stuck on its first render, so drive polls by capturing setInterval
 
 **Symptom.** A polling test for
-[media-reprocess-jobs.tsx](../../web/src/components/media/media-reprocess-jobs.tsx)
+[media-reprocess-jobs.tsx](../../web/src/features/media/components/media-reprocess-jobs.tsx)
 (2026-09-28) called `vi.useFakeTimers()`, rendered, and ran `await vi.advanceTimersByTimeAsync(0)`
 and then `(9000)`. The mocked `getMediaReprocessJobs` had been called once and its promise had
 resolved, but `document.body.textContent` was still `Loading…`. The poll interval was never

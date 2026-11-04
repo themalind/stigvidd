@@ -15,7 +15,7 @@ passes or fails for a reason unrelated to what it claims to test.
 The symptom is not an error. It is a test that fails with something plausible-looking —
 *Unable to find an element with the text `/^Saving is blocked:/`* — while the code under test
 is correct and merely never received a placeholder. Measured in
-`web/src/pages/admin/mail-template-page.test.tsx`, where three tests failed this way at once.
+`web/src/app/routes/mail-template.test.tsx`, where three tests failed this way at once.
 
 ## What to do instead
 

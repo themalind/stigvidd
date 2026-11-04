@@ -40,7 +40,7 @@ holds is worth pinning — but renamed to say what they actually demonstrate
 measurement in the comment so nobody re-reads them as coverage of the decoding.
 
 The same reasoning applies to the other allowlists here: `MailHtmlPolicy`'s tag and attribute
-lists, `isSafeMailUrl` in [`web/src/lib/mail-template.ts`](../../web/src/lib/mail-template.ts),
+lists, `isSafeMailUrl` in [`web/src/features/mail/utils/mail-template.ts`](../../web/src/features/mail/utils/mail-template.ts),
 and `ApprovedAnonymousEndpoints` / `ApprovedAdminEndpoints` in `EndpointAuthorizationTests`.
 Adding a "we block X" test to any of them proves the list, never the parsing in front of it.
 

@@ -156,8 +156,8 @@ export const CLASSIFICATION: Record<number, string> = {
 
 // ── mail templates ───────────────────────────────────────────────────────────
 // Tightened from the generated models, which are looser than the UI needs (orval marks the
-// value types optional/nullable). Asserted back to these in src/api/mail-templates.ts, which
-// is the convention src/api/trail.ts documents.
+// value types optional/nullable). Asserted back to these in src/features/mail/api/mail-templates.ts, which
+// is the convention src/features/trails/api/trail.ts documents.
 
 export type MailTemplateToken = {
   name: string;

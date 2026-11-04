@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { getValidAccessToken } from "@/services/keycloak-auth";
-import { logger } from "@/services/telemetry";
+import { getValidAccessToken } from "@/lib/keycloak-auth";
+import { logger } from "@/lib/telemetry";
 
 /**
  * Single request choke point for the orval-generated API client (see
