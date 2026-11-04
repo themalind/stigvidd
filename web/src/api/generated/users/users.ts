@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -82,78 +85,48 @@ export const usersCreateUser = async (createUserRequest: CreateUserRequest, opti
 
 
 
-export const getUsersCreateUserQueryKey = (createUserRequest?: CreateUserRequest,) => {
-    return [
-    'POST', `/api/v1/Users/create`, createUserRequest
-    ] as const;
+export const getUsersCreateUserMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError,{data: CreateUserRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError,{data: CreateUserRequest}, TContext> => {
+
+const mutationKey = ['usersCreateUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersCreateUser>>, {data: CreateUserRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  usersCreateUser(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersCreateUserMutationResult = NonNullable<Awaited<ReturnType<typeof usersCreateUser>>>
+    export type UsersCreateUserMutationBody = CreateUserRequest
+    export type UsersCreateUserMutationError = unknown
+
+    export const useUsersCreateUser = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError,{data: CreateUserRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersCreateUser>>,
+        TError,
+        {data: CreateUserRequest},
+        TContext
+      > => {
+      return useMutation(getUsersCreateUserMutationOptions(options), queryClient);
     }
-
-
-export const getUsersCreateUserQueryOptions = <TData = Awaited<ReturnType<typeof usersCreateUser>>, TError = unknown>(createUserRequest: CreateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsersCreateUserQueryKey(createUserRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersCreateUser>>> = ({ signal }) => usersCreateUser(createUserRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsersCreateUserQueryResult = NonNullable<Awaited<ReturnType<typeof usersCreateUser>>>
-export type UsersCreateUserQueryError = unknown
-
-
-export function useUsersCreateUser<TData = Awaited<ReturnType<typeof usersCreateUser>>, TError = unknown>(
- createUserRequest: CreateUserRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersCreateUser>>,
-          TError,
-          Awaited<ReturnType<typeof usersCreateUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersCreateUser<TData = Awaited<ReturnType<typeof usersCreateUser>>, TError = unknown>(
- createUserRequest: CreateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersCreateUser>>,
-          TError,
-          Awaited<ReturnType<typeof usersCreateUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersCreateUser<TData = Awaited<ReturnType<typeof usersCreateUser>>, TError = unknown>(
- createUserRequest: CreateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useUsersCreateUser<TData = Awaited<ReturnType<typeof usersCreateUser>>, TError = unknown>(
- createUserRequest: CreateUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCreateUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsersCreateUserQueryOptions(createUserRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getUsersGetStigViddUserUrl = () => {
+    export const getUsersGetStigViddUserUrl = () => {
 
 
 
@@ -176,48 +149,130 @@ export const usersGetStigViddUser = async ( options?: RequestInit): Promise<User
 
 
 
-export const getUsersGetStigViddUserMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError,void, TContext> => {
-
-const mutationKey = ['usersGetStigViddUser'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersGetStigViddUser>>, void> = () => {
-
-
-          return  usersGetStigViddUser(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UsersGetStigViddUserMutationResult = NonNullable<Awaited<ReturnType<typeof usersGetStigViddUser>>>
-
-    export type UsersGetStigViddUserMutationError = unknown
-
-    export const useUsersGetStigViddUser = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof usersGetStigViddUser>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getUsersGetStigViddUserMutationOptions(options), queryClient);
+export const getUsersGetStigViddUserQueryKey = () => {
+    return [
+    `/api/v1/Users`
+    ] as const;
     }
-    export const getUsersGetAuthenticatedUsersFavoritesUrl = () => {
+
+
+export const getUsersGetStigViddUserQueryOptions = <TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetStigViddUserQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetStigViddUser>>> = ({ signal }) => usersGetStigViddUser({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersGetStigViddUserQueryResult = NonNullable<Awaited<ReturnType<typeof usersGetStigViddUser>>>
+export type UsersGetStigViddUserQueryError = unknown
+
+
+export function useUsersGetStigViddUser<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersGetStigViddUser>>,
+          TError,
+          Awaited<ReturnType<typeof usersGetStigViddUser>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetStigViddUser<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersGetStigViddUser>>,
+          TError,
+          Awaited<ReturnType<typeof usersGetStigViddUser>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetStigViddUser<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersGetStigViddUser<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersGetStigViddUserQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersGetStigViddUserSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetStigViddUserQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetStigViddUser>>> = ({ signal }) => usersGetStigViddUser({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersGetStigViddUserSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof usersGetStigViddUser>>>
+export type UsersGetStigViddUserSuspenseQueryError = unknown
+
+
+export function useUsersGetStigViddUserSuspense<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetStigViddUserSuspense<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetStigViddUserSuspense<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersGetStigViddUserSuspense<TData = Awaited<ReturnType<typeof usersGetStigViddUser>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetStigViddUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersGetStigViddUserSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersGetAuthenticatedUsersFavoritesUrl = () => {
 
 
 
@@ -240,48 +295,130 @@ export const usersGetAuthenticatedUsersFavorites = async ( options?: RequestInit
 
 
 
-export const getUsersGetAuthenticatedUsersFavoritesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError,void, TContext> => {
-
-const mutationKey = ['usersGetAuthenticatedUsersFavorites'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, void> = () => {
-
-
-          return  usersGetAuthenticatedUsersFavorites(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UsersGetAuthenticatedUsersFavoritesMutationResult = NonNullable<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>>
-
-    export type UsersGetAuthenticatedUsersFavoritesMutationError = unknown
-
-    export const useUsersGetAuthenticatedUsersFavorites = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getUsersGetAuthenticatedUsersFavoritesMutationOptions(options), queryClient);
+export const getUsersGetAuthenticatedUsersFavoritesQueryKey = () => {
+    return [
+    `/api/v1/Users/favorites`
+    ] as const;
     }
-    export const getUsersAddTrailToUserFavoritesListUrl = () => {
+
+
+export const getUsersGetAuthenticatedUsersFavoritesQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetAuthenticatedUsersFavoritesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>> = ({ signal }) => usersGetAuthenticatedUsersFavorites({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersGetAuthenticatedUsersFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>>
+export type UsersGetAuthenticatedUsersFavoritesQueryError = unknown
+
+
+export function useUsersGetAuthenticatedUsersFavorites<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersFavorites<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>,
+          TError,
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersFavorites<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersGetAuthenticatedUsersFavorites<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersGetAuthenticatedUsersFavoritesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersGetAuthenticatedUsersFavoritesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetAuthenticatedUsersFavoritesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>> = ({ signal }) => usersGetAuthenticatedUsersFavorites({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersGetAuthenticatedUsersFavoritesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>>
+export type UsersGetAuthenticatedUsersFavoritesSuspenseQueryError = unknown
+
+
+export function useUsersGetAuthenticatedUsersFavoritesSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersFavoritesSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersFavoritesSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersGetAuthenticatedUsersFavoritesSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersFavorites>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersGetAuthenticatedUsersFavoritesSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersAddTrailToUserFavoritesListUrl = () => {
 
 
 
@@ -304,78 +441,48 @@ export const usersAddTrailToUserFavoritesList = async (addToUserFavoritesRequest
 
 
 
-export const getUsersAddTrailToUserFavoritesListQueryKey = (addToUserFavoritesRequest?: AddToUserFavoritesRequest,) => {
-    return [
-    'POST', `/api/v1/Users/favorites`, addToUserFavoritesRequest
-    ] as const;
+export const getUsersAddTrailToUserFavoritesListMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError,{data: AddToUserFavoritesRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError,{data: AddToUserFavoritesRequest}, TContext> => {
+
+const mutationKey = ['usersAddTrailToUserFavoritesList'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, {data: AddToUserFavoritesRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  usersAddTrailToUserFavoritesList(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersAddTrailToUserFavoritesListMutationResult = NonNullable<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>>
+    export type UsersAddTrailToUserFavoritesListMutationBody = AddToUserFavoritesRequest
+    export type UsersAddTrailToUserFavoritesListMutationError = unknown
+
+    export const useUsersAddTrailToUserFavoritesList = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError,{data: AddToUserFavoritesRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>,
+        TError,
+        {data: AddToUserFavoritesRequest},
+        TContext
+      > => {
+      return useMutation(getUsersAddTrailToUserFavoritesListMutationOptions(options), queryClient);
     }
-
-
-export const getUsersAddTrailToUserFavoritesListQueryOptions = <TData = Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError = unknown>(addToUserFavoritesRequest: AddToUserFavoritesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsersAddTrailToUserFavoritesListQueryKey(addToUserFavoritesRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>> = ({ signal }) => usersAddTrailToUserFavoritesList(addToUserFavoritesRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsersAddTrailToUserFavoritesListQueryResult = NonNullable<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>>
-export type UsersAddTrailToUserFavoritesListQueryError = unknown
-
-
-export function useUsersAddTrailToUserFavoritesList<TData = Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError = unknown>(
- addToUserFavoritesRequest: AddToUserFavoritesRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>,
-          TError,
-          Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersAddTrailToUserFavoritesList<TData = Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError = unknown>(
- addToUserFavoritesRequest: AddToUserFavoritesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>,
-          TError,
-          Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersAddTrailToUserFavoritesList<TData = Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError = unknown>(
- addToUserFavoritesRequest: AddToUserFavoritesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useUsersAddTrailToUserFavoritesList<TData = Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError = unknown>(
- addToUserFavoritesRequest: AddToUserFavoritesRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserFavoritesList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsersAddTrailToUserFavoritesListQueryOptions(addToUserFavoritesRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getUsersGetAuthenticatedUsersWishListUrl = () => {
+    export const getUsersGetAuthenticatedUsersWishListUrl = () => {
 
 
 
@@ -398,48 +505,130 @@ export const usersGetAuthenticatedUsersWishList = async ( options?: RequestInit)
 
 
 
-export const getUsersGetAuthenticatedUsersWishListMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError,void, TContext> => {
-
-const mutationKey = ['usersGetAuthenticatedUsersWishList'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, void> = () => {
-
-
-          return  usersGetAuthenticatedUsersWishList(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UsersGetAuthenticatedUsersWishListMutationResult = NonNullable<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>>
-
-    export type UsersGetAuthenticatedUsersWishListMutationError = unknown
-
-    export const useUsersGetAuthenticatedUsersWishList = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getUsersGetAuthenticatedUsersWishListMutationOptions(options), queryClient);
+export const getUsersGetAuthenticatedUsersWishListQueryKey = () => {
+    return [
+    `/api/v1/Users/wishlist`
+    ] as const;
     }
-    export const getUsersAddTrailToUserWishListUrl = () => {
+
+
+export const getUsersGetAuthenticatedUsersWishListQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetAuthenticatedUsersWishListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>> = ({ signal }) => usersGetAuthenticatedUsersWishList({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersGetAuthenticatedUsersWishListQueryResult = NonNullable<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>>
+export type UsersGetAuthenticatedUsersWishListQueryError = unknown
+
+
+export function useUsersGetAuthenticatedUsersWishList<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>,
+          TError,
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersWishList<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>,
+          TError,
+          Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersWishList<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersGetAuthenticatedUsersWishList<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersGetAuthenticatedUsersWishListQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersGetAuthenticatedUsersWishListSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersGetAuthenticatedUsersWishListQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>> = ({ signal }) => usersGetAuthenticatedUsersWishList({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersGetAuthenticatedUsersWishListSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>>
+export type UsersGetAuthenticatedUsersWishListSuspenseQueryError = unknown
+
+
+export function useUsersGetAuthenticatedUsersWishListSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersWishListSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersGetAuthenticatedUsersWishListSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersGetAuthenticatedUsersWishListSuspense<TData = Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersGetAuthenticatedUsersWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersGetAuthenticatedUsersWishListSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersAddTrailToUserWishListUrl = () => {
 
 
 
@@ -462,78 +651,48 @@ export const usersAddTrailToUserWishList = async (addToUserWishlistRequest: AddT
 
 
 
-export const getUsersAddTrailToUserWishListQueryKey = (addToUserWishlistRequest?: AddToUserWishlistRequest,) => {
-    return [
-    'POST', `/api/v1/Users/wishlist`, addToUserWishlistRequest
-    ] as const;
+export const getUsersAddTrailToUserWishListMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError,{data: AddToUserWishlistRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError,{data: AddToUserWishlistRequest}, TContext> => {
+
+const mutationKey = ['usersAddTrailToUserWishList'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, {data: AddToUserWishlistRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  usersAddTrailToUserWishList(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersAddTrailToUserWishListMutationResult = NonNullable<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>>
+    export type UsersAddTrailToUserWishListMutationBody = AddToUserWishlistRequest
+    export type UsersAddTrailToUserWishListMutationError = unknown
+
+    export const useUsersAddTrailToUserWishList = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError,{data: AddToUserWishlistRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersAddTrailToUserWishList>>,
+        TError,
+        {data: AddToUserWishlistRequest},
+        TContext
+      > => {
+      return useMutation(getUsersAddTrailToUserWishListMutationOptions(options), queryClient);
     }
-
-
-export const getUsersAddTrailToUserWishListQueryOptions = <TData = Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError = unknown>(addToUserWishlistRequest: AddToUserWishlistRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsersAddTrailToUserWishListQueryKey(addToUserWishlistRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>> = ({ signal }) => usersAddTrailToUserWishList(addToUserWishlistRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsersAddTrailToUserWishListQueryResult = NonNullable<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>>
-export type UsersAddTrailToUserWishListQueryError = unknown
-
-
-export function useUsersAddTrailToUserWishList<TData = Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError = unknown>(
- addToUserWishlistRequest: AddToUserWishlistRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersAddTrailToUserWishList>>,
-          TError,
-          Awaited<ReturnType<typeof usersAddTrailToUserWishList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersAddTrailToUserWishList<TData = Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError = unknown>(
- addToUserWishlistRequest: AddToUserWishlistRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersAddTrailToUserWishList>>,
-          TError,
-          Awaited<ReturnType<typeof usersAddTrailToUserWishList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersAddTrailToUserWishList<TData = Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError = unknown>(
- addToUserWishlistRequest: AddToUserWishlistRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useUsersAddTrailToUserWishList<TData = Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError = unknown>(
- addToUserWishlistRequest: AddToUserWishlistRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersAddTrailToUserWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsersAddTrailToUserWishListQueryOptions(addToUserWishlistRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getUsersCheckUsernameUrl = (params?: UsersCheckUsernameParams,) => {
+    export const getUsersCheckUsernameUrl = (params?: UsersCheckUsernameParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -563,48 +722,130 @@ export const usersCheckUsername = async (params?: UsersCheckUsernameParams, opti
 
 
 
-export const getUsersCheckUsernameMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError,{params?: UsersCheckUsernameParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError,{params?: UsersCheckUsernameParams}, TContext> => {
-
-const mutationKey = ['usersCheckUsername'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersCheckUsername>>, {params?: UsersCheckUsernameParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  usersCheckUsername(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UsersCheckUsernameMutationResult = NonNullable<Awaited<ReturnType<typeof usersCheckUsername>>>
-
-    export type UsersCheckUsernameMutationError = unknown
-
-    export const useUsersCheckUsername = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError,{params?: UsersCheckUsernameParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof usersCheckUsername>>,
-        TError,
-        {params?: UsersCheckUsernameParams},
-        TContext
-      > => {
-      return useMutation(getUsersCheckUsernameMutationOptions(options), queryClient);
+export const getUsersCheckUsernameQueryKey = (params?: UsersCheckUsernameParams,) => {
+    return [
+    `/api/v1/Users/check-username`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getUsersSearchForUserByUsernameUrl = (params?: UsersSearchForUserByUsernameParams,) => {
+
+
+export const getUsersCheckUsernameQueryOptions = <TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(params?: UsersCheckUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersCheckUsernameQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersCheckUsername>>> = ({ signal }) => usersCheckUsername(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersCheckUsernameQueryResult = NonNullable<Awaited<ReturnType<typeof usersCheckUsername>>>
+export type UsersCheckUsernameQueryError = unknown
+
+
+export function useUsersCheckUsername<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params: undefined |  UsersCheckUsernameParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersCheckUsername>>,
+          TError,
+          Awaited<ReturnType<typeof usersCheckUsername>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersCheckUsername<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params?: UsersCheckUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersCheckUsername>>,
+          TError,
+          Awaited<ReturnType<typeof usersCheckUsername>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersCheckUsername<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params?: UsersCheckUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersCheckUsername<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params?: UsersCheckUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersCheckUsernameQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersCheckUsernameSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(params?: UsersCheckUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersCheckUsernameQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersCheckUsername>>> = ({ signal }) => usersCheckUsername(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersCheckUsernameSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof usersCheckUsername>>>
+export type UsersCheckUsernameSuspenseQueryError = unknown
+
+
+export function useUsersCheckUsernameSuspense<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params: undefined |  UsersCheckUsernameParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersCheckUsernameSuspense<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params?: UsersCheckUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersCheckUsernameSuspense<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params?: UsersCheckUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersCheckUsernameSuspense<TData = Awaited<ReturnType<typeof usersCheckUsername>>, TError = unknown>(
+ params?: UsersCheckUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersCheckUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersCheckUsernameSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersSearchForUserByUsernameUrl = (params?: UsersSearchForUserByUsernameParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -634,48 +875,130 @@ export const usersSearchForUserByUsername = async (params?: UsersSearchForUserBy
 
 
 
-export const getUsersSearchForUserByUsernameMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError,{params?: UsersSearchForUserByUsernameParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError,{params?: UsersSearchForUserByUsernameParams}, TContext> => {
-
-const mutationKey = ['usersSearchForUserByUsername'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, {params?: UsersSearchForUserByUsernameParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  usersSearchForUserByUsername(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UsersSearchForUserByUsernameMutationResult = NonNullable<Awaited<ReturnType<typeof usersSearchForUserByUsername>>>
-
-    export type UsersSearchForUserByUsernameMutationError = unknown
-
-    export const useUsersSearchForUserByUsername = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError,{params?: UsersSearchForUserByUsernameParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof usersSearchForUserByUsername>>,
-        TError,
-        {params?: UsersSearchForUserByUsernameParams},
-        TContext
-      > => {
-      return useMutation(getUsersSearchForUserByUsernameMutationOptions(options), queryClient);
+export const getUsersSearchForUserByUsernameQueryKey = (params?: UsersSearchForUserByUsernameParams,) => {
+    return [
+    `/api/v1/Users/search`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getUsersRemoveTrailFromUserFavoritesListUrl = (trailIdentifier: string,) => {
+
+
+export const getUsersSearchForUserByUsernameQueryOptions = <TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersSearchForUserByUsernameQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersSearchForUserByUsername>>> = ({ signal }) => usersSearchForUserByUsername(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersSearchForUserByUsernameQueryResult = NonNullable<Awaited<ReturnType<typeof usersSearchForUserByUsername>>>
+export type UsersSearchForUserByUsernameQueryError = unknown
+
+
+export function useUsersSearchForUserByUsername<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params: undefined |  UsersSearchForUserByUsernameParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersSearchForUserByUsername>>,
+          TError,
+          Awaited<ReturnType<typeof usersSearchForUserByUsername>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersSearchForUserByUsername<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof usersSearchForUserByUsername>>,
+          TError,
+          Awaited<ReturnType<typeof usersSearchForUserByUsername>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersSearchForUserByUsername<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersSearchForUserByUsername<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersSearchForUserByUsernameQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersSearchForUserByUsernameSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getUsersSearchForUserByUsernameQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersSearchForUserByUsername>>> = ({ signal }) => usersSearchForUserByUsername(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type UsersSearchForUserByUsernameSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof usersSearchForUserByUsername>>>
+export type UsersSearchForUserByUsernameSuspenseQueryError = unknown
+
+
+export function useUsersSearchForUserByUsernameSuspense<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params: undefined |  UsersSearchForUserByUsernameParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersSearchForUserByUsernameSuspense<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useUsersSearchForUserByUsernameSuspense<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useUsersSearchForUserByUsernameSuspense<TData = Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError = unknown>(
+ params?: UsersSearchForUserByUsernameParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof usersSearchForUserByUsername>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getUsersSearchForUserByUsernameSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getUsersRemoveTrailFromUserFavoritesListUrl = (trailIdentifier: string,) => {
 
 
 
@@ -698,78 +1021,48 @@ export const usersRemoveTrailFromUserFavoritesList = async (trailIdentifier: str
 
 
 
-export const getUsersRemoveTrailFromUserFavoritesListQueryKey = (trailIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/Users/favorites/${trailIdentifier}`
-    ] as const;
+export const getUsersRemoveTrailFromUserFavoritesListMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError,{trailIdentifier: string}, TContext> => {
+
+const mutationKey = ['usersRemoveTrailFromUserFavoritesList'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, {trailIdentifier: string}> = (props) => {
+          const {trailIdentifier} = props ?? {};
+
+          return  usersRemoveTrailFromUserFavoritesList(trailIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersRemoveTrailFromUserFavoritesListMutationResult = NonNullable<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>>
+
+    export type UsersRemoveTrailFromUserFavoritesListMutationError = unknown
+
+    export const useUsersRemoveTrailFromUserFavoritesList = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>,
+        TError,
+        {trailIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getUsersRemoveTrailFromUserFavoritesListMutationOptions(options), queryClient);
     }
-
-
-export const getUsersRemoveTrailFromUserFavoritesListQueryOptions = <TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError = unknown>(trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsersRemoveTrailFromUserFavoritesListQueryKey(trailIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>> = ({ signal }) => usersRemoveTrailFromUserFavoritesList(trailIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: trailIdentifier !== null && trailIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsersRemoveTrailFromUserFavoritesListQueryResult = NonNullable<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>>
-export type UsersRemoveTrailFromUserFavoritesListQueryError = unknown
-
-
-export function useUsersRemoveTrailFromUserFavoritesList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError = unknown>(
- trailIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>,
-          TError,
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersRemoveTrailFromUserFavoritesList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError = unknown>(
- trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>,
-          TError,
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersRemoveTrailFromUserFavoritesList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError = unknown>(
- trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useUsersRemoveTrailFromUserFavoritesList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError = unknown>(
- trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserFavoritesList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsersRemoveTrailFromUserFavoritesListQueryOptions(trailIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getUsersRemoveTrailFromUserWishListUrl = (trailIdentifier: string,) => {
+    export const getUsersRemoveTrailFromUserWishListUrl = (trailIdentifier: string,) => {
 
 
 
@@ -792,78 +1085,48 @@ export const usersRemoveTrailFromUserWishList = async (trailIdentifier: string, 
 
 
 
-export const getUsersRemoveTrailFromUserWishListQueryKey = (trailIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/Users/wishlist/${trailIdentifier}`
-    ] as const;
+export const getUsersRemoveTrailFromUserWishListMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError,{trailIdentifier: string}, TContext> => {
+
+const mutationKey = ['usersRemoveTrailFromUserWishList'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, {trailIdentifier: string}> = (props) => {
+          const {trailIdentifier} = props ?? {};
+
+          return  usersRemoveTrailFromUserWishList(trailIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersRemoveTrailFromUserWishListMutationResult = NonNullable<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>>
+
+    export type UsersRemoveTrailFromUserWishListMutationError = unknown
+
+    export const useUsersRemoveTrailFromUserWishList = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>,
+        TError,
+        {trailIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getUsersRemoveTrailFromUserWishListMutationOptions(options), queryClient);
     }
-
-
-export const getUsersRemoveTrailFromUserWishListQueryOptions = <TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError = unknown>(trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsersRemoveTrailFromUserWishListQueryKey(trailIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>> = ({ signal }) => usersRemoveTrailFromUserWishList(trailIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: trailIdentifier !== null && trailIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsersRemoveTrailFromUserWishListQueryResult = NonNullable<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>>
-export type UsersRemoveTrailFromUserWishListQueryError = unknown
-
-
-export function useUsersRemoveTrailFromUserWishList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError = unknown>(
- trailIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>,
-          TError,
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersRemoveTrailFromUserWishList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError = unknown>(
- trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>,
-          TError,
-          Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersRemoveTrailFromUserWishList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError = unknown>(
- trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useUsersRemoveTrailFromUserWishList<TData = Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError = unknown>(
- trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersRemoveTrailFromUserWishList>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsersRemoveTrailFromUserWishListQueryOptions(trailIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getUsersDeleteUserUrl = () => {
+    export const getUsersDeleteUserUrl = () => {
 
 
 
@@ -886,74 +1149,44 @@ export const usersDeleteUser = async ( options?: RequestInit): Promise<Blob> => 
 
 
 
-export const getUsersDeleteUserQueryKey = () => {
-    return [
-    'DELETE', `/api/v1/Users/delete`
-    ] as const;
+export const getUsersDeleteUserMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError,void, TContext> => {
+
+const mutationKey = ['usersDeleteUser'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof usersDeleteUser>>, void> = () => {
+
+
+          return  usersDeleteUser(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UsersDeleteUserMutationResult = NonNullable<Awaited<ReturnType<typeof usersDeleteUser>>>
+
+    export type UsersDeleteUserMutationError = unknown
+
+    export const useUsersDeleteUser = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof usersDeleteUser>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getUsersDeleteUserMutationOptions(options), queryClient);
     }
-
-
-export const getUsersDeleteUserQueryOptions = <TData = Awaited<ReturnType<typeof usersDeleteUser>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getUsersDeleteUserQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof usersDeleteUser>>> = ({ signal }) => usersDeleteUser({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type UsersDeleteUserQueryResult = NonNullable<Awaited<ReturnType<typeof usersDeleteUser>>>
-export type UsersDeleteUserQueryError = unknown
-
-
-export function useUsersDeleteUser<TData = Awaited<ReturnType<typeof usersDeleteUser>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersDeleteUser>>,
-          TError,
-          Awaited<ReturnType<typeof usersDeleteUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersDeleteUser<TData = Awaited<ReturnType<typeof usersDeleteUser>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof usersDeleteUser>>,
-          TError,
-          Awaited<ReturnType<typeof usersDeleteUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useUsersDeleteUser<TData = Awaited<ReturnType<typeof usersDeleteUser>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useUsersDeleteUser<TData = Awaited<ReturnType<typeof usersDeleteUser>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof usersDeleteUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getUsersDeleteUserQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

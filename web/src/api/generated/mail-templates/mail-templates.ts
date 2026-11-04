@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -77,48 +80,130 @@ export const mailTemplatesGetAll = async ( options?: RequestInit): Promise<MailT
 
 
 
-export const getMailTemplatesGetAllMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError,void, TContext> => {
-
-const mutationKey = ['mailTemplatesGetAll'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mailTemplatesGetAll>>, void> = () => {
-
-
-          return  mailTemplatesGetAll(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type MailTemplatesGetAllMutationResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesGetAll>>>
-
-    export type MailTemplatesGetAllMutationError = unknown
-
-    export const useMailTemplatesGetAll = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof mailTemplatesGetAll>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getMailTemplatesGetAllMutationOptions(options), queryClient);
+export const getMailTemplatesGetAllQueryKey = () => {
+    return [
+    `/api/v1/admin/mail-templates`
+    ] as const;
     }
-    export const getMailTemplatesGetByIdentifierUrl = (identifier: string,) => {
+
+
+export const getMailTemplatesGetAllQueryOptions = <TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMailTemplatesGetAllQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mailTemplatesGetAll>>> = ({ signal }) => mailTemplatesGetAll({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MailTemplatesGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesGetAll>>>
+export type MailTemplatesGetAllQueryError = unknown
+
+
+export function useMailTemplatesGetAll<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mailTemplatesGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof mailTemplatesGetAll>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetAll<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mailTemplatesGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof mailTemplatesGetAll>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetAll<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMailTemplatesGetAll<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMailTemplatesGetAllQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getMailTemplatesGetAllSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMailTemplatesGetAllQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mailTemplatesGetAll>>> = ({ signal }) => mailTemplatesGetAll({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MailTemplatesGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesGetAll>>>
+export type MailTemplatesGetAllSuspenseQueryError = unknown
+
+
+export function useMailTemplatesGetAllSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetAllSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetAllSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMailTemplatesGetAllSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMailTemplatesGetAllSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getMailTemplatesGetByIdentifierUrl = (identifier: string,) => {
 
 
 
@@ -141,48 +226,130 @@ export const mailTemplatesGetByIdentifier = async (identifier: string, options?:
 
 
 
-export const getMailTemplatesGetByIdentifierMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['mailTemplatesGetByIdentifier'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  mailTemplatesGetByIdentifier(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type MailTemplatesGetByIdentifierMutationResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>>
-
-    export type MailTemplatesGetByIdentifierMutationError = unknown
-
-    export const useMailTemplatesGetByIdentifier = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getMailTemplatesGetByIdentifierMutationOptions(options), queryClient);
+export const getMailTemplatesGetByIdentifierQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/admin/mail-templates/${identifier}`
+    ] as const;
     }
-    export const getMailTemplatesUpdateUrl = (identifier: string,) => {
+
+
+export const getMailTemplatesGetByIdentifierQueryOptions = <TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMailTemplatesGetByIdentifierQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>> = ({ signal }) => mailTemplatesGetByIdentifier(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MailTemplatesGetByIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>>
+export type MailTemplatesGetByIdentifierQueryError = unknown
+
+
+export function useMailTemplatesGetByIdentifier<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetByIdentifier<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetByIdentifier<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMailTemplatesGetByIdentifier<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMailTemplatesGetByIdentifierQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getMailTemplatesGetByIdentifierSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMailTemplatesGetByIdentifierQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>> = ({ signal }) => mailTemplatesGetByIdentifier(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MailTemplatesGetByIdentifierSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>>
+export type MailTemplatesGetByIdentifierSuspenseQueryError = unknown
+
+
+export function useMailTemplatesGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMailTemplatesGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMailTemplatesGetByIdentifierSuspense<TData = Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof mailTemplatesGetByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMailTemplatesGetByIdentifierSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getMailTemplatesUpdateUrl = (identifier: string,) => {
 
 
 
@@ -206,84 +373,48 @@ export const mailTemplatesUpdate = async (identifier: string,
 
 
 
-export const getMailTemplatesUpdateQueryKey = (identifier: string,
-    updateMailTemplateRequest?: UpdateMailTemplateRequest,) => {
-    return [
-    'PUT', `/api/v1/admin/mail-templates/${identifier}`, updateMailTemplateRequest
-    ] as const;
+export const getMailTemplatesUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError,{identifier: string;data: UpdateMailTemplateRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError,{identifier: string;data: UpdateMailTemplateRequest}, TContext> => {
+
+const mutationKey = ['mailTemplatesUpdate'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mailTemplatesUpdate>>, {identifier: string;data: UpdateMailTemplateRequest}> = (props) => {
+          const {identifier,data} = props ?? {};
+
+          return  mailTemplatesUpdate(identifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MailTemplatesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesUpdate>>>
+    export type MailTemplatesUpdateMutationBody = UpdateMailTemplateRequest
+    export type MailTemplatesUpdateMutationError = unknown
+
+    export const useMailTemplatesUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError,{identifier: string;data: UpdateMailTemplateRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mailTemplatesUpdate>>,
+        TError,
+        {identifier: string;data: UpdateMailTemplateRequest},
+        TContext
+      > => {
+      return useMutation(getMailTemplatesUpdateMutationOptions(options), queryClient);
     }
-
-
-export const getMailTemplatesUpdateQueryOptions = <TData = Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError = unknown>(identifier: string,
-    updateMailTemplateRequest: UpdateMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getMailTemplatesUpdateQueryKey(identifier,updateMailTemplateRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof mailTemplatesUpdate>>> = ({ signal }) => mailTemplatesUpdate(identifier,updateMailTemplateRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type MailTemplatesUpdateQueryResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesUpdate>>>
-export type MailTemplatesUpdateQueryError = unknown
-
-
-export function useMailTemplatesUpdate<TData = Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError = unknown>(
- identifier: string,
-    updateMailTemplateRequest: UpdateMailTemplateRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof mailTemplatesUpdate>>,
-          TError,
-          Awaited<ReturnType<typeof mailTemplatesUpdate>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMailTemplatesUpdate<TData = Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError = unknown>(
- identifier: string,
-    updateMailTemplateRequest: UpdateMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof mailTemplatesUpdate>>,
-          TError,
-          Awaited<ReturnType<typeof mailTemplatesUpdate>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMailTemplatesUpdate<TData = Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError = unknown>(
- identifier: string,
-    updateMailTemplateRequest: UpdateMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useMailTemplatesUpdate<TData = Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError = unknown>(
- identifier: string,
-    updateMailTemplateRequest: UpdateMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesUpdate>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getMailTemplatesUpdateQueryOptions(identifier,updateMailTemplateRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getMailTemplatesPreviewUrl = (identifier: string,) => {
+    export const getMailTemplatesPreviewUrl = (identifier: string,) => {
 
 
 
@@ -307,80 +438,44 @@ export const mailTemplatesPreview = async (identifier: string,
 
 
 
-export const getMailTemplatesPreviewQueryKey = (identifier: string,
-    previewMailTemplateRequest?: PreviewMailTemplateRequest,) => {
-    return [
-    'POST', `/api/v1/admin/mail-templates/${identifier}/preview`, previewMailTemplateRequest
-    ] as const;
+export const getMailTemplatesPreviewMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError,{identifier: string;data: PreviewMailTemplateRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError,{identifier: string;data: PreviewMailTemplateRequest}, TContext> => {
+
+const mutationKey = ['mailTemplatesPreview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof mailTemplatesPreview>>, {identifier: string;data: PreviewMailTemplateRequest}> = (props) => {
+          const {identifier,data} = props ?? {};
+
+          return  mailTemplatesPreview(identifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type MailTemplatesPreviewMutationResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesPreview>>>
+    export type MailTemplatesPreviewMutationBody = PreviewMailTemplateRequest
+    export type MailTemplatesPreviewMutationError = unknown
+
+    export const useMailTemplatesPreview = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError,{identifier: string;data: PreviewMailTemplateRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof mailTemplatesPreview>>,
+        TError,
+        {identifier: string;data: PreviewMailTemplateRequest},
+        TContext
+      > => {
+      return useMutation(getMailTemplatesPreviewMutationOptions(options), queryClient);
     }
-
-
-export const getMailTemplatesPreviewQueryOptions = <TData = Awaited<ReturnType<typeof mailTemplatesPreview>>, TError = unknown>(identifier: string,
-    previewMailTemplateRequest: PreviewMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getMailTemplatesPreviewQueryKey(identifier,previewMailTemplateRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof mailTemplatesPreview>>> = ({ signal }) => mailTemplatesPreview(identifier,previewMailTemplateRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type MailTemplatesPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof mailTemplatesPreview>>>
-export type MailTemplatesPreviewQueryError = unknown
-
-
-export function useMailTemplatesPreview<TData = Awaited<ReturnType<typeof mailTemplatesPreview>>, TError = unknown>(
- identifier: string,
-    previewMailTemplateRequest: PreviewMailTemplateRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof mailTemplatesPreview>>,
-          TError,
-          Awaited<ReturnType<typeof mailTemplatesPreview>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMailTemplatesPreview<TData = Awaited<ReturnType<typeof mailTemplatesPreview>>, TError = unknown>(
- identifier: string,
-    previewMailTemplateRequest: PreviewMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof mailTemplatesPreview>>,
-          TError,
-          Awaited<ReturnType<typeof mailTemplatesPreview>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useMailTemplatesPreview<TData = Awaited<ReturnType<typeof mailTemplatesPreview>>, TError = unknown>(
- identifier: string,
-    previewMailTemplateRequest: PreviewMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useMailTemplatesPreview<TData = Awaited<ReturnType<typeof mailTemplatesPreview>>, TError = unknown>(
- identifier: string,
-    previewMailTemplateRequest: PreviewMailTemplateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof mailTemplatesPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getMailTemplatesPreviewQueryOptions(identifier,previewMailTemplateRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

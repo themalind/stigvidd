@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -34,7 +37,6 @@ import type {
   TrailResponse,
   TrailShortInfoResponse,
   TrailsAddTrailBody,
-  TrailsGetPopularContributedTrailsParams,
   TrailsGetPopularTrailsParams
 } from '../model';
 
@@ -83,48 +85,130 @@ export const trailsGetTrailByIdentifier = async (identifier: string, options?: R
 
 
 
-export const getTrailsGetTrailByIdentifierMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['trailsGetTrailByIdentifier'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  trailsGetTrailByIdentifier(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetTrailByIdentifierMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>>
-
-    export type TrailsGetTrailByIdentifierMutationError = unknown
-
-    export const useTrailsGetTrailByIdentifier = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getTrailsGetTrailByIdentifierMutationOptions(options), queryClient);
+export const getTrailsGetTrailByIdentifierQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/Trails/${identifier}`
+    ] as const;
     }
-    export const getTrailsGetPopularTrailsUrl = (params?: TrailsGetPopularTrailsParams,) => {
+
+
+export const getTrailsGetTrailByIdentifierQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailByIdentifierQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>> = ({ signal }) => trailsGetTrailByIdentifier(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailByIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>>
+export type TrailsGetTrailByIdentifierQueryError = unknown
+
+
+export function useTrailsGetTrailByIdentifier<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailByIdentifier<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailByIdentifier<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailByIdentifier<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailByIdentifierQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetTrailByIdentifierSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailByIdentifierQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>> = ({ signal }) => trailsGetTrailByIdentifier(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailByIdentifierSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>>
+export type TrailsGetTrailByIdentifierSuspenseQueryError = unknown
+
+
+export function useTrailsGetTrailByIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailByIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailByIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailByIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailByIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailByIdentifierSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetPopularTrailsUrl = (params?: TrailsGetPopularTrailsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -154,65 +238,140 @@ export const trailsGetPopularTrails = async (params?: TrailsGetPopularTrailsPara
 
 
 
-export const getTrailsGetPopularTrailsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError,{params?: TrailsGetPopularTrailsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError,{params?: TrailsGetPopularTrailsParams}, TContext> => {
-
-const mutationKey = ['trailsGetPopularTrails'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetPopularTrails>>, {params?: TrailsGetPopularTrailsParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  trailsGetPopularTrails(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetPopularTrailsMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetPopularTrails>>>
-
-    export type TrailsGetPopularTrailsMutationError = unknown
-
-    export const useTrailsGetPopularTrails = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError,{params?: TrailsGetPopularTrailsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetPopularTrails>>,
-        TError,
-        {params?: TrailsGetPopularTrailsParams},
-        TContext
-      > => {
-      return useMutation(getTrailsGetPopularTrailsMutationOptions(options), queryClient);
+export const getTrailsGetPopularTrailsQueryKey = (params?: TrailsGetPopularTrailsParams,) => {
+    return [
+    `/api/v1/Trails/popular`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getTrailsGetPopularContributedTrailsUrl = (params?: TrailsGetPopularContributedTrailsParams,) => {
-  const normalizedParams = new URLSearchParams();
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
+export const getTrailsGetPopularTrailsQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
 
-  const stringifiedParams = normalizedParams.toString();
+const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  return stringifiedParams.length > 0 ? `/api/v1/Trails/popular-contributions?${stringifiedParams}` : `/api/v1/Trails/popular-contributions`
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetPopularTrailsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetPopularTrails>>> = ({ signal }) => trailsGetPopularTrails(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export const trailsGetPopularContributedTrails = async (params?: TrailsGetPopularContributedTrailsParams, options?: RequestInit): Promise<TrailCardResponse[]> => {
+export type TrailsGetPopularTrailsQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetPopularTrails>>>
+export type TrailsGetPopularTrailsQueryError = unknown
 
-  return customFetch<TrailCardResponse[]>(getTrailsGetPopularContributedTrailsUrl(params),
+
+export function useTrailsGetPopularTrails<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params: undefined |  TrailsGetPopularTrailsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetPopularTrails>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetPopularTrails>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularTrails<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetPopularTrails>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetPopularTrails>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularTrails<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetPopularTrails<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetPopularTrailsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetPopularTrailsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetPopularTrailsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetPopularTrails>>> = ({ signal }) => trailsGetPopularTrails(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetPopularTrailsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetPopularTrails>>>
+export type TrailsGetPopularTrailsSuspenseQueryError = unknown
+
+
+export function useTrailsGetPopularTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params: undefined |  TrailsGetPopularTrailsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetPopularTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError = unknown>(
+ params?: TrailsGetPopularTrailsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetPopularTrailsSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetPopularContributedTrailsUrl = () => {
+
+
+
+
+  return `/api/v1/Trails/popular-contributions`
+}
+
+export const trailsGetPopularContributedTrails = async ( options?: RequestInit): Promise<TrailCardResponse[]> => {
+
+  return customFetch<TrailCardResponse[]>(getTrailsGetPopularContributedTrailsUrl(),
   {
     ...options,
     method: 'GET'
@@ -225,48 +384,130 @@ export const trailsGetPopularContributedTrails = async (params?: TrailsGetPopula
 
 
 
-export const getTrailsGetPopularContributedTrailsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,{params?: TrailsGetPopularContributedTrailsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,{params?: TrailsGetPopularContributedTrailsParams}, TContext> => {
-
-const mutationKey = ['trailsGetPopularContributedTrails'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, {params?: TrailsGetPopularContributedTrailsParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  trailsGetPopularContributedTrails(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetPopularContributedTrailsMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>>
-
-    export type TrailsGetPopularContributedTrailsMutationError = unknown
-
-    export const useTrailsGetPopularContributedTrails = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,{params?: TrailsGetPopularContributedTrailsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
-        TError,
-        {params?: TrailsGetPopularContributedTrailsParams},
-        TContext
-      > => {
-      return useMutation(getTrailsGetPopularContributedTrailsMutationOptions(options), queryClient);
+export const getTrailsGetPopularContributedTrailsQueryKey = () => {
+    return [
+    `/api/v1/Trails/popular-contributions`
+    ] as const;
     }
-    export const getTrailsGetTrailLikeUrl = (identifier: string,) => {
+
+
+export const getTrailsGetPopularContributedTrailsQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetPopularContributedTrailsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>> = ({ signal }) => trailsGetPopularContributedTrails({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetPopularContributedTrailsQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>>
+export type TrailsGetPopularContributedTrailsQueryError = unknown
+
+
+export function useTrailsGetPopularContributedTrails<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularContributedTrails<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularContributedTrails<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetPopularContributedTrails<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetPopularContributedTrailsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetPopularContributedTrailsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetPopularContributedTrailsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>> = ({ signal }) => trailsGetPopularContributedTrails({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetPopularContributedTrailsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>>
+export type TrailsGetPopularContributedTrailsSuspenseQueryError = unknown
+
+
+export function useTrailsGetPopularContributedTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularContributedTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetPopularContributedTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetPopularContributedTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetPopularContributedTrailsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetTrailLikeUrl = (identifier: string,) => {
 
 
 
@@ -289,48 +530,130 @@ export const trailsGetTrailLike = async (identifier: string, options?: RequestIn
 
 
 
-export const getTrailsGetTrailLikeMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['trailsGetTrailLike'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetTrailLike>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  trailsGetTrailLike(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetTrailLikeMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailLike>>>
-
-    export type TrailsGetTrailLikeMutationError = unknown
-
-    export const useTrailsGetTrailLike = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetTrailLike>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getTrailsGetTrailLikeMutationOptions(options), queryClient);
+export const getTrailsGetTrailLikeQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/Trails/${identifier}/like`
+    ] as const;
     }
-    export const getTrailsLikeTrailUrl = (identifier: string,) => {
+
+
+export const getTrailsGetTrailLikeQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailLikeQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailLike>>> = ({ signal }) => trailsGetTrailLike(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailLikeQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailLike>>>
+export type TrailsGetTrailLikeQueryError = unknown
+
+
+export function useTrailsGetTrailLike<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailLike>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailLike>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailLike<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailLike>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailLike>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailLike<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailLike<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailLikeQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetTrailLikeSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailLikeQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailLike>>> = ({ signal }) => trailsGetTrailLike(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailLikeSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailLike>>>
+export type TrailsGetTrailLikeSuspenseQueryError = unknown
+
+
+export function useTrailsGetTrailLikeSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailLikeSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailLikeSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailLikeSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailLike>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailLike>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailLikeSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsLikeTrailUrl = (identifier: string,) => {
 
 
 
@@ -353,78 +676,48 @@ export const trailsLikeTrail = async (identifier: string, options?: RequestInit)
 
 
 
-export const getTrailsLikeTrailQueryKey = (identifier: string,) => {
-    return [
-    'PUT', `/api/v1/Trails/${identifier}/like`
-    ] as const;
+export const getTrailsLikeTrailMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['trailsLikeTrail'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsLikeTrail>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  trailsLikeTrail(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailsLikeTrailMutationResult = NonNullable<Awaited<ReturnType<typeof trailsLikeTrail>>>
+
+    export type TrailsLikeTrailMutationError = unknown
+
+    export const useTrailsLikeTrail = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailsLikeTrail>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getTrailsLikeTrailMutationOptions(options), queryClient);
     }
-
-
-export const getTrailsLikeTrailQueryOptions = <TData = Awaited<ReturnType<typeof trailsLikeTrail>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailsLikeTrailQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsLikeTrail>>> = ({ signal }) => trailsLikeTrail(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailsLikeTrailQueryResult = NonNullable<Awaited<ReturnType<typeof trailsLikeTrail>>>
-export type TrailsLikeTrailQueryError = unknown
-
-
-export function useTrailsLikeTrail<TData = Awaited<ReturnType<typeof trailsLikeTrail>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsLikeTrail>>,
-          TError,
-          Awaited<ReturnType<typeof trailsLikeTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsLikeTrail<TData = Awaited<ReturnType<typeof trailsLikeTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsLikeTrail>>,
-          TError,
-          Awaited<ReturnType<typeof trailsLikeTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsLikeTrail<TData = Awaited<ReturnType<typeof trailsLikeTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailsLikeTrail<TData = Awaited<ReturnType<typeof trailsLikeTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsLikeTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailsLikeTrailQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailsUnlikeTrailUrl = (identifier: string,) => {
+    export const getTrailsUnlikeTrailUrl = (identifier: string,) => {
 
 
 
@@ -447,78 +740,48 @@ export const trailsUnlikeTrail = async (identifier: string, options?: RequestIni
 
 
 
-export const getTrailsUnlikeTrailQueryKey = (identifier: string,) => {
-    return [
-    'DELETE', `/api/v1/Trails/${identifier}/like`
-    ] as const;
+export const getTrailsUnlikeTrailMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['trailsUnlikeTrail'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsUnlikeTrail>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  trailsUnlikeTrail(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailsUnlikeTrailMutationResult = NonNullable<Awaited<ReturnType<typeof trailsUnlikeTrail>>>
+
+    export type TrailsUnlikeTrailMutationError = unknown
+
+    export const useTrailsUnlikeTrail = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailsUnlikeTrail>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getTrailsUnlikeTrailMutationOptions(options), queryClient);
     }
-
-
-export const getTrailsUnlikeTrailQueryOptions = <TData = Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailsUnlikeTrailQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsUnlikeTrail>>> = ({ signal }) => trailsUnlikeTrail(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailsUnlikeTrailQueryResult = NonNullable<Awaited<ReturnType<typeof trailsUnlikeTrail>>>
-export type TrailsUnlikeTrailQueryError = unknown
-
-
-export function useTrailsUnlikeTrail<TData = Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsUnlikeTrail>>,
-          TError,
-          Awaited<ReturnType<typeof trailsUnlikeTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsUnlikeTrail<TData = Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsUnlikeTrail>>,
-          TError,
-          Awaited<ReturnType<typeof trailsUnlikeTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsUnlikeTrail<TData = Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailsUnlikeTrail<TData = Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsUnlikeTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailsUnlikeTrailQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailsGetAllTrailsUrl = () => {
+    export const getTrailsGetAllTrailsUrl = () => {
 
 
 
@@ -541,48 +804,130 @@ export const trailsGetAllTrails = async ( options?: RequestInit): Promise<TrailS
 
 
 
-export const getTrailsGetAllTrailsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError,void, TContext> => {
-
-const mutationKey = ['trailsGetAllTrails'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetAllTrails>>, void> = () => {
-
-
-          return  trailsGetAllTrails(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetAllTrailsMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetAllTrails>>>
-
-    export type TrailsGetAllTrailsMutationError = unknown
-
-    export const useTrailsGetAllTrails = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetAllTrails>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getTrailsGetAllTrailsMutationOptions(options), queryClient);
+export const getTrailsGetAllTrailsQueryKey = () => {
+    return [
+    `/api/v1/Trails`
+    ] as const;
     }
-    export const getTrailsGetCoordinatesByTrailIdentifierUrl = (identifier: string,) => {
+
+
+export const getTrailsGetAllTrailsQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetAllTrailsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetAllTrails>>> = ({ signal }) => trailsGetAllTrails({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetAllTrailsQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetAllTrails>>>
+export type TrailsGetAllTrailsQueryError = unknown
+
+
+export function useTrailsGetAllTrails<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetAllTrails>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetAllTrails>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetAllTrails<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetAllTrails>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetAllTrails>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetAllTrails<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetAllTrails<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetAllTrailsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetAllTrailsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetAllTrailsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetAllTrails>>> = ({ signal }) => trailsGetAllTrails({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetAllTrailsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetAllTrails>>>
+export type TrailsGetAllTrailsSuspenseQueryError = unknown
+
+
+export function useTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetAllTrailsSuspense<TData = Awaited<ReturnType<typeof trailsGetAllTrails>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetAllTrails>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetAllTrailsSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetCoordinatesByTrailIdentifierUrl = (identifier: string,) => {
 
 
 
@@ -605,48 +950,130 @@ export const trailsGetCoordinatesByTrailIdentifier = async (identifier: string, 
 
 
 
-export const getTrailsGetCoordinatesByTrailIdentifierMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['trailsGetCoordinatesByTrailIdentifier'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  trailsGetCoordinatesByTrailIdentifier(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetCoordinatesByTrailIdentifierMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>>
-
-    export type TrailsGetCoordinatesByTrailIdentifierMutationError = unknown
-
-    export const useTrailsGetCoordinatesByTrailIdentifier = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getTrailsGetCoordinatesByTrailIdentifierMutationOptions(options), queryClient);
+export const getTrailsGetCoordinatesByTrailIdentifierQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/Trails/${identifier}/coordinates`
+    ] as const;
     }
-    export const getTrailsGetTrailCardUrl = (identifier: string,) => {
+
+
+export const getTrailsGetCoordinatesByTrailIdentifierQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetCoordinatesByTrailIdentifierQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>> = ({ signal }) => trailsGetCoordinatesByTrailIdentifier(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetCoordinatesByTrailIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>>
+export type TrailsGetCoordinatesByTrailIdentifierQueryError = unknown
+
+
+export function useTrailsGetCoordinatesByTrailIdentifier<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetCoordinatesByTrailIdentifier<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetCoordinatesByTrailIdentifier<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetCoordinatesByTrailIdentifier<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetCoordinatesByTrailIdentifierQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetCoordinatesByTrailIdentifierSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetCoordinatesByTrailIdentifierQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>> = ({ signal }) => trailsGetCoordinatesByTrailIdentifier(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetCoordinatesByTrailIdentifierSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>>
+export type TrailsGetCoordinatesByTrailIdentifierSuspenseQueryError = unknown
+
+
+export function useTrailsGetCoordinatesByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetCoordinatesByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetCoordinatesByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetCoordinatesByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetCoordinatesByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetCoordinatesByTrailIdentifierSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetTrailCardUrl = (identifier: string,) => {
 
 
 
@@ -669,48 +1096,130 @@ export const trailsGetTrailCard = async (identifier: string, options?: RequestIn
 
 
 
-export const getTrailsGetTrailCardMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['trailsGetTrailCard'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetTrailCard>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  trailsGetTrailCard(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetTrailCardMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailCard>>>
-
-    export type TrailsGetTrailCardMutationError = unknown
-
-    export const useTrailsGetTrailCard = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetTrailCard>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getTrailsGetTrailCardMutationOptions(options), queryClient);
+export const getTrailsGetTrailCardQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/Trails/${identifier}/card`
+    ] as const;
     }
-    export const getTrailsGetTrailCardsUrl = () => {
+
+
+export const getTrailsGetTrailCardQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailCardQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailCard>>> = ({ signal }) => trailsGetTrailCard(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailCardQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailCard>>>
+export type TrailsGetTrailCardQueryError = unknown
+
+
+export function useTrailsGetTrailCard<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailCard>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailCard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailCard<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailCard>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailCard>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailCard<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailCard<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailCardQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetTrailCardSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailCardQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailCard>>> = ({ signal }) => trailsGetTrailCard(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailCardSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailCard>>>
+export type TrailsGetTrailCardSuspenseQueryError = unknown
+
+
+export function useTrailsGetTrailCardSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailCardSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailCardSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailCardSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailCard>>, TError = unknown>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCard>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailCardSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetTrailCardsUrl = () => {
 
 
 
@@ -733,78 +1242,48 @@ export const trailsGetTrailCards = async (getTrailCardsRequest: GetTrailCardsReq
 
 
 
-export const getTrailsGetTrailCardsQueryKey = (getTrailCardsRequest?: GetTrailCardsRequest,) => {
-    return [
-    'POST', `/api/v1/Trails/cards`, getTrailCardsRequest
-    ] as const;
+export const getTrailsGetTrailCardsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError,{data: GetTrailCardsRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError,{data: GetTrailCardsRequest}, TContext> => {
+
+const mutationKey = ['trailsGetTrailCards'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetTrailCards>>, {data: GetTrailCardsRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  trailsGetTrailCards(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailsGetTrailCardsMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailCards>>>
+    export type TrailsGetTrailCardsMutationBody = GetTrailCardsRequest
+    export type TrailsGetTrailCardsMutationError = unknown
+
+    export const useTrailsGetTrailCards = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError,{data: GetTrailCardsRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailsGetTrailCards>>,
+        TError,
+        {data: GetTrailCardsRequest},
+        TContext
+      > => {
+      return useMutation(getTrailsGetTrailCardsMutationOptions(options), queryClient);
     }
-
-
-export const getTrailsGetTrailCardsQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailCards>>, TError = unknown>(getTrailCardsRequest: GetTrailCardsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailCardsQueryKey(getTrailCardsRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailCards>>> = ({ signal }) => trailsGetTrailCards(getTrailCardsRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailsGetTrailCardsQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailCards>>>
-export type TrailsGetTrailCardsQueryError = unknown
-
-
-export function useTrailsGetTrailCards<TData = Awaited<ReturnType<typeof trailsGetTrailCards>>, TError = unknown>(
- getTrailCardsRequest: GetTrailCardsRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsGetTrailCards>>,
-          TError,
-          Awaited<ReturnType<typeof trailsGetTrailCards>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsGetTrailCards<TData = Awaited<ReturnType<typeof trailsGetTrailCards>>, TError = unknown>(
- getTrailCardsRequest: GetTrailCardsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsGetTrailCards>>,
-          TError,
-          Awaited<ReturnType<typeof trailsGetTrailCards>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsGetTrailCards<TData = Awaited<ReturnType<typeof trailsGetTrailCards>>, TError = unknown>(
- getTrailCardsRequest: GetTrailCardsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailsGetTrailCards<TData = Awaited<ReturnType<typeof trailsGetTrailCards>>, TError = unknown>(
- getTrailCardsRequest: GetTrailCardsRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailCards>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailsGetTrailCardsQueryOptions(getTrailCardsRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailsGetTrailMarkersUrl = () => {
+    export const getTrailsGetTrailMarkersUrl = () => {
 
 
 
@@ -827,48 +1306,130 @@ export const trailsGetTrailMarkers = async ( options?: RequestInit): Promise<Tra
 
 
 
-export const getTrailsGetTrailMarkersMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError,void, TContext> => {
-
-const mutationKey = ['trailsGetTrailMarkers'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, void> = () => {
-
-
-          return  trailsGetTrailMarkers(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailsGetTrailMarkersMutationResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailMarkers>>>
-
-    export type TrailsGetTrailMarkersMutationError = unknown
-
-    export const useTrailsGetTrailMarkers = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailsGetTrailMarkers>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getTrailsGetTrailMarkersMutationOptions(options), queryClient);
+export const getTrailsGetTrailMarkersQueryKey = () => {
+    return [
+    `/api/v1/Trails/markers`
+    ] as const;
     }
-    export const getTrailsAddTrailUrl = () => {
+
+
+export const getTrailsGetTrailMarkersQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailMarkersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailMarkers>>> = ({ signal }) => trailsGetTrailMarkers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailMarkersQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailMarkers>>>
+export type TrailsGetTrailMarkersQueryError = unknown
+
+
+export function useTrailsGetTrailMarkers<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailMarkers>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailMarkers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailMarkers<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailsGetTrailMarkers>>,
+          TError,
+          Awaited<ReturnType<typeof trailsGetTrailMarkers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailMarkers<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailMarkers<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailMarkersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsGetTrailMarkersSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailsGetTrailMarkersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetTrailMarkers>>> = ({ signal }) => trailsGetTrailMarkers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailsGetTrailMarkersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailsGetTrailMarkers>>>
+export type TrailsGetTrailMarkersSuspenseQueryError = unknown
+
+
+export function useTrailsGetTrailMarkersSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailMarkersSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailsGetTrailMarkersSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailsGetTrailMarkersSuspense<TData = Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetTrailMarkers>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailsGetTrailMarkersSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailsAddTrailUrl = () => {
 
 
 
@@ -949,74 +1510,44 @@ if(trailsAddTrailBody?.images !== undefined && trailsAddTrailBody.images !== nul
 
 
 
-export const getTrailsAddTrailQueryKey = (trailsAddTrailBody?: TrailsAddTrailBody,) => {
-    return [
-    'POST', `/api/v1/Trails/create`, trailsAddTrailBody
-    ] as const;
+export const getTrailsAddTrailMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError,{data?: TrailsAddTrailBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError,{data?: TrailsAddTrailBody}, TContext> => {
+
+const mutationKey = ['trailsAddTrail'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsAddTrail>>, {data?: TrailsAddTrailBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  trailsAddTrail(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailsAddTrailMutationResult = NonNullable<Awaited<ReturnType<typeof trailsAddTrail>>>
+    export type TrailsAddTrailMutationBody = TrailsAddTrailBody | undefined
+    export type TrailsAddTrailMutationError = unknown
+
+    export const useTrailsAddTrail = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError,{data?: TrailsAddTrailBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailsAddTrail>>,
+        TError,
+        {data?: TrailsAddTrailBody},
+        TContext
+      > => {
+      return useMutation(getTrailsAddTrailMutationOptions(options), queryClient);
     }
-
-
-export const getTrailsAddTrailQueryOptions = <TData = Awaited<ReturnType<typeof trailsAddTrail>>, TError = unknown>(trailsAddTrailBody?: TrailsAddTrailBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailsAddTrailQueryKey(trailsAddTrailBody);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsAddTrail>>> = ({ signal }) => trailsAddTrail(trailsAddTrailBody, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailsAddTrailQueryResult = NonNullable<Awaited<ReturnType<typeof trailsAddTrail>>>
-export type TrailsAddTrailQueryError = unknown
-
-
-export function useTrailsAddTrail<TData = Awaited<ReturnType<typeof trailsAddTrail>>, TError = unknown>(
- trailsAddTrailBody: undefined |  TrailsAddTrailBody, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsAddTrail>>,
-          TError,
-          Awaited<ReturnType<typeof trailsAddTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsAddTrail<TData = Awaited<ReturnType<typeof trailsAddTrail>>, TError = unknown>(
- trailsAddTrailBody?: TrailsAddTrailBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailsAddTrail>>,
-          TError,
-          Awaited<ReturnType<typeof trailsAddTrail>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailsAddTrail<TData = Awaited<ReturnType<typeof trailsAddTrail>>, TError = unknown>(
- trailsAddTrailBody?: TrailsAddTrailBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailsAddTrail<TData = Awaited<ReturnType<typeof trailsAddTrail>>, TError = unknown>(
- trailsAddTrailBody?: TrailsAddTrailBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsAddTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailsAddTrailQueryOptions(trailsAddTrailBody,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -84,48 +87,141 @@ export const reviewsGetReviewsByTrailIdentifier = async (trailIdentifier: string
 
 
 
-export const getReviewsGetReviewsByTrailIdentifierMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError,{trailIdentifier: string;params?: ReviewsGetReviewsByTrailIdentifierParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError,{trailIdentifier: string;params?: ReviewsGetReviewsByTrailIdentifierParams}, TContext> => {
-
-const mutationKey = ['reviewsGetReviewsByTrailIdentifier'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, {trailIdentifier: string;params?: ReviewsGetReviewsByTrailIdentifierParams}> = (props) => {
-          const {trailIdentifier,params} = props ?? {};
-
-          return  reviewsGetReviewsByTrailIdentifier(trailIdentifier,params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReviewsGetReviewsByTrailIdentifierMutationResult = NonNullable<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>>
-
-    export type ReviewsGetReviewsByTrailIdentifierMutationError = unknown
-
-    export const useReviewsGetReviewsByTrailIdentifier = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError,{trailIdentifier: string;params?: ReviewsGetReviewsByTrailIdentifierParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>,
-        TError,
-        {trailIdentifier: string;params?: ReviewsGetReviewsByTrailIdentifierParams},
-        TContext
-      > => {
-      return useMutation(getReviewsGetReviewsByTrailIdentifierMutationOptions(options), queryClient);
+export const getReviewsGetReviewsByTrailIdentifierQueryKey = (trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams,) => {
+    return [
+    `/api/v1/Reviews/trail/${trailIdentifier}`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getReviewsHasReviewedTrailUrl = (trailIdentifier: string,) => {
+
+
+export const getReviewsGetReviewsByTrailIdentifierQueryOptions = <TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReviewsGetReviewsByTrailIdentifierQueryKey(trailIdentifier,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>> = ({ signal }) => reviewsGetReviewsByTrailIdentifier(trailIdentifier,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: trailIdentifier !== null && trailIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReviewsGetReviewsByTrailIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>>
+export type ReviewsGetReviewsByTrailIdentifierQueryError = unknown
+
+
+export function useReviewsGetReviewsByTrailIdentifier<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params: undefined |  ReviewsGetReviewsByTrailIdentifierParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsGetReviewsByTrailIdentifier<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsGetReviewsByTrailIdentifier<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useReviewsGetReviewsByTrailIdentifier<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReviewsGetReviewsByTrailIdentifierQueryOptions(trailIdentifier,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getReviewsGetReviewsByTrailIdentifierSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReviewsGetReviewsByTrailIdentifierQueryKey(trailIdentifier,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>> = ({ signal }) => reviewsGetReviewsByTrailIdentifier(trailIdentifier,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReviewsGetReviewsByTrailIdentifierSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>>
+export type ReviewsGetReviewsByTrailIdentifierSuspenseQueryError = unknown
+
+
+export function useReviewsGetReviewsByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params: undefined |  ReviewsGetReviewsByTrailIdentifierParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsGetReviewsByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsGetReviewsByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useReviewsGetReviewsByTrailIdentifierSuspense<TData = Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError = unknown>(
+ trailIdentifier: string,
+    params?: ReviewsGetReviewsByTrailIdentifierParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetReviewsByTrailIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReviewsGetReviewsByTrailIdentifierSuspenseQueryOptions(trailIdentifier,params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getReviewsHasReviewedTrailUrl = (trailIdentifier: string,) => {
 
 
 
@@ -148,48 +244,130 @@ export const reviewsHasReviewedTrail = async (trailIdentifier: string, options?:
 
 
 
-export const getReviewsHasReviewedTrailMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError,{trailIdentifier: string}, TContext> => {
-
-const mutationKey = ['reviewsHasReviewedTrail'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, {trailIdentifier: string}> = (props) => {
-          const {trailIdentifier} = props ?? {};
-
-          return  reviewsHasReviewedTrail(trailIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ReviewsHasReviewedTrailMutationResult = NonNullable<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>>
-
-    export type ReviewsHasReviewedTrailMutationError = unknown
-
-    export const useReviewsHasReviewedTrail = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof reviewsHasReviewedTrail>>,
-        TError,
-        {trailIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getReviewsHasReviewedTrailMutationOptions(options), queryClient);
+export const getReviewsHasReviewedTrailQueryKey = (trailIdentifier: string,) => {
+    return [
+    `/api/v1/Reviews/trail/${trailIdentifier}/mine`
+    ] as const;
     }
-    export const getReviewsCreateReviewUrl = () => {
+
+
+export const getReviewsHasReviewedTrailQueryOptions = <TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReviewsHasReviewedTrailQueryKey(trailIdentifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>> = ({ signal }) => reviewsHasReviewedTrail(trailIdentifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: trailIdentifier !== null && trailIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReviewsHasReviewedTrailQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>>
+export type ReviewsHasReviewedTrailQueryError = unknown
+
+
+export function useReviewsHasReviewedTrail<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewsHasReviewedTrail>>,
+          TError,
+          Awaited<ReturnType<typeof reviewsHasReviewedTrail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsHasReviewedTrail<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewsHasReviewedTrail>>,
+          TError,
+          Awaited<ReturnType<typeof reviewsHasReviewedTrail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsHasReviewedTrail<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useReviewsHasReviewedTrail<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReviewsHasReviewedTrailQueryOptions(trailIdentifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getReviewsHasReviewedTrailSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReviewsHasReviewedTrailQueryKey(trailIdentifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>> = ({ signal }) => reviewsHasReviewedTrail(trailIdentifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ReviewsHasReviewedTrailSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>>
+export type ReviewsHasReviewedTrailSuspenseQueryError = unknown
+
+
+export function useReviewsHasReviewedTrailSuspense<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsHasReviewedTrailSuspense<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useReviewsHasReviewedTrailSuspense<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useReviewsHasReviewedTrailSuspense<TData = Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsHasReviewedTrail>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getReviewsHasReviewedTrailSuspenseQueryOptions(trailIdentifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getReviewsCreateReviewUrl = () => {
 
 
 
@@ -225,78 +403,48 @@ if(reviewsCreateReviewBody?.images !== undefined && reviewsCreateReviewBody.imag
 
 
 
-export const getReviewsCreateReviewQueryKey = (reviewsCreateReviewBody?: ReviewsCreateReviewBody,) => {
-    return [
-    'POST', `/api/v1/Reviews/create`, reviewsCreateReviewBody
-    ] as const;
+export const getReviewsCreateReviewMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError,{data?: ReviewsCreateReviewBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError,{data?: ReviewsCreateReviewBody}, TContext> => {
+
+const mutationKey = ['reviewsCreateReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewsCreateReview>>, {data?: ReviewsCreateReviewBody}> = (props) => {
+          const {data} = props ?? {};
+
+          return  reviewsCreateReview(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewsCreateReviewMutationResult = NonNullable<Awaited<ReturnType<typeof reviewsCreateReview>>>
+    export type ReviewsCreateReviewMutationBody = ReviewsCreateReviewBody | undefined
+    export type ReviewsCreateReviewMutationError = unknown
+
+    export const useReviewsCreateReview = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError,{data?: ReviewsCreateReviewBody}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reviewsCreateReview>>,
+        TError,
+        {data?: ReviewsCreateReviewBody},
+        TContext
+      > => {
+      return useMutation(getReviewsCreateReviewMutationOptions(options), queryClient);
     }
-
-
-export const getReviewsCreateReviewQueryOptions = <TData = Awaited<ReturnType<typeof reviewsCreateReview>>, TError = unknown>(reviewsCreateReviewBody?: ReviewsCreateReviewBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReviewsCreateReviewQueryKey(reviewsCreateReviewBody);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsCreateReview>>> = ({ signal }) => reviewsCreateReview(reviewsCreateReviewBody, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReviewsCreateReviewQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsCreateReview>>>
-export type ReviewsCreateReviewQueryError = unknown
-
-
-export function useReviewsCreateReview<TData = Awaited<ReturnType<typeof reviewsCreateReview>>, TError = unknown>(
- reviewsCreateReviewBody: undefined |  ReviewsCreateReviewBody, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof reviewsCreateReview>>,
-          TError,
-          Awaited<ReturnType<typeof reviewsCreateReview>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReviewsCreateReview<TData = Awaited<ReturnType<typeof reviewsCreateReview>>, TError = unknown>(
- reviewsCreateReviewBody?: ReviewsCreateReviewBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof reviewsCreateReview>>,
-          TError,
-          Awaited<ReturnType<typeof reviewsCreateReview>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReviewsCreateReview<TData = Awaited<ReturnType<typeof reviewsCreateReview>>, TError = unknown>(
- reviewsCreateReviewBody?: ReviewsCreateReviewBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useReviewsCreateReview<TData = Awaited<ReturnType<typeof reviewsCreateReview>>, TError = unknown>(
- reviewsCreateReviewBody?: ReviewsCreateReviewBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsCreateReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReviewsCreateReviewQueryOptions(reviewsCreateReviewBody,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getReviewsDeleteReviewUrl = (reviewIdentifier: string,) => {
+    export const getReviewsDeleteReviewUrl = (reviewIdentifier: string,) => {
 
 
 
@@ -319,74 +467,44 @@ export const reviewsDeleteReview = async (reviewIdentifier: string, options?: Re
 
 
 
-export const getReviewsDeleteReviewQueryKey = (reviewIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/Reviews/${reviewIdentifier}`
-    ] as const;
+export const getReviewsDeleteReviewMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError,{reviewIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError,{reviewIdentifier: string}, TContext> => {
+
+const mutationKey = ['reviewsDeleteReview'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewsDeleteReview>>, {reviewIdentifier: string}> = (props) => {
+          const {reviewIdentifier} = props ?? {};
+
+          return  reviewsDeleteReview(reviewIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReviewsDeleteReviewMutationResult = NonNullable<Awaited<ReturnType<typeof reviewsDeleteReview>>>
+
+    export type ReviewsDeleteReviewMutationError = unknown
+
+    export const useReviewsDeleteReview = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError,{reviewIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof reviewsDeleteReview>>,
+        TError,
+        {reviewIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getReviewsDeleteReviewMutationOptions(options), queryClient);
     }
-
-
-export const getReviewsDeleteReviewQueryOptions = <TData = Awaited<ReturnType<typeof reviewsDeleteReview>>, TError = unknown>(reviewIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getReviewsDeleteReviewQueryKey(reviewIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsDeleteReview>>> = ({ signal }) => reviewsDeleteReview(reviewIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: reviewIdentifier !== null && reviewIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ReviewsDeleteReviewQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsDeleteReview>>>
-export type ReviewsDeleteReviewQueryError = unknown
-
-
-export function useReviewsDeleteReview<TData = Awaited<ReturnType<typeof reviewsDeleteReview>>, TError = unknown>(
- reviewIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof reviewsDeleteReview>>,
-          TError,
-          Awaited<ReturnType<typeof reviewsDeleteReview>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReviewsDeleteReview<TData = Awaited<ReturnType<typeof reviewsDeleteReview>>, TError = unknown>(
- reviewIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof reviewsDeleteReview>>,
-          TError,
-          Awaited<ReturnType<typeof reviewsDeleteReview>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useReviewsDeleteReview<TData = Awaited<ReturnType<typeof reviewsDeleteReview>>, TError = unknown>(
- reviewIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useReviewsDeleteReview<TData = Awaited<ReturnType<typeof reviewsDeleteReview>>, TError = unknown>(
- reviewIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsDeleteReview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getReviewsDeleteReviewQueryOptions(reviewIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

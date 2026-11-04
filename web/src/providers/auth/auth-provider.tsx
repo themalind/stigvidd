@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AuthContext } from "./auth-context";
 import { getStigviddUser } from "@/api/user";
 import { logger } from "@/services/telemetry";
@@ -18,6 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [stigviddUser, setStigviddUser] = useState<StigviddUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Fetch the backend profile for a signed-in user; tolerate its absence.
   const loadProfile = useCallback(async () => {
@@ -56,9 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSessionExpiredHandler(() => {
       setUser(null);
       setStigviddUser(null);
+      queryClient.clear();
     });
     return () => setSessionExpiredHandler(null);
-  }, []);
+  }, [queryClient]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -73,7 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await logoutKeycloak();
     setUser(null);
     setStigviddUser(null);
-  }, []);
+    queryClient.clear();
+  }, [queryClient]);
 
   return (
     <AuthContext.Provider

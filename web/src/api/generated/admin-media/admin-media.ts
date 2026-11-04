@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -88,48 +91,130 @@ export const adminMediaGetAll = async (params?: AdminMediaGetAllParams, options?
 
 
 
-export const getAdminMediaGetAllMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,{params?: AdminMediaGetAllParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,{params?: AdminMediaGetAllParams}, TContext> => {
-
-const mutationKey = ['adminMediaGetAll'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaGetAll>>, {params?: AdminMediaGetAllParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  adminMediaGetAll(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminMediaGetAllMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetAll>>>
-
-    export type AdminMediaGetAllMutationError = ProblemDetails
-
-    export const useAdminMediaGetAll = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError,{params?: AdminMediaGetAllParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminMediaGetAll>>,
-        TError,
-        {params?: AdminMediaGetAllParams},
-        TContext
-      > => {
-      return useMutation(getAdminMediaGetAllMutationOptions(options), queryClient);
+export const getAdminMediaGetAllQueryKey = (params?: AdminMediaGetAllParams,) => {
+    return [
+    `/api/v1/admin/media`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getAdminMediaUpdateMetadataUrl = (imageIdentifier: string,) => {
+
+
+export const getAdminMediaGetAllQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(params?: AdminMediaGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminMediaGetAllQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaGetAll>>> = ({ signal }) => adminMediaGetAll(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminMediaGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetAll>>>
+export type AdminMediaGetAllQueryError = ProblemDetails
+
+
+export function useAdminMediaGetAll<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params: undefined |  AdminMediaGetAllParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaGetAll>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetAll<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params?: AdminMediaGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaGetAll>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetAll<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params?: AdminMediaGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminMediaGetAll<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params?: AdminMediaGetAllParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminMediaGetAllQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminMediaGetAllSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(params?: AdminMediaGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminMediaGetAllQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaGetAll>>> = ({ signal }) => adminMediaGetAll(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminMediaGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetAll>>>
+export type AdminMediaGetAllSuspenseQueryError = ProblemDetails
+
+
+export function useAdminMediaGetAllSuspense<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params: undefined |  AdminMediaGetAllParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetAllSuspense<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params?: AdminMediaGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetAllSuspense<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params?: AdminMediaGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminMediaGetAllSuspense<TData = Awaited<ReturnType<typeof adminMediaGetAll>>, TError = ProblemDetails>(
+ params?: AdminMediaGetAllParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetAll>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminMediaGetAllSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminMediaUpdateMetadataUrl = (imageIdentifier: string,) => {
 
 
 
@@ -153,84 +238,48 @@ export const adminMediaUpdateMetadata = async (imageIdentifier: string,
 
 
 
-export const getAdminMediaUpdateMetadataQueryKey = (imageIdentifier: string,
-    updateImageMetadataRequest?: UpdateImageMetadataRequest,) => {
-    return [
-    'PATCH', `/api/v1/admin/media/${imageIdentifier}`, updateImageMetadataRequest
-    ] as const;
+export const getAdminMediaUpdateMetadataMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError,{imageIdentifier: string;data: UpdateImageMetadataRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError,{imageIdentifier: string;data: UpdateImageMetadataRequest}, TContext> => {
+
+const mutationKey = ['adminMediaUpdateMetadata'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, {imageIdentifier: string;data: UpdateImageMetadataRequest}> = (props) => {
+          const {imageIdentifier,data} = props ?? {};
+
+          return  adminMediaUpdateMetadata(imageIdentifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminMediaUpdateMetadataMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>>
+    export type AdminMediaUpdateMetadataMutationBody = UpdateImageMetadataRequest
+    export type AdminMediaUpdateMetadataMutationError = ProblemDetails
+
+    export const useAdminMediaUpdateMetadata = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError,{imageIdentifier: string;data: UpdateImageMetadataRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminMediaUpdateMetadata>>,
+        TError,
+        {imageIdentifier: string;data: UpdateImageMetadataRequest},
+        TContext
+      > => {
+      return useMutation(getAdminMediaUpdateMetadataMutationOptions(options), queryClient);
     }
-
-
-export const getAdminMediaUpdateMetadataQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(imageIdentifier: string,
-    updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminMediaUpdateMetadataQueryKey(imageIdentifier,updateImageMetadataRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>> = ({ signal }) => adminMediaUpdateMetadata(imageIdentifier,updateImageMetadataRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: imageIdentifier !== null && imageIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMediaUpdateMetadataQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>>
-export type AdminMediaUpdateMetadataQueryError = ProblemDetails
-
-
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
- imageIdentifier: string,
-    updateImageMetadataRequest: UpdateImageMetadataRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaUpdateMetadata>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaUpdateMetadata>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
- imageIdentifier: string,
-    updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaUpdateMetadata>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaUpdateMetadata>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
- imageIdentifier: string,
-    updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMediaUpdateMetadata<TData = Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError = ProblemDetails>(
- imageIdentifier: string,
-    updateImageMetadataRequest: UpdateImageMetadataRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaUpdateMetadata>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMediaUpdateMetadataQueryOptions(imageIdentifier,updateImageMetadataRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminMediaCreateReprocessJobUrl = () => {
+    export const getAdminMediaCreateReprocessJobUrl = () => {
 
 
 
@@ -253,78 +302,48 @@ export const adminMediaCreateReprocessJob = async (createMediaReprocessJobReques
 
 
 
-export const getAdminMediaCreateReprocessJobQueryKey = (createMediaReprocessJobRequest?: CreateMediaReprocessJobRequest,) => {
-    return [
-    'POST', `/api/v1/admin/media/reprocess`, createMediaReprocessJobRequest
-    ] as const;
+export const getAdminMediaCreateReprocessJobMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError,{data: CreateMediaReprocessJobRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError,{data: CreateMediaReprocessJobRequest}, TContext> => {
+
+const mutationKey = ['adminMediaCreateReprocessJob'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, {data: CreateMediaReprocessJobRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  adminMediaCreateReprocessJob(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminMediaCreateReprocessJobMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>>
+    export type AdminMediaCreateReprocessJobMutationBody = CreateMediaReprocessJobRequest
+    export type AdminMediaCreateReprocessJobMutationError = ProblemDetails
+
+    export const useAdminMediaCreateReprocessJob = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError,{data: CreateMediaReprocessJobRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>,
+        TError,
+        {data: CreateMediaReprocessJobRequest},
+        TContext
+      > => {
+      return useMutation(getAdminMediaCreateReprocessJobMutationOptions(options), queryClient);
     }
-
-
-export const getAdminMediaCreateReprocessJobQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError = ProblemDetails>(createMediaReprocessJobRequest: CreateMediaReprocessJobRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminMediaCreateReprocessJobQueryKey(createMediaReprocessJobRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>> = ({ signal }) => adminMediaCreateReprocessJob(createMediaReprocessJobRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMediaCreateReprocessJobQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>>
-export type AdminMediaCreateReprocessJobQueryError = ProblemDetails
-
-
-export function useAdminMediaCreateReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError = ProblemDetails>(
- createMediaReprocessJobRequest: CreateMediaReprocessJobRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaCreateReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError = ProblemDetails>(
- createMediaReprocessJobRequest: CreateMediaReprocessJobRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaCreateReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError = ProblemDetails>(
- createMediaReprocessJobRequest: CreateMediaReprocessJobRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMediaCreateReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError = ProblemDetails>(
- createMediaReprocessJobRequest: CreateMediaReprocessJobRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCreateReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMediaCreateReprocessJobQueryOptions(createMediaReprocessJobRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminMediaGetReprocessJobsUrl = (params?: AdminMediaGetReprocessJobsParams,) => {
+    export const getAdminMediaGetReprocessJobsUrl = (params?: AdminMediaGetReprocessJobsParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -354,48 +373,130 @@ export const adminMediaGetReprocessJobs = async (params?: AdminMediaGetReprocess
 
 
 
-export const getAdminMediaGetReprocessJobsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError,{params?: AdminMediaGetReprocessJobsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError,{params?: AdminMediaGetReprocessJobsParams}, TContext> => {
-
-const mutationKey = ['adminMediaGetReprocessJobs'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, {params?: AdminMediaGetReprocessJobsParams}> = (props) => {
-          const {params} = props ?? {};
-
-          return  adminMediaGetReprocessJobs(params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminMediaGetReprocessJobsMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>>
-
-    export type AdminMediaGetReprocessJobsMutationError = unknown
-
-    export const useAdminMediaGetReprocessJobs = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError,{params?: AdminMediaGetReprocessJobsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>,
-        TError,
-        {params?: AdminMediaGetReprocessJobsParams},
-        TContext
-      > => {
-      return useMutation(getAdminMediaGetReprocessJobsMutationOptions(options), queryClient);
+export const getAdminMediaGetReprocessJobsQueryKey = (params?: AdminMediaGetReprocessJobsParams,) => {
+    return [
+    `/api/v1/admin/media/reprocess`, ...(params ? [params] : [])
+    ] as const;
     }
-    export const getAdminMediaGetReprocessJobUrl = (identifier: string,) => {
+
+
+export const getAdminMediaGetReprocessJobsQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminMediaGetReprocessJobsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>> = ({ signal }) => adminMediaGetReprocessJobs(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminMediaGetReprocessJobsQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>>
+export type AdminMediaGetReprocessJobsQueryError = unknown
+
+
+export function useAdminMediaGetReprocessJobs<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params: undefined |  AdminMediaGetReprocessJobsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJobs<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJobs<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminMediaGetReprocessJobs<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminMediaGetReprocessJobsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminMediaGetReprocessJobsSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminMediaGetReprocessJobsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>> = ({ signal }) => adminMediaGetReprocessJobs(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminMediaGetReprocessJobsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>>
+export type AdminMediaGetReprocessJobsSuspenseQueryError = unknown
+
+
+export function useAdminMediaGetReprocessJobsSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params: undefined |  AdminMediaGetReprocessJobsParams, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJobsSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJobsSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminMediaGetReprocessJobsSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError = unknown>(
+ params?: AdminMediaGetReprocessJobsParams, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJobs>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminMediaGetReprocessJobsSuspenseQueryOptions(params,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminMediaGetReprocessJobUrl = (identifier: string,) => {
 
 
 
@@ -418,48 +519,130 @@ export const adminMediaGetReprocessJob = async (identifier: string, options?: Re
 
 
 
-export const getAdminMediaGetReprocessJobMutationOptions = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError,{identifier: string}, TContext> => {
-
-const mutationKey = ['adminMediaGetReprocessJob'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
-
-          return  adminMediaGetReprocessJob(identifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AdminMediaGetReprocessJobMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>>
-
-    export type AdminMediaGetReprocessJobMutationError = ProblemDetails
-
-    export const useAdminMediaGetReprocessJob = <TError = ProblemDetails,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof adminMediaGetReprocessJob>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getAdminMediaGetReprocessJobMutationOptions(options), queryClient);
+export const getAdminMediaGetReprocessJobQueryKey = (identifier: string,) => {
+    return [
+    `/api/v1/admin/media/reprocess/${identifier}`
+    ] as const;
     }
-    export const getAdminMediaCancelReprocessJobUrl = (identifier: string,) => {
+
+
+export const getAdminMediaGetReprocessJobQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminMediaGetReprocessJobQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>> = ({ signal }) => adminMediaGetReprocessJob(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminMediaGetReprocessJobQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>>
+export type AdminMediaGetReprocessJobQueryError = ProblemDetails
+
+
+export function useAdminMediaGetReprocessJob<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaGetReprocessJob>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaGetReprocessJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJob<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminMediaGetReprocessJob>>,
+          TError,
+          Awaited<ReturnType<typeof adminMediaGetReprocessJob>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJob<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminMediaGetReprocessJob<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminMediaGetReprocessJobQueryOptions(identifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminMediaGetReprocessJobSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAdminMediaGetReprocessJobQueryKey(identifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>> = ({ signal }) => adminMediaGetReprocessJob(identifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AdminMediaGetReprocessJobSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>>
+export type AdminMediaGetReprocessJobSuspenseQueryError = ProblemDetails
+
+
+export function useAdminMediaGetReprocessJobSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJobSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAdminMediaGetReprocessJobSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAdminMediaGetReprocessJobSuspense<TData = Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError = ProblemDetails>(
+ identifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminMediaGetReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAdminMediaGetReprocessJobSuspenseQueryOptions(identifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getAdminMediaCancelReprocessJobUrl = (identifier: string,) => {
 
 
 
@@ -482,78 +665,48 @@ export const adminMediaCancelReprocessJob = async (identifier: string, options?:
 
 
 
-export const getAdminMediaCancelReprocessJobQueryKey = (identifier: string,) => {
-    return [
-    'POST', `/api/v1/admin/media/reprocess/${identifier}/cancel`
-    ] as const;
+export const getAdminMediaCancelReprocessJobMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['adminMediaCancelReprocessJob'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  adminMediaCancelReprocessJob(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminMediaCancelReprocessJobMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>>
+
+    export type AdminMediaCancelReprocessJobMutationError = ProblemDetails
+
+    export const useAdminMediaCancelReprocessJob = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getAdminMediaCancelReprocessJobMutationOptions(options), queryClient);
     }
-
-
-export const getAdminMediaCancelReprocessJobQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError = ProblemDetails>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminMediaCancelReprocessJobQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>> = ({ signal }) => adminMediaCancelReprocessJob(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMediaCancelReprocessJobQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>>
-export type AdminMediaCancelReprocessJobQueryError = ProblemDetails
-
-
-export function useAdminMediaCancelReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaCancelReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaCancelReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMediaCancelReprocessJob<TData = Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaCancelReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMediaCancelReprocessJobQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminMediaRetryReprocessJobUrl = (identifier: string,) => {
+    export const getAdminMediaRetryReprocessJobUrl = (identifier: string,) => {
 
 
 
@@ -576,74 +729,44 @@ export const adminMediaRetryReprocessJob = async (identifier: string, options?: 
 
 
 
-export const getAdminMediaRetryReprocessJobQueryKey = (identifier: string,) => {
-    return [
-    'POST', `/api/v1/admin/media/reprocess/${identifier}/retry`
-    ] as const;
+export const getAdminMediaRetryReprocessJobMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError,{identifier: string}, TContext> => {
+
+const mutationKey = ['adminMediaRetryReprocessJob'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, {identifier: string}> = (props) => {
+          const {identifier} = props ?? {};
+
+          return  adminMediaRetryReprocessJob(identifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AdminMediaRetryReprocessJobMutationResult = NonNullable<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>>
+
+    export type AdminMediaRetryReprocessJobMutationError = ProblemDetails
+
+    export const useAdminMediaRetryReprocessJob = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>,
+        TError,
+        {identifier: string},
+        TContext
+      > => {
+      return useMutation(getAdminMediaRetryReprocessJobMutationOptions(options), queryClient);
     }
-
-
-export const getAdminMediaRetryReprocessJobQueryOptions = <TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminMediaRetryReprocessJobQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>> = ({ signal }) => adminMediaRetryReprocessJob(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminMediaRetryReprocessJobQueryResult = NonNullable<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>>
-export type AdminMediaRetryReprocessJobQueryError = ProblemDetails
-
-
-export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>,
-          TError,
-          Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminMediaRetryReprocessJob<TData = Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError = ProblemDetails>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminMediaRetryReprocessJob>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminMediaRetryReprocessJobQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-

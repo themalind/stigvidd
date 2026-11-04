@@ -7,7 +7,8 @@
  */
 import {
   useMutation,
-  useQuery
+  useQuery,
+  useSuspenseQuery
 } from '@tanstack/react-query';
 import type {
   DataTag,
@@ -21,7 +22,9 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -75,48 +78,130 @@ export const trailObstaclesGetTrailObstacles = async (trailIdentifier: string, o
 
 
 
-export const getTrailObstaclesGetTrailObstaclesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError,{trailIdentifier: string}, TContext> => {
-
-const mutationKey = ['trailObstaclesGetTrailObstacles'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, {trailIdentifier: string}> = (props) => {
-          const {trailIdentifier} = props ?? {};
-
-          return  trailObstaclesGetTrailObstacles(trailIdentifier,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailObstaclesGetTrailObstaclesMutationResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>>
-
-    export type TrailObstaclesGetTrailObstaclesMutationError = unknown
-
-    export const useTrailObstaclesGetTrailObstacles = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError,{trailIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>,
-        TError,
-        {trailIdentifier: string},
-        TContext
-      > => {
-      return useMutation(getTrailObstaclesGetTrailObstaclesMutationOptions(options), queryClient);
+export const getTrailObstaclesGetTrailObstaclesQueryKey = (trailIdentifier: string,) => {
+    return [
+    `/api/v1/TrailObstacles/trail/${trailIdentifier}`
+    ] as const;
     }
-    export const getTrailObstaclesGetTrailObstacleIssueTypesUrl = () => {
+
+
+export const getTrailObstaclesGetTrailObstaclesQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesGetTrailObstaclesQueryKey(trailIdentifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>> = ({ signal }) => trailObstaclesGetTrailObstacles(trailIdentifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: trailIdentifier !== null && trailIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailObstaclesGetTrailObstaclesQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>>
+export type TrailObstaclesGetTrailObstaclesQueryError = unknown
+
+
+export function useTrailObstaclesGetTrailObstacles<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>,
+          TError,
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstacles<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>,
+          TError,
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstacles<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailObstaclesGetTrailObstacles<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailObstaclesGetTrailObstaclesQueryOptions(trailIdentifier,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailObstaclesGetTrailObstaclesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesGetTrailObstaclesQueryKey(trailIdentifier);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>> = ({ signal }) => trailObstaclesGetTrailObstacles(trailIdentifier, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailObstaclesGetTrailObstaclesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>>
+export type TrailObstaclesGetTrailObstaclesSuspenseQueryError = unknown
+
+
+export function useTrailObstaclesGetTrailObstaclesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstaclesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstaclesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailObstaclesGetTrailObstaclesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError = unknown>(
+ trailIdentifier: string, options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacles>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailObstaclesGetTrailObstaclesSuspenseQueryOptions(trailIdentifier,options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailObstaclesGetTrailObstacleIssueTypesUrl = () => {
 
 
 
@@ -139,48 +224,130 @@ export const trailObstaclesGetTrailObstacleIssueTypes = async ( options?: Reques
 
 
 
-export const getTrailObstaclesGetTrailObstacleIssueTypesMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError,void, TContext> => {
-
-const mutationKey = ['trailObstaclesGetTrailObstacleIssueTypes'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, void> = () => {
-
-
-          return  trailObstaclesGetTrailObstacleIssueTypes(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailObstaclesGetTrailObstacleIssueTypesMutationResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>>
-
-    export type TrailObstaclesGetTrailObstacleIssueTypesMutationError = unknown
-
-    export const useTrailObstaclesGetTrailObstacleIssueTypes = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getTrailObstaclesGetTrailObstacleIssueTypesMutationOptions(options), queryClient);
+export const getTrailObstaclesGetTrailObstacleIssueTypesQueryKey = () => {
+    return [
+    `/api/v1/TrailObstacles/issue-types`
+    ] as const;
     }
-    export const getTrailObstaclesCreateTrailObstacleUrl = () => {
+
+
+export const getTrailObstaclesGetTrailObstacleIssueTypesQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesGetTrailObstacleIssueTypesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>> = ({ signal }) => trailObstaclesGetTrailObstacleIssueTypes({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailObstaclesGetTrailObstacleIssueTypesQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>>
+export type TrailObstaclesGetTrailObstacleIssueTypesQueryError = unknown
+
+
+export function useTrailObstaclesGetTrailObstacleIssueTypes<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>,
+          TError,
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstacleIssueTypes<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>,
+          TError,
+          Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstacleIssueTypes<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailObstaclesGetTrailObstacleIssueTypes<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailObstaclesGetTrailObstacleIssueTypesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailObstaclesGetTrailObstacleIssueTypesSuspenseQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>( options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesGetTrailObstacleIssueTypesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>> = ({ signal }) => trailObstaclesGetTrailObstacleIssueTypes({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TrailObstaclesGetTrailObstacleIssueTypesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>>
+export type TrailObstaclesGetTrailObstacleIssueTypesSuspenseQueryError = unknown
+
+
+export function useTrailObstaclesGetTrailObstacleIssueTypesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options: { query:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstacleIssueTypesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTrailObstaclesGetTrailObstacleIssueTypesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTrailObstaclesGetTrailObstacleIssueTypesSuspense<TData = Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailObstaclesGetTrailObstacleIssueTypes>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTrailObstaclesGetTrailObstacleIssueTypesSuspenseQueryOptions(options)
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as  UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+export const getTrailObstaclesCreateTrailObstacleUrl = () => {
 
 
 
@@ -203,78 +370,48 @@ export const trailObstaclesCreateTrailObstacle = async (trailObstacleRequest: Tr
 
 
 
-export const getTrailObstaclesCreateTrailObstacleQueryKey = (trailObstacleRequest?: TrailObstacleRequest,) => {
-    return [
-    'POST', `/api/v1/TrailObstacles`, trailObstacleRequest
-    ] as const;
+export const getTrailObstaclesCreateTrailObstacleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError,{data: TrailObstacleRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError,{data: TrailObstacleRequest}, TContext> => {
+
+const mutationKey = ['trailObstaclesCreateTrailObstacle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, {data: TrailObstacleRequest}> = (props) => {
+          const {data} = props ?? {};
+
+          return  trailObstaclesCreateTrailObstacle(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailObstaclesCreateTrailObstacleMutationResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>>
+    export type TrailObstaclesCreateTrailObstacleMutationBody = TrailObstacleRequest
+    export type TrailObstaclesCreateTrailObstacleMutationError = unknown
+
+    export const useTrailObstaclesCreateTrailObstacle = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError,{data: TrailObstacleRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>,
+        TError,
+        {data: TrailObstacleRequest},
+        TContext
+      > => {
+      return useMutation(getTrailObstaclesCreateTrailObstacleMutationOptions(options), queryClient);
     }
-
-
-export const getTrailObstaclesCreateTrailObstacleQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError = unknown>(trailObstacleRequest: TrailObstacleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesCreateTrailObstacleQueryKey(trailObstacleRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>> = ({ signal }) => trailObstaclesCreateTrailObstacle(trailObstacleRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailObstaclesCreateTrailObstacleQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>>
-export type TrailObstaclesCreateTrailObstacleQueryError = unknown
-
-
-export function useTrailObstaclesCreateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError = unknown>(
- trailObstacleRequest: TrailObstacleRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesCreateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError = unknown>(
- trailObstacleRequest: TrailObstacleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesCreateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError = unknown>(
- trailObstacleRequest: TrailObstacleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailObstaclesCreateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError = unknown>(
- trailObstacleRequest: TrailObstacleRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesCreateTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailObstaclesCreateTrailObstacleQueryOptions(trailObstacleRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailObstaclesAddSolvedVoteUrl = (trailObstacleIdentifier: string,) => {
+    export const getTrailObstaclesAddSolvedVoteUrl = (trailObstacleIdentifier: string,) => {
 
 
 
@@ -297,78 +434,48 @@ export const trailObstaclesAddSolvedVote = async (trailObstacleIdentifier: strin
 
 
 
-export const getTrailObstaclesAddSolvedVoteQueryKey = (trailObstacleIdentifier: string,) => {
-    return [
-    'POST', `/api/v1/TrailObstacles/solve/${trailObstacleIdentifier}`
-    ] as const;
+export const getTrailObstaclesAddSolvedVoteMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError,{trailObstacleIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError,{trailObstacleIdentifier: string}, TContext> => {
+
+const mutationKey = ['trailObstaclesAddSolvedVote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, {trailObstacleIdentifier: string}> = (props) => {
+          const {trailObstacleIdentifier} = props ?? {};
+
+          return  trailObstaclesAddSolvedVote(trailObstacleIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailObstaclesAddSolvedVoteMutationResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>>
+
+    export type TrailObstaclesAddSolvedVoteMutationError = unknown
+
+    export const useTrailObstaclesAddSolvedVote = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError,{trailObstacleIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>,
+        TError,
+        {trailObstacleIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getTrailObstaclesAddSolvedVoteMutationOptions(options), queryClient);
     }
-
-
-export const getTrailObstaclesAddSolvedVoteQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError = unknown>(trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesAddSolvedVoteQueryKey(trailObstacleIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>> = ({ signal }) => trailObstaclesAddSolvedVote(trailObstacleIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: trailObstacleIdentifier !== null && trailObstacleIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailObstaclesAddSolvedVoteQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>>
-export type TrailObstaclesAddSolvedVoteQueryError = unknown
-
-
-export function useTrailObstaclesAddSolvedVote<TData = Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError = unknown>(
- trailObstacleIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesAddSolvedVote<TData = Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesAddSolvedVote<TData = Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailObstaclesAddSolvedVote<TData = Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesAddSolvedVote>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailObstaclesAddSolvedVoteQueryOptions(trailObstacleIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailObstaclesDeleteSolvedVoteByUserIdentifierUrl = (trailObstacleIdentifier: string,) => {
+    export const getTrailObstaclesDeleteSolvedVoteByUserIdentifierUrl = (trailObstacleIdentifier: string,) => {
 
 
 
@@ -391,78 +498,48 @@ export const trailObstaclesDeleteSolvedVoteByUserIdentifier = async (trailObstac
 
 
 
-export const getTrailObstaclesDeleteSolvedVoteByUserIdentifierQueryKey = (trailObstacleIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/TrailObstacles/solve/${trailObstacleIdentifier}`
-    ] as const;
+export const getTrailObstaclesDeleteSolvedVoteByUserIdentifierMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError,{trailObstacleIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError,{trailObstacleIdentifier: string}, TContext> => {
+
+const mutationKey = ['trailObstaclesDeleteSolvedVoteByUserIdentifier'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, {trailObstacleIdentifier: string}> = (props) => {
+          const {trailObstacleIdentifier} = props ?? {};
+
+          return  trailObstaclesDeleteSolvedVoteByUserIdentifier(trailObstacleIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailObstaclesDeleteSolvedVoteByUserIdentifierMutationResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>>
+
+    export type TrailObstaclesDeleteSolvedVoteByUserIdentifierMutationError = unknown
+
+    export const useTrailObstaclesDeleteSolvedVoteByUserIdentifier = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError,{trailObstacleIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>,
+        TError,
+        {trailObstacleIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getTrailObstaclesDeleteSolvedVoteByUserIdentifierMutationOptions(options), queryClient);
     }
-
-
-export const getTrailObstaclesDeleteSolvedVoteByUserIdentifierQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError = unknown>(trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesDeleteSolvedVoteByUserIdentifierQueryKey(trailObstacleIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>> = ({ signal }) => trailObstaclesDeleteSolvedVoteByUserIdentifier(trailObstacleIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: trailObstacleIdentifier !== null && trailObstacleIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailObstaclesDeleteSolvedVoteByUserIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>>
-export type TrailObstaclesDeleteSolvedVoteByUserIdentifierQueryError = unknown
-
-
-export function useTrailObstaclesDeleteSolvedVoteByUserIdentifier<TData = Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError = unknown>(
- trailObstacleIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesDeleteSolvedVoteByUserIdentifier<TData = Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesDeleteSolvedVoteByUserIdentifier<TData = Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailObstaclesDeleteSolvedVoteByUserIdentifier<TData = Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteSolvedVoteByUserIdentifier>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailObstaclesDeleteSolvedVoteByUserIdentifierQueryOptions(trailObstacleIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailObstaclesUpdateTrailObstacleUrl = (trailObstacleIdentifier: string,) => {
+    export const getTrailObstaclesUpdateTrailObstacleUrl = (trailObstacleIdentifier: string,) => {
 
 
 
@@ -486,84 +563,48 @@ export const trailObstaclesUpdateTrailObstacle = async (trailObstacleIdentifier:
 
 
 
-export const getTrailObstaclesUpdateTrailObstacleQueryKey = (trailObstacleIdentifier: string,
-    trailObstacleUpdateRequest?: TrailObstacleUpdateRequest,) => {
-    return [
-    'PUT', `/api/v1/TrailObstacles/${trailObstacleIdentifier}`, trailObstacleUpdateRequest
-    ] as const;
+export const getTrailObstaclesUpdateTrailObstacleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError,{trailObstacleIdentifier: string;data: TrailObstacleUpdateRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError,{trailObstacleIdentifier: string;data: TrailObstacleUpdateRequest}, TContext> => {
+
+const mutationKey = ['trailObstaclesUpdateTrailObstacle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, {trailObstacleIdentifier: string;data: TrailObstacleUpdateRequest}> = (props) => {
+          const {trailObstacleIdentifier,data} = props ?? {};
+
+          return  trailObstaclesUpdateTrailObstacle(trailObstacleIdentifier,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailObstaclesUpdateTrailObstacleMutationResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>>
+    export type TrailObstaclesUpdateTrailObstacleMutationBody = TrailObstacleUpdateRequest
+    export type TrailObstaclesUpdateTrailObstacleMutationError = unknown
+
+    export const useTrailObstaclesUpdateTrailObstacle = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError,{trailObstacleIdentifier: string;data: TrailObstacleUpdateRequest}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>,
+        TError,
+        {trailObstacleIdentifier: string;data: TrailObstacleUpdateRequest},
+        TContext
+      > => {
+      return useMutation(getTrailObstaclesUpdateTrailObstacleMutationOptions(options), queryClient);
     }
-
-
-export const getTrailObstaclesUpdateTrailObstacleQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError = unknown>(trailObstacleIdentifier: string,
-    trailObstacleUpdateRequest: TrailObstacleUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesUpdateTrailObstacleQueryKey(trailObstacleIdentifier,trailObstacleUpdateRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>> = ({ signal }) => trailObstaclesUpdateTrailObstacle(trailObstacleIdentifier,trailObstacleUpdateRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: trailObstacleIdentifier !== null && trailObstacleIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailObstaclesUpdateTrailObstacleQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>>
-export type TrailObstaclesUpdateTrailObstacleQueryError = unknown
-
-
-export function useTrailObstaclesUpdateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string,
-    trailObstacleUpdateRequest: TrailObstacleUpdateRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesUpdateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string,
-    trailObstacleUpdateRequest: TrailObstacleUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesUpdateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string,
-    trailObstacleUpdateRequest: TrailObstacleUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailObstaclesUpdateTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string,
-    trailObstacleUpdateRequest: TrailObstacleUpdateRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesUpdateTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailObstaclesUpdateTrailObstacleQueryOptions(trailObstacleIdentifier,trailObstacleUpdateRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailObstaclesDeleteTrailObstacleUrl = (trailObstacleIdentifier: string,) => {
+    export const getTrailObstaclesDeleteTrailObstacleUrl = (trailObstacleIdentifier: string,) => {
 
 
 
@@ -586,74 +627,44 @@ export const trailObstaclesDeleteTrailObstacle = async (trailObstacleIdentifier:
 
 
 
-export const getTrailObstaclesDeleteTrailObstacleQueryKey = (trailObstacleIdentifier: string,) => {
-    return [
-    'DELETE', `/api/v1/TrailObstacles/${trailObstacleIdentifier}`
-    ] as const;
+export const getTrailObstaclesDeleteTrailObstacleMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError,{trailObstacleIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError,{trailObstacleIdentifier: string}, TContext> => {
+
+const mutationKey = ['trailObstaclesDeleteTrailObstacle'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, {trailObstacleIdentifier: string}> = (props) => {
+          const {trailObstacleIdentifier} = props ?? {};
+
+          return  trailObstaclesDeleteTrailObstacle(trailObstacleIdentifier,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TrailObstaclesDeleteTrailObstacleMutationResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>>
+
+    export type TrailObstaclesDeleteTrailObstacleMutationError = unknown
+
+    export const useTrailObstaclesDeleteTrailObstacle = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError,{trailObstacleIdentifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>,
+        TError,
+        {trailObstacleIdentifier: string},
+        TContext
+      > => {
+      return useMutation(getTrailObstaclesDeleteTrailObstacleMutationOptions(options), queryClient);
     }
-
-
-export const getTrailObstaclesDeleteTrailObstacleQueryOptions = <TData = Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError = unknown>(trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailObstaclesDeleteTrailObstacleQueryKey(trailObstacleIdentifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>> = ({ signal }) => trailObstaclesDeleteTrailObstacle(trailObstacleIdentifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: trailObstacleIdentifier !== null && trailObstacleIdentifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailObstaclesDeleteTrailObstacleQueryResult = NonNullable<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>>
-export type TrailObstaclesDeleteTrailObstacleQueryError = unknown
-
-
-export function useTrailObstaclesDeleteTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesDeleteTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>,
-          TError,
-          Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailObstaclesDeleteTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailObstaclesDeleteTrailObstacle<TData = Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError = unknown>(
- trailObstacleIdentifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailObstaclesDeleteTrailObstacle>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailObstaclesDeleteTrailObstacleQueryOptions(trailObstacleIdentifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
