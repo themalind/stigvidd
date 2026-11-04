@@ -7,11 +7,12 @@ import type {
   TrailResponse,
   UpdateTrailLinkRequest,
   UpdateTrailRequest,
+  UpdateVisitorInformationRequest,
 } from "@/api/generated/model";
 import { CLASSIFICATION } from "@/utils/classification";
 import { QueryBoundary } from "@/components/query-boundary";
+import { CheckboxField, FormField, TextField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -32,7 +33,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/tag-input";
 import { Edit, Plus, X } from "lucide-react";
 import { useState } from "react";
@@ -43,6 +43,10 @@ interface Props {
   data: Pick<AdminTrailListItemResponse, "identifier">;
   selected: boolean;
 }
+
+type VisitorForm = {
+  [K in keyof UpdateVisitorInformationRequest]-?: NonNullable<UpdateVisitorInformationRequest[K]>;
+};
 
 const toForm = (trail: TrailResponse): UpdateTrailRequest => ({
   name: trail.name ?? "",
@@ -55,20 +59,23 @@ const toForm = (trail: TrailResponse): UpdateTrailRequest => ({
   fullDescription: trail.fullDescription ?? "",
   tags: trail.tags ?? "",
   city: trail.city ?? "",
-  visitorInformation: {
-    gettingThere: trail.visitorInformation?.gettingThere ?? "",
-    publicTransport: trail.visitorInformation?.publicTransport ?? "",
-    parking: trail.visitorInformation?.parking ?? "",
-    illumination: trail.visitorInformation?.illumination ?? false,
-    illuminationText: trail.visitorInformation?.illuminationText ?? "",
-    maintainedBy: trail.visitorInformation?.maintainedBy ?? "",
-    winterMaintenance: trail.visitorInformation?.winterMaintenance ?? false,
-  },
+  visitorInformation: toVisitorForm(trail.visitorInformation ?? undefined),
   links: (trail.trailLinksResponse ?? []).map(({ identifier, title, link }) => ({ identifier, title, link })),
 });
 
-// Mirrors the max lengths in UpdateTrailRequestValidator; over these the API
-// rejects the whole request with a 400.
+function toVisitorForm(visitor: UpdateVisitorInformationRequest | undefined): VisitorForm {
+  return {
+    gettingThere: visitor?.gettingThere ?? "",
+    publicTransport: visitor?.publicTransport ?? "",
+    parking: visitor?.parking ?? "",
+    illumination: visitor?.illumination ?? false,
+    illuminationText: visitor?.illuminationText ?? "",
+    maintainedBy: visitor?.maintainedBy ?? "",
+    winterMaintenance: visitor?.winterMaintenance ?? false,
+  };
+}
+
+// keep-comment: mirrors UpdateTrailRequestValidator's max lengths; over one, the API rejects the whole request with a 400
 const LIMITS = {
   city: 30,
   accessibilityInfo: 200,
@@ -97,17 +104,6 @@ function linkProblem(link: UpdateTrailLinkRequest): string | null {
   if (!link.title.trim()) return "Give the link a title.";
   if (!isHttpUrl(link.link)) return "Enter a full address starting with https://";
   return null;
-}
-
-function FieldHeader({ label, value, max }: { label: string; value: string; max: number }) {
-  return (
-    <div className="flex items-baseline justify-between gap-2">
-      <p>{label}</p>
-      <span className={value.length === max ? "text-destructive text-xs" : "text-muted-foreground text-xs"}>
-        {value.length}/{max}
-      </span>
-    </div>
-  );
 }
 
 function EditorFooter({ canSave, saving, onSave }: { canSave: boolean; saving: boolean; onSave?: () => void }) {
@@ -190,263 +186,153 @@ function TrailForm({ identifier, trail }: { identifier: string; trail: TrailResp
   const [formData, setFormData] = useState<UpdateTrailRequest>(() => toForm(trail));
   const save = useUpdateTrail(identifier);
 
+  const visitor = toVisitorForm(formData.visitorInformation ?? undefined);
   const links = formData.links ?? [];
   const linksValid = links.every((link) => linkProblem(link) === null);
 
+  function set(patch: Partial<UpdateTrailRequest>) {
+    setFormData((current) => ({ ...current, ...patch }));
+  }
+
+  function setVisitor(patch: Partial<VisitorForm>) {
+    setFormData((current) => ({
+      ...current,
+      visitorInformation: { ...toVisitorForm(current.visitorInformation ?? undefined), ...patch },
+    }));
+  }
+
+  function setLinks(next: UpdateTrailLinkRequest[]) {
+    set({ links: next });
+  }
+
   function setLink(index: number, patch: Partial<UpdateTrailLinkRequest>) {
-    setFormData({ ...formData, links: links.map((link, i) => (i === index ? { ...link, ...patch } : link)) });
+    setLinks(links.map((link, i) => (i === index ? { ...link, ...patch } : link)));
   }
 
   return (
     <>
       <div className="flex-1 overflow-y-auto">
         <div className="grid auto-rows-min gap-4 px-4">
-          <div className="flex flex-col gap-2">
-            <p>Name</p>
-            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <p>Trail Length (km)</p>
-            <Input
-              type="number"
-              min={0}
-              step={0.1}
-              value={formData.trailLength}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  trailLength: Number(e.target.value),
-                })
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader label="City" value={formData.city ?? ""} max={LIMITS.city} />
-            <Input
-              value={formData.city ?? ""}
-              maxLength={LIMITS.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <p>Classification</p>
-            <Select
-              value={formData.classification?.toString() ?? "0"}
-              onValueChange={(v) => setFormData({ ...formData, classification: Number(v) })}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Difficulty</SelectLabel>
-                  {Object.entries(CLASSIFICATION)
-                    .reverse()
-                    .map(([key, value]) => (
-                      <SelectItem key={key} value={key}>
-                        {value}
-                      </SelectItem>
-                    ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="accessibility"
-              checked={formData.accessibility ?? false}
-              onCheckedChange={(checked) =>
-                setFormData({
-                  ...formData,
-                  accessibility: checked === true,
-                })
-              }
-            />
-            <p>Accessible</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader
-              label="Accessibility Info"
-              value={formData.accessibilityInfo ?? ""}
-              max={LIMITS.accessibilityInfo}
-            />
-            <Input
-              value={formData.accessibilityInfo ?? ""}
-              maxLength={LIMITS.accessibilityInfo}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  accessibilityInfo: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader label="Trail Symbol" value={formData.trailSymbol ?? ""} max={LIMITS.trailSymbol} />
-            <Input
-              value={formData.trailSymbol ?? ""}
-              maxLength={LIMITS.trailSymbol}
-              onChange={(e) => setFormData({ ...formData, trailSymbol: e.target.value })}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader label="Description" value={formData.description ?? ""} max={LIMITS.description} />
-            <Textarea
-              value={formData.description ?? ""}
-              maxLength={LIMITS.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader label="Full Description" value={formData.fullDescription ?? ""} max={LIMITS.fullDescription} />
-            <Textarea
-              value={formData.fullDescription ?? ""}
-              maxLength={LIMITS.fullDescription}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  fullDescription: e.target.value,
-                })
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <p>Tags</p>
-            <TagInput value={formData.tags ?? ""} onChange={(tags) => setFormData({ ...formData, tags })} />
-          </div>
+          <TextField label="Name" value={formData.name} onChange={(name) => set({ name })} />
+          <FormField label="Trail Length (km)">
+            {(id) => (
+              <Input
+                id={id}
+                type="number"
+                min={0}
+                step={0.1}
+                value={formData.trailLength}
+                onChange={(e) => set({ trailLength: Number(e.target.value) })}
+              />
+            )}
+          </FormField>
+          <TextField label="City" value={formData.city ?? ""} max={LIMITS.city} onChange={(city) => set({ city })} />
+          <FormField label="Classification">
+            {(id) => (
+              <Select
+                value={formData.classification?.toString() ?? "0"}
+                onValueChange={(v) => set({ classification: Number(v) })}
+              >
+                <SelectTrigger id={id} className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Difficulty</SelectLabel>
+                    {Object.entries(CLASSIFICATION)
+                      .reverse()
+                      .map(([key, value]) => (
+                        <SelectItem key={key} value={key}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            )}
+          </FormField>
+          <CheckboxField
+            label="Accessible"
+            checked={formData.accessibility ?? false}
+            onChange={(accessibility) => set({ accessibility })}
+          />
+          <TextField
+            label="Accessibility Info"
+            value={formData.accessibilityInfo ?? ""}
+            max={LIMITS.accessibilityInfo}
+            onChange={(accessibilityInfo) => set({ accessibilityInfo })}
+          />
+          <TextField
+            label="Trail Symbol"
+            value={formData.trailSymbol ?? ""}
+            max={LIMITS.trailSymbol}
+            onChange={(trailSymbol) => set({ trailSymbol })}
+          />
+          <TextField
+            label="Description"
+            value={formData.description ?? ""}
+            max={LIMITS.description}
+            multiline
+            onChange={(description) => set({ description })}
+          />
+          <TextField
+            label="Full Description"
+            value={formData.fullDescription ?? ""}
+            max={LIMITS.fullDescription}
+            multiline
+            onChange={(fullDescription) => set({ fullDescription })}
+          />
+          <FormField label="Tags">
+            {() => <TagInput value={formData.tags ?? ""} onChange={(tags) => set({ tags })} />}
+          </FormField>
 
           <Separator className="mt-3" />
 
           <p className="font-semibold">Visitor Information</p>
 
-          <div className="flex flex-col gap-2">
-            <FieldHeader
-              label="Getting There"
-              value={formData.visitorInformation?.gettingThere ?? ""}
-              max={LIMITS.gettingThere}
-            />
-            <Textarea
-              value={formData.visitorInformation?.gettingThere ?? ""}
-              maxLength={LIMITS.gettingThere}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  visitorInformation: {
-                    ...formData.visitorInformation,
-                    gettingThere: e.target.value,
-                  },
-                })
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader
-              label="Public Transport"
-              value={formData.visitorInformation?.publicTransport ?? ""}
-              max={LIMITS.publicTransport}
-            />
-            <Textarea
-              value={formData.visitorInformation?.publicTransport ?? ""}
-              maxLength={LIMITS.publicTransport}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  visitorInformation: {
-                    ...formData.visitorInformation,
-                    publicTransport: e.target.value,
-                  },
-                })
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader label="Parking" value={formData.visitorInformation?.parking ?? ""} max={LIMITS.parking} />
-            <Textarea
-              value={formData.visitorInformation?.parking ?? ""}
-              maxLength={LIMITS.parking}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  visitorInformation: {
-                    ...formData.visitorInformation,
-                    parking: e.target.value,
-                  },
-                })
-              }
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="illumination"
-              checked={formData.visitorInformation?.illumination ?? false}
-              onCheckedChange={(checked) =>
-                setFormData({
-                  ...formData,
-                  visitorInformation: {
-                    ...formData.visitorInformation,
-                    illumination: checked === true,
-                  },
-                })
-              }
-            />
-            <p>Illuminated</p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader
-              label="Illumination Info"
-              value={formData.visitorInformation?.illuminationText ?? ""}
-              max={LIMITS.illuminationText}
-            />
-            <Input
-              value={formData.visitorInformation?.illuminationText ?? ""}
-              maxLength={LIMITS.illuminationText}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  visitorInformation: {
-                    ...formData.visitorInformation,
-                    illuminationText: e.target.value,
-                  },
-                })
-              }
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <FieldHeader
-              label="Maintained By"
-              value={formData.visitorInformation?.maintainedBy ?? ""}
-              max={LIMITS.maintainedBy}
-            />
-            <Input
-              value={formData.visitorInformation?.maintainedBy ?? ""}
-              maxLength={LIMITS.maintainedBy}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  visitorInformation: {
-                    ...formData.visitorInformation,
-                    maintainedBy: e.target.value,
-                  },
-                })
-              }
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="winterMaintenance"
-              checked={formData.visitorInformation?.winterMaintenance ?? false}
-              onCheckedChange={(checked) =>
-                setFormData({
-                  ...formData,
-                  visitorInformation: {
-                    ...formData.visitorInformation,
-                    winterMaintenance: checked === true,
-                  },
-                })
-              }
-            />
-            <p>Winter Maintenance</p>
-          </div>
+          <TextField
+            label="Getting There"
+            value={visitor.gettingThere}
+            max={LIMITS.gettingThere}
+            multiline
+            onChange={(gettingThere) => setVisitor({ gettingThere })}
+          />
+          <TextField
+            label="Public Transport"
+            value={visitor.publicTransport}
+            max={LIMITS.publicTransport}
+            multiline
+            onChange={(publicTransport) => setVisitor({ publicTransport })}
+          />
+          <TextField
+            label="Parking"
+            value={visitor.parking}
+            max={LIMITS.parking}
+            multiline
+            onChange={(parking) => setVisitor({ parking })}
+          />
+          <CheckboxField
+            label="Illuminated"
+            checked={visitor.illumination}
+            onChange={(illumination) => setVisitor({ illumination })}
+          />
+          <TextField
+            label="Illumination Info"
+            value={visitor.illuminationText}
+            max={LIMITS.illuminationText}
+            onChange={(illuminationText) => setVisitor({ illuminationText })}
+          />
+          <TextField
+            label="Maintained By"
+            value={visitor.maintainedBy}
+            max={LIMITS.maintainedBy}
+            onChange={(maintainedBy) => setVisitor({ maintainedBy })}
+          />
+          <CheckboxField
+            label="Winter Maintenance"
+            checked={visitor.winterMaintenance}
+            onChange={(winterMaintenance) => setVisitor({ winterMaintenance })}
+          />
 
           <Separator className="mt-3" />
 
@@ -457,7 +343,7 @@ function TrailForm({ identifier, trail }: { identifier: string; trail: TrailResp
           {links.map((link, index) => {
             const problem = linkProblem(link);
             return (
-              <div key={link.identifier ?? `new-${index}`} className="flex flex-col gap-2 rounded-[5px] border p-3">
+              <div key={link.identifier ?? `new-${index}`} className="flex flex-col gap-2 rounded-xs border p-3">
                 <div className="flex items-center gap-2">
                   <Input
                     aria-label={`Link ${index + 1} title`}
@@ -470,7 +356,7 @@ function TrailForm({ identifier, trail }: { identifier: string; trail: TrailResp
                     variant="ghost"
                     size="icon"
                     aria-label={`Remove link ${index + 1}`}
-                    onClick={() => setFormData({ ...formData, links: links.filter((_, i) => i !== index) })}
+                    onClick={() => setLinks(links.filter((_, i) => i !== index))}
                   >
                     <X />
                   </Button>
@@ -491,7 +377,7 @@ function TrailForm({ identifier, trail }: { identifier: string; trail: TrailResp
           <Button
             variant="outline"
             className="mb-4 self-start"
-            onClick={() => setFormData({ ...formData, links: [...links, { title: "", link: "" }] })}
+            onClick={() => setLinks([...links, { title: "", link: "" }])}
           >
             <Plus />
             Add link
