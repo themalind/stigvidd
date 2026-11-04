@@ -1,10 +1,11 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
-import type { SimilarRoute } from "@/features/hike-submissions/api/hike-submissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { similarRoutesQueryOptions } from "@/features/hike-submissions/api/hike-submissions";
 
 const KIND_LABELS: Record<string, string> = {
   Trail: "Trail",
@@ -12,25 +13,23 @@ const KIND_LABELS: Record<string, string> = {
   Submission: "Other submission",
 };
 
-const percent = (share: number | undefined) => `${Math.round((share ?? 0) * 100)} %`;
+const percent = (share: number) => `${Math.round(share * 100)} %`;
 
-type Props = {
-  // keep-comment: null while loading
-  routes: SimilarRoute[] | null;
-  failed: boolean;
-};
+export function SimilarRoutesCard({ identifier }: { identifier: string }) {
+  const { data: routes, isError } = useQuery(similarRoutesQueryOptions(identifier));
 
-export function SimilarRoutesCard({ routes, failed }: Props) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Already on the map?</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {failed ? (
-          <p className="text-sm text-destructive">Could not compare with the existing trails.</p>
-        ) : routes === null ? (
-          <Skeleton className="h-12 w-full" />
+        {!routes ? (
+          isError ? (
+            <p className="text-sm text-destructive">Could not compare with the existing trails.</p>
+          ) : (
+            <Skeleton className="h-12 w-full" />
+          )
         ) : routes.length === 0 ? (
           <p className="text-sm text-muted-foreground">No trail or other submission follows this route.</p>
         ) : (

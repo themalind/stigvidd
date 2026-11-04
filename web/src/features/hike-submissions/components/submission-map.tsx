@@ -5,7 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap, type MapLayerMouseEvent } from "maplibre-gl";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { type Jump, type LngLat, midpoints } from "@/utils/geometry-edit";
-import { mapStyle } from "./map-style";
+import { mapStyle } from "@/lib/map-style";
 
 export type EditMode = "move" | "delete" | "cut" | "redraw" | "extend" | "start";
 

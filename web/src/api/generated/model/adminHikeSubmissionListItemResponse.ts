@@ -10,11 +10,11 @@ export interface AdminHikeSubmissionListItemResponse {
   identifier: string;
   name: string;
   /** @nullable */
-  submitterNickName?: string | null;
-  showSubmitterName?: boolean;
-  createdAt?: string;
-  trailLength?: number;
-  imageCount?: number;
+  submitterNickName: string | null;
+  showSubmitterName: boolean;
+  createdAt: string;
+  trailLength: number;
+  imageCount: number;
   status: string;
-  longestGapMetres?: number;
+  longestGapMetres: number;
 }

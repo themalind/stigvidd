@@ -9,7 +9,7 @@ import { QueryBoundary } from "@/components/query-boundary";
 import { trailPathQueryOptions } from "@/features/trails/api/trail";
 import { findJumps, formatMetres, pathLengthMetres } from "@/utils/geometry-edit";
 import type { AdminTrailListItemResponse } from "@/api/generated/model";
-import { hasSatellite } from "@/features/hike-submissions/components/map-style";
+import { hasSatellite } from "@/lib/map-style";
 import { TrailPathMap } from "./trail-path-map";
 import { Button } from "@/components/ui/button";
 
