@@ -1,50 +1,55 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type { ImageProcessingOptions } from "@/types/types";
+import { keepPreviousData, queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   adminMediaCancelReprocessJob,
   adminMediaCreateReprocessJob,
   adminMediaGetAll,
-  adminMediaGetReprocessJob,
-  adminMediaGetReprocessJobs,
   adminMediaRetryReprocessJob,
   adminMediaUpdateMetadata,
+  getAdminMediaGetAllQueryOptions,
+  getAdminMediaGetAllUrl,
+  getAdminMediaGetReprocessJobQueryOptions,
+  getAdminMediaGetReprocessJobsSuspenseQueryOptions,
+  getAdminMediaGetReprocessJobsUrl,
 } from "@/api/generated/admin-media/admin-media";
 import type {
   AdminMediaGetAllParams,
-  MediaFilter,
   MediaItemResponse,
-  MediaLibraryPageResponse,
   MediaReprocessJobDetailResponse,
   MediaReprocessJobSummaryResponse,
-  PagedResultOfMediaReprocessJobSummaryResponse,
+  UpdateImageMetadataRequest,
 } from "@/api/generated/model";
+import { addFacilityImages, addTrailImages, deleteFacilityImage, deleteTrailImage, setTrailSymbol } from "@/api/images";
+import type { ImageProcessingOptions } from "@/types/types";
+import { groupFailures } from "@/features/media/utils/media-reprocess-failures";
+import type { TargetType } from "@/features/media/utils/media-upload";
+import type { ReprocessTarget } from "@/features/media/utils/media-reprocess-target";
 
-// See trail.ts for the wrapper rationale — delegates to the generated client
-// while keeping the app's existing signatures. Auth + base URL come from the
-// `customFetch` mutator the generated functions call.
+const ADMIN_MEDIA = getAdminMediaGetAllUrl();
+const REPROCESS_JOBS = getAdminMediaGetReprocessJobsUrl();
+const POLL_MS = 3000;
+const JOBS_PAGE = { page: 1, pageSize: 50 };
 
-export async function getMedia(params: AdminMediaGetAllParams): Promise<MediaLibraryPageResponse> {
-  return adminMediaGetAll(params);
-}
+const startsWith = (prefix: string) => ({
+  predicate: ({ queryKey }: { queryKey: readonly unknown[] }) =>
+    typeof queryKey[0] === "string" && queryKey[0].startsWith(prefix),
+});
 
-// The listing endpoint caps a page at 200 and no longer returns the whole library at once,
-// so one owner is asked for by filter and walked page by page.
-const OwnerPageSize = 200;
-const OwnerMaxPages = 20;
+export const mediaLibraryQueryOptions = (params: AdminMediaGetAllParams) =>
+  getAdminMediaGetAllQueryOptions(params, { query: { placeholderData: keepPreviousData } });
+
+// keep-comment: the listing caps a page at 200, so one owner is walked page by page, up to a ceiling a server that always says "more" cannot spin past
+const OWNER_PAGE_SIZE = 200;
+const OWNER_MAX_PAGES = 20;
 
 export async function getMediaForOwner(ownerIdentifier: string): Promise<MediaItemResponse[]> {
   const items: MediaItemResponse[] = [];
 
-  // A ceiling rather than a while (hasMore), the same guard collectAllMatching uses: a server
-  // that always says there is more would otherwise spin in the browser.
-  for (let page = 1; page <= OwnerMaxPages; page++) {
-    const result = await adminMediaGetAll({
-      OwnerIdentifier: ownerIdentifier,
-      Page: page,
-      PageSize: OwnerPageSize,
-    });
+  for (let page = 1; page <= OWNER_MAX_PAGES; page++) {
+    const result = await adminMediaGetAll({ OwnerIdentifier: ownerIdentifier, Page: page, PageSize: OWNER_PAGE_SIZE });
     items.push(...result.items);
     if (!result.hasMore) break;
   }
@@ -52,48 +57,140 @@ export async function getMediaForOwner(ownerIdentifier: string): Promise<MediaIt
   return items;
 }
 
-export async function updateImageMetadata(
-  imageIdentifier: string,
-  metadata: { altText?: string | null; caption?: string | null },
-): Promise<void> {
-  await adminMediaUpdateMetadata(imageIdentifier, metadata);
+export const ownerMediaQueryOptions = (ownerIdentifier: string) =>
+  queryOptions({
+    queryKey: [ADMIN_MEDIA, "owner", ownerIdentifier],
+    queryFn: () => getMediaForOwner(ownerIdentifier),
+    enabled: ownerIdentifier !== "",
+  });
+
+export function useInvalidateMedia() {
+  const queryClient = useQueryClient();
+
+  return () => queryClient.invalidateQueries(startsWith(ADMIN_MEDIA));
+}
+
+export type UploadRequest = {
+  targetType: TargetType;
+  targetId: string;
+  files: File[];
+  options: ImageProcessingOptions;
+};
+
+async function upload({ targetType, targetId, files, options }: UploadRequest): Promise<string> {
+  if (targetType === "trail-symbol") {
+    await setTrailSymbol(targetId, files[0], options);
+    return "Trail symbol updated.";
+  }
+
+  if (targetType === "trail-gallery") {
+    const added = await addTrailImages(targetId, files, options);
+    return `${added.length} image(s) added to trail.`;
+  }
+
+  const added = await addFacilityImages(targetId, files, options);
+  return `${added.length} image(s) added to facility.`;
+}
+
+export function useUploadImages(onTrailImagesChanged: () => void) {
+  const invalidate = useInvalidateMedia();
+
+  return useMutation({
+    mutationFn: upload,
+    onSuccess: (message, { targetType }) => {
+      toast.success(message);
+      if (targetType !== "facility") onTrailImagesChanged();
+      return invalidate();
+    },
+    meta: { errorMessage: "Upload failed." },
+  });
+}
+
+export function useDeleteImage(onTrailImagesChanged: () => void) {
+  const invalidate = useInvalidateMedia();
+
+  return useMutation({
+    mutationFn: (item: Pick<MediaItemResponse, "identifier" | "ownerType">) =>
+      item.ownerType === "Trail" ? deleteTrailImage(item.identifier) : deleteFacilityImage(item.identifier),
+    onSuccess: (_result, { ownerType }) => {
+      if (ownerType === "Trail") onTrailImagesChanged();
+      return invalidate();
+    },
+    meta: { successMessage: "Image deleted.", errorMessage: "Failed to delete image." },
+  });
+}
+
+export function useUpdateMediaMetadata() {
+  const invalidate = useInvalidateMedia();
+
+  return useMutation({
+    mutationFn: ({ identifier, ...metadata }: UpdateImageMetadataRequest & { identifier: string }) =>
+      adminMediaUpdateMetadata(identifier, metadata),
+    onSuccess: invalidate,
+    meta: { successMessage: "Metadata saved." },
+  });
 }
 
 export type ReprocessJobSummary = MediaReprocessJobSummaryResponse;
-export type ReprocessJobDetail = MediaReprocessJobDetailResponse;
 
-/** Submits already-stored Trail/Facility images for background resize/re-encode. */
-export async function enqueueMediaReprocessJob(
-  mediaIdentifiers: string[],
-  options: ImageProcessingOptions,
-): Promise<ReprocessJobSummary> {
-  return adminMediaCreateReprocessJob({ mediaIdentifiers, options });
+const isActive = (job: ReprocessJobSummary) => job.status === "Pending" || job.status === "Processing";
+
+export const reprocessJobsQueryOptions = () =>
+  getAdminMediaGetReprocessJobsSuspenseQueryOptions(JOBS_PAGE, {
+    query: {
+      refetchInterval: ({ state }) => (state.data?.items.some(isActive) ? POLL_MS : false),
+      meta: { errorMessage: "Failed to load batch jobs." },
+    },
+  });
+
+const toFailures = (detail: MediaReprocessJobDetailResponse) => groupFailures(detail.items);
+
+export const reprocessFailuresQueryOptions = (identifier: string) =>
+  getAdminMediaGetReprocessJobQueryOptions(identifier, { query: { select: toFailures } });
+
+function useInvalidateJobs() {
+  const queryClient = useQueryClient();
+
+  return () => queryClient.invalidateQueries(startsWith(REPROCESS_JOBS));
 }
 
-// keep-comment: the server re-expands the filter when the job is created, so a batch larger than the request cap never travels as identifiers
-export async function enqueueMediaReprocessJobForFilter(
-  filter: MediaFilter,
-  options: ImageProcessingOptions,
-): Promise<ReprocessJobSummary> {
-  return adminMediaCreateReprocessJob({ filter, options });
+export function useEnqueueReprocess() {
+  const invalidateJobs = useInvalidateJobs();
+
+  return useMutation({
+    mutationFn: ({ target, options }: { target: ReprocessTarget; options: ImageProcessingOptions }) =>
+      adminMediaCreateReprocessJob(
+        target.kind === "ids"
+          ? { mediaIdentifiers: target.mediaIdentifiers, options }
+          : { filter: target.filter, options },
+      ),
+    // keep-comment: the job's own totalCount, not the dialog's - in filter mode the server expands the filter again when the job is created
+    onSuccess: (job) => {
+      toast.success(`Batch started for ${job.totalCount} image(s).`);
+      return invalidateJobs();
+    },
+  });
 }
 
-export async function getMediaReprocessJobs(
-  page: number,
-  pageSize: number,
-): Promise<PagedResultOfMediaReprocessJobSummaryResponse> {
-  return adminMediaGetReprocessJobs({ page, pageSize });
+export function useCancelReprocessJob() {
+  const invalidateJobs = useInvalidateJobs();
+
+  return useMutation({
+    mutationFn: (identifier: string) => adminMediaCancelReprocessJob(identifier),
+    onSuccess: invalidateJobs,
+    meta: { errorMessage: "Failed to cancel the batch." },
+  });
 }
 
-export async function getMediaReprocessJob(identifier: string): Promise<ReprocessJobDetail> {
-  return adminMediaGetReprocessJob(identifier);
-}
+export function useRetryReprocessJob() {
+  const invalidateJobs = useInvalidateJobs();
 
-/** Cancels every item of a job still waiting to be processed. */
-export async function cancelMediaReprocessJob(identifier: string): Promise<ReprocessJobSummary> {
-  return adminMediaCancelReprocessJob(identifier);
-}
-
-export async function retryMediaReprocessJob(identifier: string): Promise<ReprocessJobSummary> {
-  return adminMediaRetryReprocessJob(identifier);
+  return useMutation({
+    mutationFn: (identifier: string) => adminMediaRetryReprocessJob(identifier),
+    onSuccess: (retried) => {
+      toast.success(`Retrying ${retried.pendingCount} failed image(s).`);
+      return invalidateJobs();
+    },
+    meta: { errorMessage: "Failed to retry the batch." },
+  });
 }

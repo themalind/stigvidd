@@ -7,6 +7,7 @@ import { useMutationState, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Images, X } from "lucide-react";
 import type { AdminTrailListItemResponse, TrailImageResponse } from "@/api/generated/model";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -67,22 +68,7 @@ export default function TrailImagesDialog({ data, selected, label }: Props) {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {enlarged && (
-        <Dialog.Root open={true} onOpenChange={(open) => !open && setEnlarged(null)}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 z-60 bg-black/80" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 z-60 -translate-x-1/2 -translate-y-1/2 outline-none">
-              <Dialog.Title className="sr-only">Enlarged image</Dialog.Title>
-              <Dialog.Description className="sr-only">Full-size view of the selected trail image.</Dialog.Description>
-              <img
-                src={enlarged.imageUrl}
-                alt=""
-                className="max-h-[85vh] max-w-[85vw] rounded-xs object-contain shadow-2xl"
-              />
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-      )}
+      <ImageLightbox image={enlarged} onClose={() => setEnlarged(null)} />
     </>
   );
 }

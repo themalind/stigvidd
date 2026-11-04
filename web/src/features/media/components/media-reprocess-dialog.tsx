@@ -3,13 +3,10 @@
 
 import { useState } from "react";
 import { Dialog } from "radix-ui";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { buildImageOptions } from "@/features/media/utils/media-upload";
+import { buildImageOptions, type ProcessingValues } from "@/features/media/utils/media-upload";
 import {
   matchPreset,
   NEEDS_WORK_PRESET,
@@ -18,11 +15,8 @@ import {
   type ReprocessPresetKey,
 } from "@/features/media/utils/media-reprocess";
 import { targetCount, type ReprocessTarget } from "@/features/media/utils/media-reprocess-target";
-import {
-  enqueueMediaReprocessJob,
-  enqueueMediaReprocessJobForFilter,
-  type ReprocessJobSummary,
-} from "@/features/media/api/media";
+import { useEnqueueReprocess, type ReprocessJobSummary } from "@/features/media/api/media";
+import { ProcessingControls } from "./processing-controls";
 
 interface Props {
   open: boolean;
@@ -31,49 +25,29 @@ interface Props {
   onSubmitted: (job: ReprocessJobSummary) => void;
 }
 
+function fromPreset(key: ReprocessPresetKey, current?: ProcessingValues): ProcessingValues {
+  const { resolution, quality, format } = presetByKey(key);
+  return { customWidth: "", customHeight: "", ...current, resolution, quality, format };
+}
+
 export default function MediaReprocessDialog({ open, onOpenChange, target, onSubmitted }: Props) {
-  const defaults = presetByKey(NEEDS_WORK_PRESET);
-  const [resolution, setResolution] = useState(defaults.resolution);
-  const [customWidth, setCustomWidth] = useState("");
-  const [customHeight, setCustomHeight] = useState("");
-  const [quality, setQuality] = useState(defaults.quality);
-  const [format, setFormat] = useState(defaults.format);
-  const [submitting, setSubmitting] = useState(false);
+  const [values, setValues] = useState(() => fromPreset(NEEDS_WORK_PRESET));
+  const enqueue = useEnqueueReprocess();
 
-  const preset = matchPreset(resolution, quality, format);
+  const preset = matchPreset(values.resolution, values.quality, values.format);
   const count = targetCount(target);
+  const plural = count === 1 ? "" : "s";
 
-  function choosePreset(key: ReprocessPresetKey) {
-    const chosen = presetByKey(key);
-    setResolution(chosen.resolution);
-    setQuality(chosen.quality);
-    setFormat(chosen.format);
-  }
-
-  async function handleSubmit() {
-    setSubmitting(true);
-    try {
-      const options = buildImageOptions({
-        resolution,
-        customWidth,
-        customHeight,
-        quality,
-        format,
-        canCrop: false,
-      });
-
-      const job =
-        target.kind === "ids"
-          ? await enqueueMediaReprocessJob(target.mediaIdentifiers, options)
-          : await enqueueMediaReprocessJobForFilter(target.filter, options);
-
-      onSubmitted(job);
-      onOpenChange(false);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The batch could not be started.");
-    } finally {
-      setSubmitting(false);
-    }
+  function handleSubmit() {
+    enqueue.mutate(
+      { target, options: buildImageOptions({ ...values, canCrop: false }) },
+      {
+        onSuccess: (job) => {
+          onSubmitted(job);
+          onOpenChange(false);
+        },
+      },
+    );
   }
 
   return (
@@ -83,8 +57,8 @@ export default function MediaReprocessDialog({ open, onOpenChange, target, onSub
         <Dialog.Content className="bg-background fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-xs border p-6 shadow-lg">
           <Dialog.Title className="font-semibold">
             {target.kind === "filter"
-              ? `Optimize all ${count} matching image${count === 1 ? "" : "s"}`
-              : `Optimize ${count} image${count === 1 ? "" : "s"}`}
+              ? `Optimize all ${count} matching image${plural}`
+              : `Optimize ${count} image${plural}`}
           </Dialog.Title>
           <Dialog.Description className="text-muted-foreground text-sm">
             {target.kind === "filter" ? (
@@ -100,7 +74,10 @@ export default function MediaReprocessDialog({ open, onOpenChange, target, onSub
 
           <div className="space-y-1.5">
             <Label htmlFor="reprocess-preset">Preset</Label>
-            <Select value={preset} onValueChange={(v) => choosePreset(v as ReprocessPresetKey)}>
+            <Select
+              value={preset}
+              onValueChange={(key) => setValues((current) => fromPreset(key as ReprocessPresetKey, current))}
+            >
               <SelectTrigger id="reprocess-preset" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -114,81 +91,14 @@ export default function MediaReprocessDialog({ open, onOpenChange, target, onSub
             </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="reprocess-resolution">Max resolution</Label>
-            <Select value={resolution} onValueChange={setResolution}>
-              <SelectTrigger id="reprocess-resolution" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="original">Original</SelectItem>
-                <SelectItem value="3840">4K — 3840px</SelectItem>
-                <SelectItem value="1920">Full HD — 1920px</SelectItem>
-                <SelectItem value="1600">1600px</SelectItem>
-                <SelectItem value="1280">1280px</SelectItem>
-                <SelectItem value="800">800px</SelectItem>
-                <SelectItem value="400">400px</SelectItem>
-                <SelectItem value="custom">Custom…</SelectItem>
-              </SelectContent>
-            </Select>
-            {resolution === "custom" && (
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  aria-label="Max width"
-                  placeholder="Max width"
-                  value={customWidth}
-                  onChange={(e) => setCustomWidth(e.target.value)}
-                />
-                <Input
-                  type="number"
-                  min={1}
-                  aria-label="Max height"
-                  placeholder="Max height"
-                  value={customHeight}
-                  onChange={(e) => setCustomHeight(e.target.value)}
-                />
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Quality</Label>
-              <span className="text-muted-foreground text-sm">{quality}</span>
-            </div>
-            <Slider
-              min={10}
-              max={100}
-              step={1}
-              value={[quality]}
-              onValueChange={(v) => setQuality(v[0])}
-              thumbLabel="Quality"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="reprocess-format">Format</Label>
-            <Select value={format} onValueChange={setFormat}>
-              <SelectTrigger id="reprocess-format" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="original">Keep original</SelectItem>
-                <SelectItem value="webp">WebP</SelectItem>
-                <SelectItem value="jpeg">JPEG</SelectItem>
-                <SelectItem value="png">PNG</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <ProcessingControls value={values} onChange={setValues} />
 
           <div className="flex justify-end gap-2">
             <Dialog.Close asChild>
               <Button variant="outline">Cancel</Button>
             </Dialog.Close>
-            <Button onClick={handleSubmit} disabled={submitting || count === 0}>
-              {submitting ? "Starting…" : `Start batch for ${count} image${count === 1 ? "" : "s"}`}
+            <Button onClick={handleSubmit} disabled={enqueue.isPending || count === 0}>
+              {enqueue.isPending ? "Starting…" : `Start batch for ${count} image${plural}`}
             </Button>
           </div>
         </Dialog.Content>

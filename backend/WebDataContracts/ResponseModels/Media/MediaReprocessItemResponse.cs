@@ -14,9 +14,9 @@ public class MediaReprocessItemResponse
     /// <summary>"Pending" | "Processing" | "Succeeded" | "Failed" | "Cancelled"</summary>
     public required string Status { get; set; }
 
-    public string? LastError { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime LastUpdatedAt { get; set; }
+    public required string? LastError { get; set; }
+    public required DateTime CreatedAt { get; set; }
+    public required DateTime LastUpdatedAt { get; set; }
 
     public static MediaReprocessItemResponse Create(
         string identifier,

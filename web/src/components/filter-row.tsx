@@ -8,9 +8,10 @@ interface Props {
   options: readonly string[];
   value: string;
   onChange: (next: string) => void;
+  optionLabel?: (option: string) => string;
 }
 
-export function FilterRow({ label, options, value, onChange }: Props) {
+export function FilterRow({ label, options, value, onChange, optionLabel = (option) => option }: Props) {
   return (
     <div className="flex items-center gap-1 text-sm" role="group" aria-label={label}>
       <span className="text-muted-foreground">{label}</span>
@@ -22,7 +23,7 @@ export function FilterRow({ label, options, value, onChange }: Props) {
           aria-pressed={option === value}
           onClick={() => onChange(option)}
         >
-          {option}
+          {optionLabel(option)}
         </Button>
       ))}
     </div>

@@ -9,9 +9,9 @@ import type { MediaItemResponse } from "./mediaItemResponse";
 
 export interface MediaLibraryPageResponse {
   items: MediaItemResponse[];
-  page?: number;
-  hasMore?: boolean;
-  totalCount?: number;
-  reprocessableCount?: number;
-  totalSizeBytes?: number;
+  page: number;
+  hasMore: boolean;
+  totalCount: number;
+  reprocessableCount: number;
+  totalSizeBytes: number;
 }

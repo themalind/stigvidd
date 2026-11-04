@@ -3,24 +3,10 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// These three go through customFetch directly rather than the generated client: the
-// generated multipart functions expand a file's own properties into form fields instead
-// of sending the file, so the body is built by hand. That workaround is what is asserted.
 const customFetch = vi.hoisted(() => vi.fn());
 vi.mock("@/api/mutator", () => ({ customFetch }));
 
-// Editing a trail is admin-only, so these moved to api/v1/admin/trails and are
-// generated into their own module. Mocking only the public one would leave the real
-// admin module in play and the URL assertions below would silently test nothing.
-const generatedAdmin = vi.hoisted(() => ({
-  adminTrailsGetAllTrails: vi.fn(),
-  getAdminTrailsAddTrailImagesUrl: vi.fn((id: string) => `/api/v1/admin/trails/${id}/images`),
-  getAdminTrailsDeleteTrailImageUrl: vi.fn((id: string) => `/api/v1/admin/trails/images/${id}`),
-  getAdminTrailsSetTrailSymbolUrl: vi.fn((id: string) => `/api/v1/admin/trails/${id}/symbol`),
-}));
-vi.mock("@/api/generated/admin-trails/admin-trails", () => generatedAdmin);
-
-import { addTrailImages, deleteTrailImage, getAllTrails, setTrailSymbol } from "./trail";
+import { addFacilityImages, addTrailImages, deleteFacilityImage, deleteTrailImage, setTrailSymbol } from "./images";
 
 function png(name: string) {
   return new File([name], name, { type: "image/png" });
@@ -31,15 +17,8 @@ function sentBody(): FormData {
 }
 
 beforeEach(() => {
+  customFetch.mockReset();
   customFetch.mockResolvedValue([]);
-});
-
-describe("getAllTrails", () => {
-  it("reads the admin list, which includes inactive trails", async () => {
-    generatedAdmin.adminTrailsGetAllTrails.mockResolvedValue([{ identifier: "abc" }]);
-
-    await expect(getAllTrails()).resolves.toEqual([{ identifier: "abc" }]);
-  });
 });
 
 describe("addTrailImages", () => {
@@ -109,14 +88,29 @@ describe("setTrailSymbol", () => {
   });
 });
 
-describe("deleteTrailImage", () => {
-  it("deletes by the image's own identifier, not the trail's", async () => {
-    customFetch.mockResolvedValue(undefined);
+describe("addFacilityImages", () => {
+  it("posts the files to the facility's own image route", async () => {
+    await addFacilityImages("fac-1", [png("a.png")], { format: "webp" });
 
+    expect(customFetch).toHaveBeenCalledWith(
+      "/api/v1/admin/facilities/fac-1/images",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(sentBody().get("images")).toBeInstanceOf(File);
+    expect(sentBody().get("Format")).toBe("webp");
+  });
+});
+
+describe("deleting an image", () => {
+  it("deletes a trail image by the image's own identifier, not the trail's", async () => {
     await deleteTrailImage("img-9");
 
-    expect(customFetch).toHaveBeenCalledWith("/api/v1/admin/trails/images/img-9", {
-      method: "DELETE",
-    });
+    expect(customFetch).toHaveBeenCalledWith("/api/v1/admin/trails/images/img-9", { method: "DELETE" });
+  });
+
+  it("deletes a facility image at the facility route", async () => {
+    await deleteFacilityImage("img-3");
+
+    expect(customFetch).toHaveBeenCalledWith("/api/v1/admin/facilities/images/img-3", { method: "DELETE" });
   });
 });

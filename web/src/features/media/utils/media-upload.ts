@@ -1,20 +1,19 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/**
- * The rules the media upload panel decides by: what the server is told to do to the bytes,
- * which of the dropped files are kept, and which of the library's images belong to the
- * chosen target.
- *
- * Extracted from media-upload.tsx so they can be tested without driving a file picker.
- * The processing options are destructive on the server side — an image is resized, recoded
- * and cropped before it is stored, and the original is not kept.
- */
-
-import type { MediaItemResponse } from "@/api/generated/model";
+import type { AdminTrailListItemResponse, FacilityResponse, MediaItemResponse } from "@/api/generated/model";
 import type { ImageProcessingOptions } from "@/types/types";
 
 export type TargetType = "trail-gallery" | "trail-symbol" | "facility";
+
+export type TrailOption = Pick<
+  AdminTrailListItemResponse,
+  "identifier" | "name" | "trailLength" | "city" | "classification" | "accessibility"
+>;
+
+export type FacilityOption = Pick<FacilityResponse, "identifier" | "name">;
+
+export type OwnerList<T> = { items: T[] | undefined; failed: boolean };
 
 /** The `ownerType` the media library reports for each upload target. */
 export const OWNER_TYPE: Record<TargetType, string> = {
@@ -25,7 +24,7 @@ export const OWNER_TYPE: Record<TargetType, string> = {
 
 export type CropRect = { x: number; y: number; width: number; height: number };
 
-export type ProcessingChoices = {
+export type ProcessingValues = {
   /** "original", "custom", or a pixel count as a string. */
   resolution: string;
   customWidth: string;
@@ -33,6 +32,9 @@ export type ProcessingChoices = {
   quality: number;
   /** "original" or an image format name. */
   format: string;
+};
+
+export type ProcessingChoices = ProcessingValues & {
   /** Only applied to a single staged file; the panel hides the cropper otherwise. */
   crop?: CropRect | null;
   canCrop?: boolean;

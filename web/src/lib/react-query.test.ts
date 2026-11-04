@@ -51,6 +51,27 @@ describe("the query cache", () => {
 
     expect(toasts.toast.error).toHaveBeenCalledWith("Could not refresh the list.");
   });
+
+  it("toasts a run of failed refetches once, and again only after a success", async () => {
+    const client = createQueryClient();
+    client.setQueryData(["poll"], "cached");
+    let next: () => Promise<string> = () => Promise.reject(new ApiError("Down", 503));
+    const refetch = () =>
+      client
+        .fetchQuery({ queryKey: ["poll"], queryFn: () => next(), staleTime: 0, retry: false })
+        .catch(() => undefined);
+
+    await refetch();
+    await refetch();
+    expect(toasts.toast.error).toHaveBeenCalledTimes(1);
+
+    next = () => Promise.resolve("fresh");
+    await refetch();
+    next = () => Promise.reject(new ApiError("Down", 503));
+    await refetch();
+
+    expect(toasts.toast.error).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("the mutation cache", () => {

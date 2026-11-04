@@ -3,14 +3,12 @@
 
 import { describe, expect, it } from "vitest";
 import type { MediaReprocessItemResponse } from "@/api/generated/model";
+import { failedItem } from "@/testing/fixtures/media";
 import { groupFailures } from "./media-reprocess-failures";
 
 const item = (mediaIdentifier: string, status: string, lastError?: string | null): MediaReprocessItemResponse => ({
-  identifier: `item-${mediaIdentifier}`,
-  mediaIdentifier,
-  ownerType: "Trail",
+  ...failedItem(mediaIdentifier, lastError ?? null),
   status,
-  lastError,
 });
 
 describe("groupFailures", () => {

@@ -2,108 +2,62 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useEffect } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { MediaItemResponse } from "@/api/generated/model";
-import type { ReprocessJobSummary } from "@/features/media/api/media";
-import type { ReprocessTarget } from "@/features/media/utils/media-reprocess-target";
+import type { MediaItemResponse, MediaLibraryPageResponse } from "@/api/generated/model";
+import { libraryPage, mediaItem, reprocessJob } from "@/testing/fixtures/media";
+import { renderWithProviders } from "@/testing/render";
 
-const mediaApi = vi.hoisted(() => ({
-  getMedia: vi.fn(),
-  updateImageMetadata: vi.fn(),
-}));
-vi.mock("@/features/media/api/media", () => mediaApi);
-
-const trailApi = vi.hoisted(() => ({
-  deleteTrailImage: vi.fn(),
-  invalidateTrails: vi.fn(),
-  useInvalidateTrailQueries: () => trailApi.invalidateTrails,
-}));
-vi.mock("@/features/trails/api/trail", () => trailApi);
-
-const facilityApi = vi.hoisted(() => ({ deleteFacilityImage: vi.fn() }));
-vi.mock("@/features/facilities/api/facility", () => facilityApi);
-
-const toasted = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
-vi.mock("sonner", () => ({ toast: toasted }));
-
-const dialogProps = vi.hoisted(() => ({ mounts: 0 }));
-const noteMount = vi.hoisted(() => () => {
-  dialogProps.mounts += 1;
+const api = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
 });
-vi.mock("./media-reprocess-dialog", () => {
-  function DialogStub(props: {
-    open: boolean;
-    target: ReprocessTarget;
-    onSubmitted: (job: ReprocessJobSummary) => void;
-  }) {
-    // A fresh mount is what resets the preset, so the test needs to see mounts, not renders.
-    useEffect(noteMount, []);
-    if (!props.open) return null;
-    return (
-      <div>
-        <span data-testid="reprocess-target">
-          {props.target.kind === "ids"
-            ? props.target.mediaIdentifiers.join(",")
-            : `filter:${props.target.matchingCount}`}
-        </span>
-        <button onClick={() => props.onSubmitted({ identifier: "job-1" } as ReprocessJobSummary)}>fake-submit</button>
-      </div>
-    );
-  }
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: api.mock.customFetch,
+}));
 
-  return { default: DialogStub };
-});
+const toasts = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
+vi.mock("sonner", () => ({ toast: toasts }));
 
 import MediaBrowse from "./media-browse";
 
-const item = (identifier: string, ownerType: string): MediaItemResponse =>
-  ({
-    identifier,
-    ownerType,
-    ownerIdentifier: `owner-${identifier}`,
-    ownerName: `Owner ${identifier}`,
-    imageUrl: `https://media.test/${identifier}.webp`,
-    altText: null,
-    caption: null,
-    format: "webp",
-    width: 800,
-    height: 600,
-    sizeBytes: 2048,
-    createdAt: "2026-03-12T09:00:00Z",
-  }) as MediaItemResponse;
+const MEDIA = "/api/v1/admin/media";
+const JOBS = "/api/v1/admin/media/reprocess";
 
-const page = (
-  items: MediaItemResponse[],
-  extra: { totalCount?: number; reprocessableCount?: number; hasMore?: boolean } = {},
-) => ({
-  items,
-  page: 1,
-  hasMore: extra.hasMore ?? false,
-  totalCount: extra.totalCount ?? items.length,
-  reprocessableCount: extra.reprocessableCount ?? items.length,
-  totalSizeBytes: 4096,
-});
+const item = (identifier: string, ownerType: string): MediaItemResponse =>
+  mediaItem({ identifier, ownerType, ownerIdentifier: `owner-${identifier}`, ownerName: `Owner ${identifier}` });
+
+const threeKinds = () =>
+  libraryPage([item("trail-1", "Trail"), item("facility-1", "Facility"), item("symbol-1", "TrailSymbol")]);
+const longLibrary = (identifier = "trail-1") =>
+  libraryPage([item(identifier, "Trail")], { totalCount: 90, reprocessableCount: 90, hasMore: true });
+
+let respond: (query: URLSearchParams) => MediaLibraryPageResponse | Promise<MediaLibraryPageResponse>;
+
+const listCalls = () => api.mock.calls.filter((call) => call.method === "GET" && call.path === MEDIA);
+const lastQuery = () => new URLSearchParams(listCalls().at(-1)?.url.split("?")[1]);
+const posted = () => api.mock.calls.find((call) => call.method === "POST" && call.path === JOBS)?.body;
 
 const onBatchStarted = vi.fn();
-const show = () => render(<MediaBrowse refreshKey={0} onBatchStarted={onBatchStarted} />);
+const onTrailImagesChanged = vi.fn();
+const show = () =>
+  renderWithProviders(<MediaBrowse onTrailImagesChanged={onTrailImagesChanged} onBatchStarted={onBatchStarted} />);
+
+const loaded = (owner = "trail-1") => screen.findByText(`Owner ${owner}`);
+const optimize = () => screen.getByRole("button", { name: /^optimize/i });
+const named = (owner: string) => `Owner ${owner} (${owner}.webp)`;
+const select = (owner: string) => userEvent.click(screen.getByRole("checkbox", { name: `Select ${named(owner)}` }));
+const needsWork = () => userEvent.click(screen.getByRole("button", { name: /needs work/i }));
 
 beforeEach(() => {
-  dialogProps.mounts = 0;
-  mediaApi.getMedia.mockResolvedValue(
-    page([item("trail-1", "Trail"), item("facility-1", "Facility"), item("symbol-1", "TrailSymbol")], {
-      totalCount: 3,
-      reprocessableCount: 2,
-    }),
-  );
+  vi.clearAllMocks();
+  vi.unstubAllGlobals();
+  api.mock.reset();
+  respond = threeKinds;
+  api.mock.on("GET", MEDIA, () => respond(lastQuery()));
+  api.mock.on("POST", JOBS, () => reprocessJob({ identifier: "job-1", totalCount: 2 }));
 });
-
-async function loaded() {
-  await waitFor(() => expect(screen.getByText("Owner trail-1")).toBeInTheDocument());
-}
-
-const optimize = () => screen.getByRole("button", { name: /^optimize/i });
 
 describe("selecting images for a batch", () => {
   it("offers no batch action until something is selected", async () => {
@@ -117,17 +71,17 @@ describe("selecting images for a batch", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
+    await select("trail-1");
 
     expect(optimize()).toBeEnabled();
-    expect(optimize()).toHaveTextContent("1");
+    expect(optimize()).toHaveTextContent("Optimize 1");
   });
 
   it("never offers a trail symbol a checkbox", async () => {
     show();
     await loaded();
 
-    expect(screen.queryByRole("checkbox", { name: /^Select Owner symbol-1 / })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: `Select ${named("symbol-1")}` })).toBeNull();
   });
 
   it("the page checkbox only ever selects Trail/Facility images", async () => {
@@ -136,19 +90,20 @@ describe("selecting images for a batch", () => {
 
     await userEvent.click(screen.getByRole("checkbox", { name: "Select every image on this page" }));
     await userEvent.click(optimize());
+    await userEvent.click(screen.getByRole("button", { name: /start batch/i }));
 
-    expect(screen.getByTestId("reprocess-target")).toHaveTextContent("trail-1,facility-1");
+    await waitFor(() => expect(posted()).toMatchObject({ mediaIdentifiers: ["trail-1", "facility-1"] }));
   });
 
-  it("clears the selection once the dialog reports a submitted batch", async () => {
+  it("clears the selection and hands over the job once a batch has started", async () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
+    await select("trail-1");
     await userEvent.click(optimize());
-    await userEvent.click(screen.getByText("fake-submit"));
+    await userEvent.click(screen.getByRole("button", { name: /start batch/i }));
 
-    expect(onBatchStarted).toHaveBeenCalledWith({ identifier: "job-1" });
+    await waitFor(() => expect(onBatchStarted).toHaveBeenCalledWith(expect.objectContaining({ identifier: "job-1" })));
     expect(optimize()).toBeDisabled();
   });
 });
@@ -158,10 +113,10 @@ describe("filtering", () => {
     show();
     await loaded();
 
-    mediaApi.getMedia.mockResolvedValue(page([], { totalCount: 0, reprocessableCount: 0 }));
-    await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
+    respond = () => libraryPage([]);
+    await needsWork();
 
-    await waitFor(() => expect(screen.getByText(/No images match/i)).toBeInTheDocument());
+    expect(await screen.findByText(/No images match/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /needs work/i })).toBeInTheDocument();
   });
 
@@ -169,77 +124,69 @@ describe("filtering", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
+    await needsWork();
 
-    await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(
-        expect.objectContaining({ TargetMaxWidth: 800, TargetFormat: "webp" }),
-      ),
+    await waitFor(() => expect(lastQuery().get("TargetMaxWidth")).toBe("800"));
+    expect(lastQuery().get("TargetFormat")).toBe("webp");
+  });
+
+  it("narrows by owner, and says what it is showing", async () => {
+    show();
+    await loaded();
+
+    await userEvent.click(
+      within(screen.getByRole("group", { name: "Owner" })).getByRole("button", { name: "Symbols" }),
     );
+
+    await waitFor(() => expect(lastQuery().get("OwnerType")).toBe("TrailSymbol"));
+    expect(screen.getByText(/^Showing:/)).toBeInTheDocument();
   });
 
   it("returns to page 1 when the filter changes", async () => {
-    mediaApi.getMedia.mockResolvedValue(
-      page([item("trail-1", "Trail")], { totalCount: 90, reprocessableCount: 90, hasMore: true }),
-    );
+    respond = () => longLibrary();
     show();
     await loaded();
 
     await userEvent.click(screen.getByTestId("next-page"));
-    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })));
+    await waitFor(() => expect(lastQuery().get("Page")).toBe("2"));
 
-    await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
+    await needsWork();
 
-    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 1 })));
+    await waitFor(() => expect(lastQuery().get("Page")).toBe("1"));
   });
 
   it("makes exactly one request when the filter changes from a later page", async () => {
-    mediaApi.getMedia.mockResolvedValue(
-      page([item("trail-1", "Trail")], { totalCount: 90, reprocessableCount: 90, hasMore: true }),
-    );
+    respond = () => longLibrary();
     show();
     await loaded();
-
     await userEvent.click(screen.getByTestId("next-page"));
-    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })));
-    mediaApi.getMedia.mockClear();
+    await waitFor(() => expect(lastQuery().get("Page")).toBe("2"));
+    const before = listCalls().length;
 
-    await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
-    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenCalled());
+    await needsWork();
+    await waitFor(() => expect(listCalls().length).toBeGreaterThan(before));
 
-    // A second call here is the narrowed filter fetched once for the stale page and once for
-    // page 1, and nothing decides which of the two lands last.
-    expect(mediaApi.getMedia).toHaveBeenCalledTimes(1);
-    expect(mediaApi.getMedia).toHaveBeenCalledWith(expect.objectContaining({ Page: 1 }));
+    expect(listCalls()).toHaveLength(before + 1);
+    expect(lastQuery().get("Page")).toBe("1");
   });
 
   it("shows the page the pager reports when a slow response for the old page lands late", async () => {
-    const slowPageTwo = page([item("stale-1", "Trail")], {
-      totalCount: 90,
-      reprocessableCount: 90,
-      hasMore: true,
-    });
-    const freshPageOne = page([item("fresh-1", "Trail")], {
-      totalCount: 1,
-      reprocessableCount: 1,
-    });
-
-    mediaApi.getMedia.mockResolvedValue(
-      page([item("trail-1", "Trail")], { totalCount: 90, reprocessableCount: 90, hasMore: true }),
-    );
+    respond = () => longLibrary();
     show();
     await loaded();
 
-    let releaseStale: (value: unknown) => void = () => {};
-    mediaApi.getMedia.mockImplementationOnce(() => new Promise((resolve) => (releaseStale = resolve)));
-
+    let releaseStale: () => void = () => {};
+    respond = () =>
+      new Promise((resolve) => {
+        releaseStale = () => resolve(longLibrary("stale-1"));
+      });
     await userEvent.click(screen.getByTestId("next-page"));
-    mediaApi.getMedia.mockResolvedValue(freshPageOne);
+    respond = () => libraryPage([item("fresh-1", "Trail")]);
 
-    await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
-    await waitFor(() => expect(screen.getByText("Owner fresh-1")).toBeInTheDocument());
+    await needsWork();
+    await loaded("fresh-1");
+    releaseStale();
 
-    releaseStale(slowPageTwo);
     await waitFor(() => expect(screen.getByText("Owner fresh-1")).toBeInTheDocument());
     expect(screen.queryByText("Owner stale-1")).not.toBeInTheDocument();
   });
@@ -248,19 +195,25 @@ describe("filtering", () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
+    await select("trail-1");
     expect(optimize()).toBeEnabled();
 
-    await userEvent.click(screen.getByRole("button", { name: /needs work/i }));
+    await needsWork();
 
     await waitFor(() => expect(optimize()).toBeDisabled());
   });
 
-  it("shows the server's own message when the load fails", async () => {
-    mediaApi.getMedia.mockRejectedValue(new Error("nope"));
+  it("applies the extra filters only when asked to", async () => {
     show();
+    await loaded();
 
-    await waitFor(() => expect(toasted.error).toHaveBeenCalledWith("nope"));
+    await userEvent.click(screen.getByRole("button", { name: "More filters" }));
+    await userEvent.type(screen.getByLabelText("Minimum width"), "1000");
+    expect(lastQuery().get("MinWidth")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+
+    await waitFor(() => expect(lastQuery().get("MinWidth")).toBe("1000"));
   });
 });
 
@@ -269,7 +222,7 @@ describe("sorting", () => {
     show();
     await loaded();
 
-    expect(mediaApi.getMedia).toHaveBeenCalledWith(expect.objectContaining({ Sort: "newest" }));
+    expect(lastQuery().get("Sort")).toBe("newest");
   });
 
   it("sends the chosen sort", async () => {
@@ -278,124 +231,176 @@ describe("sorting", () => {
 
     await userEvent.selectOptions(screen.getByLabelText("Sort"), "largest");
 
-    await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Sort: "largest", Page: 1 })),
-    );
+    await waitFor(() => expect(lastQuery().get("Sort")).toBe("largest"));
+    expect(lastQuery().get("Page")).toBe("1");
   });
 
   it("rewinds to page 1 but keeps the selection, because the same images are still matched", async () => {
-    mediaApi.getMedia.mockResolvedValue(
-      page([item("trail-1", "Trail")], { totalCount: 90, reprocessableCount: 90, hasMore: true }),
-    );
+    respond = () => longLibrary();
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
+    await select("trail-1");
     await userEvent.click(screen.getByTestId("next-page"));
-    await waitFor(() => expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Page: 2 })));
+    await waitFor(() => expect(lastQuery().get("Page")).toBe("2"));
 
     await userEvent.selectOptions(screen.getByLabelText("Sort"), "oldest");
 
-    await waitFor(() =>
-      expect(mediaApi.getMedia).toHaveBeenLastCalledWith(expect.objectContaining({ Sort: "oldest", Page: 1 })),
-    );
+    await waitFor(() => expect(lastQuery().get("Sort")).toBe("oldest"));
+    expect(lastQuery().get("Page")).toBe("1");
     expect(optimize()).toBeEnabled();
   });
 });
 
 describe("deleting an image", () => {
   it("re-reads the library so the totals and the size do not drift", async () => {
-    trailApi.deleteTrailImage.mockResolvedValue(undefined);
     vi.stubGlobal("confirm", () => true);
-
-    mediaApi.getMedia
-      .mockResolvedValueOnce(
-        page([item("trail-1", "Trail"), item("trail-2", "Trail")], {
-          totalCount: 2,
-          reprocessableCount: 2,
-        }),
-      )
-      .mockResolvedValueOnce(page([item("trail-2", "Trail")], { totalCount: 1, reprocessableCount: 1 }));
-
+    let library = libraryPage([item("trail-1", "Trail"), item("trail-2", "Trail")]);
+    respond = () => library;
+    api.mock.on("DELETE", "/api/v1/admin/trails/images/trail-1", () => {
+      library = libraryPage([item("trail-2", "Trail")]);
+      return undefined;
+    });
     show();
     await loaded();
     expect(screen.getByText(/of 2/)).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /^Delete Owner trail-1 / }));
+    await userEvent.click(screen.getByRole("button", { name: `Delete ${named("trail-1")}` }));
 
-    await waitFor(() => expect(trailApi.deleteTrailImage).toHaveBeenCalledWith("trail-1"));
-    await waitFor(() => expect(screen.getByText(/of 1/)).toBeInTheDocument());
-    expect(trailApi.invalidateTrails).toHaveBeenCalled();
+    expect(await screen.findByText(/of 1/)).toBeInTheDocument();
+    expect(onTrailImagesChanged).toHaveBeenCalled();
+    expect(toasts.success).toHaveBeenCalledWith("Image deleted.");
+  });
+
+  it("sends a facility's image to the facility endpoint, which leaves the trails alone", async () => {
+    vi.stubGlobal("confirm", () => true);
+    api.mock.on("DELETE", "/api/v1/admin/facilities/images/facility-1", () => undefined);
+    show();
+    await loaded();
+
+    await userEvent.click(screen.getByRole("button", { name: `Delete ${named("facility-1")}` }));
+
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith("Image deleted."));
+    expect(onTrailImagesChanged).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when the question is answered no", async () => {
+    vi.stubGlobal("confirm", () => false);
+    show();
+    await loaded();
+
+    await userEvent.click(screen.getByRole("button", { name: `Delete ${named("trail-1")}` }));
+
+    expect(api.mock.calls.some((call) => call.method === "DELETE")).toBe(false);
+  });
+});
+
+describe("editing metadata", () => {
+  it("saves the alt text and caption, then shows the library as the server has it", async () => {
+    api.mock.on("PATCH", `${MEDIA}/trail-1`, () => {
+      respond = () => libraryPage([mediaItem({ ...item("trail-1", "Trail"), altText: "A bridge" })]);
+      return undefined;
+    });
+    show();
+    await loaded();
+
+    await userEvent.click(screen.getByRole("button", { name: `Edit metadata for ${named("trail-1")}` }));
+    await userEvent.clear(screen.getByLabelText("Alt text"));
+    await userEvent.type(screen.getByLabelText("Alt text"), "A bridge");
+    await userEvent.type(screen.getByLabelText("Caption"), "Over the river");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith("Metadata saved."));
+    expect(api.mock.calls.find((call) => call.method === "PATCH")?.body).toEqual({
+      altText: "A bridge",
+      caption: "Over the river",
+    });
+    expect(screen.queryByRole("dialog", { name: "Edit metadata" })).toBeNull();
+    expect(await screen.findByAltText("A bridge")).toBeInTheDocument();
+  });
+
+  it("stays open when the save fails", async () => {
+    api.mock.on("PATCH", `${MEDIA}/trail-1`, () => {
+      throw new Error("Alt text is too long.");
+    });
+    show();
+    await loaded();
+
+    await userEvent.click(screen.getByRole("button", { name: `Edit metadata for ${named("trail-1")}` }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("Alt text is too long."));
+    expect(screen.getByRole("dialog", { name: "Edit metadata" })).toBeInTheDocument();
   });
 });
 
 describe("the batch dialog", () => {
-  it("is mounted afresh each time it opens, so it cannot reopen on the last batch settings", async () => {
+  it("opens on the default preset again, not on the last batch's settings", async () => {
     show();
     await loaded();
-
-    expect(dialogProps.mounts).toBe(0);
-
-    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
+    await select("trail-1");
     await userEvent.click(optimize());
-    await waitFor(() => expect(screen.getByTestId("reprocess-target")).toBeInTheDocument());
-    expect(dialogProps.mounts).toBe(1);
+    await userEvent.click(screen.getByRole("combobox", { name: "Preset" }));
+    await userEvent.click(await screen.findByRole("option", { name: /Thumbnail/ }));
+    await userEvent.click(screen.getByRole("button", { name: /start batch/i }));
+    await waitFor(() => expect(onBatchStarted).toHaveBeenCalled());
 
-    await userEvent.click(screen.getByRole("button", { name: "fake-submit" }));
-    await waitFor(() => expect(screen.queryByTestId("reprocess-target")).not.toBeInTheDocument());
-
-    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
+    await select("trail-1");
     await userEvent.click(optimize());
-    await waitFor(() => expect(screen.getByTestId("reprocess-target")).toBeInTheDocument());
 
-    // A second mount is the whole point: the preset the operator last used is gone with it.
-    expect(dialogProps.mounts).toBe(2);
+    expect(screen.getByRole("combobox", { name: "Preset" })).toHaveTextContent(/Optimized/);
   });
 });
 
 describe("select all matching", () => {
   it("hands the dialog a filter rather than identifiers", async () => {
-    mediaApi.getMedia.mockResolvedValue(
-      page([item("trail-1", "Trail")], { totalCount: 1204, reprocessableCount: 1204, hasMore: true }),
-    );
+    respond = () =>
+      libraryPage([item("trail-1", "Trail")], { totalCount: 1204, reprocessableCount: 1204, hasMore: true });
     show();
     await loaded();
 
     await userEvent.click(screen.getByRole("checkbox", { name: "Select every image on this page" }));
     await userEvent.click(screen.getByRole("button", { name: /select all 1204 matching/i }));
     await userEvent.click(optimize());
+    await userEvent.click(screen.getByRole("button", { name: /start batch/i }));
 
-    expect(screen.getByTestId("reprocess-target")).toHaveTextContent("filter:1204");
+    await waitFor(() => expect(posted()).toHaveProperty("filter"));
+    expect(posted()).not.toHaveProperty("mediaIdentifiers");
   });
 
   it("is not offered while the page still has unselected images", async () => {
     show();
     await loaded();
 
-    await userEvent.click(screen.getByRole("checkbox", { name: /^Select Owner trail-1 / }));
+    await select("trail-1");
 
     expect(screen.queryByRole("button", { name: /matching this filter/i })).toBeNull();
   });
 });
 
 describe("loading and keyboard access", () => {
-  it("shows a failed load as an error with a retry, not as an empty library", async () => {
-    mediaApi.getMedia.mockRejectedValueOnce(new Error("boom"));
+  it("shows a failed load as the server's message with a retry, not as an empty library", async () => {
+    let call = 0;
+    respond = () => {
+      if (++call === 1) throw new Error("The library is unavailable.");
+      return threeKinds();
+    };
     show();
 
-    await userEvent.click(await screen.findByRole("button", { name: "Try again" }));
-
+    expect(await screen.findByText("The library is unavailable.")).toBeInTheDocument();
     expect(screen.queryByText(/no media yet/i)).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
     await loaded();
-    expect(screen.queryByText(/could not be loaded/i)).toBeNull();
+    expect(screen.queryByText("The library is unavailable.")).toBeNull();
   });
 
   it("opens the enlarged view from the keyboard", async () => {
     show();
     await loaded();
 
-    const enlarge = screen.getByRole("button", { name: /^Enlarge Owner trail-1 / });
-    enlarge.focus();
+    screen.getByRole("button", { name: `Enlarge ${named("trail-1")}` }).focus();
     await userEvent.keyboard("{Enter}");
 
     expect(await screen.findByRole("dialog", { name: "Enlarged image" })).toBeInTheDocument();
