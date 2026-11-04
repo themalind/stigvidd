@@ -201,6 +201,28 @@ describe("TrailEditor", () => {
     });
   });
 
+  it("names every field by its label", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByDisplayValue("Knalleleden");
+
+    expect(screen.getByLabelText("Name")).toHaveValue("Knalleleden");
+    expect(screen.getByLabelText("Parking")).toHaveValue("By the church");
+    expect(screen.getByLabelText("Maintained By")).toHaveValue("Borås stad");
+  });
+
+  it("ticks a box when its label is clicked", async () => {
+    render(<TrailEditor data={short} selected />);
+    await open();
+    await screen.findByDisplayValue("Knalleleden");
+
+    await userEvent.click(screen.getByText("Winter Maintenance"));
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(puts()).toHaveLength(1));
+    expect(sent().visitorInformation?.winterMaintenance).toBe(true);
+  });
+
   it("fills a missing visitor block rather than sending nothing for it", async () => {
     api.mock.on("GET", TRAIL, () => ({ ...full, visitorInformation: null }));
 
