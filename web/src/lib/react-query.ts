@@ -20,13 +20,20 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
 }
 
 export function createQueryClient(): QueryClient {
+  // keep-comment: a polling query that keeps failing would toast every tick; a run of failures toasts once, until a success
+  const failing = new WeakSet<object>();
+
   return new QueryClient({
     queryCache: new QueryCache({
       // A first-load failure goes to the page's error boundary; only a failed background refetch toasts. keep-comment: tkdodo.eu/blog/react-query-error-handling
       onError: (error, query) => {
-        if (query.state.data !== undefined) {
+        if (query.state.data !== undefined && !failing.has(query)) {
           toast.error(query.meta?.errorMessage ?? error.message);
         }
+        failing.add(query);
+      },
+      onSuccess: (_data, query) => {
+        failing.delete(query);
       },
     }),
     mutationCache: new MutationCache({

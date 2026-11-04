@@ -1,31 +1,33 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { toast } from "sonner";
-import type { ReprocessJobSummary } from "@/features/media/api/media";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { QueryBoundary } from "@/components/query-boundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MediaUpload from "@/features/media/components/media-upload";
+import { facilitiesQueryOptions } from "@/features/facilities/api/facility";
 import MediaBrowse from "@/features/media/components/media-browse";
 import MediaReprocessJobs from "@/features/media/components/media-reprocess-jobs";
+import MediaUpload from "@/features/media/components/media-upload";
+import { trailsQueryOptions, useInvalidateTrailQueries } from "@/features/trails/api/trail";
+
+function UploadTab({ onTrailImagesChanged }: { onTrailImagesChanged: () => void }) {
+  const trails = useQuery(trailsQueryOptions());
+  const facilities = useQuery(facilitiesQueryOptions());
+
+  return (
+    <MediaUpload
+      trails={{ items: trails.data, failed: trails.isError }}
+      facilities={{ items: facilities.data, failed: facilities.isError }}
+      onTrailImagesChanged={onTrailImagesChanged}
+    />
+  );
+}
 
 export default function MediaPage() {
   const [tab, setTab] = useState("upload");
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [jobsRefreshKey, setJobsRefreshKey] = useState(0);
-
-  // Keep Browse in sync, but stay on Upload — that tab now shows the target's
-  // images itself, so jumping away would hide the result of the change.
-  function handleMediaChanged() {
-    setRefreshKey((k) => k + 1);
-  }
-
-  // keep-comment: the job's own totalCount, not the dialog's - in filter mode the dialog only knows what the listing last counted, while the server expanded the filter again when the job was created
-  function handleBatchStarted(job: ReprocessJobSummary) {
-    toast.success(`Batch started for ${job.totalCount ?? 0} image(s).`);
-    setJobsRefreshKey((k) => k + 1);
-    setTab("jobs");
-  }
+  const invalidateTrails = useInvalidateTrailQueries();
+  const onTrailImagesChanged = () => void invalidateTrails();
 
   return (
     <main>
@@ -37,13 +39,15 @@ export default function MediaPage() {
             <TabsTrigger value="jobs">Batch jobs</TabsTrigger>
           </TabsList>
           <TabsContent value="upload">
-            <MediaUpload onMediaChanged={handleMediaChanged} />
+            <UploadTab onTrailImagesChanged={onTrailImagesChanged} />
           </TabsContent>
           <TabsContent value="browse">
-            <MediaBrowse refreshKey={refreshKey} onBatchStarted={handleBatchStarted} />
+            <MediaBrowse onTrailImagesChanged={onTrailImagesChanged} onBatchStarted={() => setTab("jobs")} />
           </TabsContent>
           <TabsContent value="jobs">
-            <MediaReprocessJobs refreshKey={jobsRefreshKey} />
+            <QueryBoundary>
+              <MediaReprocessJobs />
+            </QueryBoundary>
           </TabsContent>
         </Tabs>
       </div>

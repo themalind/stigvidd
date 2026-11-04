@@ -3,30 +3,18 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { ImageProcessingOptions } from "@/types/types";
 import {
-  adminTrailsGetAllTrails,
   adminTrailsSetTrailVerified,
   adminTrailsUpdateTrail,
-  getAdminTrailsAddTrailImagesUrl,
-  getAdminTrailsDeleteTrailImageUrl,
   getAdminTrailsGetAllTrailsQueryKey,
   getAdminTrailsGetAllTrailsSuspenseQueryOptions,
   getAdminTrailsGetTrailPathSuspenseQueryOptions,
   getAdminTrailsGetTrailQueryKey,
   getAdminTrailsGetTrailSuspenseQueryOptions,
-  getAdminTrailsSetTrailSymbolUrl,
 } from "@/api/generated/admin-trails/admin-trails";
-import type {
-  AdminTrailListItemResponse,
-  AdminTrailPathResponse,
-  TrailImageResponse,
-  TrailSymbolResponse,
-  UpdateTrailRequest,
-} from "@/api/generated/model";
-import { customFetch } from "@/api/mutator";
+import type { AdminTrailListItemResponse, AdminTrailPathResponse, UpdateTrailRequest } from "@/api/generated/model";
+import { addTrailImages, deleteTrailImage } from "@/api/images";
 import type { LngLat } from "@/utils/geometry-edit";
-import { appendProcessingOptions } from "@/api/image-options";
 
 export const trailsQueryOptions = () => getAdminTrailsGetAllTrailsSuspenseQueryOptions();
 
@@ -55,43 +43,6 @@ export function useForgetTrail(identifier: string) {
   const queryClient = useQueryClient();
 
   return () => queryClient.removeQueries({ queryKey: getAdminTrailsGetTrailQueryKey(identifier), exact: true });
-}
-
-export function getAllTrails(): Promise<AdminTrailListItemResponse[]> {
-  return adminTrailsGetAllTrails();
-}
-
-// keep-comment: the generated multipart clients (images and symbol) expand a File's own properties into fields, so both bodies are built here
-export function addTrailImages(
-  identifier: string,
-  images: File[],
-  options?: ImageProcessingOptions,
-): Promise<TrailImageResponse[]> {
-  const formData = new FormData();
-  images.forEach((file) => formData.append("images", file));
-  appendProcessingOptions(formData, options);
-  return customFetch<TrailImageResponse[]>(getAdminTrailsAddTrailImagesUrl(identifier), {
-    method: "POST",
-    body: formData,
-  });
-}
-
-export function setTrailSymbol(
-  identifier: string,
-  symbol: File,
-  options?: ImageProcessingOptions,
-): Promise<TrailSymbolResponse> {
-  const formData = new FormData();
-  formData.append("symbol", symbol);
-  appendProcessingOptions(formData, options);
-  return customFetch<TrailSymbolResponse>(getAdminTrailsSetTrailSymbolUrl(identifier), {
-    method: "POST",
-    body: formData,
-  });
-}
-
-export async function deleteTrailImage(imageIdentifier: string): Promise<void> {
-  await customFetch<void>(getAdminTrailsDeleteTrailImageUrl(imageIdentifier), { method: "DELETE" });
 }
 
 const SET_VERIFIED = ["admin-trails", "set-verified"];

@@ -12,7 +12,7 @@ export interface MediaReprocessItemResponse {
   ownerType: string;
   status: string;
   /** @nullable */
-  lastError?: string | null;
-  createdAt?: string;
-  lastUpdatedAt?: string;
+  lastError: string | null;
+  createdAt: string;
+  lastUpdatedAt: string;
 }

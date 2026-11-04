@@ -9,12 +9,12 @@
 export interface MediaReprocessJobSummaryResponse {
   identifier: string;
   status: string;
-  totalCount?: number;
-  pendingCount?: number;
-  processingCount?: number;
-  succeededCount?: number;
-  failedCount?: number;
-  cancelledCount?: number;
-  createdAt?: string;
-  lastUpdatedAt?: string;
+  totalCount: number;
+  pendingCount: number;
+  processingCount: number;
+  succeededCount: number;
+  failedCount: number;
+  cancelledCount: number;
+  createdAt: string;
+  lastUpdatedAt: string;
 }

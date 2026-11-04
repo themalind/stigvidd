@@ -10,17 +10,17 @@ export interface MediaItemResponse {
   identifier: string;
   imageUrl: string;
   /** @nullable */
-  altText?: string | null;
+  altText: string | null;
   /** @nullable */
-  caption?: string | null;
-  width?: number;
-  height?: number;
-  sizeBytes?: number;
-  createdAt?: string;
+  caption: string | null;
+  width: number;
+  height: number;
+  sizeBytes: number;
+  createdAt: string;
   format: string;
   ownerType: string;
   /** @nullable */
-  ownerIdentifier?: string | null;
+  ownerIdentifier: string | null;
   /** @nullable */
-  ownerName?: string | null;
+  ownerName: string | null;
 }
