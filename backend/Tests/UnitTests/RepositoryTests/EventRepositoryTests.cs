@@ -9,6 +9,8 @@ using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using NetTopologySuite.Geometries;
+using WebDataContracts.Enums;
 
 namespace UnitTests.RepositoryTests;
 
@@ -62,12 +64,24 @@ public class EventRepositoryTests : TestBase
         int[]? hidden = null,
         string? trail = null,
         string? organizer = null,
-        EventArea? area = null,
-        EventPageKey? after = null,
+        EventSearch? search = null,
+        EventOrder? order = null,
         int limit = 20,
         bool excludeMine = false)
     {
-        return new EventFeedFilter(viewerId, hidden ?? [], Now, trail, organizer, area, after, limit, excludeMine);
+        return new EventFeedFilter(viewerId, hidden ?? [], Now, trail, organizer, search ?? new EventSearch(), order ?? new EventsByStart(), limit, excludeMine);
+    }
+
+    private static EventMineFilter Mine(int viewerId = 1, int[]? hidden = null, bool past = false, EventSearch? search = null)
+    {
+        return new EventMineFilter(viewerId, hidden ?? [], Now, past, search ?? new EventSearch(), new EventsByStart(Descending: past), 20);
+    }
+
+    private static async Task<IReadOnlyList<string>> MineIdentifiers(IDbContextFactory<StigViddDbContext> factory, EventMineFilter filter)
+    {
+        var result = await Repository(factory).GetMineAsync(filter, TestContext.Current.CancellationToken);
+        result.Value.Should().NotBeNull();
+        return result.Value.Select(c => c.Identifier).ToList();
     }
 
     private static async Task<IReadOnlyList<string>> FeedIdentifiers(IDbContextFactory<StigViddDbContext> factory, EventFeedFilter filter)
@@ -238,7 +252,7 @@ public class EventRepositoryTests : TestBase
 
         var area = new EventArea(BorasLongitude, BorasLatitude, 10_000);
 
-        (await FeedIdentifiers(factory, Feed(area: area))).Should().BeEquivalentTo(["event-1", "event-3"]);
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(Area: area)))).Should().BeEquivalentTo(["event-1", "event-3"]);
     }
 
     [Fact]
@@ -258,7 +272,132 @@ public class EventRepositoryTests : TestBase
         using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
         var last = await context.Events.SingleAsync(e => e.Id == 1, TestContext.Current.CancellationToken);
 
-        (await FeedIdentifiers(factory, Feed(after: new EventPageKey(last.StartsAt, last.Id)))).Should().Equal("event-3");
+        (await FeedIdentifiers(factory, Feed(order: new EventsByStart(After: new EventPageKey(last.StartsAt, last.Id))))).Should().Equal("event-3");
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_Search_MatchesTitlePlacesTrailAndOrganizerIgnoringCase()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            var byTitle = NewEvent(1, organizerId: 3);
+            byTitle.Title = "Fika vid KYPESJON";
+            db.Events.Add(byTitle);
+            var byPlace = NewEvent(2, organizerId: 3);
+            byPlace.LocationName = "Kypesjon norra";
+            db.Events.Add(byPlace);
+            var byMeetingPoint = NewEvent(3, organizerId: 3);
+            byMeetingPoint.MeetingPointName = "Parkeringen vid Kypesjon";
+            db.Events.Add(byMeetingPoint);
+            var byTrail = NewEvent(4, organizerId: 3);
+            byTrail.TrailId = 2;
+            db.Events.Add(byTrail);
+            db.Events.Add(NewEvent(5, organizerId: 2));
+            var joinedByThem = NewEvent(6, organizerId: 3);
+            joinedByThem.Participants.Add(new EventParticipant { UserId = 2, Role = EventParticipantRole.Participant });
+            db.Events.Add(joinedByThem);
+        });
+
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(Text: "kypesjon")))).Should().Equal("event-1", "event-2", "event-3");
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(Text: "storsj")))).Should().Equal("event-4");
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(Text: "vandrarvennen")))).Should().Equal("event-5");
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_FromAndTo_KeepStartsFromInclusiveToExclusive()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            db.Events.Add(NewEvent(1, organizerId: 2, startsInDays: 1));
+            db.Events.Add(NewEvent(2, organizerId: 2, startsInDays: 2));
+            db.Events.Add(NewEvent(3, organizerId: 2, startsInDays: 3));
+            db.Events.Add(NewEvent(4, organizerId: 2, startsInDays: 4));
+        });
+
+        var search = new EventSearch(From: Now.AddDays(2), To: Now.AddDays(4));
+
+        (await FeedIdentifiers(factory, Feed(search: search))).Should().Equal("event-2", "event-3");
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_OnlyWithSpots_LeavesOutFullEvents()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            var full = NewEvent(1, organizerId: 2);
+            full.MaxParticipants = 2;
+            full.ParticipantCount = 2;
+            db.Events.Add(full);
+            var room = NewEvent(2, organizerId: 2);
+            room.MaxParticipants = 3;
+            room.ParticipantCount = 2;
+            db.Events.Add(room);
+            db.Events.Add(NewEvent(3, organizerId: 2));
+        });
+
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(OnlyWithSpots: true)))).Should().Equal("event-2", "event-3");
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_LengthAndRouteKind_ReadTheTrailOrTheOwnRoute()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            var onTrail = NewEvent(1, organizerId: 2);
+            onTrail.TrailId = 2;
+            db.Events.Add(onTrail);
+            db.Events.Add(WithOwnRoute(NewEvent(2, organizerId: 2), 3_000));
+            db.Events.Add(WithOwnRoute(NewEvent(3, organizerId: 2), 12_000));
+            db.Events.Add(NewEvent(4, organizerId: 2));
+        });
+
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(MinLengthKm: 5, MaxLengthKm: 10)))).Should().Equal("event-1");
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(MinLengthKm: 10)))).Should().Equal("event-3");
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(MaxLengthKm: 5)))).Should().Equal("event-2");
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(RouteKind: EventRouteKind.Trail)))).Should().Equal("event-1");
+        (await FeedIdentifiers(factory, Feed(search: new EventSearch(RouteKind: EventRouteKind.Own)))).Should().Equal("event-2", "event-3");
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_ByDistance_PagesNearestFirstThenById()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            db.Events.Add(NewEvent(1, organizerId: 2, startsInDays: 1, longitude: BorasLongitude + 0.2));
+            db.Events.Add(NewEvent(2, organizerId: 2, startsInDays: 2, longitude: BorasLongitude + 0.05));
+            db.Events.Add(NewEvent(3, organizerId: 2, startsInDays: 3, longitude: BorasLongitude + 0.05));
+            db.Events.Add(NewEvent(4, organizerId: 2, startsInDays: 4));
+        });
+
+        var first = await FeedIdentifiers(factory, Feed(order: new EventsByDistance(BorasLongitude, BorasLatitude), limit: 2));
+        first.Should().Equal("event-4", "event-2");
+
+        var squaredMetres = LocalMetricProjection
+            .CentredOn(new Coordinate(BorasLongitude, BorasLatitude))
+            .SquaredMetresTo(new Coordinate(BorasLongitude + 0.05, BorasLatitude));
+        var key = new EventDistanceKey(squaredMetres, 2);
+
+        (await FeedIdentifiers(factory, Feed(order: new EventsByDistance(BorasLongitude, BorasLatitude, key)))).Should().Equal("event-3", "event-1");
+    }
+
+    [Fact]
+    public async Task GetMineAsync_AppliesTheSearch()
+    {
+        var factory = CreateSeededFactory(db =>
+        {
+            var match = NewEvent(1, organizerId: 1);
+            match.Title = "Kypesjon runt";
+            db.Events.Add(match);
+            db.Events.Add(NewEvent(2, organizerId: 1));
+        });
+
+        (await MineIdentifiers(factory, Mine(search: new EventSearch(Text: "kypesjon")))).Should().Equal("event-1");
+    }
+
+    private static Event WithOwnRoute(Event e, int lengthMetres)
+    {
+        e.Route = new EventRoute { Path = Utilities.GeoPath((12.95, 57.73), (12.96, 57.74)), LengthMetres = lengthMetres };
+        return e;
     }
 
     [Fact]
@@ -277,8 +416,8 @@ public class EventRepositoryTests : TestBase
             db.Events.Add(NewEvent(5, organizerId: 1, startsInDays: -20));
         });
 
-        var upcoming = await Repository(factory).GetMineAsync(new EventMineFilter(1, [], Now, false, null, 20), TestContext.Current.CancellationToken);
-        var past = await Repository(factory).GetMineAsync(new EventMineFilter(1, [], Now, true, null, 20), TestContext.Current.CancellationToken);
+        var upcoming = await Repository(factory).GetMineAsync(Mine(), TestContext.Current.CancellationToken);
+        var past = await Repository(factory).GetMineAsync(Mine(past: true), TestContext.Current.CancellationToken);
 
         upcoming.Value.Should().NotBeNull();
         upcoming.Value.Select(c => c.Identifier).Should().BeEquivalentTo(["event-1", "event-2"]);
@@ -302,7 +441,7 @@ public class EventRepositoryTests : TestBase
             db.Events.Add(e);
         });
 
-        var result = await Repository(factory).GetMineAsync(new EventMineFilter(1, [3], Now, false, null, 20), TestContext.Current.CancellationToken);
+        var result = await Repository(factory).GetMineAsync(Mine(hidden: [3]), TestContext.Current.CancellationToken);
 
         result.Value.Should().NotBeNull();
         result.Value.Should().ContainSingle().Which.UnreadPostCount.Should().Be(1);

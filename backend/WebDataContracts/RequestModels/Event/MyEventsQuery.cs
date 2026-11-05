@@ -3,9 +3,7 @@
 
 namespace WebDataContracts.RequestModels.Event;
 
-public class MyEventsQuery
+public class MyEventsQuery : EventSearchQuery
 {
     public bool Past { get; set; }
-    public int Limit { get; set; } = EventFeedQuery.DefaultLimit;
-    public string? Cursor { get; set; }
 }

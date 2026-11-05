@@ -2,77 +2,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Infrastructure.Data.Entities;
-using Infrastructure.Enums;
 using NetTopologySuite.Geometries;
 
 namespace Core.Interfaces.Repositories;
-
-public record TrailAnchor(int TrailId, Point Start);
-
-// At is StartsAt for events and CreatedAt for board posts. keep-comment: one cursor shape for both
-public record EventPageKey(DateTime At, int Id);
-
-public record EventArea(double Longitude, double Latitude, double RadiusMeters);
-
-public record EventFeedFilter(
-    int ViewerId,
-    int[] HiddenUserIds,
-    DateTime Now,
-    string? TrailIdentifier,
-    string? OrganizerIdentifier,
-    EventArea? Area,
-    EventPageKey? After,
-    int Limit,
-    bool ExcludeMine);
-
-public record EventMineFilter(int ViewerId, int[] HiddenUserIds, DateTime Now, bool Past, EventPageKey? After, int Limit);
-
-public record EventCard(
-    int Id,
-    string Identifier,
-    string Title,
-    DateTime StartsAt,
-    DateTime? EndsAt,
-    string? LocationName,
-    string? MeetingPointName,
-    string? TrailName,
-    decimal? TrailLengthKm,
-    int? RouteLengthMetres,
-    EventVisibility Visibility,
-    EventStatus Status,
-    int ParticipantCount,
-    int? MaxParticipants,
-    string? ImageUrl,
-    ModerationState? ImageModerationState,
-    string? OrganizerNickName,
-    double Longitude,
-    double Latitude,
-    EventParticipantRole? MyRole,
-    EventParticipantStatus? MyStatus,
-    int UnreadPostCount);
-
-public record EventDetail(
-    Event Event,
-    string? TrailIdentifier,
-    string? TrailName,
-    decimal? TrailLengthKm,
-    int? RouteLengthMetres,
-    string? ImageUrl,
-    ModerationState? ImageModerationState,
-    string? ImageIdentifier,
-    int? OrganizerUserId,
-    string? OrganizerNickName,
-    int InterestedCount,
-    EventParticipantRole? MyRole,
-    EventParticipantStatus? MyStatus,
-    bool HasPendingInvite);
-
-public record UpdatedEvent(IReadOnlyCollection<int> NotifyUserIds);
-
-public record CancelledEvent(string Title, DateTime StartsAt, IReadOnlyCollection<int> NotifyUserIds);
-
-// NotifyUserIds is empty unless the event was still published and upcoming. keep-comment: nobody needs telling about a past or already-cancelled event
-public record DeletedEvent(string Identifier, string Title, DateTime StartsAt, string? ImageUrl, IReadOnlyCollection<int> NotifyUserIds);
 
 public interface IEventRepository
 {

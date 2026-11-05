@@ -164,6 +164,101 @@ public class EventsControllerTests : IClassFixture<StigViddWebApplicationFactory
     }
 
     [Fact]
+    public async Task Feed_SearchAndFilters_TranslateOnTheDatabase()
+    {
+        var onTrail = await CreateAsync(NaturElskaren, Request(trail: Tiveden));
+        await CreateAsync(NaturElskaren, Request());
+        var from = Uri.EscapeDataString(DateTime.UtcNow.AddDays(2).ToString("O"));
+        var to = Uri.EscapeDataString(DateTime.UtcNow.AddDays(4).ToString("O"));
+
+        var found = await Client(VandrarVennen).GetFromJsonAsync<EventPageResponse>(
+            $"{BASE_URL}?search=TIVED&minLengthKm=9&maxLengthKm=10&onlyWithSpots=true&routeKind=Trail&from={from}&to={to}",
+            TestContext.Current.CancellationToken);
+        var byOrganizer = await Client(VandrarVennen).GetFromJsonAsync<EventPageResponse>(
+            $"{BASE_URL}?search=naturelsk", TestContext.Current.CancellationToken);
+        var tooShort = await Client(VandrarVennen).GetFromJsonAsync<EventPageResponse>(
+            $"{BASE_URL}?search=tived&maxLengthKm=5", TestContext.Current.CancellationToken);
+
+        found.Should().NotBeNull();
+        found.Items.Should().ContainSingle().Which.Identifier.Should().Be(onTrail.Identifier);
+        byOrganizer.Should().NotBeNull();
+        byOrganizer.Items.Should().HaveCount(2);
+        tooShort.Should().NotBeNull();
+        tooShort.Items.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Feed_SortedByDistance_PagesNearestFirstAcrossTheCursor()
+    {
+        // Two organizers, so the daily creation limit does not refuse the fourth. keep-comment: why the organizers alternate
+        var atOrigin = await CreateAsync(NaturElskaren, At(12.94m));
+        var east = await CreateAsync(VandrarVennen, At(12.99m));
+        var alsoEast = await CreateAsync(NaturElskaren, At(12.99m));
+        var farEast = await CreateAsync(VandrarVennen, At(13.20m));
+        var url = $"{BASE_URL}?lat=57.72&lon=12.94&sort=Distance&limit=2";
+        var signedOut = _factory.CreateClient();
+
+        var first = await signedOut.GetFromJsonAsync<EventPageResponse>(url, TestContext.Current.CancellationToken);
+        first.Should().NotBeNull();
+        first.NextCursor.Should().NotBeNull();
+        var second = await signedOut.GetFromJsonAsync<EventPageResponse>(
+            $"{url}&cursor={Uri.EscapeDataString(first.NextCursor)}", TestContext.Current.CancellationToken);
+
+        second.Should().NotBeNull();
+        second.NextCursor.Should().BeNull();
+        first.Items.Concat(second.Items).Select(i => i.Identifier).Should().Equal(
+            atOrigin.Identifier, east.Identifier, alsoEast.Identifier, farEast.Identifier);
+    }
+
+    [Theory]
+    [InlineData("sort=Distance")]
+    [InlineData("from=2026-12-02T00:00:00Z&to=2026-12-01T00:00:00Z")]
+    [InlineData("minLengthKm=10&maxLengthKm=5")]
+    [InlineData("routeKind=Boat")]
+    public async Task Feed_WithAnInvalidSearch_Is400(string query)
+    {
+        var response = await Client(VandrarVennen).GetAsync($"{BASE_URL}?{query}", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Feed_WithADateCursorUnderTheDistanceSort_Is400()
+    {
+        await CreateAsync(NaturElskaren, Request());
+        await CreateAsync(NaturElskaren, Request());
+        var byDate = await Client(VandrarVennen).GetFromJsonAsync<EventPageResponse>($"{BASE_URL}?limit=1", TestContext.Current.CancellationToken);
+        byDate.Should().NotBeNull();
+        byDate.NextCursor.Should().NotBeNull();
+
+        var response = await Client(VandrarVennen).GetAsync(
+            $"{BASE_URL}?lat=57.72&lon=12.94&sort=Distance&cursor={Uri.EscapeDataString(byDate.NextCursor)}", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Mine_Search_FiltersMyEvents()
+    {
+        var match = Request();
+        match.Title = "Fika vid Kypesjon";
+        var created = await CreateAsync(NaturElskaren, match);
+        await CreateAsync(NaturElskaren, Request());
+
+        var mine = await Client(NaturElskaren).GetFromJsonAsync<EventPageResponse>($"{BASE_URL}/mine?search=kypesjon", TestContext.Current.CancellationToken);
+
+        mine.Should().NotBeNull();
+        mine.Items.Should().ContainSingle().Which.Identifier.Should().Be(created.Identifier);
+    }
+
+    private static CreateEventRequest At(decimal longitude)
+    {
+        var request = Request();
+        request.MeetingPointLongitude = longitude;
+        return request;
+    }
+
+    [Fact]
     public async Task Feed_WithRadiusButNoPosition_Is400()
     {
         var response = await Client(VandrarVennen).GetAsync($"{BASE_URL}?radiusKm=10", TestContext.Current.CancellationToken);

@@ -98,7 +98,7 @@ public class EventService : IEventService
 
     public async Task<Result<EventPageResponse>> GetFeedAsync(string? userIdentifier, EventFeedQuery query, CancellationToken ctoken)
     {
-        if (!EventCursor.TryDecode(query.Cursor, out var after))
+        if (!EventListing.TryOrderOf(query, newestFirst: false, out var order))
             return Result.Fail<EventPageResponse>(new Message(400, "Invalid cursor."));
 
         var viewerId = EventLoader.AnonymousViewerId;
@@ -115,21 +115,14 @@ public class EventService : IEventService
             hidden = await _userBlockService.GetHiddenUserIdsForReadAsync(viewerId, ctoken);
         }
 
-        var origin = query.Lat.HasValue && query.Lon.HasValue
-            ? new Coordinate((double)query.Lon.Value, (double)query.Lat.Value)
-            : null;
-        var area = origin is not null && query.RadiusKm.HasValue
-            ? new EventArea(origin.X, origin.Y, query.RadiusKm.Value * 1000.0)
-            : null;
-
         var filter = new EventFeedFilter(
             viewerId,
             hidden,
             DateTime.UtcNow,
             query.Trail,
             query.Organizer,
-            area,
-            after,
+            EventListing.SearchOf(query),
+            order,
             query.Limit + 1,
             query.ExcludeMine && userIdentifier is not null);
 
@@ -138,12 +131,12 @@ public class EventService : IEventService
         if (!cards.IsSuccess)
             return Result.Fail<EventPageResponse>(new Message(500, "An error occurred while fetching events."));
 
-        return Result.Ok(Page(cards.Value, query.Limit, origin));
+        return Result.Ok(Page(cards.Value, query, order));
     }
 
     public async Task<Result<EventPageResponse>> GetMineAsync(string userIdentifier, MyEventsQuery query, CancellationToken ctoken)
     {
-        if (!EventCursor.TryDecode(query.Cursor, out var after))
+        if (!EventListing.TryOrderOf(query, newestFirst: query.Past, out var order))
             return Result.Fail<EventPageResponse>(new Message(400, "Invalid cursor."));
 
         var viewer = await _loader.ResolveUserAsync(userIdentifier, ctoken);
@@ -152,14 +145,14 @@ public class EventService : IEventService
             return Result.Fail<EventPageResponse>(viewer.Message);
 
         var hidden = await _userBlockService.GetHiddenUserIdsForReadAsync(viewer.Value, ctoken);
-        var filter = new EventMineFilter(viewer.Value, hidden, DateTime.UtcNow, query.Past, after, query.Limit + 1);
+        var filter = new EventMineFilter(viewer.Value, hidden, DateTime.UtcNow, query.Past, EventListing.SearchOf(query), order, query.Limit + 1);
 
         var cards = await _eventRepository.GetMineAsync(filter, ctoken);
 
         if (!cards.IsSuccess)
             return Result.Fail<EventPageResponse>(new Message(500, "An error occurred while fetching your events."));
 
-        return Result.Ok(Page(cards.Value, query.Limit, origin: null));
+        return Result.Ok(Page(cards.Value, query, order));
     }
 
     public async Task<Result<EventPreviewResponse>> GetPreviewAsync(string identifier, CancellationToken ctoken)
@@ -493,17 +486,16 @@ public class EventService : IEventService
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
 
-    private EventPageResponse Page(IReadOnlyList<EventCard> cards, int limit, Coordinate? origin)
+    private EventPageResponse Page(IReadOnlyList<EventCard> cards, EventSearchQuery query, EventOrder order)
     {
-        var page = cards.Take(limit).ToList();
+        var page = cards.Take(query.Limit).ToList();
+        var origin = EventListing.OriginOf(query);
         var projection = origin is null ? null : LocalMetricProjection.CentredOn(origin);
 
         return new EventPageResponse
         {
             Items = page.Select(c => _factory.CreateSummary(c, DistanceMeters(projection, c))).ToList(),
-            NextCursor = cards.Count > limit
-                ? EventCursor.Encode(new EventPageKey(page[^1].StartsAt, page[^1].Id))
-                : null,
+            NextCursor = cards.Count > query.Limit ? EventListing.NextCursor(order, page[^1]) : null,
         };
     }
 

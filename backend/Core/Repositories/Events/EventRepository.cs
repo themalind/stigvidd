@@ -271,17 +271,15 @@ public class EventRepository : IEventRepository
                     && (p.Role == EventParticipantRole.Organizer || p.Role == EventParticipantRole.CoHost)));
             }
 
-            if (query.Area is not null)
-                events = WithinArea(events, query.Area);
-
             if (query.ExcludeMine)
             {
                 var viewerId = query.ViewerId;
                 events = events.Where(e => !e.Participants.Any(p => p.UserId == viewerId));
             }
 
-            var cards = await After(events, query.After, descending: false)
-                .OrderBy(e => e.StartsAt).ThenBy(e => e.Id)
+            var cards = await events
+                .Matching(query.Search)
+                .InOrder(query.Order)
                 .Take(query.Limit)
                 .Select(EventQueries.Card(query.ViewerId, query.HiddenUserIds))
                 .ToListAsync(ctoken);
@@ -312,13 +310,9 @@ public class EventRepository : IEventRepository
                 ? events.Where(e => e.PastAfter <= now)
                 : events.Where(e => e.PastAfter > now);
 
-            events = After(events, query.After, descending: query.Past);
-
-            var ordered = query.Past
-                ? events.OrderByDescending(e => e.StartsAt).ThenByDescending(e => e.Id)
-                : events.OrderBy(e => e.StartsAt).ThenBy(e => e.Id);
-
-            var cards = await ordered
+            var cards = await events
+                .Matching(query.Search)
+                .InOrder(query.Order)
                 .Take(query.Limit)
                 .Select(EventQueries.Card(query.ViewerId, query.HiddenUserIds))
                 .ToListAsync(ctoken);
@@ -464,46 +458,4 @@ public class EventRepository : IEventRepository
             .Select(e => (int?)e.Id)
             .FirstOrDefaultAsync(ctoken);
     }
-
-    // The box uses the GiST index; the metre check trims its corners. Equirectangular, as in TrailRepository. keep-comment: translates on Npgsql, SpatiaLite and InMemory alike
-    private static IQueryable<Event> WithinArea(IQueryable<Event> events, EventArea area)
-    {
-        var projection = LocalMetricProjection.CentredOn(new Coordinate(area.Longitude, area.Latitude));
-        var metresPerDegreeLongitude = projection.MetresPerDegreeLongitude;
-        var metresPerDegreeLatitude = projection.MetresPerDegreeLatitude;
-        var halfWidth = area.RadiusMeters / metresPerDegreeLongitude;
-        var halfHeight = area.RadiusMeters / metresPerDegreeLatitude;
-
-        var box = GeoPointFactory.FromLonLatEnvelope(new Envelope(
-            area.Longitude - halfWidth,
-            area.Longitude + halfWidth,
-            Math.Max(-90, area.Latitude - halfHeight),
-            Math.Min(90, area.Latitude + halfHeight)));
-
-        var originLongitude = area.Longitude;
-        var originLatitude = area.Latitude;
-        var radiusSquared = area.RadiusMeters * area.RadiusMeters;
-
-        return
-            from e in events
-            where e.Location.Intersects(box)
-            let eastingMetres = (e.Location.X - originLongitude) * metresPerDegreeLongitude
-            let northingMetres = (e.Location.Y - originLatitude) * metresPerDegreeLatitude
-            where (eastingMetres * eastingMetres) + (northingMetres * northingMetres) <= radiusSquared
-            select e;
-    }
-
-    private static IQueryable<Event> After(IQueryable<Event> events, EventPageKey? key, bool descending)
-    {
-        if (key is null)
-            return events;
-
-        var startsAt = key.At;
-        var id = key.Id;
-
-        return descending
-            ? events.Where(e => e.StartsAt < startsAt || (e.StartsAt == startsAt && e.Id < id))
-            : events.Where(e => e.StartsAt > startsAt || (e.StartsAt == startsAt && e.Id > id));
-    }
-
 }

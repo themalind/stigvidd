@@ -5,6 +5,8 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
+import type { EventRouteKind } from './eventRouteKind';
+import type { EventSort } from './eventSort';
 
 export type EventsGetEventsParams = {
 /**
@@ -15,6 +17,19 @@ Trail?: string | null;
  * @nullable
  */
 Organizer?: string | null;
+ExcludeMine?: boolean;
+/**
+ * @nullable
+ */
+Search?: string | null;
+/**
+ * @nullable
+ */
+From?: string | null;
+/**
+ * @nullable
+ */
+To?: string | null;
 /**
  * @nullable
  */
@@ -27,10 +42,20 @@ Lon?: number | null;
  * @nullable
  */
 RadiusKm?: number | null;
+OnlyWithSpots?: boolean;
+/**
+ * @nullable
+ */
+MinLengthKm?: number | null;
+/**
+ * @nullable
+ */
+MaxLengthKm?: number | null;
+RouteKind?: EventRouteKind | null;
+Sort?: EventSort;
 Limit?: number;
 /**
  * @nullable
  */
 Cursor?: string | null;
-ExcludeMine?: boolean;
 };

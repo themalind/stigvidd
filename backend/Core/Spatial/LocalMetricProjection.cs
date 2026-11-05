@@ -65,8 +65,14 @@ public sealed class LocalMetricProjection
 
     public double MetresTo(Coordinate coordinate)
     {
+        return Math.Sqrt(SquaredMetresTo(coordinate));
+    }
+
+    // Keyset paging compares this exact value, so a query must compute it with the same operations. keep-comment: see EventDistance
+    public double SquaredMetresTo(Coordinate coordinate)
+    {
         var projected = Project(coordinate);
-        return Math.Sqrt((projected.X * projected.X) + (projected.Y * projected.Y));
+        return (projected.X * projected.X) + (projected.Y * projected.Y);
     }
 
     public LineString Project(LineString line)
