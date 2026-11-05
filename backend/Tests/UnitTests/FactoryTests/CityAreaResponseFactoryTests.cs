@@ -7,6 +7,7 @@ using AwesomeAssertions;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using WebDataContracts.Enums;
 
 namespace UnitTests.FactoryTests;
 
@@ -105,5 +106,39 @@ public class CityAreaResponseFactoryTests
         result.Should().HaveCount(2);
         result.Should().Contain(a => a.Identifier == "area-dalsjofors");
         result.Should().Contain(a => a.Identifier == "area-viskafors");
+    }
+
+    [Fact]
+    public void CreateLinkSuggestions_MapsEveryFieldAndRoundsTheDistance()
+    {
+        // Arrange
+        var factory = BuildFactory();
+        var near = new AreaSuggestion("area-rya", "Rya åsar", AreaSuggestionReason.Nearby, 1.4321, "Ryaslingan");
+        var named = new AreaSuggestion("area-rya", "Rya åsar", AreaSuggestionReason.Name, null, null);
+
+        // Act
+        var result = factory.CreateLinkSuggestions(
+            [
+                new SuggestedFacility(new UnlinkedFacilityProjection("fac-near", "Grillplats", (int)FacilityType.FirePit, 57.70, 12.90), [near]),
+                new SuggestedFacility(new UnlinkedFacilityProjection("fac-far", "Fiskevatten", (int)FacilityType.FishingArea, null, null), []),
+            ],
+            [new SuggestedTrail(new UnlinkedTrailProjection("trail-rya", "Rya åsar runt", "Borås", false, null, null), [named])]);
+
+        // Assert
+        var facility = result.Facilities.Single(f => f.Identifier == "fac-near");
+        facility.Name.Should().Be("Grillplats");
+        facility.FacilityType.Should().Be((int)FacilityType.FirePit);
+        var suggestion = facility.Suggestions.Should().ContainSingle().Subject;
+        suggestion.AreaIdentifier.Should().Be("area-rya");
+        suggestion.AreaName.Should().Be("Rya åsar");
+        suggestion.Reason.Should().Be(AreaSuggestionReason.Nearby);
+        suggestion.DistanceKm.Should().Be(1.4);
+        suggestion.NearestName.Should().Be("Ryaslingan");
+        result.Facilities.Single(f => f.Identifier == "fac-far").Suggestions.Should().BeEmpty();
+        var trail = result.Trails.Should().ContainSingle().Subject;
+        trail.Name.Should().Be("Rya åsar runt");
+        trail.City.Should().Be("Borås");
+        trail.IsVerified.Should().BeFalse();
+        trail.Suggestions.Should().ContainSingle().Which.DistanceKm.Should().BeNull();
     }
 }

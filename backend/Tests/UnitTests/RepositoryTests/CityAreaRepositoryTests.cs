@@ -52,6 +52,39 @@ public class CityAreaRepositoryTests : TestBase
     }
 
     [Fact]
+    public async Task GetLinkSuggestionSourcesAsync_ListsOnlyUnlinkedFacilitiesAndCuratedTrails()
+    {
+        // Arrange
+        var repo = new CityAreaRepository(CreateSeededFactory(db =>
+        {
+            SeedLinkedArea(db);
+            db.Trails.Add(new Trail
+            {
+                Identifier = "trail-user-walk",
+                Name = "En användarpromenad",
+                TrailLength = 2m,
+                IsVerified = true,
+                City = "Borås",
+                GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)),
+                Contribution = new TrailContribution { SubmittedByUserId = 2, ShowSubmitterName = true },
+            });
+        }), NullLogger<CityAreaRepository>.Instance);
+
+        // Act
+        var result = await repo.GetLinkSuggestionSourcesAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        var sources = result.Value;
+        sources.Facilities.Select(f => f.Name).Should().Contain("Vindskydd Gesebol").And.NotContain("Grillplats Tiveden");
+        sources.Trails.Select(t => t.Name).Should().NotContain(["Tiveden", "En användarpromenad"]).And.NotBeEmpty();
+        sources.Trails.Should().OnlyContain(t => t.Latitude.HasValue && t.Longitude.HasValue);
+        var area = sources.Areas.Should().ContainSingle().Subject;
+        area.Places.Select(p => p.Name).Should().BeEquivalentTo(["Grillplats Tiveden", "Tiveden"]);
+    }
+
+    [Fact]
     public async Task GetAllAsync_WhenCityAreasExist_ReturnsAll()
     {
         // Arrange

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { screen, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AdminFacilityResponse } from "@/api/generated/model";
 import { ApiError } from "@/api/mutator";
@@ -142,6 +142,25 @@ describe("CityAreasPage", () => {
 
     expect(screen.getByText("Borås · inactive")).toBeInTheDocument();
   });
+
+  it("says when a search only finds what is already linked", async () => {
+    renderPage();
+    await screen.findByRole("heading", { name: "Rya åsar" });
+
+    await userEvent.type(screen.getByRole("textbox", { name: "Search facilities to link" }), "grillplats");
+
+    expect(facilitiesCard().getByText("Already linked here: Grillplats Rya")).toBeInTheDocument();
+    expect(facilitiesCard().queryByText("No matches.")).not.toBeInTheDocument();
+  });
+
+  it("finds a trail by its words in any order", async () => {
+    renderPage();
+    await screen.findByRole("heading", { name: "Rya åsar" });
+
+    await userEvent.type(screen.getByRole("textbox", { name: "Search trails to link" }), "Boras Ryaslingan");
+
+    expect(screen.getByRole("button", { name: "Link Ryaslingan" })).toBeInTheDocument();
+  });
 });
 
 describe("choosing an area", () => {
@@ -164,6 +183,208 @@ describe("choosing an area", () => {
 
     expect(await screen.findByRole("heading", { name: "Öresjö" })).toBeInTheDocument();
     expect(screen.queryByRole("list", { name: "Areas" })).not.toBeInTheDocument();
+  });
+});
+
+describe("linking what is not in an area", () => {
+  beforeEach(() => {
+    api.mock.on("GET", `${AREAS}/suggestions`, () => ({
+      facilities: [
+        {
+          identifier: "f-3",
+          name: "Grillplats Öresjö",
+          facilityType: 1,
+          suggestions: [
+            { areaIdentifier: "a-2", areaName: "Öresjö", reason: "Name", distanceKm: null, nearestName: null },
+          ],
+        },
+        { identifier: "f-4", name: "Vindskydd Okänd", facilityType: 2, suggestions: [] },
+      ],
+      trails: [
+        {
+          identifier: "t-2",
+          name: "Kråkstigen",
+          city: "Kråkered",
+          isVerified: true,
+          suggestions: [
+            {
+              areaIdentifier: "a-1",
+              areaName: "Rya åsar",
+              reason: "Nearby",
+              distanceKm: 1.2,
+              nearestName: "Ryaslingan",
+            },
+            {
+              areaIdentifier: "a-2",
+              areaName: "Öresjö",
+              reason: "Nearby",
+              distanceKm: 3.4,
+              nearestName: "Öresjö runt",
+            },
+          ],
+        },
+      ],
+    }));
+  });
+
+  async function openUnlinked() {
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: "Not in an area" }));
+    return {
+      facilities: within(await screen.findByRole("list", { name: "Facilities" })),
+      trails: within(screen.getByRole("list", { name: "Trails" })),
+    };
+  }
+
+  function suggestionLoads() {
+    return api.mock.calls.filter((call) => call.method === "GET" && call.path === `${AREAS}/suggestions`).length;
+  }
+
+  function areasFor(label: string) {
+    return within(screen.getByRole("group", { name: `Areas for ${label}` }));
+  }
+
+  it("offers every suggested area with its reason, the first one ticked", async () => {
+    const { facilities } = await openUnlinked();
+
+    expect(areasFor("Kråkstigen").getByRole("button", { name: "Rya åsar, 1.2 km" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    expect(areasFor("Kråkstigen").getByRole("button", { name: "Öresjö, 3.4 km" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    expect(areasFor("Grillplats Öresjö").getByRole("button", { name: "Öresjö, name" })).toBeInTheDocument();
+    expect(facilities.getByText("Shelter · No area within 5 km")).toBeInTheDocument();
+  });
+
+  it("links a trail to two suggested areas in one go", async () => {
+    api.mock.on("PUT", `${AREAS}/a-1/trails/t-2`, () => undefined);
+    api.mock.on("PUT", `${AREAS}/a-2/trails/t-2`, () => undefined);
+    await openUnlinked();
+
+    await userEvent.click(areasFor("Kråkstigen").getByRole("button", { name: "Öresjö, 3.4 km" }));
+    await userEvent.click(
+      areasFor("Kråkstigen").getByRole("button", { name: "Link Kråkstigen to Rya åsar and Öresjö" }),
+    );
+
+    const linked = api.mock.calls.filter((call) => call.method === "PUT").map((call) => call.path);
+    expect(linked).toEqual(expect.arrayContaining([`${AREAS}/a-1/trails/t-2`, `${AREAS}/a-2/trails/t-2`]));
+    expect(linked).toHaveLength(2);
+  });
+
+  it("will not link until an area is chosen", async () => {
+    await openUnlinked();
+
+    expect(areasFor("Vindskydd Okänd").getByRole("button", { name: "Link Vindskydd Okänd" })).toBeDisabled();
+  });
+
+  it("links to the suggested area and drops the row at once", async () => {
+    let answer: (value: unknown) => void = () => {};
+    api.mock.on("PUT", `${AREAS}/a-2/facilities/f-3`, () => new Promise((resolve) => (answer = resolve)));
+    const { facilities } = await openUnlinked();
+
+    await userEvent.click(facilities.getByRole("button", { name: "Link Grillplats Öresjö to Öresjö" }));
+
+    expect(facilities.queryByText("Grillplats Öresjö")).not.toBeInTheDocument();
+    expect(api.mock.calls).toContainEqual(
+      expect.objectContaining({ method: "PUT", path: `${AREAS}/a-2/facilities/f-3` }),
+    );
+    answer(undefined);
+  });
+
+  it("links to areas ticked in the search, which stays open for more", async () => {
+    api.mock.on("PUT", `${AREAS}/a-1/facilities/f-4`, () => undefined);
+    api.mock.on("PUT", `${AREAS}/a-2/facilities/f-4`, () => undefined);
+    await openUnlinked();
+
+    await userEvent.click(
+      areasFor("Vindskydd Okänd").getByRole("button", { name: "Choose areas for Vindskydd Okänd" }),
+    );
+    await userEvent.type(screen.getByRole("textbox", { name: "Search areas" }), "oresjo");
+    await userEvent.click(within(screen.getByRole("list", { name: "Areas" })).getByText("Öresjö"));
+    await userEvent.clear(screen.getByRole("textbox", { name: "Search areas" }));
+    await userEvent.click(within(screen.getByRole("list", { name: "Areas" })).getByText("Rya åsar"));
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(
+      areasFor("Vindskydd Okänd").getByRole("button", { name: "Link Vindskydd Okänd to Öresjö and Rya åsar" }),
+    );
+
+    const linked = api.mock.calls.filter((call) => call.method === "PUT").map((call) => call.path);
+    expect(linked).toEqual(expect.arrayContaining([`${AREAS}/a-1/facilities/f-4`, `${AREAS}/a-2/facilities/f-4`]));
+  });
+
+  it("puts a refused link back", async () => {
+    api.mock.on("PUT", `${AREAS}/a-1/trails/t-2`, () => {
+      throw new ApiError("Not allowed", 403);
+    });
+    const { trails } = await openUnlinked();
+    api.mock.on("GET", `${AREAS}/suggestions`, () => new Promise(() => {}));
+
+    await userEvent.click(trails.getByRole("button", { name: "Link Kråkstigen to Rya åsar" }));
+
+    expect(await trails.findByText("Kråkstigen")).toBeInTheDocument();
+    expect(toasts.toast.error).toHaveBeenCalled();
+  });
+
+  it("narrows the facilities to one type", async () => {
+    const { facilities } = await openUnlinked();
+
+    await userEvent.click(screen.getByRole("button", { name: "Shelter" }));
+
+    expect(facilities.queryByText("Grillplats Öresjö")).not.toBeInTheDocument();
+    expect(facilities.getByText("Vindskydd Okänd")).toBeInTheDocument();
+  });
+
+  it("shows every type again once the filtered type is all linked", async () => {
+    api.mock.on("PUT", `${AREAS}/a-1/facilities/f-4`, () => undefined);
+    await openUnlinked();
+    await userEvent.click(screen.getByRole("button", { name: "Shelter" }));
+    api.mock.on("GET", `${AREAS}/suggestions`, () => ({
+      facilities: [
+        {
+          identifier: "f-3",
+          name: "Grillplats Öresjö",
+          facilityType: 1,
+          suggestions: [
+            { areaIdentifier: "a-2", areaName: "Öresjö", reason: "Name", distanceKm: null, nearestName: null },
+          ],
+        },
+      ],
+      trails: [],
+    }));
+
+    await userEvent.click(
+      areasFor("Vindskydd Okänd").getByRole("button", { name: "Choose areas for Vindskydd Okänd" }),
+    );
+    await userEvent.click(within(screen.getByRole("list", { name: "Areas" })).getByText("Rya åsar"));
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(
+      areasFor("Vindskydd Okänd").getByRole("button", { name: "Link Vindskydd Okänd to Rya åsar" }),
+    );
+
+    expect(await screen.findByText("Grillplats Öresjö")).toBeInTheDocument();
+  });
+
+  it("keeps a linked row away while another link is still on its way", async () => {
+    let slow: (value: unknown) => void = () => {};
+    api.mock.on("PUT", `${AREAS}/a-2/facilities/f-3`, () => new Promise((resolve) => (slow = resolve)));
+    api.mock.on("PUT", `${AREAS}/a-1/trails/t-2`, () => undefined);
+    const { facilities } = await openUnlinked();
+
+    await userEvent.click(
+      areasFor("Grillplats Öresjö").getByRole("button", { name: "Link Grillplats Öresjö to Öresjö" }),
+    );
+    await userEvent.click(areasFor("Kråkstigen").getByRole("button", { name: "Link Kråkstigen to Rya åsar" }));
+    await act(async () => {});
+
+    expect(suggestionLoads()).toBe(1);
+    expect(facilities.queryByText("Grillplats Öresjö")).not.toBeInTheDocument();
+
+    api.mock.on("GET", `${AREAS}/suggestions`, () => ({ facilities: [], trails: [] }));
+    slow(undefined);
+    await waitFor(() => expect(suggestionLoads()).toBe(2));
   });
 });
 

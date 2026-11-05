@@ -33,6 +33,19 @@ public class AdminCityAreasController : StigViddController
         return Ok(result.Value);
     }
 
+    [HttpGet("suggestions")]
+    public async Task<ActionResult<AdminLinkSuggestionsResponse>> GetLinkSuggestions(CancellationToken ctoken)
+    {
+        var result = await _cityAreaService.GetLinkSuggestionsAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPut("{identifier}/facilities/{facilityIdentifier}")]
     public async Task<ActionResult> LinkFacility(string identifier, string facilityIdentifier, CancellationToken ctoken)
     {

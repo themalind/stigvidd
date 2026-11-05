@@ -23,7 +23,7 @@ import type {
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 
-import type { AdminCityAreaResponse } from "../model";
+import type { AdminCityAreaResponse, AdminLinkSuggestionsResponse } from "../model";
 
 import { customFetch } from "../../mutator";
 
@@ -203,6 +203,199 @@ export function useAdminCityAreasGetAllSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getAdminCityAreasGetAllSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminCityAreasGetLinkSuggestionsUrl = () => {
+  return `/api/v1/admin/city-areas/suggestions`;
+};
+
+export const adminCityAreasGetLinkSuggestions = async (
+  options?: RequestInit,
+): Promise<AdminLinkSuggestionsResponse> => {
+  return customFetch<AdminLinkSuggestionsResponse>(getAdminCityAreasGetLinkSuggestionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminCityAreasGetLinkSuggestionsQueryKey = () => {
+  return [`/api/v1/admin/city-areas/suggestions`] as const;
+};
+
+export const getAdminCityAreasGetLinkSuggestionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasGetLinkSuggestionsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>> = ({ signal }) =>
+    adminCityAreasGetLinkSuggestions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminCityAreasGetLinkSuggestionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>
+>;
+export type AdminCityAreasGetLinkSuggestionsQueryError = unknown;
+
+export function useAdminCityAreasGetLinkSuggestions<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+          TError,
+          Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetLinkSuggestions<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+          TError,
+          Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetLinkSuggestions<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useAdminCityAreasGetLinkSuggestions<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasGetLinkSuggestionsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminCityAreasGetLinkSuggestionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasGetLinkSuggestionsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>> = ({ signal }) =>
+    adminCityAreasGetLinkSuggestions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminCityAreasGetLinkSuggestionsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>
+>;
+export type AdminCityAreasGetLinkSuggestionsSuspenseQueryError = unknown;
+
+export function useAdminCityAreasGetLinkSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetLinkSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetLinkSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useAdminCityAreasGetLinkSuggestionsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetLinkSuggestions>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasGetLinkSuggestionsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

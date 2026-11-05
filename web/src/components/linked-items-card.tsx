@@ -6,6 +6,7 @@ import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { matchesAll, searchTerms } from "@/utils/search";
 
 export interface LinkItem {
   identifier: string;
@@ -26,10 +27,6 @@ interface Props {
 
 const MAX_SUGGESTIONS = 8;
 
-function fold(text: string): string {
-  return text.toLocaleLowerCase("sv");
-}
-
 export default function LinkedItemsCard({
   title,
   description,
@@ -42,14 +39,18 @@ export default function LinkedItemsCard({
 }: Props) {
   const [query, setQuery] = useState("");
 
-  const suggestions = useMemo(() => {
-    const term = fold(query.trim());
-    if (term === "") return [];
+  const { suggestions, alreadyLinked } = useMemo(() => {
+    const terms = searchTerms(query);
+    if (terms.length === 0) return { suggestions: [], alreadyLinked: [] };
+    const matches = (item: LinkItem) => matchesAll(`${item.label} ${item.detail ?? ""}`, terms);
     const linkedIds = new Set(linked.map((item) => item.identifier));
-    return available
-      .filter((item) => !linkedIds.has(item.identifier))
-      .filter((item) => fold(`${item.label} ${item.detail ?? ""}`).includes(term))
-      .slice(0, MAX_SUGGESTIONS);
+    return {
+      suggestions: available
+        .filter((item) => !linkedIds.has(item.identifier))
+        .filter(matches)
+        .slice(0, MAX_SUGGESTIONS),
+      alreadyLinked: linked.filter(matches),
+    };
   }, [query, linked, available]);
 
   return (
@@ -92,8 +93,13 @@ export default function LinkedItemsCard({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          {query.trim() !== "" && suggestions.length === 0 && (
-            <p className="text-sm text-muted-foreground">No unlinked matches.</p>
+          {alreadyLinked.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              Already linked here: {alreadyLinked.map((item) => item.label.trim()).join(", ")}
+            </p>
+          )}
+          {query.trim() !== "" && suggestions.length === 0 && alreadyLinked.length === 0 && (
+            <p className="text-sm text-muted-foreground">No matches.</p>
           )}
           {suggestions.length > 0 && (
             <ul className="divide-y rounded-xs border border-input">

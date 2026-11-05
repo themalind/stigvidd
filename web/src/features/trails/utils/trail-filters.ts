@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { AdminTrailListItemResponse } from "@/api/generated/model";
+import { matchesAll, searchTerms } from "@/utils/search";
 
 export const TRAIL_MISSING = [
   { value: "All", label: "Missing anything" },
@@ -54,14 +55,6 @@ export const emptyTrailFilters: TrailFilterState = {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-// keep-comment: folds case and diacritics so "boras" finds "Borås" and "sjoleden" finds "Sjöleden"
-function fold(value: string): string {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLocaleLowerCase("sv");
-}
 
 function km(value: string): number | undefined {
   if (value.trim() === "") return undefined;
@@ -157,7 +150,7 @@ export function filterTrails(
   filters: TrailFilterState,
   now: number = Date.now(),
 ): AdminTrailListItemResponse[] {
-  const terms = fold(filters.query).split(/\s+/).filter(Boolean);
+  const terms = searchTerms(filters.query);
   const minKm = km(filters.minKm);
   const maxKm = km(filters.maxKm);
   const updatedSince =
@@ -176,8 +169,7 @@ export function filterTrails(
       if (minKm !== undefined && trail.trailLength < minKm) return false;
       if (maxKm !== undefined && trail.trailLength > maxKm) return false;
 
-      const haystack = fold(`${trail.name} ${trail.city} ${trail.identifier}`);
-      return terms.every((term) => haystack.includes(term));
+      return matchesAll(`${trail.name} ${trail.city} ${trail.identifier}`, terms);
     })
     .sort(compare(filters.sort));
 }
