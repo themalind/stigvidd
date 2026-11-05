@@ -34,6 +34,7 @@ import type {
   TrailResponse,
   TrailShortInfoResponse,
   TrailsAddTrailBody,
+  TrailsGetPopularContributedTrailsParams,
   TrailsGetPopularTrailsParams
 } from '../model';
 
@@ -194,17 +195,24 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getTrailsGetPopularTrailsMutationOptions(options), queryClient);
     }
-    export const getTrailsGetPopularContributedTrailsUrl = () => {
+    export const getTrailsGetPopularContributedTrailsUrl = (params?: TrailsGetPopularContributedTrailsParams,) => {
+  const normalizedParams = new URLSearchParams();
 
+  Object.entries(params || {}).forEach(([key, value]) => {
 
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
 
+  const stringifiedParams = normalizedParams.toString();
 
-  return `/api/v1/Trails/popular-contributions`
+  return stringifiedParams.length > 0 ? `/api/v1/Trails/popular-contributions?${stringifiedParams}` : `/api/v1/Trails/popular-contributions`
 }
 
-export const trailsGetPopularContributedTrails = async ( options?: RequestInit): Promise<TrailCardResponse[]> => {
+export const trailsGetPopularContributedTrails = async (params?: TrailsGetPopularContributedTrailsParams, options?: RequestInit): Promise<TrailCardResponse[]> => {
 
-  return customFetch<TrailCardResponse[]>(getTrailsGetPopularContributedTrailsUrl(),
+  return customFetch<TrailCardResponse[]>(getTrailsGetPopularContributedTrailsUrl(params),
   {
     ...options,
     method: 'GET'
@@ -218,8 +226,8 @@ export const trailsGetPopularContributedTrails = async ( options?: RequestInit):
 
 
 export const getTrailsGetPopularContributedTrailsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,void, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,{params?: TrailsGetPopularContributedTrailsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,{params?: TrailsGetPopularContributedTrailsParams}, TContext> => {
 
 const mutationKey = ['trailsGetPopularContributedTrails'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -231,10 +239,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, {params?: TrailsGetPopularContributedTrailsParams}> = (props) => {
+          const {params} = props ?? {};
 
-
-          return  trailsGetPopularContributedTrails(requestOptions)
+          return  trailsGetPopularContributedTrails(params,requestOptions)
         }
 
 
@@ -249,11 +257,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type TrailsGetPopularContributedTrailsMutationError = unknown
 
     export const useTrailsGetPopularContributedTrails = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError,{params?: TrailsGetPopularContributedTrailsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
         TError,
-        void,
+        {params?: TrailsGetPopularContributedTrailsParams},
         TContext
       > => {
       return useMutation(getTrailsGetPopularContributedTrailsMutationOptions(options), queryClient);
