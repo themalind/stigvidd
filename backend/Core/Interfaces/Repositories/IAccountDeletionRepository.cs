@@ -3,8 +3,6 @@
 
 namespace Core.Interfaces.Repositories;
 
-public sealed record DeletedAccount(int UserId, IReadOnlyCollection<string> FileUrls);
-
 public interface IAccountDeletionRepository
 {
     // keep-comment: the caller deletes FileUrls, and only after this has committed.

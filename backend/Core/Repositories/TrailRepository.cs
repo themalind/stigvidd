@@ -524,7 +524,7 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken)
     {
         try
         {
@@ -548,21 +548,21 @@ public class TrailRepository : ITrailRepository
                 })
                 .ToListAsync(ctoken);
 
-            IReadOnlyCollection<Services.ContributionRankingInput> inputs = rows
-                .Select(r => new Services.ContributionRankingInput(
+            IReadOnlyCollection<ContributionRankingInput> inputs = rows
+                .Select(r => new ContributionRankingInput(
                     r.Identifier,
-                    r.Reviews.Select(x => new Services.RankedReview(x.Rating, x.LastUpdatedAt)).ToList(),
+                    r.Reviews.Select(x => new RankedReview(x.Rating, x.LastUpdatedAt)).ToList(),
                     r.Likes,
                     r.StartLatitude,
                     r.StartLongitude))
                 .ToList();
 
-            return RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>.Success(inputs);
+            return RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>.Success(inputs);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "TrailRepository: GetContributionRankingInputsAsync -> Something went wrong when fetching contributed trails.");
-            return RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>.Error();
+            return RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>.Error();
         }
     }
 

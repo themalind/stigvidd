@@ -5,8 +5,6 @@ using Infrastructure.Data.Entities;
 
 namespace Core.Interfaces.Repositories;
 
-public record MappableUser(int Id, string NickName, string Email, int HikeCount);
-
 public interface IUserKeycloakMappingRepository
 {
     Task<RepositoryResult<IReadOnlyList<UserKeycloakMapping>>> ListMappingsAsync(CancellationToken ctoken);

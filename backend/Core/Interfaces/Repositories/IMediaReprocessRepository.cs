@@ -6,30 +6,6 @@ using Infrastructure.Enums;
 
 namespace Core.Interfaces.Repositories;
 
-public record MediaReprocessJobCounts(
-    string Identifier,
-    string OptionsJson,
-    int TotalCount,
-    int PendingCount,
-    int ProcessingCount,
-    int SucceededCount,
-    int FailedCount,
-    int CancelledCount,
-    DateTime CreatedAt,
-    DateTime LastUpdatedAt);
-
-public record MediaReprocessItemDetail(
-    string Identifier,
-    string MediaIdentifier,
-    string OwnerType,
-    MediaReprocessItemStatus Status,
-    string? LastError,
-    DateTime CreatedAt,
-    DateTime LastUpdatedAt);
-
-// keep-comment: rows share files (placeholders by the hundred), so a success reports how many rows moved and whether the old file may be deleted
-public record MediaReprocessSuccess(int RowsRepointed, bool OldFileStillReferenced);
-
 public interface IMediaReprocessRepository
 {
     Task<RepositoryResult<MediaReprocessJob>> CreateJobAsync(

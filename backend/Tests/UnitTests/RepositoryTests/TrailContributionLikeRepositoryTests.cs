@@ -47,12 +47,12 @@ public class TrailContributionLikeRepositoryTests : TestBase
         var twice = await repository.SetTrailLikeAsync(ContributedIdentifier, Utilities.Identifiers.User, true, ct);
 
         twice.IsSuccess.Should().BeTrue();
-        twice.Value.Should().Be(new Core.Interfaces.Repositories.TrailLikeState(1, true));
+        twice.Value.Should().Be(new TrailLikeState(1, true));
 
         var unliked = await repository.SetTrailLikeAsync(ContributedIdentifier, Utilities.Identifiers.User, false, ct);
 
         unliked.IsSuccess.Should().BeTrue();
-        unliked.Value.Should().Be(new Core.Interfaces.Repositories.TrailLikeState(0, false));
+        unliked.Value.Should().Be(new TrailLikeState(0, false));
     }
 
     [Fact]
