@@ -37,7 +37,7 @@ const fail = (path: string) =>
   });
 
 function card(label: string): HTMLElement {
-  const link = screen.getByText(label).closest("a, div.relative");
+  const link = screen.getByText(label).closest("a, div.border");
   if (!(link instanceof HTMLElement)) throw new Error(`expected a card around "${label}"`);
   return link;
 }
