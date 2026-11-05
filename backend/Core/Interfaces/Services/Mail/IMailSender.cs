@@ -12,15 +12,3 @@ public interface IMailSender
 {
     Task<MailSendResult> SendAsync(OutboxEmail email, CancellationToken ctoken);
 }
-
-/// <param name="Permanent">
-/// True when retrying cannot help — the server rejected the message itself (a 5xx reply: no
-/// such mailbox, sender refused). The dispatcher parks those immediately instead of spending
-/// five attempts to be told the same thing five times.
-/// </param>
-public record MailSendResult(bool Success, bool Permanent, string? Error)
-{
-    public static MailSendResult Ok() => new(true, false, null);
-    public static MailSendResult Transient(string error) => new(false, false, error);
-    public static MailSendResult PermanentFailure(string error) => new(false, true, error);
-}

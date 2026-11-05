@@ -4,22 +4,6 @@
 using Core.TrailImport.Matching;
 namespace Core.TrailImport.Apply;
 
-// What a three-way merge decided for one field.
-public enum MergeOutcome
-{
-    NoBaseline,  // no previous snapshot; nothing is written on an existing trail
-    Unchanged,   // ours and the source already agree
-    TookSource,  // we had not edited the field, so the source's new value wins
-    KeptOurs,    // the source did not change, so our edit stands
-    Conflict,    // both changed; ours stands and the difference is reported
-}
-
-public readonly record struct MergeResult<T>(MergeOutcome Outcome, T Value)
-{
-    // True when the caller has to write Value back. Every other outcome leaves the row alone.
-    public bool ShouldWrite => Outcome == MergeOutcome.TookSource;
-}
-
 /// <summary>
 /// Merges one source-owned field across three values: what the source said last time
 /// (the baseline, out of TrailSourceLink.SourceSnapshot), what the trail says now, and

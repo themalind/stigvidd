@@ -7,15 +7,6 @@ using WebDataContracts.ResponseModels.Trail;
 
 namespace StigviddLinks;
 
-public enum LookupStatus
-{
-    Found,
-    NotFound,
-    Unavailable,
-}
-
-public record Lookup<T>(LookupStatus Status, T? Value = null) where T : class;
-
 public class ApiClient(HttpClient http, ILogger<ApiClient> logger)
 {
     public Task<Lookup<TrailResponse>> GetTrailAsync(string identifier, CancellationToken ctoken)

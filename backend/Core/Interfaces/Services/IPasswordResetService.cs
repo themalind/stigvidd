@@ -3,30 +3,6 @@
 
 namespace Core.Interfaces.Services;
 
-/// <summary>What a password-reset attempt actually resolved to. All of these are ordinary
-/// outcomes, not failures — a failed <see cref="Result{T}"/> means the attempt could not be
-/// evaluated at all.</summary>
-public enum PasswordResetOutcome
-{
-    /// <summary>The link is good and the form may be shown. Nothing has been consumed.</summary>
-    Valid,
-
-    /// <summary>The password was set and the link is now spent.</summary>
-    Reset,
-
-    /// <summary>There was a matching link, but it is past its lifetime or already used.</summary>
-    Expired,
-
-    /// <summary>No such token.</summary>
-    Invalid,
-
-    /// <summary>
-    /// Keycloak refused the new password for violating the realm's password policy. The link
-    /// is deliberately NOT consumed — the user must be able to try a stronger one.
-    /// </summary>
-    WeakPassword,
-}
-
 // Issues and settles the "set a new password" challenge behind the forgot-password flow.
 public interface IPasswordResetService
 {

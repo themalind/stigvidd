@@ -15,10 +15,3 @@ public class OutgoingHikeShareResponse
     public DateTime LastSharedAt { get; set; }
     public List<OutgoingHikeShareRecipientResponse> Recipients { get; set; } = [];
 }
-
-public class OutgoingHikeShareRecipientResponse
-{
-    public required string Identifier { get; set; }
-    public required string NickName { get; set; }
-    public DateTime SharedAt { get; set; }
-}

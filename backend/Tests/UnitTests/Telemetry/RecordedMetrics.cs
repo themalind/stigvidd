@@ -6,12 +6,6 @@ using System.Diagnostics.Metrics;
 
 namespace UnitTests.Telemetry;
 
-/// <summary>One measurement as it reached the listener.</summary>
-internal sealed record RecordedMeasurement(
-    string InstrumentName,
-    double Value,
-    IReadOnlyDictionary<string, string?> Tags);
-
 /// <summary>
 /// Captures what a <see cref="StigviddMetrics"/> actually recorded.
 ///
