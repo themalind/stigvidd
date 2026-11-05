@@ -78,6 +78,18 @@ public class TrailContributionLikeRepositoryTests : TestBase
     }
 
     [Fact]
+    public async Task RankingInputs_CarryTheTrailsStartPoint()
+    {
+        var result = await Build().GetContributionRankingInputsAsync(TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        var input = result.Value.Single();
+        input.StartLatitude.Should().BeApproximately(57.72, 1e-9);
+        input.StartLongitude.Should().BeApproximately(12.94, 1e-9);
+    }
+
+    [Fact]
     public async Task PopularCuratedTrails_LeaveOutContributedOnes()
     {
         var result = await Build().GetPopularTrailOverviewsAsync(null, null, t => t.Identifier, TestContext.Current.CancellationToken);

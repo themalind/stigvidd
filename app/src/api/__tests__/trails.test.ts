@@ -26,7 +26,7 @@ class FormDataStub {
 (global as unknown as { FormData: unknown }).FormData = FormDataStub;
 
 import { getUserToken } from "../users";
-import { addTrail } from "../trails";
+import { addTrail, getPopularContributedTrails } from "../trails";
 import { CreateTrailRequest } from "@/data/types";
 
 const mockGetUserToken = getUserToken as jest.Mock;
@@ -81,5 +81,26 @@ describe("addTrail", () => {
   it("throws when there is no auth token", async () => {
     mockGetUserToken.mockResolvedValue(null);
     await expect(addTrail(baseRequest)).rejects.toThrow("User not authenticated");
+  });
+});
+
+describe("getPopularContributedTrails", () => {
+  function mockJson() {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] } as unknown as Response);
+  }
+
+  it("sends the position as query parameters", async () => {
+    mockJson();
+    await getPopularContributedTrails(57.71, 11.97);
+    expect(fetch).toHaveBeenCalledWith(
+      "http://test/api/v1/trails/popular-contributions?latitude=57.71&longitude=11.97",
+      expect.anything(),
+    );
+  });
+
+  it("asks without parameters when the position is unknown", async () => {
+    mockJson();
+    await getPopularContributedTrails();
+    expect(fetch).toHaveBeenCalledWith("http://test/api/v1/trails/popular-contributions", expect.anything());
   });
 });

@@ -275,10 +275,11 @@ public class TrailService : ITrailService
         return Result.Ok<IReadOnlyCollection<TrailCardResponse>>(result.Value.Select(ToCard).ToList());
     }
 
-    public async Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrailsAsync(CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrailsAsync(
+        double? userLatitude, double? userLongitude, CancellationToken ctoken)
     {
         // keep-comment: the ranking reads every review and like of every contributed trail, so only the order is cached, not the cards
-        if (!_cache.TryGetValue(PopularContributionsCacheKey, out IReadOnlyList<string>? ranked) || ranked is null)
+        if (!_cache.TryGetValue(PopularContributionsCacheKey, out IReadOnlyList<RankedContribution>? order) || order is null)
         {
             var inputs = await _trailRepository.GetContributionRankingInputsAsync(ctoken);
 
@@ -286,9 +287,11 @@ public class TrailService : ITrailService
                 return Result.Fail<IReadOnlyCollection<TrailCardResponse>>(
                     new Message(500, "An error occurred while fetching popular contributed trails."));
 
-            ranked = _ranking.Rank(inputs.Value, DateTime.UtcNow);
-            _cache.Set(PopularContributionsCacheKey, ranked, _ranking.CacheDuration);
+            order = _ranking.Rank(inputs.Value, DateTime.UtcNow);
+            _cache.Set(PopularContributionsCacheKey, order, _ranking.CacheDuration);
         }
+
+        var ranked = _ranking.Pick(order, userLatitude, userLongitude);
 
         if (ranked.Count == 0)
             return Result.Ok<IReadOnlyCollection<TrailCardResponse>>([]);

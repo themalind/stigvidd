@@ -1,13 +1,22 @@
 ﻿// SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Spatial;
 using Microsoft.Extensions.Configuration;
+using NetTopologySuite.Geometries;
 
 namespace Core.Services;
 
 public record RankedReview(decimal Rating, DateTime At);
 
-public record ContributionRankingInput(string Identifier, IReadOnlyCollection<RankedReview> Reviews, IReadOnlyCollection<DateTime> LikedAt);
+public record ContributionRankingInput(
+    string Identifier,
+    IReadOnlyCollection<RankedReview> Reviews,
+    IReadOnlyCollection<DateTime> LikedAt,
+    double StartLatitude,
+    double StartLongitude);
+
+public record RankedContribution(string Identifier, double StartLatitude, double StartLongitude);
 
 public class TrailContributionRanking
 {
@@ -15,6 +24,7 @@ public class TrailContributionRanking
     public double Z { get; }
     public double LikeBonusWeight { get; }
     public int Take { get; }
+    public double NearbyRadiusKm { get; }
     public TimeSpan CacheDuration { get; }
 
     public TrailContributionRanking(IConfiguration configuration)
@@ -24,17 +34,42 @@ public class TrailContributionRanking
         Z = section.GetValue("Z", 1.96);
         LikeBonusWeight = section.GetValue("LikeBonusWeight", 0.05);
         Take = section.GetValue("Take", 10);
+        NearbyRadiusKm = section.GetValue("NearbyRadiusKm", 50.0);
         CacheDuration = TimeSpan.FromMinutes(section.GetValue("CacheMinutes", 10.0));
     }
 
-    public IReadOnlyList<string> Rank(IEnumerable<ContributionRankingInput> trails, DateTime now) =>
-        trails
-            .Select(t => (t.Identifier, Score: Score(t, now)))
+    public IReadOnlyList<RankedContribution> Rank(IEnumerable<ContributionRankingInput> trails, DateTime now)
+    {
+        return trails
+            .Select(t => (Trail: t, Score: Score(t, now)))
             .OrderByDescending(x => x.Score)
-            .ThenBy(x => x.Identifier, StringComparer.Ordinal)
-            .Take(Take)
-            .Select(x => x.Identifier)
+            .ThenBy(x => x.Trail.Identifier, StringComparer.Ordinal)
+            .Select(x => new RankedContribution(x.Trail.Identifier, x.Trail.StartLatitude, x.Trail.StartLongitude))
             .ToList();
+    }
+
+    // keep-comment: without a position every trail qualifies; with one, only those starting within NearbyRadiusKm
+    public IReadOnlyList<string> Pick(IReadOnlyList<RankedContribution> ranked, double? userLatitude, double? userLongitude)
+    {
+        IEnumerable<RankedContribution> candidates = ranked;
+
+        if (userLatitude.HasValue && userLongitude.HasValue)
+        {
+            var latitude = userLatitude.Value;
+            var longitude = userLongitude.Value;
+            var projection = LocalMetricProjection.CentredOn(new Coordinate(longitude, latitude));
+            var radiusMetres = NearbyRadiusKm * 1000.0;
+
+            candidates = ranked.Where(c =>
+            {
+                var easting = (c.StartLongitude - longitude) * projection.MetresPerDegreeLongitude;
+                var northing = (c.StartLatitude - latitude) * projection.MetresPerDegreeLatitude;
+                return Math.Sqrt((easting * easting) + (northing * northing)) <= radiusMetres;
+            });
+        }
+
+        return candidates.Take(Take).Select(c => c.Identifier).ToList();
+    }
 
     public double Score(ContributionRankingInput trail, DateTime now)
     {
