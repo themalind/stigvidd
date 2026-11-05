@@ -7,13 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Core.Services.DataTransfer;
 
-public enum ColumnTreatment
-{
-    Kept,
-    Replaced,
-    Cleared,
-}
-
 // Runs against a scratch copy of the database, never the live one. keep-comment: every statement here is destructive
 public static class DataAnonymizer
 {

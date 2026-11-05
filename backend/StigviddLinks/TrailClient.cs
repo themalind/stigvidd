@@ -6,15 +6,6 @@ using WebDataContracts.ResponseModels.Trail;
 
 namespace StigviddLinks;
 
-public enum TrailLookupStatus
-{
-    Found,
-    NotFound,
-    Unavailable,
-}
-
-public record TrailLookup(TrailLookupStatus Status, TrailResponse? Trail = null);
-
 public class TrailClient(HttpClient http, ILogger<TrailClient> logger)
 {
     public async Task<TrailLookup> GetTrailAsync(string identifier, CancellationToken ctoken)

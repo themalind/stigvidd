@@ -7,24 +7,6 @@ using NetTopologySuite.Geometries;
 
 namespace Core.TrailImport.Matching;
 
-// One trail to weigh a source feature against. Fingerprint is precomputed by the caller,
-// which loads every trail once per import rather than per feature.
-public sealed record TrailCandidate(int TrailId, string Fingerprint, LineString Geometry);
-
-public sealed record TrailMatch(
-    int? TrailId,
-    // The closest trail the comparison looked at, set even when TrailId is null. Triage
-    // only: it says what the coverage numbers were measured against, never a suggestion.
-    int? NearestTrailId,
-    MatchConfidence Confidence,
-    double CoverageForward,
-    double CoverageBackward,
-    double? HausdorffMetres,
-    string Reason,
-    // The fingerprint the feature was matched on. Carried out so the proposal stores the
-    // same value the matching used, instead of hashing the line a second time.
-    string FeatureFingerprint);
-
 // Decides which trail a source feature is, and how sure that is. Confidence drives what
 // happens next: Certain and High update by themselves, anything lower waits for a human.
 public static class TrailMatcher

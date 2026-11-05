@@ -35,27 +35,4 @@ public class Result
     }
 }
 
-public class Result<T> : Result
-{
-    public T? Value { get; set; }
-
-    protected internal Result(T? value, bool success, Message? ResultMessage)
-        : base(success, ResultMessage)
-    {
-        Value = value;
-    }
-}
-
-public class Message
-{
-    public int StatusCode { get; set; }
-    public string? ResultMessage { get; set; }
-
-    public Message(int statusCode, string? resultMessage = default)
-    {
-        StatusCode = statusCode;
-        ResultMessage = resultMessage;
-    }
-}
-
 // https://achraf-chennan.medium.com/using-the-result-class-in-c-519da90351f0

@@ -29,18 +29,3 @@ public sealed record ProposalSummary(
     string? Note,
     string? DecidedName,
     decimal? DecidedLengthKm);
-
-// How a session's features are spread across confidences and decisions. Drives the
-// summary row above the review list and answers whether the session is ready to apply.
-public sealed record ProposalCounts(
-    int Total,
-    int Certain,
-    int High,
-    int Medium,
-    int Unmatched,
-    int Pending,
-    int Accepted,
-    int Relinked,
-    int CreateNew,
-    int Excluded,
-    int Skipped);

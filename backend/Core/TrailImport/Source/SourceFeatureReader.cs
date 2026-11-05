@@ -8,9 +8,6 @@ using System.Text.Json;
 
 namespace Core.TrailImport.Source;
 
-// One feature as the source published it, before anything has been decided about it.
-public sealed record SourceFeature(string ExternalId, string Name, string Properties, LineString Geometry);
-
 // Reads the GeoJSON export. Features without usable geometry are skipped rather than
 // failing the run: one broken line in the file should not stop the other two hundred.
 public static class SourceFeatureReader
