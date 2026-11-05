@@ -18,6 +18,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { EventSummary } from "@/data/types";
 import { useEventMutations } from "@/hooks/events/useEventMutations";
 import { useEventFeed, useMyEvents } from "@/hooks/events/useEventQueries";
+import { useEventSearch } from "@/hooks/events/useEventSearch";
+import FilterIconButton from "@/components/filter/filter-icon-button";
 import { useReturnHereAfterLogin } from "@/hooks/useReturnHereAfterLogin";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
@@ -27,6 +29,8 @@ import { useTranslation } from "react-i18next";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import EventCard from "./event-card";
+import EventFilterSheet from "./event-filter-sheet";
+import EventSearchBar from "./event-search-bar";
 import EventInvitationRow from "./event-invitation-row";
 import { EVENTS_TAB_ROUTES, openEvent as openEventIn } from "./event-routes";
 
@@ -44,9 +48,12 @@ export default function EventsListScreen() {
   const returnHere = useReturnHereAfterLogin();
   const invitations = useAtomValue(incomingEventInvitationsAtom);
   const tab: EventsTab = isAuthenticated ? chosenTab : "explore";
-  const feed = useEventFeed();
-  const mine = useMyEvents(false);
-  const past = useMyEvents(true, tab === "past");
+  const isPast = tab === "past";
+  const search = useEventSearch(isPast);
+  const [showFilters, setShowFilters] = useState(false);
+  const feed = useEventFeed(search.upcoming);
+  const mine = useMyEvents(false, true, search.upcoming);
+  const past = useMyEvents(true, isPast, search.past);
   const { acceptInvitationMutation, declineInvitationMutation } = useEventMutations();
   const answering = acceptInvitationMutation.isPending || declineInvitationMutation.isPending;
   const invitationCount = invitations.data?.length ?? 0;
@@ -69,12 +76,11 @@ export default function EventsListScreen() {
     if (isAuthenticated) {
       void invitations.refetch();
       void mine.refetch();
-      if (tab === "past") void past.refetch();
+      if (isPast) void past.refetch();
     }
     void feed.refetch();
   };
 
-  const isPast = tab === "past";
   const renderItem = useCallback(
     ({ item }: { item: EventSummary }) => <EventCard event={item} onPress={openEvent} isPast={isPast} />,
     [isPast],
@@ -106,6 +112,14 @@ export default function EventsListScreen() {
     if (active.isError && !active.data) {
       return <InlineError message={t("events.loadError")} onRetry={() => void active.refetch()} />;
     }
+    if (search.isActive) {
+      return (
+        <View testID="events-no-matches" style={s.noMatches}>
+          <Text style={[s.noMatchesTitle, { color: theme.colors.onBackground }]}>{t("events.search.noMatches")}</Text>
+          <Text style={[s.empty, { color: theme.colors.onSurfaceVariant }]}>{t("events.search.noMatchesHint")}</Text>
+        </View>
+      );
+    }
     return <Text style={[s.empty, { color: theme.colors.onSurfaceVariant }]}>{emptyText}</Text>;
   };
 
@@ -115,6 +129,14 @@ export default function EventsListScreen() {
         <ScreenTitleBar
           title={t("events.title")}
           leading={<MaterialCommunityIcons name="calendar-month-outline" size={25} color={theme.colors.onBackground} />}
+          trailing={
+            <FilterIconButton
+              testID="events-filter-button"
+              label={t("events.search.filters")}
+              activeCount={search.activeCount}
+              onPress={() => setShowFilters(true)}
+            />
+          }
           action={{
             testID: "events-create",
             label: t("events.form.create"),
@@ -142,6 +164,7 @@ export default function EventsListScreen() {
             style={s.tabs}
           />
         ) : null}
+        <EventSearchBar search={search} showWhen={!isPast} />
       </View>
       <FlatList
         ref={listRef}
@@ -153,13 +176,25 @@ export default function EventsListScreen() {
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
         ListFooterComponent={active.isFetchingNextPage ? <LoadingIndicator /> : null}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         onEndReachedThreshold={0.5}
         onEndReached={() => {
           if (active.hasNextPage && !active.isFetchingNextPage) void active.fetchNextPage();
         }}
         refreshControl={
-          <RefreshControl refreshing={active.isRefetching && !active.isFetchingNextPage} onRefresh={refresh} />
+          // A changed search refetches behind the previous list, which is not a pull to refresh. keep-comment: why placeholder data is excluded
+          <RefreshControl
+            refreshing={active.isRefetching && !active.isFetchingNextPage && !active.isPlaceholderData}
+            onRefresh={refresh}
+          />
         }
+      />
+      <EventFilterSheet
+        visible={showFilters}
+        onClose={() => setShowFilters(false)}
+        search={search}
+        showWhen={!isPast}
       />
       <NotAuthenticatedDialog
         visible={showAuthDialog}
@@ -206,5 +241,13 @@ const s = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     paddingVertical: 24,
+  },
+  noMatches: {
+    alignItems: "center",
+    paddingTop: 24,
+  },
+  noMatchesTitle: {
+    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
   },
 });

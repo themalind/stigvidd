@@ -9,6 +9,7 @@ import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import ErrorView from "@/components/error-view";
 import LoadingIndicator from "@/components/loading-indicator";
 import ScreenTitleBar from "@/components/screen-title-bar";
+import SearchField from "@/components/search-field";
 import SegmentedControl from "@/components/segmented-control";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
 import TrailItem from "@/components/trail/trail-list/trail-item";
@@ -22,7 +23,7 @@ import { router } from "expo-router";
 import { useAtom } from "jotai";
 import React, { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
-import { Text, TextInput, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
 export default function TrailsScreen() {
@@ -124,23 +125,11 @@ export default function TrailsScreen() {
             style={s.sourceToggle}
           />
         )}
-        <TextInput
-          mode="outlined"
+        <SearchField
           placeholder={t("trailList.search")}
           value={searchQuery}
           onChangeText={setSearchQuery}
-          left={<TextInput.Icon icon="magnify" />}
-          right={
-            searchQuery ? (
-              <TextInput.Icon testID="search-close-icon" icon="close" onPress={() => setSearchQuery("")} />
-            ) : undefined
-          }
-          style={[s.searchInput, { backgroundColor: theme.colors.surface }]}
-          theme={{
-            colors: {
-              primary: theme.colors.outlineVariant,
-            },
-          }}
+          style={s.searchInput}
         />
         <View style={s.filterContainer}>
           <Text style={s.resultText}>{t("trailList.showing", { count: totalCount, shown: filteredCount })}</Text>

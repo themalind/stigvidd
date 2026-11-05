@@ -10,21 +10,28 @@ import { getEvent, getEvents, getMyEvents } from "@/api/events";
 import { retryUnlessAuthFailure } from "@/api/unauthorized";
 import { userAtom } from "@/atoms/auth-atoms";
 import { EVENTS_STALE_TIME } from "@/constants/cache";
-import { EventPage } from "@/data/types";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { EventPage, EventSearchParams } from "@/data/types";
+import { Query, QueryKey, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 
 function nextCursor(page: EventPage): string | undefined {
   return page.nextCursor ?? undefined;
 }
 
-export function useEventFeed() {
+// Keeps the last list on screen while a changed search loads, but never across a change of user. keep-comment: index 2 of both keys is the user id
+function keepWhileSearching(userId: string | undefined) {
+  return <T>(previous: T | undefined, previousQuery: Query<T, Error, T, QueryKey> | undefined): T | undefined =>
+    previousQuery?.queryKey[2] === userId ? previous : undefined;
+}
+
+export function useEventFeed(search: EventSearchParams = {}) {
   const user = useAtomValue(userAtom);
   return useInfiniteQuery({
-    queryKey: ["events", "feed", user?.id],
-    queryFn: ({ pageParam }) => getEvents({ cursor: pageParam, excludeMine: true }),
+    queryKey: ["events", "feed", user?.id, search],
+    queryFn: ({ pageParam }) => getEvents({ ...search, cursor: pageParam, excludeMine: true }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: nextCursor,
+    placeholderData: keepWhileSearching(user?.id),
     staleTime: EVENTS_STALE_TIME,
   });
 }
@@ -41,13 +48,14 @@ export function useOrganizerEvents(organizerIdentifier: string | undefined) {
   });
 }
 
-export function useMyEvents(past: boolean, enabled = true) {
+export function useMyEvents(past: boolean, enabled = true, search: EventSearchParams = {}) {
   const user = useAtomValue(userAtom);
   return useInfiniteQuery({
-    queryKey: ["events", "mine", user?.id, past],
-    queryFn: ({ pageParam }) => getMyEvents({ past, cursor: pageParam }),
+    queryKey: ["events", "mine", user?.id, past, search],
+    queryFn: ({ pageParam }) => getMyEvents({ ...search, past, cursor: pageParam }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: nextCursor,
+    placeholderData: keepWhileSearching(user?.id),
     enabled: enabled && !!user?.id,
     staleTime: EVENTS_STALE_TIME,
   });

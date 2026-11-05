@@ -11,7 +11,13 @@ import { EventSummary } from "@/data/types";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+
+// Explicit, so the component and requireMock share one instance of the root manual mock.
+jest.mock("react-native-paper-dates");
+const { mockPickers } = jest.requireMock<{
+  mockPickers: { date: { onConfirm: (range: { startDate?: Date; endDate?: Date }) => void } | null };
+}>("react-native-paper-dates");
 
 const mockGetEvents = jest.fn();
 const mockGetMine = jest.fn();
@@ -37,6 +43,12 @@ jest.mock("expo-router", () => ({
 }));
 
 jest.mock("@/utils/navigation", () => ({ guardedNavigate: (fn: () => void) => fn() }));
+
+// The pause before a search is sent has its own test; here the text goes out at once. keep-comment: why the debounce is identity
+jest.mock("@/hooks/useDebouncedValue", () => ({ useDebouncedValue: <T,>(value: T) => value }));
+
+let mockLocation: { latitude: number; longitude: number } | null = null;
+jest.mock("@/hooks/useUserLocation", () => ({ useRealUserLocation: () => mockLocation }));
 
 let mockSignedIn = true;
 jest.mock("@/components/auth/auth-provider", () => ({
@@ -79,6 +91,7 @@ async function showSignedOut() {
 beforeEach(() => {
   jest.clearAllMocks();
   mockSignedIn = true;
+  mockLocation = null;
   mockGetInvitations.mockResolvedValue([
     {
       event: summary("inv", "Hemlig tur", { visibility: "Private" }),
@@ -250,6 +263,148 @@ describe("EventsListScreen", () => {
 
       expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
       expect(store.get(loginReturnPathAtom)).toBe("/events");
+    });
+  });
+
+  describe("search and filters", () => {
+    const lastFeedQuery = () => mockGetEvents.mock.lastCall?.[0];
+
+    async function settleOn(check: () => boolean) {
+      await flushUntil(check);
+      expect(check()).toBe(true);
+    }
+
+    it("sends the typed text to the server, trimmed", async () => {
+      await show();
+
+      fireEvent.changeText(screen.getByTestId("events-search"), "  kype ");
+
+      await settleOn(() => lastFeedQuery()?.search === "kype");
+      expect(lastFeedQuery()).toEqual(expect.objectContaining({ excludeMine: true, search: "kype" }));
+    });
+
+    it("sends a weekend window from the quick filter and counts it on the filter button", async () => {
+      await show();
+
+      fireEvent.press(screen.getByTestId("events-chip-weekend"));
+
+      await settleOn(() => lastFeedQuery()?.from !== undefined);
+      const { from, to } = lastFeedQuery();
+      expect(new Date(to).getTime() - new Date(from).getTime()).toBeGreaterThanOrEqual(23 * 3600 * 1000);
+      expect(new Date(from).getDay()).toBe(new Date().getDay() === 0 ? 0 : 6);
+      expect(screen.getByTestId("events-filter-button-count")).toHaveTextContent("1");
+      expect(screen.getByTestId("events-chip-weekend")).toBeSelected();
+    });
+
+    it("offers near me only with a position, and then sorts by distance", async () => {
+      await show();
+      expect(screen.queryByTestId("events-chip-near-me")).toBeNull();
+
+      screen.unmount();
+      mockLocation = { latitude: 57.72106, longitude: 12.93987 };
+      await show();
+      fireEvent.press(screen.getByTestId("events-chip-near-me"));
+
+      await settleOn(() => lastFeedQuery()?.sort === "Distance");
+      expect(lastFeedQuery()).toEqual(
+        expect.objectContaining({ lat: 57.721, lon: 12.94, radiusKm: 25, sort: "Distance" }),
+      );
+    });
+
+    it("says nothing matches, and clearing brings the plain feed back", async () => {
+      mockGetEvents.mockImplementation((query: { search?: string }) =>
+        Promise.resolve({ items: query.search ? [] : [summary("open", "Fikapromenad")], nextCursor: null }),
+      );
+      await show();
+
+      fireEvent.changeText(screen.getByTestId("events-search"), "kajak");
+      await settleOn(() => screen.queryByTestId("events-no-matches") !== null);
+      expect(screen.getByText("Inga evenemang matchar")).toBeTruthy();
+
+      fireEvent.press(screen.getByTestId("events-clear-filters"));
+      await settleOn(() => screen.queryByText("Fikapromenad") !== null);
+      expect(lastFeedQuery()?.search).toBeUndefined();
+      expect(screen.queryByTestId("events-clear-filters")).toBeNull();
+    });
+
+    it("searches past events too, without the date filters", async () => {
+      mockGetMine.mockImplementation((query: { past?: boolean }) =>
+        Promise.resolve({ items: query.past ? [summary("old", "Gammal tur")] : [], nextCursor: null }),
+      );
+      await show();
+      fireEvent.press(screen.getByTestId("events-tabs-past"));
+      await settleOn(() => screen.queryByText("Gammal tur") !== null);
+
+      expect(screen.queryByTestId("events-chip-today")).toBeNull();
+      fireEvent.changeText(screen.getByTestId("events-search"), "gammal");
+
+      await settleOn(() => mockGetMine.mock.lastCall?.[0]?.search === "gammal");
+      expect(mockGetMine.mock.lastCall?.[0]).toEqual(expect.objectContaining({ past: true, search: "gammal" }));
+      expect(mockGetMine.mock.lastCall?.[0]?.from).toBeUndefined();
+    });
+
+    it("does not count a date choice on the past tab, where it does not apply", async () => {
+      await show();
+      fireEvent.press(screen.getByTestId("events-chip-weekend"));
+      await settleOn(() => screen.queryByTestId("events-filter-button-count") !== null);
+
+      fireEvent.press(screen.getByTestId("events-tabs-past"));
+      await settleOn(() => mockGetMine.mock.lastCall?.[0]?.past === true);
+
+      expect(screen.queryByTestId("events-filter-button-count")).toBeNull();
+      expect(screen.queryByTestId("events-clear-filters")).toBeNull();
+      expect(screen.queryByTestId("events-no-matches")).toBeNull();
+    });
+
+    it("clears the filters from the sheet but keeps the typed text", async () => {
+      await show();
+      fireEvent.press(screen.getByTestId("events-chip-spots"));
+      await settleOn(() => lastFeedQuery()?.onlyWithSpots === true);
+      fireEvent.changeText(screen.getByTestId("events-search"), "kype");
+      await settleOn(() => lastFeedQuery()?.search === "kype");
+
+      fireEvent.press(screen.getByTestId("events-filter-button"));
+      fireEvent.press(screen.getByTestId("filter-sheet-clear"));
+
+      await settleOn(() => lastFeedQuery()?.onlyWithSpots === undefined);
+      expect(lastFeedQuery()?.search).toBe("kype");
+      expect(screen.getByTestId("events-search")).toHaveProp("value", "kype");
+    });
+
+    it("applies the length, route and spots choices from the filter sheet", async () => {
+      await show();
+      fireEvent.press(screen.getByTestId("events-filter-button"));
+
+      fireEvent.press(screen.getByTestId("event-length-mid"));
+      fireEvent.press(screen.getByTestId("event-route-own"));
+      fireEvent(screen.getByTestId("event-filter-spots"), "valueChange", true);
+
+      await settleOn(() => lastFeedQuery()?.onlyWithSpots === true);
+      expect(lastFeedQuery()).toEqual(
+        expect.objectContaining({ minLengthKm: 5, maxLengthKm: 15, routeKind: "Own", onlyWithSpots: true }),
+      );
+      expect(screen.getByTestId("events-filter-button-count")).toHaveTextContent("3");
+    });
+
+    it("sends a picked date range with its last day included", async () => {
+      await show();
+      fireEvent.press(screen.getByTestId("events-filter-button"));
+      fireEvent.press(screen.getByTestId("event-when-custom"));
+
+      const picker = mockPickers.date;
+      if (!picker) throw new Error("expected the range picker to open");
+      await act(async () => {
+        picker.onConfirm({ startDate: new Date(2030, 4, 10, 12), endDate: new Date(2030, 4, 12) });
+      });
+
+      await settleOn(() => lastFeedQuery()?.from !== undefined);
+      expect(lastFeedQuery()).toEqual(
+        expect.objectContaining({
+          from: new Date(2030, 4, 10).toISOString(),
+          to: new Date(2030, 4, 13).toISOString(),
+        }),
+      );
+      expect(screen.getByText(/10 maj – 12 maj/)).toBeTruthy();
     });
   });
 });

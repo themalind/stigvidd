@@ -89,18 +89,32 @@ export interface EventPage {
   nextCursor?: string | null;
 }
 
-export interface EventFeedQuery {
-  trail?: string;
-  organizer?: string;
+export type EventSort = "Date" | "Distance";
+
+// Shared by the feed and the viewer's own lists; from/to are ISO strings with Z, to exclusive. keep-comment: the server's bounds
+export interface EventSearchParams {
+  search?: string;
+  from?: string;
+  to?: string;
   lat?: number;
   lon?: number;
   radiusKm?: number;
+  onlyWithSpots?: boolean;
+  minLengthKm?: number;
+  maxLengthKm?: number;
+  routeKind?: EventRouteKind;
+  sort?: EventSort;
+}
+
+export interface EventFeedQuery extends EventSearchParams {
+  trail?: string;
+  organizer?: string;
   limit?: number;
   cursor?: string;
   excludeMine?: boolean;
 }
 
-export interface MyEventsQuery {
+export interface MyEventsQuery extends EventSearchParams {
   past?: boolean;
   limit?: number;
   cursor?: string;

@@ -11,10 +11,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Icon, IconButton, Text, useTheme } from "react-native-paper";
-import { DatePickerModal, en, registerTranslation, sv, TimePickerModal } from "react-native-paper-dates";
-
-registerTranslation("sv", sv);
-registerTranslation("en", en);
+import { DatePickerModal, TimePickerModal } from "react-native-paper-dates";
+import { paperDatesLocale } from "@/utils/paper-dates-locale";
 
 type Props = {
   label: string;
@@ -52,7 +50,7 @@ export default function DateTimeField({
 }: Props) {
   const theme = useTheme();
   const { t, i18n } = useTranslation();
-  const locale = i18n.language.startsWith("sv") ? "sv" : "en";
+  const locale = paperDatesLocale(i18n.language);
   const [step, setStep] = useState<"date" | "time" | null>(null);
   const [day, setDay] = useState<Date | null>(null);
 

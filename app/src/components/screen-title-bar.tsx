@@ -21,11 +21,13 @@ type Action = {
 type Props = {
   title: string;
   leading?: ReactNode;
+  // Sits before the action button, such as a filter icon. keep-comment: where trailing goes
+  trailing?: ReactNode;
   action?: Action;
   style?: StyleProp<ViewStyle>;
 };
 
-export default function ScreenTitleBar({ title, leading, action, style }: Props) {
+export default function ScreenTitleBar({ title, leading, trailing, action, style }: Props) {
   const theme = useTheme();
 
   return (
@@ -34,14 +36,17 @@ export default function ScreenTitleBar({ title, leading, action, style }: Props)
         {leading}
         <Text style={[s.title, { color: theme.colors.onBackground }]}>{title}</Text>
       </View>
-      {action ? (
-        <Pressable testID={action.testID} accessibilityRole="button" onPress={action.onPress}>
-          <View style={[s.button, { backgroundColor: theme.colors.primary }]}>
-            <MaterialIcons name={action.icon} size={24} color={theme.colors.onPrimary} />
-            <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>{action.label}</Text>
-          </View>
-        </Pressable>
-      ) : null}
+      <View style={s.end}>
+        {trailing}
+        {action ? (
+          <Pressable testID={action.testID} accessibilityRole="button" onPress={action.onPress}>
+            <View style={[s.button, { backgroundColor: theme.colors.primary }]}>
+              <MaterialIcons name={action.icon} size={24} color={theme.colors.onPrimary} />
+              <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>{action.label}</Text>
+            </View>
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -56,6 +61,11 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+  },
+  end: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 18,
   },
   title: {
     fontFamily: "Inter_600SemiBold",

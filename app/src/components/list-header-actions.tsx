@@ -5,13 +5,15 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import FilterIconButton from "@/components/filter/filter-icon-button";
+import SearchField from "@/components/search-field";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Keyboard, Platform, Pressable, StyleSheet, View } from "react-native";
-import { Divider, Portal, Text, TextInput, useTheme } from "react-native-paper";
+import { Divider, Portal, Text, useTheme } from "react-native-paper";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 
 export interface SortField {
@@ -121,14 +123,7 @@ export default function ListHeaderAction({
           {/* collapsable={false}: Android may drop a plain wrapper View from the
               native tree, and measureInWindow needs it to exist. */}
           <View ref={anchorRef} collapsable={false}>
-            <Pressable onPress={toggleSort} hitSlop={8}>
-              <MaterialIcons name="filter-list" size={24} color={theme.colors.onBackground} />
-              {activeFilterCount > 0 && (
-                <View style={[s.badge, { backgroundColor: theme.colors.primary }]}>
-                  <Text style={[s.badgeText, { color: theme.colors.onPrimary }]}>{activeFilterCount}</Text>
-                </View>
-              )}
-            </Pressable>
+            <FilterIconButton activeCount={activeFilterCount} label={t("filter.label")} onPress={toggleSort} />
           </View>
         </View>
       </View>
@@ -136,8 +131,7 @@ export default function ListHeaderAction({
       {/* Mounted on demand so autoFocus fires; styled to match the trails tab's search. */}
       {searchOpen && (
         <Animated.View entering={FadeInUp.duration(150)} exiting={FadeOutUp.duration(120)}>
-          <TextInput
-            mode="outlined"
+          <SearchField
             dense
             autoFocus
             placeholder={searchPlaceholder}
@@ -147,18 +141,11 @@ export default function ListHeaderAction({
             // outside blurs the field, which is what closes it; the query survives
             // and the tinted search icon plus the counter row keep it visible.
             onBlur={() => setSearchOpen(false)}
-            left={<TextInput.Icon icon="magnify" />}
-            right={
-              <TextInput.Icon
-                icon="close"
-                onPress={() => {
-                  onSearchChange("");
-                  setSearchOpen(false);
-                }}
-              />
-            }
-            style={[s.search, { backgroundColor: theme.colors.surface }]}
-            theme={{ colors: { primary: theme.colors.outlineVariant } }}
+            onClear={() => {
+              onSearchChange("");
+              setSearchOpen(false);
+            }}
+            style={s.search}
           />
         </Animated.View>
       )}
@@ -251,21 +238,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 16,
     marginLeft: "auto",
-  },
-  badge: {
-    position: "absolute",
-    top: -4,
-    right: -6,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  badgeText: {
-    fontSize: 10,
-    fontFamily: "Inter_600SemiBold",
   },
   search: {
     marginHorizontal: SCREEN_PADDING,
