@@ -12,20 +12,12 @@ export function display(value: number | undefined | null): string {
   return value.toLocaleString("sv-SE");
 }
 
-export type Tone = "emerald" | "sky" | "violet" | "amber";
-
-export const TONES: Record<Tone, { chip: string; bar: string }> = {
-  emerald: {
-    chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-    bar: "bg-emerald-500",
-  },
-  sky: { chip: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300", bar: "bg-sky-500" },
-  violet: {
-    chip: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
-    bar: "bg-violet-500",
-  },
-  amber: { chip: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300", bar: "bg-amber-500" },
-};
+// keep-comment: plain figures take the theme's colour; amber only marks what wants a human, green only all clear
+export const CHIPS = {
+  plain: "bg-accent/60 text-primary",
+  attention: "bg-amber-500/15 text-amber-800 dark:text-amber-200",
+  clear: "bg-emerald-600/10 text-emerald-800 dark:text-emerald-200",
+} as const;
 
 interface AttentionCardProps {
   label: string;
@@ -43,13 +35,13 @@ export function AttentionCard({ label, value, to, icon: Icon }: AttentionCardPro
       to={to}
       className={cn(
         "group flex items-center gap-4 rounded-xs border bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-md",
-        pending && "border-amber-300 bg-amber-50/60 dark:border-amber-800 dark:bg-amber-950/30",
+        pending && "border-amber-500/40",
       )}
     >
       <span
         className={cn(
           "flex size-11 shrink-0 items-center justify-center rounded-xs",
-          pending ? TONES.amber.chip : clear ? TONES.emerald.chip : "bg-muted text-muted-foreground",
+          pending ? CHIPS.attention : clear ? CHIPS.clear : "bg-muted text-muted-foreground",
         )}
       >
         {clear ? <CheckCircle2 className="size-5" /> : <Icon className="size-5" />}
@@ -61,7 +53,7 @@ export function AttentionCard({ label, value, to, icon: Icon }: AttentionCardPro
           title={value === null ? "Could not be loaded" : undefined}
         >
           {clear ? (
-            <span className="text-base font-medium text-emerald-700 dark:text-emerald-300">All clear</span>
+            <span className="text-base font-medium text-emerald-800 dark:text-emerald-200">All clear</span>
           ) : (
             display(value)
           )}
@@ -79,15 +71,14 @@ interface MetricCardProps {
   detail?: string;
   to?: string;
   icon: LucideIcon;
-  tone: Tone;
 }
 
-export function MetricCard({ label, value, delta, detail, to, icon: Icon, tone }: MetricCardProps) {
+export function MetricCard({ label, value, delta, detail, to, icon: Icon }: MetricCardProps) {
   const body = (
     <>
       <div className="flex items-start justify-between">
         <span className="text-muted-foreground text-sm font-medium">{label}</span>
-        <span className={cn("flex size-9 items-center justify-center rounded-xs", TONES[tone].chip)}>
+        <span className={cn("flex size-9 items-center justify-center rounded-xs", CHIPS.plain)}>
           <Icon className="size-4" />
         </span>
       </div>
@@ -97,7 +88,7 @@ export function MetricCard({ label, value, delta, detail, to, icon: Icon, tone }
           <span
             className={cn(
               "rounded-xs px-1.5 py-0.5 font-medium",
-              delta > 0 ? TONES[tone].chip : "bg-muted text-muted-foreground",
+              delta > 0 ? CHIPS.plain : "bg-muted text-muted-foreground",
             )}
           >
             +{delta.toLocaleString("sv-SE")}
@@ -108,23 +99,18 @@ export function MetricCard({ label, value, delta, detail, to, icon: Icon, tone }
     </>
   );
 
-  const className = "relative flex flex-col overflow-hidden rounded-xs border bg-card p-5";
-  const accent = <span className={cn("absolute inset-x-0 top-0 h-1", TONES[tone].bar)} aria-hidden />;
+  const className = "flex flex-col rounded-xs border bg-card p-5";
 
   return to ? (
     <Link to={to} className={cn(className, "transition-all hover:-translate-y-0.5 hover:shadow-md")}>
-      {accent}
       {body}
     </Link>
   ) : (
-    <div className={className}>
-      {accent}
-      {body}
-    </div>
+    <div className={className}>{body}</div>
   );
 }
 
-export function HealthBar({ label, percent, tone, to }: { label: string; percent: number; tone: Tone; to: string }) {
+export function HealthBar({ label, percent, to }: { label: string; percent: number; to: string }) {
   return (
     <Link to={to} className="group flex flex-col gap-1.5">
       <span className="flex items-baseline justify-between text-sm">
@@ -133,7 +119,7 @@ export function HealthBar({ label, percent, tone, to }: { label: string; percent
       </span>
       <span className="bg-muted h-2 overflow-hidden rounded-xs">
         <span
-          className={cn("block h-full rounded-xs transition-[width] duration-700", TONES[tone].bar)}
+          className="bg-primary/70 block h-full rounded-xs transition-[width] duration-700"
           style={{ width: `${percent}%` }}
         />
       </span>

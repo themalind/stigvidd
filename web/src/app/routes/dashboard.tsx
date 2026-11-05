@@ -44,11 +44,8 @@ export default function DashboardPage() {
 
   return (
     <Page width="full" className="space-y-10">
-      <header className="relative overflow-hidden rounded-xs border bg-gradient-to-br from-emerald-50 via-background to-sky-50 p-8 dark:from-emerald-950/40 dark:to-sky-950/40">
-        <Mountain
-          className="absolute -right-6 -bottom-10 size-56 text-emerald-600/10 dark:text-emerald-400/10"
-          aria-hidden
-        />
+      <header className="relative overflow-hidden rounded-xs border bg-card p-8">
+        <Mountain className="text-primary/10 absolute -right-6 -bottom-10 size-56" aria-hidden />
         <p className="text-muted-foreground text-sm">
           {now.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
         </p>
@@ -95,7 +92,6 @@ export default function DashboardPage() {
             delta={dashboard.data?.newUsersLast7Days}
             detail="new this week"
             icon={Users}
-            tone="sky"
           />
           <MetricCard
             label="Reviews"
@@ -103,7 +99,6 @@ export default function DashboardPage() {
             delta={dashboard.data?.reviewsLast7Days}
             detail="new this week"
             icon={MessageSquareText}
-            tone="violet"
           />
           <MetricCard
             label="Trails"
@@ -111,7 +106,6 @@ export default function DashboardPage() {
             detail={stats ? `${stats.total - stats.inactive} active in the app` : undefined}
             to={paths.trails()}
             icon={Mountain}
-            tone="emerald"
           />
           <MetricCard
             label="Inactive trails"
@@ -119,7 +113,6 @@ export default function DashboardPage() {
             detail="hidden in the app"
             to={paths.trails({ status: "Inactive" })}
             icon={EyeOff}
-            tone="amber"
           />
         </div>
       </section>
@@ -153,25 +146,21 @@ export default function DashboardPage() {
                 <HealthBar
                   label="Active in the app"
                   percent={share(stats.total - stats.inactive, stats.total)}
-                  tone="emerald"
                   to={paths.trails({ status: "Inactive" })}
                 />
                 <HealthBar
                   label="Have images"
                   percent={share(stats.total - stats.withoutImages, stats.total)}
-                  tone="sky"
                   to={paths.trails({ missing: "Images" })}
                 />
                 <HealthBar
                   label="Real photos, not examples"
                   percent={share(stats.total - stats.withExampleImages, stats.total)}
-                  tone="violet"
                   to={paths.trails({ missing: "ExampleImages" })}
                 />
                 <HealthBar
                   label="Have a short description"
                   percent={share(stats.total - stats.withoutDescription, stats.total)}
-                  tone="amber"
                   to={paths.trails({ missing: "Description" })}
                 />
               </>

@@ -5,7 +5,7 @@ import { EyeOff, ImageIcon, Star } from "lucide-react";
 import type { DashboardReview } from "@/features/dashboard/api/dashboard";
 import { relativeTime } from "@/features/dashboard/utils/dashboard";
 import { cn } from "@/lib/utils";
-import { TONES } from "./dashboard-cards";
+import { CHIPS } from "./dashboard-cards";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -31,7 +31,7 @@ export function ReviewRow({ review }: { review: DashboardReview }) {
       <span
         className={cn(
           "flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold",
-          TONES.violet.chip,
+          CHIPS.plain,
         )}
         aria-hidden
       >
@@ -44,7 +44,7 @@ export function ReviewRow({ review }: { review: DashboardReview }) {
           <span className="font-medium">{review.trailName}</span>
           <Stars rating={review.rating} />
           {review.isHidden && (
-            <span className={cn("flex items-center gap-1 rounded-xs px-1.5 py-0.5 text-xs", TONES.amber.chip)}>
+            <span className={cn("flex items-center gap-1 rounded-xs px-1.5 py-0.5 text-xs", CHIPS.attention)}>
               <EyeOff className="size-3" /> Hidden
             </span>
           )}
