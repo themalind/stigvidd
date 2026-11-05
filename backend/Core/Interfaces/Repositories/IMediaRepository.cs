@@ -19,28 +19,3 @@ public interface IMediaRepository
     Task<RepositoryResult<IReadOnlyCollection<MediaLookupProjection>>> GetByIdentifiersAsync(
         IReadOnlyCollection<string> identifiers, CancellationToken ctoken);
 }
-
-public record MediaLookupProjection(string Identifier, string OwnerType, string ImageUrl);
-
-public record MediaItemProjection(
-    // keep-comment: the sort tiebreak, and the per-source cap key. It is the row's int Id, not its Identifier, so that pushing the ordering into SQL later stays safe: a string tiebreak would then be compared under the database collation on one side and Ordinal on the other, and the two disagree on a GUID's hyphens under en_US.utf8
-    int SourceId,
-    string Identifier,
-    string ImageUrl,
-    string? AltText,
-    string? Caption,
-    int Width,
-    int Height,
-    long SizeBytes,
-    DateTime CreatedAt,
-    string OwnerType,
-    string? OwnerIdentifier,
-    string? OwnerName);
-
-public record MediaLibraryPage(
-    IReadOnlyCollection<MediaItemProjection> Items,
-    int Page,
-    bool HasMore,
-    int TotalCount,
-    int ReprocessableCount,
-    long TotalSizeBytes);

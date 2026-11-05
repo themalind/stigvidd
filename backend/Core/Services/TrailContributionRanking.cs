@@ -7,17 +7,6 @@ using NetTopologySuite.Geometries;
 
 namespace Core.Services;
 
-public record RankedReview(decimal Rating, DateTime At);
-
-public record ContributionRankingInput(
-    string Identifier,
-    IReadOnlyCollection<RankedReview> Reviews,
-    IReadOnlyCollection<DateTime> LikedAt,
-    double StartLatitude,
-    double StartLongitude);
-
-public record RankedContribution(string Identifier, double StartLatitude, double StartLongitude);
-
 public class TrailContributionRanking
 {
     public double HalfLifeDays { get; }

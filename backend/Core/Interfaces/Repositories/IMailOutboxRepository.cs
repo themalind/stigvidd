@@ -6,30 +6,6 @@ using Infrastructure.Enums;
 
 namespace Core.Interfaces.Repositories;
 
-/// <summary>
-/// One row of the outbox as the admin list sees it.
-/// </summary>
-/// <remarks>
-/// Carries no BodyHtml/BodyText on purpose. A page of rendered mail bodies is megabytes on the
-/// wire and megabytes in the change tracker, and the only way to guarantee they are never read
-/// is to project without them.
-/// </remarks>
-public record OutboxEmailSummary(
-    string Identifier,
-    string ToAddress,
-    string? ToName,
-    string Subject,
-    string? TemplateKey,
-    OutboxEmailStatus Status,
-    int Attempts,
-    DateTime NextAttemptAt,
-    DateTime? SentAt,
-    string? LastError,
-    DateTime? SettledAt,
-    DateTime? RedactedAt,
-    DateTime CreatedAt,
-    DateTime LastUpdatedAt);
-
 public interface IMailOutboxRepository
 {
     Task<RepositoryResult<OutboxEmail>> AddAsync(OutboxEmail email, CancellationToken ctoken);
