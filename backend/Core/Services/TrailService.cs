@@ -74,23 +74,33 @@ public class TrailService : ITrailService
     public async Task<Result<IReadOnlyCollection<AdminTrailListItemResponse>>> GetAllTrailsForAdminAsync(CancellationToken ctoken)
     {
         var result = await _trailRepository.GetAllTrailsForAdminAsync(
-            t => new AdminTrailListItemResponse
+            row => new AdminTrailListItemResponse
             {
-                Identifier = t.Identifier,
-                Name = t.Name,
-                TrailLength = t.TrailLength,
-                Accessibility = t.Accessibility,
-                Classification = t.Classification,
-                City = t.City,
-                IsVerified = t.IsVerified,
-                HasImages = t.TrailImages!.Any(),
+                Identifier = row.Trail.Identifier,
+                Name = row.Trail.Name,
+                TrailLength = row.Trail.TrailLength,
+                Accessibility = row.Trail.Accessibility,
+                Classification = row.Trail.Classification,
+                City = row.Trail.City,
+                IsVerified = row.Trail.IsVerified,
+                HasImages = row.Trail.TrailImages!.Any(),
                 // keep-comment: the app badges an image as an example by this same rule (app/src/utils/is-mock-image.ts)
-                HasExampleImages = t.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains("mock")),
-                HasSymbol = t.TrailSymbolImage != "",
-                HasDescription = t.Description != "",
-                HasFullDescription = t.FullDescription != "",
-                CreatedAt = t.CreatedAt,
-                LastUpdatedAt = t.LastUpdatedAt,
+                HasExampleImages = row.Trail.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains("mock")),
+                HasSymbol = row.Trail.TrailSymbolImage != "",
+                HasDescription = row.Trail.Description != "",
+                HasFullDescription = row.Trail.FullDescription != "",
+                CreatedAt = row.Trail.CreatedAt,
+                LastUpdatedAt = row.Trail.LastUpdatedAt,
+                Contribution = row.Trail.Contribution == null ? null : new AdminTrailContributionResponse
+                {
+                    SubmitterNickName = row.Trail.Contribution.SubmittedBy != null
+                        ? row.Trail.Contribution.SubmittedBy.NickName
+                        : null,
+                    ShowSubmitterName = row.Trail.Contribution.ShowSubmitterName,
+                    PublishedAt = row.Trail.Contribution.PublishedAt,
+                    LikeCount = row.Trail.Contribution.Likes.Count,
+                    SubmissionIdentifier = row.SubmissionIdentifier,
+                },
             },
             ctoken);
 

@@ -11,6 +11,7 @@ export const paths = {
   login: "/",
   dashboard: "/dashboard",
   trails: (search?: Search) => withSearch("/trails", search),
+  userWalks: (search?: Search) => withSearch("/user-walks", search),
   areas: "/areas",
   media: "/media",
   users: "/users",

@@ -47,6 +47,22 @@ describe("trailStats", () => {
     });
   });
 
+  it("leaves user walks out, as the Trails page it links to does", () => {
+    const walk = trail({
+      isVerified: false,
+      hasImages: false,
+      contribution: { showSubmitterName: true, publishedAt: "2026-10-01T00:00:00Z", likeCount: 0 },
+    });
+
+    expect(trailStats([trail({}), walk])).toEqual({
+      total: 1,
+      inactive: 0,
+      withExampleImages: 0,
+      withoutImages: 0,
+      withoutDescription: 0,
+    });
+  });
+
   it("is all zeroes for no trails", () => {
     expect(trailStats([])).toEqual({
       total: 0,

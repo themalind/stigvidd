@@ -668,12 +668,42 @@ public class TrailRepositoryTests : TestBase
 
         // Act
         var result = await repo.GetAllTrailsForAdminAsync(
-            t => new { t.Identifier, t.IsVerified }, TestContext.Current.CancellationToken);
+            row => new { row.Trail.Identifier, row.Trail.IsVerified }, TestContext.Current.CancellationToken);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().ContainEquivalentOf(new { Identifier = TivedenIdentifier, IsVerified = false });
         result.Value.Should().ContainEquivalentOf(new { Identifier = StorsjoledenIdentifier, IsVerified = true });
+    }
+
+    [Fact]
+    public async Task GetAllTrailsForAdmin_PairsAUserWalkWithTheSubmissionThatPublishedIt()
+    {
+        // Arrange
+        var walk = Contributed("Användarpromenad", showName: true);
+        var repo = new TrailRepository(CreateSeededFactory(db =>
+        {
+            db.Trails.Add(walk);
+            db.SaveChanges();
+            db.HikeSubmissions.Add(new HikeSubmission
+            {
+                Identifier = "submission-1",
+                Name = "Användarpromenad",
+                UserId = 2,
+                ConsentTextId = 1,
+                Status = Infrastructure.Enums.HikeSubmissionStatus.Approved,
+                PublishedTrailId = walk.Id,
+            });
+        }), NullLogger<TrailRepository>.Instance);
+
+        // Act
+        var result = await repo.GetAllTrailsForAdminAsync(
+            row => new { row.Trail.Identifier, row.SubmissionIdentifier }, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainEquivalentOf(new { Identifier = walk.Identifier, SubmissionIdentifier = "submission-1" });
+        result.Value.Should().ContainEquivalentOf(new { Identifier = StorsjoledenIdentifier, SubmissionIdentifier = (string?)null });
     }
 
     [Fact]

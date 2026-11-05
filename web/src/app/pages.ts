@@ -6,6 +6,7 @@ import type { LoaderFunction } from "react-router";
 import {
   DatabaseBackup,
   Flag,
+  Footprints,
   Gauge,
   Images,
   Mail,
@@ -44,6 +45,12 @@ export const pages: AppPage[] = [
     title: "Trails",
     icon: Settings2,
     component: lazy(() => import("./routes/trails")),
+  },
+  {
+    path: paths.userWalks(),
+    title: "User Walks",
+    icon: Footprints,
+    component: lazy(() => import("./routes/user-walks")),
   },
   {
     path: paths.areas,

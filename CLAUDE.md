@@ -54,6 +54,8 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
   `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`.
   A many-to-many join (`CityAreaFacility`, `CityAreaTrail`) needs no nullable navigation: query/add rows via
   `context.Set<Dictionary<string, object>>("CityAreaFacility")` + `EF.Property<int>(row, "CityAreaId")` (`CityAreaRepository.SetLinkAsync`).
+- A user walk ("contribution") is a `Trail` with a `TrailContribution` row; its source is the `HikeSubmission` with
+  `PublishedTrailId == trail.Id` (no inverse navigation; see `TrailRepository.GetAllTrailsForAdminAsync`).
 - Geometry is SRID 4326, built only via `GeoPointFactory.FromLonLat(lon, lat)`. Any other
   `WithSRID(...)` is a bug. Lat/long travel as a pair ([note](docs/notes/srid-4326.md)).
 - Tests: xunit.v3 + **AwesomeAssertions** (never FluentAssertions) + Moq. Every token is

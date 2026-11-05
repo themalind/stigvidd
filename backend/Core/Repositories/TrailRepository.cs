@@ -441,13 +441,21 @@ public class TrailRepository : ITrailRepository
     }
 
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsForAdminAsync<T>(
-        Expression<Func<Trail, T>> selector, CancellationToken ctoken)
+        Expression<Func<AdminTrailSource, T>> selector, CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var trails = await context.Trails.AsNoTracking()
+                .Select(t => new AdminTrailSource
+                {
+                    Trail = t,
+                    SubmissionIdentifier = context.HikeSubmissions
+                        .Where(s => s.PublishedTrailId == t.Id)
+                        .Select(s => s.Identifier)
+                        .FirstOrDefault(),
+                })
                 .Select(selector)
                 .ToListAsync(ctoken);
 

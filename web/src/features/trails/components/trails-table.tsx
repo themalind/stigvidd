@@ -16,6 +16,7 @@ interface Props {
 }
 
 function cellValue(column: TableColumn<AdminTrailListItemResponse>, row: AdminTrailListItemResponse) {
+  if (column.render) return column.render(row);
   switch (column.key) {
     case "trailLength":
       return `${row.trailLength} km`;
@@ -35,7 +36,7 @@ export default function TrailsTable({ columns, trails }: Props) {
         <TableHeader>
           <TableRow>
             {columns.map((column) => (
-              <TableHead key={column.key} className="font-bold">
+              <TableHead key={column.label} className="font-bold">
                 {column.label}
               </TableHead>
             ))}
@@ -46,7 +47,7 @@ export default function TrailsTable({ columns, trails }: Props) {
           {trails.map((trail, index) => (
             <TableRow key={trail.identifier} className={index % 2 === 0 ? "bg-sidebar" : "bg-background"}>
               {columns.map((column) => (
-                <TableCell key={column.key}>{cellValue(column, trail)}</TableCell>
+                <TableCell key={column.label}>{cellValue(column, trail)}</TableCell>
               ))}
               <TableCell>
                 <TrailVerifiedToggle data={trail} />
