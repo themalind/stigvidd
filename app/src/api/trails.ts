@@ -48,9 +48,17 @@ export async function getPopularTrails(latitude?: number, longitude?: number): P
   }
 }
 
-export async function getPopularContributedTrails(): Promise<TrailCard[]> {
+export async function getPopularContributedTrails(latitude?: number, longitude?: number): Promise<TrailCard[]> {
   try {
-    const response = await apiFetch(`${BASE_URL}/trails/popular-contributions`);
+    const params = new URLSearchParams();
+
+    if (latitude !== undefined && longitude !== undefined) {
+      params.append("latitude", latitude.toString());
+      params.append("longitude", longitude.toString());
+    }
+
+    const query = params.toString();
+    const response = await apiFetch(`${BASE_URL}/trails/popular-contributions${query ? `?${query}` : ""}`);
 
     if (!response.ok) {
       throw new Error(`HTTP error ${response.status}`);

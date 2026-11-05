@@ -45,12 +45,16 @@ jest.mock("@/components/home/adventure-card", () => {
   };
 });
 
+const mockContributionProps = jest.fn();
 jest.mock("@/components/home/popular-contributions", () => {
   const { View } = jest.requireActual("react-native");
   const ReactActual = jest.requireActual("react");
   return {
     __esModule: true,
-    default: () => ReactActual.createElement(View, { testID: "home-contributions" }),
+    default: (props: unknown) => {
+      mockContributionProps(props);
+      return ReactActual.createElement(View, { testID: "home-contributions" });
+    },
   };
 });
 
@@ -119,6 +123,30 @@ it("ranks the popular trails around the user's position", async () => {
 
   expect(mockGetPopularTrails).toHaveBeenCalledWith(HERE.latitude, HERE.longitude);
   expect(screen.getByText("Populära promenader nära dig")).toBeTruthy();
+});
+
+it("hands the shared walks the same rounded position", async () => {
+  mockLocation = { data: { latitude: 57.6512, longitude: 13.0211, isFallback: false }, isPending: false };
+  show();
+  await settle();
+
+  expect(mockContributionProps).toHaveBeenLastCalledWith({ latitude: 57.65, longitude: 13.02, enabled: true });
+});
+
+it("never hands the shared walks the Borås fallback", async () => {
+  mockLocation = { data: FALLBACK, isPending: false };
+  show();
+  await settle();
+
+  expect(mockContributionProps).toHaveBeenLastCalledWith({ latitude: undefined, longitude: undefined, enabled: true });
+});
+
+it("holds the shared walks back while the position is resolving", async () => {
+  mockLocation = { data: undefined, isPending: true };
+  show();
+  await settle();
+
+  expect(mockContributionProps).toHaveBeenLastCalledWith({ latitude: undefined, longitude: undefined, enabled: false });
 });
 
 it("asks once for a position that only drifts a few metres", async () => {

@@ -769,6 +769,41 @@ public class TrailServiceTests
     }
 
     [Fact]
+    public async Task GetPopularContributedTrails_PicksPerPositionFromOneCachedRanking()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetContributionRankingInputsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>.Success(
+            [
+                new ContributionRankingInput("kiruna", [new RankedReview(5m, DateTime.UtcNow)], [], 67.8558, 20.2253),
+                new ContributionRankingInput("gothenburg", [], [], 57.7089, 11.9746),
+            ]));
+        repo.Setup(r => r.GetTrailsByIdentifiersAsync(
+                It.IsAny<IReadOnlyCollection<string>>(),
+                It.IsAny<Expression<Func<Trail, TrailCardProjection>>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyCollection<string> ids, Expression<Func<Trail, TrailCardProjection>> _, CancellationToken _) =>
+                RepositoryResult<IReadOnlyCollection<TrailCardProjection>>.Success(
+                    ids.Select(id => new TrailCardProjection(id, id, 3M, 1, false, 0M, null)).ToList()));
+        var service = Build(repo);
+        var ct = TestContext.Current.CancellationToken;
+
+        // Act
+        var anywhere = await service.GetPopularContributedTrailsAsync(null, null, ct);
+        var nearGothenburg = await service.GetPopularContributedTrailsAsync(57.70, 11.97, ct);
+
+        // Assert
+        anywhere.Success.Should().BeTrue();
+        anywhere.Value.Should().NotBeNull();
+        anywhere.Value.Select(c => c.Identifier).Should().Equal("kiruna", "gothenburg");
+        nearGothenburg.Success.Should().BeTrue();
+        nearGothenburg.Value.Should().NotBeNull();
+        nearGothenburg.Value.Select(c => c.Identifier).Should().Equal("gothenburg");
+        repo.Verify(r => r.GetContributionRankingInputsAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public async Task GetTrailCards_WhenSuccess_ReturnsCards()
     {
         // Arrange

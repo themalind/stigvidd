@@ -65,9 +65,12 @@ public class TrailsController : StigViddController
 
     [AllowAnonymous]
     [HttpGet("popular-contributions")]
-    public async Task<ActionResult<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrails(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrails(
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
+        CancellationToken ctoken)
     {
-        var result = await _trailService.GetPopularContributedTrailsAsync(ctoken);
+        var result = await _trailService.GetPopularContributedTrailsAsync(latitude, longitude, ctoken);
 
         if (!result.Success && result.Message != null)
             return ToActionResult(result.Message);
