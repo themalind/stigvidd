@@ -182,7 +182,7 @@ describe("the queue", () => {
 });
 
 describe("filters", () => {
-  it.each(["EventPost", "HikeImage"])("filters the queue on %s and keeps it in the address", async (type) => {
+  it.each(["TrailObstacle", "HikeImage"])("filters the queue on %s and keeps it in the address", async (type) => {
     const user = userEvent.setup();
     renderPage([summary()]);
     await screen.findByTestId("content-snapshot");
@@ -465,23 +465,5 @@ describe("images", () => {
     await user.click(screen.getByTestId("uphold"));
 
     expect(await screen.findByTestId("confirm-body")).toHaveTextContent("hike image for good");
-  });
-
-  it("shows a reported event cover as a picture and names it in the warning", async () => {
-    const user = userEvent.setup();
-    renderPage([
-      summary({
-        contentType: "EventImage",
-        contentSnapshot: "events/abc.jpg",
-        contentImageUrl: "https://media.stigvidd.se/events/abc.jpg",
-      }),
-    ]);
-
-    const image = await screen.findByTestId("content-image");
-    expect(image).toHaveAttribute("alt", "The reported event cover image");
-    await user.click(screen.getByTestId("mark-read"));
-    await user.click(screen.getByTestId("uphold"));
-
-    expect(await screen.findByTestId("confirm-body")).toHaveTextContent("event cover image for good");
   });
 });

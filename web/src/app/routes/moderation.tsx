@@ -20,7 +20,7 @@ import { useUnbanUser } from "@/features/users/api/users";
 import { BanSheet } from "@/features/users/components/ban-sheet";
 
 const STATUS_FILTERS = ["Pending", "Dismissed", "Upheld", "ContentExpired", "All"] as const;
-const TYPE_FILTERS = ["All", "Review", "TrailObstacle", "HikeImage", "Event", "EventPost", "EventImage"] as const;
+const TYPE_FILTERS = ["All", "Review", "TrailObstacle", "HikeImage"] as const;
 const OUTCOME_FILTERS = ["All", "Hidden", "AlreadyHidden", "WithheldReporterDismissed"] as const;
 
 const FILTER_DEFAULTS = { status: "Pending", contentType: "All", hideOutcome: "All" };

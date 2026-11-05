@@ -23,9 +23,6 @@ const contentTypeNoun: Record<string, string> = {
   Review: "review",
   TrailObstacle: "obstacle report",
   HikeImage: "hike image",
-  Event: "event",
-  EventPost: "event board post",
-  EventImage: "event cover image",
 };
 
 const riskLabel: Record<string, string> = {
