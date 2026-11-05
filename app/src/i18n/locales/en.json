@@ -314,6 +314,25 @@
     },
     "info": "Information",
     "contributed": "User walk",
+    "contributionInfo": {
+      "title": "About user walks",
+      "sharedBy": {
+        "heading": "Shared by a user",
+        "text": "This walk was recorded and shared by someone who uses Stigvidd. It is not an official trail from the municipality or an association."
+      },
+      "ownAssessment": {
+        "heading": "The user's own assessment",
+        "text": "The difficulty is the user's own assessment. We review the walk before it is published and may add to or polish the text. We do not guarantee that the details are correct or that the route is passable and safe."
+      },
+      "unmarked": {
+        "heading": "Not marked on the ground",
+        "text": "User walks are not marked with a trail symbol. The walk may cross private land where the right of public access applies, and conditions may have changed since it was recorded."
+      },
+      "ownRisk": {
+        "heading": "You walk at your own risk",
+        "text": "Judge for yourself whether the walk suits you, given the weather, the terrain and your own ability."
+      }
+    },
     "sharedBy": "Shared by {{nickName}}",
     "like": "Like",
     "liked": "You like this",
@@ -706,6 +725,7 @@
     "popular": "Popular walks",
     "popularError": "Could not load the walks right now.",
     "popularContributions": "Shared by other hikers",
+    "popularContributionsNearYou": "Shared by hikers near you",
     "popularContributionsHint": "Popular walks others recorded",
     "seeAllContributions": "Show all",
     "locationUnknown": "Location unknown",

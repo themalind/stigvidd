@@ -29,6 +29,17 @@ describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
     expect(screen.getByText("Innehåll")).toBeTruthy();
   });
 
+  it("puts the title accessory beside the title", () => {
+    renderWithProviders(
+      <SectionPanel title="Rubrik" titleAccessory={<Text testID="accessory">i</Text>}>
+        <Text>Innehåll</Text>
+      </SectionPanel>,
+      { theme },
+    );
+
+    expect(screen.getByTestId("accessory")).toBeTruthy();
+  });
+
   it("renders the title, subtitle and header action above the content", () => {
     renderWithProviders(
       <SectionPanel title="Rubrik" subtitle="Underrubrik" headerAction={<Text>Visa alla</Text>}>

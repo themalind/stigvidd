@@ -314,6 +314,25 @@
     },
     "info": "Information",
     "contributed": "Användarpromenad",
+    "contributionInfo": {
+      "title": "Om användarpromenader",
+      "sharedBy": {
+        "heading": "Delad av en användare",
+        "text": "Promenaden har spelats in och delats av någon som använder Stigvidd. Det är ingen officiell led från kommunen eller någon förening."
+      },
+      "ownAssessment": {
+        "heading": "Användarens egen bedömning",
+        "text": "Svårighetsgraden är användarens egen bedömning. Vi granskar promenaden innan den publiceras och kan komplettera eller putsa på texten. Vi garanterar inte att uppgifterna stämmer eller att rutten är framkomlig och säker."
+      },
+      "unmarked": {
+        "heading": "Inte märkt i terrängen",
+        "text": "Användarpromenader är inte märkta med någon ledsymbol. Promenaden kan gå över privat mark där allemansrätten gäller, och förhållandena kan ha ändrats sedan den spelades in."
+      },
+      "ownRisk": {
+        "heading": "Du går på eget ansvar",
+        "text": "Bedöm själv om promenaden passar dig utifrån väder, terräng och din egen förmåga."
+      }
+    },
     "sharedBy": "Delad av {{nickName}}",
     "like": "Gilla",
     "liked": "Du gillar den här",
@@ -706,6 +725,7 @@
     "popular": "Populära promenader",
     "popularError": "Kunde inte hämta promenaderna just nu.",
     "popularContributions": "Delat av andra vandrare",
+    "popularContributionsNearYou": "Delat av vandrare nära dig",
     "popularContributionsHint": "Populära promenader som andra spelat in",
     "seeAllContributions": "Visa alla",
     "locationUnknown": "Plats okänd",
