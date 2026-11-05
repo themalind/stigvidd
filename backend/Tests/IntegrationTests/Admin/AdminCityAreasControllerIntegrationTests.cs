@@ -106,7 +106,7 @@ public class AdminCityAreasControllerIntegrationTests : IClassFixture<StigViddWe
         // Act
         var response = await client.DeleteAsync($"{Route}/{LinkedArea}/facilities/{Firepit}", TestContext.Current.CancellationToken);
         var area = await GetAreaAsync(client, LinkedArea);
-        var facilities = await client.GetFromJsonAsync<List<FacilityResponse>>("/api/v1/admin/facilities", TestContext.Current.CancellationToken);
+        var facilities = await client.GetFromJsonAsync<List<AdminFacilityResponse>>("/api/v1/admin/facilities", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -171,7 +171,7 @@ public class AdminCityAreasControllerIntegrationTests : IClassFixture<StigViddWe
         var client = CreateAdminClient();
 
         // Act
-        var facilities = await client.GetFromJsonAsync<List<FacilityResponse>>("/api/v1/admin/facilities", TestContext.Current.CancellationToken);
+        var facilities = await client.GetFromJsonAsync<List<AdminFacilityResponse>>("/api/v1/admin/facilities", TestContext.Current.CancellationToken);
 
         // Assert
         facilities.Should().NotBeNull();

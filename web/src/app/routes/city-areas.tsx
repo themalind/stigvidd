@@ -4,15 +4,16 @@
 import { useMemo } from "react";
 import { useSearchParams } from "react-router";
 import { useSuspenseQueries } from "@tanstack/react-query";
-import type { AdminCityAreaResponse, AdminTrailListItemResponse, FacilityResponse } from "@/api/generated/model";
+import type { AdminCityAreaResponse, AdminFacilityResponse, AdminTrailListItemResponse } from "@/api/generated/model";
 import { EmptyState } from "@/components/empty-state";
 import LinkedItemsCard, { type LinkItem } from "@/components/linked-items-card";
 import { Page, PageHeader } from "@/components/page";
 import { cityAreasQueryOptions, useSetFacilityLink, useSetTrailLink } from "@/features/city-areas/api/city-areas";
+import { AreaPicker } from "@/features/city-areas/components/area-picker";
 import { facilitiesQueryOptions } from "@/features/facilities/api/facility";
+import { FacilityEditor } from "@/features/facilities/components/facility-editor";
 import { facilityTypeLabel } from "@/features/facilities/utils/facility-types";
 import { trailsQueryOptions } from "@/features/trails/api/trail";
-import { cn } from "@/lib/utils";
 
 function facilityItem(facility: { identifier: string; name: string; facilityType: number }): LinkItem {
   return { identifier: facility.identifier, label: facility.name, detail: facilityTypeLabel(facility.facilityType) };
@@ -39,27 +40,12 @@ export default function CityAreasPage() {
       />
 
       {selected ? (
-        <div className="grid gap-6 md:grid-cols-[16rem_1fr]">
-          <nav aria-label="Areas" className="space-y-1">
-            {areas.map((area) => (
-              <button
-                key={area.identifier}
-                type="button"
-                aria-current={area.identifier === selected.identifier ? "page" : undefined}
-                onClick={() => setSearchParams({ area: area.identifier })}
-                className={cn(
-                  "block w-full rounded-xs px-3 py-2 text-left text-sm transition-colors hover:bg-accent/50",
-                  area.identifier === selected.identifier && "bg-accent font-medium",
-                )}
-              >
-                <span className="block truncate">{area.name}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {area.facilities.length} facilities · {area.trails.length} trails
-                </span>
-              </button>
-            ))}
-          </nav>
-
+        <div className="space-y-6">
+          <AreaPicker
+            areas={areas}
+            selected={selected}
+            onSelect={(identifier) => setSearchParams({ area: identifier })}
+          />
           <AreaLinks area={selected} facilities={facilities} trails={trails} />
         </div>
       ) : (
@@ -71,7 +57,7 @@ export default function CityAreasPage() {
 
 interface AreaLinksProps {
   area: AdminCityAreaResponse;
-  facilities: FacilityResponse[];
+  facilities: AdminFacilityResponse[];
   trails: AdminTrailListItemResponse[];
 }
 
@@ -92,6 +78,11 @@ function AreaLinks({ area, facilities, trails }: AreaLinksProps) {
     if (item) setTrailLink.mutate({ area: area.identifier, item, linked });
   }
 
+  function editFacility(item: LinkItem) {
+    const facility = facilitiesById.get(item.identifier);
+    return facility ? <FacilityEditor facility={facility} /> : null;
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -107,6 +98,7 @@ function AreaLinks({ area, facilities, trails }: AreaLinksProps) {
         available={facilities.map(facilityItem)}
         onLink={(id) => linkFacility(id, true)}
         onUnlink={(id) => linkFacility(id, false)}
+        actions={editFacility}
       />
 
       <LinkedItemsCard

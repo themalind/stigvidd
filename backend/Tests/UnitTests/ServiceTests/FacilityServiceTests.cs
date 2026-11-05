@@ -11,6 +11,7 @@ using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using WebDataContracts.RequestModels.Facility;
 
 namespace UnitTests.ServiceTests;
 
@@ -35,6 +36,22 @@ public class FacilityServiceTests
             cfg.Object);
     }
 
+    private static SaveFacilityRequest Request(
+        string name = "Grillplats Tiveden", int facilityType = 1, decimal? longitude = 14.5M, decimal? latitude = 58.9M)
+    {
+        return new SaveFacilityRequest
+        {
+            Name = name,
+            FacilityType = facilityType,
+            IsAccessible = true,
+            Latitude = latitude,
+            Longitude = longitude,
+            Location = "",
+            Description = "",
+            Url = "",
+        };
+    }
+
     private static Facility MakeFacility() => new()
     {
         Identifier = FacilityIdentifier,
@@ -53,7 +70,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
 
         // Act
-        var result = await Build(repo).CreateFacilityAsync("Grillplats Tiveden", 1, true, 14.5M, 58.9M, TestContext.Current.CancellationToken);
+        var result = await Build(repo).CreateFacilityAsync(Request(), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -70,7 +87,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).CreateFacilityAsync("Grillplats", 1, true, 14.5M, 58.9M, TestContext.Current.CancellationToken);
+        var result = await Build(repo).CreateFacilityAsync(Request("Grillplats"), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -96,7 +113,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(facility));
 
         // Act
-        await Build(repo).CreateFacilityAsync("Name", input, true, 0M, 0M, TestContext.Current.CancellationToken);
+        await Build(repo).CreateFacilityAsync(Request("Name", input, 0M, 0M), TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -216,7 +233,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "New Name", null, null, null, null, TestContext.Current.CancellationToken);
+        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, Request("New Name"), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -231,7 +248,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.NotFound());
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync("no-such-id", "Name", null, null, null, null, TestContext.Current.CancellationToken);
+        var result = await Build(repo).UpdateFacilityAsync("no-such-id", Request("Name"), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -248,7 +265,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "Name", null, null, null, null, TestContext.Current.CancellationToken);
+        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, Request("Name"), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -267,7 +284,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Error());
 
         // Act
-        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "Name", null, null, null, null, TestContext.Current.CancellationToken);
+        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, Request("Name"), TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();
@@ -276,10 +293,11 @@ public class FacilityServiceTests
     }
 
     [Fact]
-    public async Task UpdateFacilityAsync_OnlyUpdatesProvidedFields()
+    public async Task UpdateFacilityAsync_ReplacesEveryField()
     {
         // Arrange
         var original = MakeFacility();
+        original.Location = "Vid sjön";
         Facility? captured = null;
 
         var repo = new Mock<IFacilityRepository>();
@@ -289,15 +307,35 @@ public class FacilityServiceTests
             .Callback<Facility, CancellationToken>((f, _) => captured = f)
             .ReturnsAsync(RepositoryResult<Facility>.Success(original));
 
-        // Act — only name is provided, all other fields should remain unchanged
-        await Build(repo).UpdateFacilityAsync(FacilityIdentifier, "New Name", null, null, null, null, TestContext.Current.CancellationToken);
+        var request = new SaveFacilityRequest
+        {
+            Name = "  Vindskydd Gesebol  ",
+            FacilityType = 2,
+            IsAccessible = false,
+            Latitude = 57.7M,
+            Longitude = 12.9M,
+            Location = "",
+            Description = "Två vindskydd vid stranden.",
+            Url = "https://www.boras.se/gesebol",
+        };
+
+        // Act
+        var result = await Build(repo).UpdateFacilityAsync(FacilityIdentifier, request, TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
-        captured.Name.Should().Be("New Name");
-        captured.FacilityType.Should().Be(original.FacilityType);
-        captured.IsAccessible.Should().Be(original.IsAccessible);
-        captured.Coordinates.Should().Be(original.Coordinates);
+        captured.Name.Should().Be("Vindskydd Gesebol");
+        captured.FacilityType.Should().Be(FacilityType.Shelter);
+        captured.IsAccessible.Should().BeFalse();
+        captured.Coordinates.Should().NotBeNull();
+        captured.Coordinates.X.Should().Be(12.9);
+        captured.Coordinates.Y.Should().Be(57.7);
+        captured.Location.Should().BeNull();
+        captured.Description.Should().Be("Två vindskydd vid stranden.");
+        captured.Url.Should().Be("https://www.boras.se/gesebol");
+        result.Value.Should().NotBeNull();
+        result.Value.Location.Should().Be("");
+        result.Value.Description.Should().Be("Två vindskydd vid stranden.");
     }
 
     [Fact]
@@ -571,8 +609,8 @@ public class FacilityServiceTests
     [Fact]
     public async Task CreateFacilityAsync_BuildsPointWithLongitudeAsXAndLatitudeAsY()
     {
-        // Arrange — the service takes (longitude, latitude); geometry is (X = lon, Y = lat),
-        // so a swap here would silently move every new facility across the globe.
+        // Arrange
+        // keep-comment: geometry is (X = lon, Y = lat); a swap would silently move every new facility across the globe
         Facility? captured = null;
         var repo = new Mock<IFacilityRepository>();
         repo.Setup(r => r.CreateFacilityAsync(It.IsAny<Facility>(), It.IsAny<CancellationToken>()))
@@ -580,7 +618,7 @@ public class FacilityServiceTests
             .ReturnsAsync(RepositoryResult<Facility>.Success(MakeFacility()));
 
         // Act
-        await Build(repo).CreateFacilityAsync("Grillplats", 1, true, 14.5M, 58.9M, TestContext.Current.CancellationToken);
+        await Build(repo).CreateFacilityAsync(Request("Grillplats"), TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
@@ -591,12 +629,10 @@ public class FacilityServiceTests
     }
 
     [Fact]
-    public async Task UpdateFacilityAsync_WithOnlyOneOrdinate_LeavesCoordinatesUnchanged()
+    public async Task UpdateFacilityAsync_WithNoCoordinates_RemovesThePoint()
     {
-        // Arrange — a Point cannot be half-updated. The validator rejects such a request
-        // before it reaches the service; this pins the service's own behaviour.
+        // Arrange
         var original = MakeFacility();
-        var existingCoordinates = original.Coordinates;
         Facility? captured = null;
 
         var repo = new Mock<IFacilityRepository>();
@@ -606,11 +642,15 @@ public class FacilityServiceTests
             .Callback<Facility, CancellationToken>((f, _) => captured = f)
             .ReturnsAsync(RepositoryResult<Facility>.Success(original));
 
-        // Act — longitude only
-        await Build(repo).UpdateFacilityAsync(FacilityIdentifier, null, null, null, 99.9M, null, TestContext.Current.CancellationToken);
+        // Act
+        var result = await Build(repo).UpdateFacilityAsync(
+            FacilityIdentifier, Request(longitude: null, latitude: null), TestContext.Current.CancellationToken);
 
         // Assert
         captured.Should().NotBeNull();
-        captured.Coordinates.Should().Be(existingCoordinates);
+        captured.Coordinates.Should().BeNull();
+        result.Value.Should().NotBeNull();
+        result.Value.Latitude.Should().BeNull();
+        result.Value.Longitude.Should().BeNull();
     }
 }

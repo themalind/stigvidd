@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ interface Props {
   available: LinkItem[];
   onLink: (identifier: string) => void;
   onUnlink: (identifier: string) => void;
+  actions?: (item: LinkItem) => ReactNode;
 }
 
 const MAX_SUGGESTIONS = 8;
@@ -37,6 +38,7 @@ export default function LinkedItemsCard({
   available,
   onLink,
   onUnlink,
+  actions,
 }: Props) {
   const [query, setQuery] = useState("");
 
@@ -67,14 +69,17 @@ export default function LinkedItemsCard({
                   <p className="truncate text-sm font-medium">{item.label}</p>
                   {item.detail && <p className="truncate text-xs text-muted-foreground">{item.detail}</p>}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Unlink ${item.label}`}
-                  onClick={() => onUnlink(item.identifier)}
-                >
-                  <X />
-                </Button>
+                <div className="flex shrink-0 items-center gap-1">
+                  {actions?.(item)}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Unlink ${item.label}`}
+                    onClick={() => onUnlink(item.identifier)}
+                  >
+                    <X />
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

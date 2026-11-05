@@ -6,7 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface CreateFacilityRequest {
+export interface SaveFacilityRequest {
   name: string;
   facilityType: number;
   isAccessible: boolean;
@@ -14,10 +14,7 @@ export interface CreateFacilityRequest {
   latitude: number | null;
   /** @nullable */
   longitude: number | null;
-  /** @nullable */
-  location?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /** @nullable */
-  url?: string | null;
+  location: string;
+  description: string;
+  url: string;
 }
