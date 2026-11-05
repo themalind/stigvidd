@@ -33,6 +33,7 @@ import type {
   TrailResponse,
   TrailShortInfoResponse,
   TrailsAddTrailBody,
+  TrailsGetPopularContributedTrailsParams,
   TrailsGetPopularTrailsParams,
 } from "../model";
 
@@ -447,34 +448,52 @@ export function useTrailsGetPopularTrailsSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getTrailsGetPopularContributedTrailsUrl = () => {
-  return `/api/v1/Trails/popular-contributions`;
+export const getTrailsGetPopularContributedTrailsUrl = (params?: TrailsGetPopularContributedTrailsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/v1/Trails/popular-contributions?${stringifiedParams}`
+    : `/api/v1/Trails/popular-contributions`;
 };
 
-export const trailsGetPopularContributedTrails = async (options?: RequestInit): Promise<TrailCardResponse[]> => {
-  return customFetch<TrailCardResponse[]>(getTrailsGetPopularContributedTrailsUrl(), {
+export const trailsGetPopularContributedTrails = async (
+  params?: TrailsGetPopularContributedTrailsParams,
+  options?: RequestInit,
+): Promise<TrailCardResponse[]> => {
+  return customFetch<TrailCardResponse[]>(getTrailsGetPopularContributedTrailsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getTrailsGetPopularContributedTrailsQueryKey = () => {
-  return [`/api/v1/Trails/popular-contributions`] as const;
+export const getTrailsGetPopularContributedTrailsQueryKey = (params?: TrailsGetPopularContributedTrailsParams) => {
+  return [`/api/v1/Trails/popular-contributions`, ...(params ? [params] : [])] as const;
 };
 
 export const getTrailsGetPopularContributedTrailsQueryOptions = <
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: TrailsGetPopularContributedTrailsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getTrailsGetPopularContributedTrailsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getTrailsGetPopularContributedTrailsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>> = ({ signal }) =>
-    trailsGetPopularContributedTrails({ signal, ...requestOptions });
+    trailsGetPopularContributedTrails(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
@@ -492,6 +511,7 @@ export function useTrailsGetPopularContributedTrails<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params: undefined | TrailsGetPopularContributedTrailsParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>> &
       Pick<
@@ -510,6 +530,7 @@ export function useTrailsGetPopularContributedTrails<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params?: TrailsGetPopularContributedTrailsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>> &
       Pick<
@@ -528,6 +549,7 @@ export function useTrailsGetPopularContributedTrails<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params?: TrailsGetPopularContributedTrailsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -539,13 +561,14 @@ export function useTrailsGetPopularContributedTrails<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params?: TrailsGetPopularContributedTrailsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getTrailsGetPopularContributedTrailsQueryOptions(options);
+  const queryOptions = getTrailsGetPopularContributedTrailsQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -557,18 +580,21 @@ export function useTrailsGetPopularContributedTrails<
 export const getTrailsGetPopularContributedTrailsSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
->(options?: {
-  query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: TrailsGetPopularContributedTrailsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getTrailsGetPopularContributedTrailsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getTrailsGetPopularContributedTrailsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>> = ({ signal }) =>
-    trailsGetPopularContributedTrails({ signal, ...requestOptions });
+    trailsGetPopularContributedTrails(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
     Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
@@ -586,6 +612,7 @@ export function useTrailsGetPopularContributedTrailsSuspense<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params: undefined | TrailsGetPopularContributedTrailsParams,
   options: {
     query: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>
@@ -598,6 +625,7 @@ export function useTrailsGetPopularContributedTrailsSuspense<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params?: TrailsGetPopularContributedTrailsParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>
@@ -610,6 +638,7 @@ export function useTrailsGetPopularContributedTrailsSuspense<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params?: TrailsGetPopularContributedTrailsParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>
@@ -623,6 +652,7 @@ export function useTrailsGetPopularContributedTrailsSuspense<
   TData = Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>,
   TError = unknown,
 >(
+  params?: TrailsGetPopularContributedTrailsParams,
   options?: {
     query?: Partial<
       UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailsGetPopularContributedTrails>>, TError, TData>
@@ -631,7 +661,7 @@ export function useTrailsGetPopularContributedTrailsSuspense<
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getTrailsGetPopularContributedTrailsSuspenseQueryOptions(options);
+  const queryOptions = getTrailsGetPopularContributedTrailsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
