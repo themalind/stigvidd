@@ -94,6 +94,24 @@ public class CityAreaService : ICityAreaService
         return Result.Ok(_cityAreaResponseFactory.CreateAdmin(result.Value));
     }
 
+    public async Task<Result<AdminLinkSuggestionsResponse>> GetLinkSuggestionsAsync(CancellationToken ctoken)
+    {
+        var result = await _cityAreaRepository.GetLinkSuggestionSourcesAsync(ctoken);
+
+        if (!result.IsSuccess)
+            return Result.Fail<AdminLinkSuggestionsResponse>(new Message(500, "An error occurred while retrieving unlinked facilities and trails."));
+
+        var sources = result.Value;
+        var facilities = sources.Facilities
+            .Select(f => new SuggestedFacility(f, CityAreaSuggester.Suggest(f.Name, f.Latitude, f.Longitude, sources.Areas)))
+            .ToList();
+        var trails = sources.Trails
+            .Select(t => new SuggestedTrail(t, CityAreaSuggester.Suggest(t.Name, t.Latitude, t.Longitude, sources.Areas)))
+            .ToList();
+
+        return Result.Ok(_cityAreaResponseFactory.CreateLinkSuggestions(facilities, trails));
+    }
+
     public async Task<Result> SetFacilityLinkAsync(string areaIdentifier, string facilityIdentifier, bool linked, CancellationToken ctoken)
     {
         var result = await _cityAreaRepository.SetFacilityLinkAsync(areaIdentifier, facilityIdentifier, linked, ctoken);

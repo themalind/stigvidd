@@ -54,11 +54,20 @@ describe("LinkedItemsCard", () => {
     expect(onLink).toHaveBeenCalledWith("f-1");
   });
 
-  it("says when nothing unlinked matches", async () => {
+  it("names a match that is already linked instead of saying nothing matches", async () => {
     renderCard([grill]);
 
     await userEvent.type(screen.getByRole("textbox", { name: "Search facilities" }), "grill");
 
-    expect(screen.getByText("No unlinked matches.")).toBeInTheDocument();
+    expect(screen.getByText("Already linked here: Grillplats Ramnasjön")).toBeInTheDocument();
+    expect(screen.queryByText("No matches.")).not.toBeInTheDocument();
+  });
+
+  it("says when nothing matches at all", async () => {
+    renderCard([]);
+
+    await userEvent.type(screen.getByRole("textbox", { name: "Search facilities" }), "zzz");
+
+    expect(screen.getByText("No matches.")).toBeInTheDocument();
   });
 });

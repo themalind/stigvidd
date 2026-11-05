@@ -123,6 +123,93 @@ public class CityAreaRepository : ICityAreaRepository
         }
     }
 
+    public async Task<RepositoryResult<LinkSuggestionSourcesProjection>> GetLinkSuggestionSourcesAsync(CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var areas = await context.CityAreas
+                .AsNoTracking()
+                .OrderBy(a => a.Name)
+                .Select(a => new { a.Id, a.Identifier, a.Name })
+                .ToListAsync(ctoken);
+
+            var facilityPlaces = await (
+                from link in context.Set<Dictionary<string, object>>(FacilityLinkTable)
+                join facility in context.Facilities on EF.Property<int>(link, FacilityKey) equals facility.Id
+                where facility.Coordinates != null
+                select new
+                {
+                    AreaId = EF.Property<int>(link, AreaKey),
+                    facility.Name,
+                    Latitude = facility.Coordinates == null ? 0.0 : facility.Coordinates.Y,
+                    Longitude = facility.Coordinates == null ? 0.0 : facility.Coordinates.X,
+                })
+                .AsNoTracking()
+                .ToListAsync(ctoken);
+
+            var trailPlaces = await (
+                from link in context.Set<Dictionary<string, object>>(TrailLinkTable)
+                join trail in context.Trails on EF.Property<int>(link, TrailKey) equals trail.Id
+                where trail.GeoPath != null
+                select new
+                {
+                    AreaId = EF.Property<int>(link, AreaKey),
+                    trail.Name,
+                    Latitude = trail.GeoPath == null ? 0.0 : trail.GeoPath.StartPoint.Y,
+                    Longitude = trail.GeoPath == null ? 0.0 : trail.GeoPath.StartPoint.X,
+                })
+                .AsNoTracking()
+                .ToListAsync(ctoken);
+
+            var facilities = await context.Facilities
+                .AsNoTracking()
+                .Where(f => !context.Set<Dictionary<string, object>>(FacilityLinkTable)
+                    .Any(link => EF.Property<int>(link, FacilityKey) == f.Id))
+                .OrderBy(f => f.Name)
+                .Select(f => new UnlinkedFacilityProjection(
+                    f.Identifier,
+                    f.Name,
+                    (int)f.FacilityType,
+                    f.Coordinates == null ? null : f.Coordinates.Y,
+                    f.Coordinates == null ? null : f.Coordinates.X))
+                .ToListAsync(ctoken);
+
+            var trails = await context.Trails
+                .AsNoTracking()
+                .Where(t => t.Contribution == null)
+                .Where(t => !context.Set<Dictionary<string, object>>(TrailLinkTable)
+                    .Any(link => EF.Property<int>(link, TrailKey) == t.Id))
+                .OrderBy(t => t.Name)
+                .Select(t => new UnlinkedTrailProjection(
+                    t.Identifier,
+                    t.Name,
+                    t.City,
+                    t.IsVerified,
+                    t.GeoPath == null ? null : t.GeoPath.StartPoint.Y,
+                    t.GeoPath == null ? null : t.GeoPath.StartPoint.X))
+                .ToListAsync(ctoken);
+
+            var placesByArea = facilityPlaces
+                .Select(p => (p.AreaId, Place: new LinkedPlaceProjection(p.Name, p.Latitude, p.Longitude)))
+                .Concat(trailPlaces.Select(p => (p.AreaId, Place: new LinkedPlaceProjection(p.Name, p.Latitude, p.Longitude))))
+                .ToLookup(p => p.AreaId, p => p.Place);
+
+            var suggestionAreas = areas
+                .Select(a => new SuggestionAreaProjection(a.Identifier, a.Name, placesByArea[a.Id].ToList()))
+                .ToList();
+
+            return RepositoryResult<LinkSuggestionSourcesProjection>.Success(
+                new LinkSuggestionSourcesProjection(suggestionAreas, facilities, trails));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CityAreaRepository: GetLinkSuggestionSourcesAsync -> Something went wrong when fetching unlinked facilities and trails.");
+            return RepositoryResult<LinkSuggestionSourcesProjection>.Error();
+        }
+    }
+
     public async Task<RepositoryResult> SetFacilityLinkAsync(
         string areaIdentifier, string facilityIdentifier, bool linked, CancellationToken ctoken)
     {

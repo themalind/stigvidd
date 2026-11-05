@@ -66,6 +66,54 @@ public class AdminCityAreasControllerIntegrationTests : IClassFixture<StigViddWe
     }
 
     [Fact]
+    public async Task GetLinkSuggestions_ListsWhatIsUnlinked_WithTheNearestArea()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var suggestions = await client.GetFromJsonAsync<AdminLinkSuggestionsResponse>(
+            $"{Route}/suggestions", TestContext.Current.CancellationToken);
+
+        // Assert
+        suggestions.Should().NotBeNull();
+        suggestions.Facilities.Select(f => f.Identifier).Should().NotContain([Firepit, FishingArea]);
+        var shelter = suggestions.Facilities.Should().ContainSingle(f => f.Identifier == Shelter).Subject;
+        var suggestion = shelter.Suggestions.Should().ContainSingle().Subject;
+        suggestion.AreaIdentifier.Should().Be(LinkedArea);
+        suggestion.Reason.Should().Be(WebDataContracts.Enums.AreaSuggestionReason.Nearby);
+        suggestion.NearestName.Should().Be("Tiveden");
+        suggestions.Trails.Should().NotBeEmpty().And.NotContain(t => t.Name == "Tiveden");
+    }
+
+    [Fact]
+    public async Task GetLinkSuggestions_SendsTheReasonAsAName()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var json = await client.GetStringAsync($"{Route}/suggestions", TestContext.Current.CancellationToken);
+
+        // Assert
+        json.Should().Contain("\"reason\":\"Nearby\"");
+    }
+
+    [Fact]
+    public async Task GetLinkSuggestions_WithoutAdminRole_ReturnsForbidden()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        // Act
+        var response = await client.GetAsync($"{Route}/suggestions", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task GetAll_WithoutAdminRole_ReturnsForbidden()
     {
         // Arrange
