@@ -6,12 +6,10 @@ using WebDataContracts.ResponseModels.Facility;
 
 namespace Core.Factories;
 
-// Add missing properties
 public class FacilityResponseFactory
 {
-    // A coordinate-less facility reports 0/0 rather than null. That predates the geometry
-    // column and clients rely on it, so GetValueOrDefault stays. The marker endpoint filters
-    // those facilities out anyway (FacilityRepository.GetAllAsync).
+    // keep-comment: the public shape reports a coordinate-less facility as 0/0, which shipped apps rely on;
+    // keep-comment: the admin shape (CreateAdmin) reports null instead
     public FacilityResponse Create(Facility facility)
     {
         return FacilityResponse.Create(
@@ -25,6 +23,22 @@ public class FacilityResponseFactory
             facility.Description,
             facility.Url
         );
+    }
+
+    public AdminFacilityResponse CreateAdmin(Facility facility)
+    {
+        return new AdminFacilityResponse
+        {
+            Identifier = facility.Identifier,
+            Name = facility.Name,
+            FacilityType = (int)facility.FacilityType,
+            IsAccessible = facility.IsAccessible,
+            Latitude = GeoPointFactory.ToLatitude(facility.Coordinates),
+            Longitude = GeoPointFactory.ToLongitude(facility.Coordinates),
+            Location = facility.Location ?? string.Empty,
+            Description = facility.Description ?? string.Empty,
+            Url = facility.Url ?? string.Empty,
+        };
     }
 
     public IReadOnlyCollection<FacilityResponse> Create(IReadOnlyCollection<Facility> facilities)

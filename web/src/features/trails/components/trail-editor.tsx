@@ -38,6 +38,7 @@ import { Edit, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { trailQueryOptions, useForgetTrail, useUpdateTrail } from "@/features/trails/api/trail";
 import { Separator } from "@/components/ui/separator";
+import { isHttpUrl } from "@/utils/url";
 
 interface Props {
   data: Pick<AdminTrailListItemResponse, "identifier">;
@@ -90,15 +91,6 @@ const LIMITS = {
   linkTitle: 100,
   link: 500,
 } as const;
-
-function isHttpUrl(value: string) {
-  try {
-    const url = new URL(value.trim());
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 function linkProblem(link: UpdateTrailLinkRequest): string | null {
   if (!link.title.trim()) return "Give the link a title.";

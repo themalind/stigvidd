@@ -25,10 +25,9 @@ import type {
 
 import type {
   AdminFacilitiesAddFacilityImagesBody,
-  CreateFacilityRequest,
+  AdminFacilityResponse,
   FacilityImageResponse,
-  FacilityResponse,
-  UpdateFacilityRequest,
+  SaveFacilityRequest,
 } from "../model";
 
 import { customFetch } from "../../mutator";
@@ -54,8 +53,8 @@ export const getAdminFacilitiesGetAllUrl = () => {
   return `/api/v1/admin/facilities`;
 };
 
-export const adminFacilitiesGetAll = async (options?: RequestInit): Promise<FacilityResponse[]> => {
-  return customFetch<FacilityResponse[]>(getAdminFacilitiesGetAllUrl(), {
+export const adminFacilitiesGetAll = async (options?: RequestInit): Promise<AdminFacilityResponse[]> => {
+  return customFetch<AdminFacilityResponse[]>(getAdminFacilitiesGetAllUrl(), {
     ...options,
     method: "GET",
   });
@@ -222,14 +221,14 @@ export const getAdminFacilitiesCreateUrl = () => {
 };
 
 export const adminFacilitiesCreate = async (
-  createFacilityRequest: CreateFacilityRequest,
+  saveFacilityRequest: SaveFacilityRequest,
   options?: RequestInit,
-): Promise<FacilityResponse> => {
-  return customFetch<FacilityResponse>(getAdminFacilitiesCreateUrl(), {
+): Promise<AdminFacilityResponse> => {
+  return customFetch<AdminFacilityResponse>(getAdminFacilitiesCreateUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createFacilityRequest),
+    body: JSON.stringify(saveFacilityRequest),
   });
 };
 
@@ -237,14 +236,14 @@ export const getAdminFacilitiesCreateMutationOptions = <TError = unknown, TConte
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof adminFacilitiesCreate>>,
     TError,
-    { data: CreateFacilityRequest },
+    { data: SaveFacilityRequest },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof adminFacilitiesCreate>>,
   TError,
-  { data: CreateFacilityRequest },
+  { data: SaveFacilityRequest },
   TContext
 > => {
   const mutationKey = ["adminFacilitiesCreate"];
@@ -256,7 +255,7 @@ export const getAdminFacilitiesCreateMutationOptions = <TError = unknown, TConte
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof adminFacilitiesCreate>>,
-    { data: CreateFacilityRequest }
+    { data: SaveFacilityRequest }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -267,7 +266,7 @@ export const getAdminFacilitiesCreateMutationOptions = <TError = unknown, TConte
 };
 
 export type AdminFacilitiesCreateMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesCreate>>>;
-export type AdminFacilitiesCreateMutationBody = CreateFacilityRequest;
+export type AdminFacilitiesCreateMutationBody = SaveFacilityRequest;
 export type AdminFacilitiesCreateMutationError = unknown;
 
 export const useAdminFacilitiesCreate = <TError = unknown, TContext = unknown>(
@@ -275,7 +274,7 @@ export const useAdminFacilitiesCreate = <TError = unknown, TContext = unknown>(
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof adminFacilitiesCreate>>,
       TError,
-      { data: CreateFacilityRequest },
+      { data: SaveFacilityRequest },
       TContext
     >;
     request?: SecondParameter<typeof customFetch>;
@@ -284,7 +283,7 @@ export const useAdminFacilitiesCreate = <TError = unknown, TContext = unknown>(
 ): UseMutationResult<
   Awaited<ReturnType<typeof adminFacilitiesCreate>>,
   TError,
-  { data: CreateFacilityRequest },
+  { data: SaveFacilityRequest },
   TContext
 > => {
   return useMutation(getAdminFacilitiesCreateMutationOptions(options), queryClient);
@@ -295,14 +294,14 @@ export const getAdminFacilitiesUpdateUrl = (identifier: string) => {
 
 export const adminFacilitiesUpdate = async (
   identifier: string,
-  updateFacilityRequest: UpdateFacilityRequest,
+  saveFacilityRequest: SaveFacilityRequest,
   options?: RequestInit,
-): Promise<FacilityResponse> => {
-  return customFetch<FacilityResponse>(getAdminFacilitiesUpdateUrl(identifier), {
+): Promise<AdminFacilityResponse> => {
+  return customFetch<AdminFacilityResponse>(getAdminFacilitiesUpdateUrl(identifier), {
     ...options,
     method: "PUT",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(updateFacilityRequest),
+    body: JSON.stringify(saveFacilityRequest),
   });
 };
 
@@ -310,14 +309,14 @@ export const getAdminFacilitiesUpdateMutationOptions = <TError = unknown, TConte
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
     TError,
-    { identifier: string; data: UpdateFacilityRequest },
+    { identifier: string; data: SaveFacilityRequest },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
   TError,
-  { identifier: string; data: UpdateFacilityRequest },
+  { identifier: string; data: SaveFacilityRequest },
   TContext
 > => {
   const mutationKey = ["adminFacilitiesUpdate"];
@@ -329,7 +328,7 @@ export const getAdminFacilitiesUpdateMutationOptions = <TError = unknown, TConte
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
-    { identifier: string; data: UpdateFacilityRequest }
+    { identifier: string; data: SaveFacilityRequest }
   > = (props) => {
     const { identifier, data } = props ?? {};
 
@@ -340,7 +339,7 @@ export const getAdminFacilitiesUpdateMutationOptions = <TError = unknown, TConte
 };
 
 export type AdminFacilitiesUpdateMutationResult = NonNullable<Awaited<ReturnType<typeof adminFacilitiesUpdate>>>;
-export type AdminFacilitiesUpdateMutationBody = UpdateFacilityRequest;
+export type AdminFacilitiesUpdateMutationBody = SaveFacilityRequest;
 export type AdminFacilitiesUpdateMutationError = unknown;
 
 export const useAdminFacilitiesUpdate = <TError = unknown, TContext = unknown>(
@@ -348,7 +347,7 @@ export const useAdminFacilitiesUpdate = <TError = unknown, TContext = unknown>(
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
       TError,
-      { identifier: string; data: UpdateFacilityRequest },
+      { identifier: string; data: SaveFacilityRequest },
       TContext
     >;
     request?: SecondParameter<typeof customFetch>;
@@ -357,7 +356,7 @@ export const useAdminFacilitiesUpdate = <TError = unknown, TContext = unknown>(
 ): UseMutationResult<
   Awaited<ReturnType<typeof adminFacilitiesUpdate>>,
   TError,
-  { identifier: string; data: UpdateFacilityRequest },
+  { identifier: string; data: SaveFacilityRequest },
   TContext
 > => {
   return useMutation(getAdminFacilitiesUpdateMutationOptions(options), queryClient);

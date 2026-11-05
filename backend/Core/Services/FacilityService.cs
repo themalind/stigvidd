@@ -9,6 +9,7 @@ using Infrastructure.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using WebDataContracts.RequestModels.Facility;
 using WebDataContracts.ResponseModels.Facility;
 
 namespace Core.Services;
@@ -39,28 +40,17 @@ public class FacilityService : IFacilityService
             ?? throw new InvalidOperationException("PresentableBaseUrl configuration is missing");
     }
 
-    public async Task<Result<FacilityResponse>> CreateFacilityAsync(
-        string name,
-        int facilityType,
-        bool IsAccessible,
-        decimal? longitude,
-        decimal? latitude,
-        CancellationToken ctoken)
+    public async Task<Result<AdminFacilityResponse>> CreateFacilityAsync(SaveFacilityRequest request, CancellationToken ctoken)
     {
-        var facility = new Facility
-        {
-            Name = name,
-            FacilityType = MapToFacilityType(facilityType),
-            IsAccessible = IsAccessible,
-            Coordinates = GeoPointFactory.FromLonLat(longitude, latitude)
-        };
+        var facility = new Facility { Name = string.Empty };
+        Apply(facility, request);
 
         var result = await _facilityRepository.CreateFacilityAsync(facility, ctoken);
 
         if (!result.IsSuccess)
-            return Result.Fail<FacilityResponse>(new Message(500, "Failed to create the facility."));
+            return Result.Fail<AdminFacilityResponse>(new Message(500, "Failed to create the facility."));
 
-        return Result.Ok(_facilityResponseFactory.Create(result.Value));
+        return Result.Ok(_facilityResponseFactory.CreateAdmin(result.Value));
     }
 
     public async Task<Result<IReadOnlyCollection<FacilityResponse>>> GetAllAsync(CancellationToken ctoken)
@@ -73,14 +63,14 @@ public class FacilityService : IFacilityService
         return Result.Ok(_facilityResponseFactory.Create(result.Value));
     }
 
-    public async Task<Result<IReadOnlyCollection<FacilityResponse>>> GetAllIncludingUnmappedAsync(CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<AdminFacilityResponse>>> GetAllIncludingUnmappedAsync(CancellationToken ctoken)
     {
         var result = await _facilityRepository.GetAllIncludingUnmappedAsync(ctoken);
 
         if (!result.IsSuccess)
-            return Result.Fail<IReadOnlyCollection<FacilityResponse>>(new Message(500, "An error occurred while retrieving facilities."));
+            return Result.Fail<IReadOnlyCollection<AdminFacilityResponse>>(new Message(500, "An error occurred while retrieving facilities."));
 
-        return Result.Ok(_facilityResponseFactory.Create(result.Value));
+        return Result.Ok<IReadOnlyCollection<AdminFacilityResponse>>([.. result.Value.Select(_facilityResponseFactory.CreateAdmin)]);
     }
 
     public async Task<Result<FacilityResponse>> GetByIdentifierAsync(string identifier, CancellationToken ctoken)
@@ -96,33 +86,42 @@ public class FacilityService : IFacilityService
         return Result.Ok(_facilityResponseFactory.Create(result.Value));
     }
 
-    public async Task<Result<FacilityResponse>> UpdateFacilityAsync(string facilityIdentifier, string? name, int? facilityType, bool? isAccessible, decimal? longitude, decimal? latitude, CancellationToken ctoken)
+    public async Task<Result<AdminFacilityResponse>> UpdateFacilityAsync(string facilityIdentifier, SaveFacilityRequest request, CancellationToken ctoken)
     {
         var facility = await _facilityRepository.GetByIdentifierAsync(facilityIdentifier, ctoken);
 
         if (facility.Status == RepositoryResultStatus.Error)
-            return Result.Fail<FacilityResponse>(new Message(500, "An error occurred while retrieving the facility."));
+            return Result.Fail<AdminFacilityResponse>(new Message(500, "An error occurred while retrieving the facility."));
 
         if (!facility.IsSuccess)
-            return Result.Fail<FacilityResponse>(new Message(404, $"No facility found with identifier: {facilityIdentifier}"));
+            return Result.Fail<AdminFacilityResponse>(new Message(404, $"No facility found with identifier: {facilityIdentifier}"));
 
         var existingFacility = facility.Value;
-
-        existingFacility.Name = name ?? existingFacility.Name;
-        existingFacility.FacilityType = facilityType.HasValue ? MapToFacilityType(facilityType.Value) : existingFacility.FacilityType;
-        existingFacility.IsAccessible = isAccessible ?? existingFacility.IsAccessible;
-
-        // A Point cannot be half-updated, so coordinates move together or not at all.
-        // The validator rejects a request carrying only one ordinate.
-        if (longitude.HasValue && latitude.HasValue)
-            existingFacility.Coordinates = GeoPointFactory.FromLonLat(longitude, latitude);
+        Apply(existingFacility, request);
 
         var updateResult = await _facilityRepository.UpdateAsync(existingFacility, ctoken);
 
         if (!updateResult.IsSuccess)
-            return Result.Fail<FacilityResponse>(new Message(500, "Failed to update the facility."));
+            return Result.Fail<AdminFacilityResponse>(new Message(500, "Failed to update the facility."));
 
-        return Result.Ok(_facilityResponseFactory.Create(updateResult.Value));
+        return Result.Ok(_facilityResponseFactory.CreateAdmin(updateResult.Value));
+    }
+
+    private static void Apply(Facility facility, SaveFacilityRequest request)
+    {
+        facility.Name = request.Name.Trim();
+        facility.FacilityType = MapToFacilityType(request.FacilityType);
+        facility.IsAccessible = request.IsAccessible;
+        facility.Coordinates = GeoPointFactory.FromLonLat(request.Longitude, request.Latitude);
+        facility.Location = OrNull(request.Location);
+        facility.Description = OrNull(request.Description);
+        facility.Url = OrNull(request.Url);
+    }
+
+    private static string? OrNull(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Length == 0 ? null : trimmed;
     }
 
     public async Task<Result> DeleteAsync(string facilityIdentifier, CancellationToken ctoken)
