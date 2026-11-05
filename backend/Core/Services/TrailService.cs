@@ -74,23 +74,33 @@ public class TrailService : ITrailService
     public async Task<Result<IReadOnlyCollection<AdminTrailListItemResponse>>> GetAllTrailsForAdminAsync(CancellationToken ctoken)
     {
         var result = await _trailRepository.GetAllTrailsForAdminAsync(
-            t => new AdminTrailListItemResponse
+            row => new AdminTrailListItemResponse
             {
-                Identifier = t.Identifier,
-                Name = t.Name,
-                TrailLength = t.TrailLength,
-                Accessibility = t.Accessibility,
-                Classification = t.Classification,
-                City = t.City,
-                IsVerified = t.IsVerified,
-                HasImages = t.TrailImages!.Any(),
+                Identifier = row.Trail.Identifier,
+                Name = row.Trail.Name,
+                TrailLength = row.Trail.TrailLength,
+                Accessibility = row.Trail.Accessibility,
+                Classification = row.Trail.Classification,
+                City = row.Trail.City,
+                IsVerified = row.Trail.IsVerified,
+                HasImages = row.Trail.TrailImages!.Any(),
                 // keep-comment: the app badges an image as an example by this same rule (app/src/utils/is-mock-image.ts)
-                HasExampleImages = t.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains("mock")),
-                HasSymbol = t.TrailSymbolImage != "",
-                HasDescription = t.Description != "",
-                HasFullDescription = t.FullDescription != "",
-                CreatedAt = t.CreatedAt,
-                LastUpdatedAt = t.LastUpdatedAt,
+                HasExampleImages = row.Trail.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains("mock")),
+                HasSymbol = row.Trail.TrailSymbolImage != "",
+                HasDescription = row.Trail.Description != "",
+                HasFullDescription = row.Trail.FullDescription != "",
+                CreatedAt = row.Trail.CreatedAt,
+                LastUpdatedAt = row.Trail.LastUpdatedAt,
+                Contribution = row.Trail.Contribution == null ? null : new AdminTrailContributionResponse
+                {
+                    SubmitterNickName = row.Trail.Contribution.SubmittedBy != null
+                        ? row.Trail.Contribution.SubmittedBy.NickName
+                        : null,
+                    ShowSubmitterName = row.Trail.Contribution.ShowSubmitterName,
+                    PublishedAt = row.Trail.Contribution.PublishedAt,
+                    LikeCount = row.Trail.Contribution.Likes.Count,
+                    SubmissionIdentifier = row.SubmissionIdentifier,
+                },
             },
             ctoken);
 
@@ -265,10 +275,11 @@ public class TrailService : ITrailService
         return Result.Ok<IReadOnlyCollection<TrailCardResponse>>(result.Value.Select(ToCard).ToList());
     }
 
-    public async Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrailsAsync(CancellationToken ctoken)
+    public async Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrailsAsync(
+        double? userLatitude, double? userLongitude, CancellationToken ctoken)
     {
         // keep-comment: the ranking reads every review and like of every contributed trail, so only the order is cached, not the cards
-        if (!_cache.TryGetValue(PopularContributionsCacheKey, out IReadOnlyList<string>? ranked) || ranked is null)
+        if (!_cache.TryGetValue(PopularContributionsCacheKey, out IReadOnlyList<RankedContribution>? order) || order is null)
         {
             var inputs = await _trailRepository.GetContributionRankingInputsAsync(ctoken);
 
@@ -276,9 +287,11 @@ public class TrailService : ITrailService
                 return Result.Fail<IReadOnlyCollection<TrailCardResponse>>(
                     new Message(500, "An error occurred while fetching popular contributed trails."));
 
-            ranked = _ranking.Rank(inputs.Value, DateTime.UtcNow);
-            _cache.Set(PopularContributionsCacheKey, ranked, _ranking.CacheDuration);
+            order = _ranking.Rank(inputs.Value, DateTime.UtcNow);
+            _cache.Set(PopularContributionsCacheKey, order, _ranking.CacheDuration);
         }
+
+        var ranked = _ranking.Pick(order, userLatitude, userLongitude);
 
         if (ranked.Count == 0)
             return Result.Ok<IReadOnlyCollection<TrailCardResponse>>([]);

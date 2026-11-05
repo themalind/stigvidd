@@ -1,0 +1,110 @@
+// SPDX-FileCopyrightText: 2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/api/mutator";
+
+const toasts = vi.hoisted(() => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+vi.mock("sonner", () => toasts);
+
+import { createQueryClient, shouldRetry, underUrl } from "./react-query";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe("underUrl", () => {
+  const { predicate } = underUrl("/api/v1/sessions/1");
+  const matches = (url: unknown) => predicate({ queryKey: [url] });
+
+  it("selects the resource, what lies beneath it and its filtered reads", () => {
+    expect(matches("/api/v1/sessions/1")).toBe(true);
+    expect(matches("/api/v1/sessions/1/proposals")).toBe(true);
+    expect(matches("/api/v1/sessions/1?page=2")).toBe(true);
+  });
+
+  it("leaves a sibling whose id only starts the same alone", () => {
+    expect(matches("/api/v1/sessions/12")).toBe(false);
+    expect(matches("/api/v1/sessions")).toBe(false);
+    expect(matches(["not", "a", "url"])).toBe(false);
+  });
+});
+
+describe("shouldRetry", () => {
+  it("never retries a refusal, which would only be refused again", () => {
+    expect(shouldRetry(0, new ApiError("Not found", 404))).toBe(false);
+  });
+
+  it("retries a server failure and a dropped connection twice", () => {
+    expect(shouldRetry(0, new ApiError("Boom", 503))).toBe(true);
+    expect(shouldRetry(1, new TypeError("Failed to fetch"))).toBe(true);
+    expect(shouldRetry(2, new TypeError("Failed to fetch"))).toBe(false);
+  });
+});
+
+describe("the query cache", () => {
+  it("leaves a first-load failure to the error boundary", async () => {
+    const client = createQueryClient();
+
+    await client
+      .fetchQuery({ queryKey: ["first"], queryFn: () => Promise.reject(new ApiError("Nope", 404)) })
+      .catch(() => undefined);
+
+    expect(toasts.toast.error).not.toHaveBeenCalled();
+  });
+
+  it("toasts a failed background refetch, preferring the query's own message", async () => {
+    const client = createQueryClient();
+    client.setQueryData(["list"], ["cached"]);
+
+    await client
+      .fetchQuery({
+        queryKey: ["list"],
+        queryFn: () => Promise.reject(new ApiError("Nope", 400)),
+        staleTime: 0,
+        meta: { errorMessage: "Could not refresh the list." },
+      })
+      .catch(() => undefined);
+
+    expect(toasts.toast.error).toHaveBeenCalledWith("Could not refresh the list.");
+  });
+
+  it("toasts a run of failed refetches once, and again only after a success", async () => {
+    const client = createQueryClient();
+    client.setQueryData(["poll"], "cached");
+    let next: () => Promise<string> = () => Promise.reject(new ApiError("Down", 503));
+    const refetch = () =>
+      client
+        .fetchQuery({ queryKey: ["poll"], queryFn: () => next(), staleTime: 0, retry: false })
+        .catch(() => undefined);
+
+    await refetch();
+    await refetch();
+    expect(toasts.toast.error).toHaveBeenCalledTimes(1);
+
+    next = () => Promise.resolve("fresh");
+    await refetch();
+    next = () => Promise.reject(new ApiError("Down", 503));
+    await refetch();
+
+    expect(toasts.toast.error).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("the mutation cache", () => {
+  it("toasts success and failure from the mutation's meta", async () => {
+    const client = createQueryClient();
+    const mutations = client.getMutationCache();
+
+    await mutations
+      .build(client, { mutationFn: () => Promise.resolve(), meta: { successMessage: "Saved." } })
+      .execute(undefined);
+    await mutations
+      .build(client, { mutationFn: () => Promise.reject(new ApiError("Refused", 409)) })
+      .execute(undefined)
+      .catch(() => undefined);
+
+    expect(toasts.toast.success).toHaveBeenCalledWith("Saved.");
+    expect(toasts.toast.error).toHaveBeenCalledWith("Refused");
+  });
+});

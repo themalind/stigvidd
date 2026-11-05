@@ -5,10 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,8 +18,10 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
 import type {
   DecideProposalRequest,
@@ -35,22 +34,19 @@ import type {
   TrailImportDiffResponse,
   TrailImportGetProposalsParams,
   TrailImportPreviewResponse,
-  TrailImportSessionResponse
-} from '../model';
+  TrailImportSessionResponse,
+} from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -61,1020 +57,1540 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getTrailImportCreateSessionUrl = () => {
+  return `/api/v1/admin/trail-import/sessions`;
+};
 
-
-
-
-  return `/api/v1/admin/trail-import/sessions`
-}
-
-export const trailImportCreateSession = async (trailImportCreateSessionBody?: TrailImportCreateSessionBody, options?: RequestInit): Promise<TrailImportSessionResponse> => {
-    const formData = new FormData();
-if(trailImportCreateSessionBody?.ContentType !== undefined && trailImportCreateSessionBody.ContentType !== null) {
- formData.append(`ContentType`, trailImportCreateSessionBody.ContentType);
- }
-if(trailImportCreateSessionBody?.ContentDisposition !== undefined && trailImportCreateSessionBody.ContentDisposition !== null) {
- formData.append(`ContentDisposition`, trailImportCreateSessionBody.ContentDisposition);
- }
-if(trailImportCreateSessionBody?.Headers !== undefined && trailImportCreateSessionBody.Headers !== null) {
- trailImportCreateSessionBody?.Headers.forEach(value => formData.append(`Headers`, value));
- }
-if(trailImportCreateSessionBody?.Length !== undefined) {
- formData.append(`Length`, trailImportCreateSessionBody.Length.toString())
- }
-if(trailImportCreateSessionBody?.Name !== undefined && trailImportCreateSessionBody.Name !== null) {
- formData.append(`Name`, trailImportCreateSessionBody.Name);
- }
-if(trailImportCreateSessionBody?.FileName !== undefined && trailImportCreateSessionBody.FileName !== null) {
- formData.append(`FileName`, trailImportCreateSessionBody.FileName);
- }
-if(trailImportCreateSessionBody?.source !== undefined && trailImportCreateSessionBody.source !== null) {
- formData.append(`source`, trailImportCreateSessionBody.source);
- }
-
-  return customFetch<TrailImportSessionResponse>(getTrailImportCreateSessionUrl(),
-  {
-    ...options,
-    method: 'POST'
-    ,
-    body: formData
+export const trailImportCreateSession = async (
+  trailImportCreateSessionBody?: TrailImportCreateSessionBody,
+  options?: RequestInit,
+): Promise<TrailImportSessionResponse> => {
+  const formData = new FormData();
+  if (trailImportCreateSessionBody?.ContentType !== undefined && trailImportCreateSessionBody.ContentType !== null) {
+    formData.append(`ContentType`, trailImportCreateSessionBody.ContentType);
   }
-);}
+  if (
+    trailImportCreateSessionBody?.ContentDisposition !== undefined &&
+    trailImportCreateSessionBody.ContentDisposition !== null
+  ) {
+    formData.append(`ContentDisposition`, trailImportCreateSessionBody.ContentDisposition);
+  }
+  if (trailImportCreateSessionBody?.Headers !== undefined && trailImportCreateSessionBody.Headers !== null) {
+    trailImportCreateSessionBody?.Headers.forEach((value) => formData.append(`Headers`, value));
+  }
+  if (trailImportCreateSessionBody?.Length !== undefined) {
+    formData.append(`Length`, trailImportCreateSessionBody.Length.toString());
+  }
+  if (trailImportCreateSessionBody?.Name !== undefined && trailImportCreateSessionBody.Name !== null) {
+    formData.append(`Name`, trailImportCreateSessionBody.Name);
+  }
+  if (trailImportCreateSessionBody?.FileName !== undefined && trailImportCreateSessionBody.FileName !== null) {
+    formData.append(`FileName`, trailImportCreateSessionBody.FileName);
+  }
+  if (trailImportCreateSessionBody?.source !== undefined && trailImportCreateSessionBody.source !== null) {
+    formData.append(`source`, trailImportCreateSessionBody.source);
+  }
 
+  return customFetch<TrailImportSessionResponse>(getTrailImportCreateSessionUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
 
+export const getTrailImportCreateSessionMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trailImportCreateSession>>,
+    TError,
+    { data?: TrailImportCreateSessionBody },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof trailImportCreateSession>>,
+  TError,
+  { data?: TrailImportCreateSessionBody },
+  TContext
+> => {
+  const mutationKey = ["trailImportCreateSession"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof trailImportCreateSession>>,
+    { data?: TrailImportCreateSessionBody }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return trailImportCreateSession(data, requestOptions);
+  };
 
-export const getTrailImportCreateSessionQueryKey = (trailImportCreateSessionBody?: TrailImportCreateSessionBody,) => {
-    return [
-    'POST', `/api/v1/admin/trail-import/sessions`, trailImportCreateSessionBody
-    ] as const;
-    }
+  return { mutationFn, ...mutationOptions };
+};
 
+export type TrailImportCreateSessionMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportCreateSession>>>;
+export type TrailImportCreateSessionMutationBody = TrailImportCreateSessionBody | undefined;
+export type TrailImportCreateSessionMutationError = unknown;
 
-export const getTrailImportCreateSessionQueryOptions = <TData = Awaited<ReturnType<typeof trailImportCreateSession>>, TError = unknown>(trailImportCreateSessionBody?: TrailImportCreateSessionBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportCreateSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+export const useTrailImportCreateSession = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof trailImportCreateSession>>,
+      TError,
+      { data?: TrailImportCreateSessionBody },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof trailImportCreateSession>>,
+  TError,
+  { data?: TrailImportCreateSessionBody },
+  TContext
+> => {
+  return useMutation(getTrailImportCreateSessionMutationOptions(options), queryClient);
+};
+export const getTrailImportGetSessionsUrl = () => {
+  return `/api/v1/admin/trail-import/sessions`;
+};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+export const trailImportGetSessions = async (options?: RequestInit): Promise<TrailImportSessionResponse[]> => {
+  return customFetch<TrailImportSessionResponse[]>(getTrailImportGetSessionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
 
-  const queryKey =  queryOptions?.queryKey ?? getTrailImportCreateSessionQueryKey(trailImportCreateSessionBody);
+export const getTrailImportGetSessionsQueryKey = () => {
+  return [`/api/v1/admin/trail-import/sessions`] as const;
+};
 
+export const getTrailImportGetSessionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetSessions>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetSessionsQueryKey();
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportCreateSession>>> = ({ signal }) => trailImportCreateSession(trailImportCreateSessionBody, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetSessions>>> = ({ signal }) =>
+    trailImportGetSessions({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetSessions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type TrailImportGetSessionsQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetSessions>>>;
+export type TrailImportGetSessionsQueryError = unknown;
 
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailImportCreateSession>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailImportCreateSessionQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportCreateSession>>>
-export type TrailImportCreateSessionQueryError = unknown
-
-
-export function useTrailImportCreateSession<TData = Awaited<ReturnType<typeof trailImportCreateSession>>, TError = unknown>(
- trailImportCreateSessionBody: undefined |  TrailImportCreateSessionBody, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportCreateSession>>, TError, TData>> & Pick<
+export function useTrailImportGetSessions<TData = Awaited<ReturnType<typeof trailImportGetSessions>>, TError = unknown>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportCreateSession>>,
+          Awaited<ReturnType<typeof trailImportGetSessions>>,
           TError,
-          Awaited<ReturnType<typeof trailImportCreateSession>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportCreateSession<TData = Awaited<ReturnType<typeof trailImportCreateSession>>, TError = unknown>(
- trailImportCreateSessionBody?: TrailImportCreateSessionBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportCreateSession>>, TError, TData>> & Pick<
+          Awaited<ReturnType<typeof trailImportGetSessions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSessions<TData = Awaited<ReturnType<typeof trailImportGetSessions>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportCreateSession>>,
+          Awaited<ReturnType<typeof trailImportGetSessions>>,
           TError,
-          Awaited<ReturnType<typeof trailImportCreateSession>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportCreateSession<TData = Awaited<ReturnType<typeof trailImportCreateSession>>, TError = unknown>(
- trailImportCreateSessionBody?: TrailImportCreateSessionBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportCreateSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+          Awaited<ReturnType<typeof trailImportGetSessions>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSessions<TData = Awaited<ReturnType<typeof trailImportGetSessions>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useTrailImportCreateSession<TData = Awaited<ReturnType<typeof trailImportCreateSession>>, TError = unknown>(
- trailImportCreateSessionBody?: TrailImportCreateSessionBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportCreateSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useTrailImportGetSessions<TData = Awaited<ReturnType<typeof trailImportGetSessions>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetSessionsQueryOptions(options);
 
-  const queryOptions = getTrailImportCreateSessionQueryOptions(trailImportCreateSessionBody,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getTrailImportGetSessionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetSessions>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetSessionsQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetSessions>>> = ({ signal }) =>
+    trailImportGetSessions({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetSessions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type TrailImportGetSessionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetSessions>>>;
+export type TrailImportGetSessionsSuspenseQueryError = unknown;
 
-export const getTrailImportGetSessionsUrl = () => {
+export function useTrailImportGetSessionsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSessions>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSessionsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSessions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSessionsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSessions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useTrailImportGetSessionsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSessions>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetSessionsSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-  return `/api/v1/admin/trail-import/sessions`
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const trailImportGetSessions = async ( options?: RequestInit): Promise<TrailImportSessionResponse[]> => {
-
-  return customFetch<TrailImportSessionResponse[]>(getTrailImportGetSessionsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getTrailImportGetSessionsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError,void, TContext> => {
-
-const mutationKey = ['trailImportGetSessions'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportGetSessions>>, void> = () => {
-
-
-          return  trailImportGetSessions(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailImportGetSessionsMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportGetSessions>>>
-
-    export type TrailImportGetSessionsMutationError = unknown
-
-    export const useTrailImportGetSessions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetSessions>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailImportGetSessions>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getTrailImportGetSessionsMutationOptions(options), queryClient);
-    }
-    export const getTrailImportAnalyzeUrl = (id: number,
-    params?: TrailImportAnalyzeParams,) => {
+export const getTrailImportAnalyzeUrl = (id: number, params?: TrailImportAnalyzeParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/admin/trail-import/sessions/${id}/analyze?${stringifiedParams}` : `/api/v1/admin/trail-import/sessions/${id}/analyze`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/admin/trail-import/sessions/${id}/analyze?${stringifiedParams}`
+    : `/api/v1/admin/trail-import/sessions/${id}/analyze`;
+};
 
-export const trailImportAnalyze = async (id: number,
-    params?: TrailImportAnalyzeParams, options?: RequestInit): Promise<TrailImportSessionResponse> => {
-
-  return customFetch<TrailImportSessionResponse>(getTrailImportAnalyzeUrl(id,params),
-  {
+export const trailImportAnalyze = async (
+  id: number,
+  params?: TrailImportAnalyzeParams,
+  options?: RequestInit,
+): Promise<TrailImportSessionResponse> => {
+  return customFetch<TrailImportSessionResponse>(getTrailImportAnalyzeUrl(id, params), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getTrailImportAnalyzeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trailImportAnalyze>>,
+    TError,
+    { id: number; params?: TrailImportAnalyzeParams },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof trailImportAnalyze>>,
+  TError,
+  { id: number; params?: TrailImportAnalyzeParams },
+  TContext
+> => {
+  const mutationKey = ["trailImportAnalyze"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof trailImportAnalyze>>,
+    { id: number; params?: TrailImportAnalyzeParams }
+  > = (props) => {
+    const { id, params } = props ?? {};
 
+    return trailImportAnalyze(id, params, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type TrailImportAnalyzeMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportAnalyze>>>;
 
+export type TrailImportAnalyzeMutationError = unknown;
 
-export const getTrailImportAnalyzeQueryKey = (id: number,
-    params?: TrailImportAnalyzeParams,) => {
-    return [
-    'POST', `/api/v1/admin/trail-import/sessions/${id}/analyze`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getTrailImportAnalyzeQueryOptions = <TData = Awaited<ReturnType<typeof trailImportAnalyze>>, TError = unknown>(id: number,
-    params?: TrailImportAnalyzeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportAnalyze>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailImportAnalyzeQueryKey(id,params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportAnalyze>>> = ({ signal }) => trailImportAnalyze(id,params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailImportAnalyze>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailImportAnalyzeQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportAnalyze>>>
-export type TrailImportAnalyzeQueryError = unknown
-
-
-export function useTrailImportAnalyze<TData = Awaited<ReturnType<typeof trailImportAnalyze>>, TError = unknown>(
- id: number,
-    params: undefined |  TrailImportAnalyzeParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportAnalyze>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportAnalyze>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportAnalyze>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportAnalyze<TData = Awaited<ReturnType<typeof trailImportAnalyze>>, TError = unknown>(
- id: number,
-    params?: TrailImportAnalyzeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportAnalyze>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportAnalyze>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportAnalyze>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportAnalyze<TData = Awaited<ReturnType<typeof trailImportAnalyze>>, TError = unknown>(
- id: number,
-    params?: TrailImportAnalyzeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportAnalyze>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailImportAnalyze<TData = Awaited<ReturnType<typeof trailImportAnalyze>>, TError = unknown>(
- id: number,
-    params?: TrailImportAnalyzeParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportAnalyze>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailImportAnalyzeQueryOptions(id,params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailImportGetSessionUrl = (id: number,) => {
-
-
-
-
-  return `/api/v1/admin/trail-import/sessions/${id}`
-}
+export const useTrailImportAnalyze = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof trailImportAnalyze>>,
+      TError,
+      { id: number; params?: TrailImportAnalyzeParams },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof trailImportAnalyze>>,
+  TError,
+  { id: number; params?: TrailImportAnalyzeParams },
+  TContext
+> => {
+  return useMutation(getTrailImportAnalyzeMutationOptions(options), queryClient);
+};
+export const getTrailImportGetSessionUrl = (id: number) => {
+  return `/api/v1/admin/trail-import/sessions/${id}`;
+};
 
 export const trailImportGetSession = async (id: number, options?: RequestInit): Promise<TrailImportSessionResponse> => {
-
-  return customFetch<TrailImportSessionResponse>(getTrailImportGetSessionUrl(id),
-  {
+  return customFetch<TrailImportSessionResponse>(getTrailImportGetSessionUrl(id), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getTrailImportGetSessionQueryKey = (id: number) => {
+  return [`/api/v1/admin/trail-import/sessions/${id}`] as const;
+};
 
-  }
-);}
-
-
-
-
-
-export const getTrailImportGetSessionMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError,{id: number}, TContext> => {
-
-const mutationKey = ['trailImportGetSession'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportGetSession>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  trailImportGetSession(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailImportGetSessionMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportGetSession>>>
-
-    export type TrailImportGetSessionMutationError = unknown
-
-    export const useTrailImportGetSession = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailImportGetSession>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getTrailImportGetSessionMutationOptions(options), queryClient);
-    }
-    export const getTrailImportDeleteSessionUrl = (id: number,) => {
-
-
-
-
-  return `/api/v1/admin/trail-import/sessions/${id}`
-}
-
-export const trailImportDeleteSession = async (id: number, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getTrailImportDeleteSessionUrl(id),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getTrailImportDeleteSessionQueryKey = (id: number,) => {
-    return [
-    'DELETE', `/api/v1/admin/trail-import/sessions/${id}`
-    ] as const;
-    }
-
-
-export const getTrailImportDeleteSessionQueryOptions = <TData = Awaited<ReturnType<typeof trailImportDeleteSession>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+export const getTrailImportGetSessionQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetSession>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
 ) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetSessionQueryKey(id);
 
-  const queryKey =  queryOptions?.queryKey ?? getTrailImportDeleteSessionQueryKey(id);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetSession>>> = ({ signal }) =>
+    trailImportGetSession(id, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetSession>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type TrailImportGetSessionQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetSession>>>;
+export type TrailImportGetSessionQueryError = unknown;
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportDeleteSession>>> = ({ signal }) => trailImportDeleteSession(id, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailImportDeleteSessionQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportDeleteSession>>>
-export type TrailImportDeleteSessionQueryError = unknown
-
-
-export function useTrailImportDeleteSession<TData = Awaited<ReturnType<typeof trailImportDeleteSession>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, TData>> & Pick<
+export function useTrailImportGetSession<TData = Awaited<ReturnType<typeof trailImportGetSession>>, TError = unknown>(
+  id: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportDeleteSession>>,
+          Awaited<ReturnType<typeof trailImportGetSession>>,
           TError,
-          Awaited<ReturnType<typeof trailImportDeleteSession>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportDeleteSession<TData = Awaited<ReturnType<typeof trailImportDeleteSession>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, TData>> & Pick<
+          Awaited<ReturnType<typeof trailImportGetSession>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSession<TData = Awaited<ReturnType<typeof trailImportGetSession>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportDeleteSession>>,
+          Awaited<ReturnType<typeof trailImportGetSession>>,
           TError,
-          Awaited<ReturnType<typeof trailImportDeleteSession>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportDeleteSession<TData = Awaited<ReturnType<typeof trailImportDeleteSession>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+          Awaited<ReturnType<typeof trailImportGetSession>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSession<TData = Awaited<ReturnType<typeof trailImportGetSession>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useTrailImportDeleteSession<TData = Awaited<ReturnType<typeof trailImportDeleteSession>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useTrailImportGetSession<TData = Awaited<ReturnType<typeof trailImportGetSession>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetSessionQueryOptions(id, options);
 
-  const queryOptions = getTrailImportDeleteSessionQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getTrailImportGetSessionSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetSession>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetSessionQueryKey(id);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetSession>>> = ({ signal }) =>
+    trailImportGetSession(id, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetSession>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type TrailImportGetSessionSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetSession>>>;
+export type TrailImportGetSessionSuspenseQueryError = unknown;
 
-export const getTrailImportGetProposalsUrl = (id: number,
-    params?: TrailImportGetProposalsParams,) => {
+export function useTrailImportGetSessionSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSession>>,
+  TError = unknown,
+>(
+  id: number,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSessionSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSession>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetSessionSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSession>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useTrailImportGetSessionSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetSession>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetSession>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetSessionSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getTrailImportDeleteSessionUrl = (id: number) => {
+  return `/api/v1/admin/trail-import/sessions/${id}`;
+};
+
+export const trailImportDeleteSession = async (id: number, options?: RequestInit): Promise<Blob> => {
+  return customFetch<Blob>(getTrailImportDeleteSessionUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getTrailImportDeleteSessionMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, { id: number }, TContext> => {
+  const mutationKey = ["trailImportDeleteSession"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportDeleteSession>>, { id: number }> = (
+    props,
+  ) => {
+    const { id } = props ?? {};
+
+    return trailImportDeleteSession(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TrailImportDeleteSessionMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportDeleteSession>>>;
+
+export type TrailImportDeleteSessionMutationError = unknown;
+
+export const useTrailImportDeleteSession = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof trailImportDeleteSession>>,
+      TError,
+      { id: number },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof trailImportDeleteSession>>, TError, { id: number }, TContext> => {
+  return useMutation(getTrailImportDeleteSessionMutationOptions(options), queryClient);
+};
+export const getTrailImportGetProposalsUrl = (id: number, params?: TrailImportGetProposalsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
-
     if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
+      normalizedParams.append(key, value === null ? "null" : String(value));
     }
   });
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/v1/admin/trail-import/sessions/${id}/proposals?${stringifiedParams}` : `/api/v1/admin/trail-import/sessions/${id}/proposals`
-}
+  return stringifiedParams.length > 0
+    ? `/api/v1/admin/trail-import/sessions/${id}/proposals?${stringifiedParams}`
+    : `/api/v1/admin/trail-import/sessions/${id}/proposals`;
+};
 
-export const trailImportGetProposals = async (id: number,
-    params?: TrailImportGetProposalsParams, options?: RequestInit): Promise<PagedResultOfTrailImportProposalResponse> => {
-
-  return customFetch<PagedResultOfTrailImportProposalResponse>(getTrailImportGetProposalsUrl(id,params),
-  {
+export const trailImportGetProposals = async (
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: RequestInit,
+): Promise<PagedResultOfTrailImportProposalResponse> => {
+  return customFetch<PagedResultOfTrailImportProposalResponse>(getTrailImportGetProposalsUrl(id, params), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getTrailImportGetProposalsQueryKey = (id: number, params?: TrailImportGetProposalsParams) => {
+  return [`/api/v1/admin/trail-import/sessions/${id}/proposals`, ...(params ? [params] : [])] as const;
+};
 
-  }
-);}
+export const getTrailImportGetProposalsQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetProposalsQueryKey(id, params);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetProposals>>> = ({ signal }) =>
+    trailImportGetProposals(id, params, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetProposals>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type TrailImportGetProposalsQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetProposals>>>;
+export type TrailImportGetProposalsQueryError = unknown;
 
-export const getTrailImportGetProposalsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError,{id: number;params?: TrailImportGetProposalsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError,{id: number;params?: TrailImportGetProposalsParams}, TContext> => {
+export function useTrailImportGetProposals<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params: undefined | TrailImportGetProposalsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetProposals>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetProposals>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetProposals<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetProposals>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetProposals>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetProposals<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-const mutationKey = ['trailImportGetProposals'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export function useTrailImportGetProposals<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetProposalsQueryOptions(id, params, options);
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportGetProposals>>, {id: number;params?: TrailImportGetProposalsParams}> = (props) => {
-          const {id,params} = props ?? {};
-
-          return  trailImportGetProposals(id,params,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailImportGetProposalsMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportGetProposals>>>
-
-    export type TrailImportGetProposalsMutationError = unknown
-
-    export const useTrailImportGetProposals = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError,{id: number;params?: TrailImportGetProposalsParams}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailImportGetProposals>>,
-        TError,
-        {id: number;params?: TrailImportGetProposalsParams},
-        TContext
-      > => {
-      return useMutation(getTrailImportGetProposalsMutationOptions(options), queryClient);
-    }
-    export const getTrailImportGetPreviewUrl = (id: number,
-    proposalId: number,) => {
-
-
-
-
-  return `/api/v1/admin/trail-import/sessions/${id}/proposals/${proposalId}/preview`
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const trailImportGetPreview = async (id: number,
-    proposalId: number, options?: RequestInit): Promise<TrailImportPreviewResponse> => {
+export const getTrailImportGetProposalsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  return customFetch<TrailImportPreviewResponse>(getTrailImportGetPreviewUrl(id,proposalId),
-  {
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetProposalsQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetProposals>>> = ({ signal }) =>
+    trailImportGetProposals(id, params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetProposals>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TrailImportGetProposalsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof trailImportGetProposals>>
+>;
+export type TrailImportGetProposalsSuspenseQueryError = unknown;
+
+export function useTrailImportGetProposalsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params: undefined | TrailImportGetProposalsParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetProposalsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetProposalsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useTrailImportGetProposalsSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetProposals>>,
+  TError = unknown,
+>(
+  id: number,
+  params?: TrailImportGetProposalsParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetProposals>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetProposalsSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getTrailImportGetPreviewUrl = (id: number, proposalId: number) => {
+  return `/api/v1/admin/trail-import/sessions/${id}/proposals/${proposalId}/preview`;
+};
+
+export const trailImportGetPreview = async (
+  id: number,
+  proposalId: number,
+  options?: RequestInit,
+): Promise<TrailImportPreviewResponse> => {
+  return customFetch<TrailImportPreviewResponse>(getTrailImportGetPreviewUrl(id, proposalId), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getTrailImportGetPreviewQueryKey = (id: number, proposalId: number) => {
+  return [`/api/v1/admin/trail-import/sessions/${id}/proposals/${proposalId}/preview`] as const;
+};
 
-  }
-);}
+export const getTrailImportGetPreviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetPreview>>,
+  TError = unknown,
+>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetPreviewQueryKey(id, proposalId);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetPreview>>> = ({ signal }) =>
+    trailImportGetPreview(id, proposalId, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined && proposalId !== null && proposalId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type TrailImportGetPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetPreview>>>;
+export type TrailImportGetPreviewQueryError = unknown;
 
-export const getTrailImportGetPreviewMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError,{id: number;proposalId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError,{id: number;proposalId: number}, TContext> => {
+export function useTrailImportGetPreview<TData = Awaited<ReturnType<typeof trailImportGetPreview>>, TError = unknown>(
+  id: number,
+  proposalId: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetPreview>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetPreview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetPreview<TData = Awaited<ReturnType<typeof trailImportGetPreview>>, TError = unknown>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetPreview>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetPreview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetPreview<TData = Awaited<ReturnType<typeof trailImportGetPreview>>, TError = unknown>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-const mutationKey = ['trailImportGetPreview'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export function useTrailImportGetPreview<TData = Awaited<ReturnType<typeof trailImportGetPreview>>, TError = unknown>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetPreviewQueryOptions(id, proposalId, options);
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportGetPreview>>, {id: number;proposalId: number}> = (props) => {
-          const {id,proposalId} = props ?? {};
-
-          return  trailImportGetPreview(id,proposalId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailImportGetPreviewMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportGetPreview>>>
-
-    export type TrailImportGetPreviewMutationError = unknown
-
-    export const useTrailImportGetPreview = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError,{id: number;proposalId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailImportGetPreview>>,
-        TError,
-        {id: number;proposalId: number},
-        TContext
-      > => {
-      return useMutation(getTrailImportGetPreviewMutationOptions(options), queryClient);
-    }
-    export const getTrailImportGetDiffUrl = (id: number,) => {
-
-
-
-
-  return `/api/v1/admin/trail-import/sessions/${id}/diff`
+  return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getTrailImportGetPreviewSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetPreview>>,
+  TError = unknown,
+>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetPreviewQueryKey(id, proposalId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetPreview>>> = ({ signal }) =>
+    trailImportGetPreview(id, proposalId, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetPreview>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TrailImportGetPreviewSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetPreview>>>;
+export type TrailImportGetPreviewSuspenseQueryError = unknown;
+
+export function useTrailImportGetPreviewSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetPreview>>,
+  TError = unknown,
+>(
+  id: number,
+  proposalId: number,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetPreviewSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetPreview>>,
+  TError = unknown,
+>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetPreviewSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetPreview>>,
+  TError = unknown,
+>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useTrailImportGetPreviewSuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetPreview>>,
+  TError = unknown,
+>(
+  id: number,
+  proposalId: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetPreview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetPreviewSuspenseQueryOptions(id, proposalId, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getTrailImportGetDiffUrl = (id: number) => {
+  return `/api/v1/admin/trail-import/sessions/${id}/diff`;
+};
 
 export const trailImportGetDiff = async (id: number, options?: RequestInit): Promise<TrailImportDiffResponse> => {
-
-  return customFetch<TrailImportDiffResponse>(getTrailImportGetDiffUrl(id),
-  {
+  return customFetch<TrailImportDiffResponse>(getTrailImportGetDiffUrl(id), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getTrailImportGetDiffQueryKey = (id: number) => {
+  return [`/api/v1/admin/trail-import/sessions/${id}/diff`] as const;
+};
 
-  }
-);}
+export const getTrailImportGetDiffQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetDiff>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetDiffQueryKey(id);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetDiff>>> = ({ signal }) =>
+    trailImportGetDiff(id, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetDiff>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type TrailImportGetDiffQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetDiff>>>;
+export type TrailImportGetDiffQueryError = unknown;
 
-export const getTrailImportGetDiffMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError,{id: number}, TContext> => {
+export function useTrailImportGetDiff<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetDiff>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetDiff>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetDiff<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetDiff>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetDiff>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetDiff<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-const mutationKey = ['trailImportGetDiff'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export function useTrailImportGetDiff<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetDiffQueryOptions(id, options);
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportGetDiff>>, {id: number}> = (props) => {
-          const {id} = props ?? {};
-
-          return  trailImportGetDiff(id,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailImportGetDiffMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportGetDiff>>>
-
-    export type TrailImportGetDiffMutationError = unknown
-
-    export const useTrailImportGetDiff = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailImportGetDiff>>,
-        TError,
-        {id: number},
-        TContext
-      > => {
-      return useMutation(getTrailImportGetDiffMutationOptions(options), queryClient);
-    }
-    export const getTrailImportApplyUrl = (id: number,) => {
-
-
-
-
-  return `/api/v1/admin/trail-import/sessions/${id}/apply`
+  return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getTrailImportGetDiffSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetDiff>>,
+  TError = unknown,
+>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetDiffQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetDiff>>> = ({ signal }) =>
+    trailImportGetDiff(id, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetDiff>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TrailImportGetDiffSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetDiff>>>;
+export type TrailImportGetDiffSuspenseQueryError = unknown;
+
+export function useTrailImportGetDiffSuspense<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetDiffSuspense<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetDiffSuspense<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useTrailImportGetDiffSuspense<TData = Awaited<ReturnType<typeof trailImportGetDiff>>, TError = unknown>(
+  id: number,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetDiff>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetDiffSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getTrailImportApplyUrl = (id: number) => {
+  return `/api/v1/admin/trail-import/sessions/${id}/apply`;
+};
 
 export const trailImportApply = async (id: number, options?: RequestInit): Promise<TrailImportApplyResponse> => {
-
-  return customFetch<TrailImportApplyResponse>(getTrailImportApplyUrl(id),
-  {
+  return customFetch<TrailImportApplyResponse>(getTrailImportApplyUrl(id), {
     ...options,
-    method: 'POST'
+    method: "POST",
+  });
+};
 
+export const getTrailImportApplyMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, { id: number }, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, { id: number }, TContext> => {
+  const mutationKey = ["trailImportApply"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportApply>>, { id: number }> = (props) => {
+    const { id } = props ?? {};
 
+    return trailImportApply(id, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type TrailImportApplyMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportApply>>>;
 
+export type TrailImportApplyMutationError = unknown;
 
-export const getTrailImportApplyQueryKey = (id: number,) => {
-    return [
-    'POST', `/api/v1/admin/trail-import/sessions/${id}/apply`
-    ] as const;
-    }
+export const useTrailImportApply = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, { id: number }, TContext>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof trailImportApply>>, TError, { id: number }, TContext> => {
+  return useMutation(getTrailImportApplyMutationOptions(options), queryClient);
+};
+export const getTrailImportDecideUrl = (id: number, proposalId: number) => {
+  return `/api/v1/admin/trail-import/sessions/${id}/proposals/${proposalId}/decide`;
+};
 
-
-export const getTrailImportApplyQueryOptions = <TData = Awaited<ReturnType<typeof trailImportApply>>, TError = unknown>(id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailImportApplyQueryKey(id);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportApply>>> = ({ signal }) => trailImportApply(id, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailImportApplyQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportApply>>>
-export type TrailImportApplyQueryError = unknown
-
-
-export function useTrailImportApply<TData = Awaited<ReturnType<typeof trailImportApply>>, TError = unknown>(
- id: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportApply>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportApply>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportApply<TData = Awaited<ReturnType<typeof trailImportApply>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportApply>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportApply>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportApply<TData = Awaited<ReturnType<typeof trailImportApply>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailImportApply<TData = Awaited<ReturnType<typeof trailImportApply>>, TError = unknown>(
- id: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportApply>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailImportApplyQueryOptions(id,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailImportDecideUrl = (id: number,
-    proposalId: number,) => {
-
-
-
-
-  return `/api/v1/admin/trail-import/sessions/${id}/proposals/${proposalId}/decide`
-}
-
-export const trailImportDecide = async (id: number,
-    proposalId: number,
-    decideProposalRequest: DecideProposalRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getTrailImportDecideUrl(id,proposalId),
-  {
+export const trailImportDecide = async (
+  id: number,
+  proposalId: number,
+  decideProposalRequest: DecideProposalRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getTrailImportDecideUrl(id, proposalId), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(decideProposalRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(decideProposalRequest),
+  });
+};
 
+export const getTrailImportDecideMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trailImportDecide>>,
+    TError,
+    { id: number; proposalId: number; data: DecideProposalRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof trailImportDecide>>,
+  TError,
+  { id: number; proposalId: number; data: DecideProposalRequest },
+  TContext
+> => {
+  const mutationKey = ["trailImportDecide"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof trailImportDecide>>,
+    { id: number; proposalId: number; data: DecideProposalRequest }
+  > = (props) => {
+    const { id, proposalId, data } = props ?? {};
 
+    return trailImportDecide(id, proposalId, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getTrailImportDecideQueryKey = (id: number,
-    proposalId: number,
-    decideProposalRequest?: DecideProposalRequest,) => {
-    return [
-    'POST', `/api/v1/admin/trail-import/sessions/${id}/proposals/${proposalId}/decide`, decideProposalRequest
-    ] as const;
-    }
+export type TrailImportDecideMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportDecide>>>;
+export type TrailImportDecideMutationBody = DecideProposalRequest;
+export type TrailImportDecideMutationError = unknown;
 
+export const useTrailImportDecide = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof trailImportDecide>>,
+      TError,
+      { id: number; proposalId: number; data: DecideProposalRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof trailImportDecide>>,
+  TError,
+  { id: number; proposalId: number; data: DecideProposalRequest },
+  TContext
+> => {
+  return useMutation(getTrailImportDecideMutationOptions(options), queryClient);
+};
+export const getTrailImportDecideBulkUrl = (id: number) => {
+  return `/api/v1/admin/trail-import/sessions/${id}/decide-bulk`;
+};
 
-export const getTrailImportDecideQueryOptions = <TData = Awaited<ReturnType<typeof trailImportDecide>>, TError = unknown>(id: number,
-    proposalId: number,
-    decideProposalRequest: DecideProposalRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecide>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailImportDecideQueryKey(id,proposalId,decideProposalRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportDecide>>> = ({ signal }) => trailImportDecide(id,proposalId,decideProposalRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && proposalId !== null && proposalId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailImportDecide>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailImportDecideQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportDecide>>>
-export type TrailImportDecideQueryError = unknown
-
-
-export function useTrailImportDecide<TData = Awaited<ReturnType<typeof trailImportDecide>>, TError = unknown>(
- id: number,
-    proposalId: number,
-    decideProposalRequest: DecideProposalRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecide>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportDecide>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportDecide>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportDecide<TData = Awaited<ReturnType<typeof trailImportDecide>>, TError = unknown>(
- id: number,
-    proposalId: number,
-    decideProposalRequest: DecideProposalRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecide>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportDecide>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportDecide>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportDecide<TData = Awaited<ReturnType<typeof trailImportDecide>>, TError = unknown>(
- id: number,
-    proposalId: number,
-    decideProposalRequest: DecideProposalRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecide>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailImportDecide<TData = Awaited<ReturnType<typeof trailImportDecide>>, TError = unknown>(
- id: number,
-    proposalId: number,
-    decideProposalRequest: DecideProposalRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecide>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailImportDecideQueryOptions(id,proposalId,decideProposalRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getTrailImportDecideBulkUrl = (id: number,) => {
-
-
-
-
-  return `/api/v1/admin/trail-import/sessions/${id}/decide-bulk`
-}
-
-export const trailImportDecideBulk = async (id: number,
-    decideProposalsBulkRequest: DecideProposalsBulkRequest, options?: RequestInit): Promise<TrailImportDecideBulkResponse> => {
-
-  return customFetch<TrailImportDecideBulkResponse>(getTrailImportDecideBulkUrl(id),
-  {
+export const trailImportDecideBulk = async (
+  id: number,
+  decideProposalsBulkRequest: DecideProposalsBulkRequest,
+  options?: RequestInit,
+): Promise<TrailImportDecideBulkResponse> => {
+  return customFetch<TrailImportDecideBulkResponse>(getTrailImportDecideBulkUrl(id), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(decideProposalsBulkRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(decideProposalsBulkRequest),
+  });
+};
 
+export const getTrailImportDecideBulkMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof trailImportDecideBulk>>,
+    TError,
+    { id: number; data: DecideProposalsBulkRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof trailImportDecideBulk>>,
+  TError,
+  { id: number; data: DecideProposalsBulkRequest },
+  TContext
+> => {
+  const mutationKey = ["trailImportDecideBulk"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof trailImportDecideBulk>>,
+    { id: number; data: DecideProposalsBulkRequest }
+  > = (props) => {
+    const { id, data } = props ?? {};
 
+    return trailImportDecideBulk(id, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getTrailImportDecideBulkQueryKey = (id: number,
-    decideProposalsBulkRequest?: DecideProposalsBulkRequest,) => {
-    return [
-    'POST', `/api/v1/admin/trail-import/sessions/${id}/decide-bulk`, decideProposalsBulkRequest
-    ] as const;
-    }
+export type TrailImportDecideBulkMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportDecideBulk>>>;
+export type TrailImportDecideBulkMutationBody = DecideProposalsBulkRequest;
+export type TrailImportDecideBulkMutationError = unknown;
 
-
-export const getTrailImportDecideBulkQueryOptions = <TData = Awaited<ReturnType<typeof trailImportDecideBulk>>, TError = unknown>(id: number,
-    decideProposalsBulkRequest: DecideProposalsBulkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecideBulk>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getTrailImportDecideBulkQueryKey(id,decideProposalsBulkRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportDecideBulk>>> = ({ signal }) => trailImportDecideBulk(id,decideProposalsBulkRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof trailImportDecideBulk>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type TrailImportDecideBulkQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportDecideBulk>>>
-export type TrailImportDecideBulkQueryError = unknown
-
-
-export function useTrailImportDecideBulk<TData = Awaited<ReturnType<typeof trailImportDecideBulk>>, TError = unknown>(
- id: number,
-    decideProposalsBulkRequest: DecideProposalsBulkRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecideBulk>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportDecideBulk>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportDecideBulk>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportDecideBulk<TData = Awaited<ReturnType<typeof trailImportDecideBulk>>, TError = unknown>(
- id: number,
-    decideProposalsBulkRequest: DecideProposalsBulkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecideBulk>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof trailImportDecideBulk>>,
-          TError,
-          Awaited<ReturnType<typeof trailImportDecideBulk>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useTrailImportDecideBulk<TData = Awaited<ReturnType<typeof trailImportDecideBulk>>, TError = unknown>(
- id: number,
-    decideProposalsBulkRequest: DecideProposalsBulkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecideBulk>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useTrailImportDecideBulk<TData = Awaited<ReturnType<typeof trailImportDecideBulk>>, TError = unknown>(
- id: number,
-    decideProposalsBulkRequest: DecideProposalsBulkRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportDecideBulk>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getTrailImportDecideBulkQueryOptions(id,decideProposalsBulkRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
+export const useTrailImportDecideBulk = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof trailImportDecideBulk>>,
+      TError,
+      { id: number; data: DecideProposalsBulkRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof trailImportDecideBulk>>,
+  TError,
+  { id: number; data: DecideProposalsBulkRequest },
+  TContext
+> => {
+  return useMutation(getTrailImportDecideBulkMutationOptions(options), queryClient);
+};
 export const getTrailImportGetVocabularyUrl = () => {
+  return `/api/v1/admin/trail-import/vocabulary`;
+};
 
+export const trailImportGetVocabulary = async (options?: RequestInit): Promise<Blob> => {
+  return customFetch<Blob>(getTrailImportGetVocabularyUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
 
+export const getTrailImportGetVocabularyQueryKey = () => {
+  return [`/api/v1/admin/trail-import/vocabulary`] as const;
+};
 
+export const getTrailImportGetVocabularyQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  return `/api/v1/admin/trail-import/vocabulary`
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetVocabularyQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetVocabulary>>> = ({ signal }) =>
+    trailImportGetVocabulary({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TrailImportGetVocabularyQueryResult = NonNullable<Awaited<ReturnType<typeof trailImportGetVocabulary>>>;
+export type TrailImportGetVocabularyQueryError = unknown;
+
+export function useTrailImportGetVocabulary<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetVocabulary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetVocabulary<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+          TError,
+          Awaited<ReturnType<typeof trailImportGetVocabulary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetVocabulary<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useTrailImportGetVocabulary<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetVocabularyQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const trailImportGetVocabulary = async ( options?: RequestInit): Promise<Blob> => {
+export const getTrailImportGetVocabularySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  return customFetch<Blob>(getTrailImportGetVocabularyUrl(),
-  {
-    ...options,
-    method: 'GET'
+  const queryKey = queryOptions?.queryKey ?? getTrailImportGetVocabularyQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof trailImportGetVocabulary>>> = ({ signal }) =>
+    trailImportGetVocabulary({ signal, ...requestOptions });
 
-  }
-);}
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type TrailImportGetVocabularySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof trailImportGetVocabulary>>
+>;
+export type TrailImportGetVocabularySuspenseQueryError = unknown;
 
+export function useTrailImportGetVocabularySuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetVocabularySuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTrailImportGetVocabularySuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useTrailImportGetVocabularySuspense<
+  TData = Awaited<ReturnType<typeof trailImportGetVocabulary>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTrailImportGetVocabularySuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-export const getTrailImportGetVocabularyMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError,void, TContext> => {
-
-const mutationKey = ['trailImportGetVocabulary'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof trailImportGetVocabulary>>, void> = () => {
-
-
-          return  trailImportGetVocabulary(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type TrailImportGetVocabularyMutationResult = NonNullable<Awaited<ReturnType<typeof trailImportGetVocabulary>>>
-
-    export type TrailImportGetVocabularyMutationError = unknown
-
-    export const useTrailImportGetVocabulary = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof trailImportGetVocabulary>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof trailImportGetVocabulary>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getTrailImportGetVocabularyMutationOptions(options), queryClient);
-    }
+  return withQueryKey(query, queryOptions.queryKey);
+}

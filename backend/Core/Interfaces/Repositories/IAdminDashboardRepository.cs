@@ -6,8 +6,6 @@ using System.Linq.Expressions;
 
 namespace Core.Interfaces.Repositories;
 
-public record AdminDashboardCounts(int UserCount, int NewUsers, int ReviewCount, int NewReviews);
-
 public interface IAdminDashboardRepository
 {
     Task<RepositoryResult<AdminDashboardCounts>> GetCountsAsync(DateTime since, CancellationToken ctoken);

@@ -20,14 +20,12 @@ public interface ITrailRepository
     Task<RepositoryResult<IReadOnlyCollection<TrailImage>>> AddTrailImagesAsync(int trailId, IReadOnlyCollection<TrailImage> images, CancellationToken ctoken);
     Task<RepositoryResult> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken);
     Task<RepositoryResult> UpdateTrailSymbolAsync(string trailIdentifier, string symbolPath, CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsForAdminAsync<T>(Expression<Func<Trail, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsForAdminAsync<T>(Expression<Func<AdminTrailSource, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<T>> GetTrailByIdentifierForAdminAsync<T>(string identifier, Expression<Func<Trail, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyList<double[]>>> GetTrailPathForAdminAsync(string identifier, CancellationToken ctoken);
     Task<RepositoryResult> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<ContributedTrailProjection>>> GetTrailsCreditedToUserAsync(int userId, CancellationToken ctoken);
-    Task<RepositoryResult<IReadOnlyCollection<Core.Services.ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken);
     Task<RepositoryResult<TrailLikeState>> GetTrailLikeAsync(string trailIdentifier, string userIdentifier, CancellationToken ctoken);
     Task<RepositoryResult<TrailLikeState>> SetTrailLikeAsync(string trailIdentifier, string userIdentifier, bool liked, CancellationToken ctoken);
 }
-
-public record TrailLikeState(int LikeCount, bool LikedByMe);

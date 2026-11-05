@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using AwesomeAssertions;
 using Core.Factories;
 using Core.Interfaces.Repositories;
-using Core.Projections;
 using Core.Services;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;

@@ -8,11 +8,11 @@
 
 export interface AuthorStatisticResponse {
   /** @nullable */
-  identifier?: string | null;
+  identifier: string | null;
   /** @nullable */
-  nickName?: string | null;
-  strikes?: number;
+  nickName: string | null;
+  strikes: number;
   /** @nullable */
-  bannedAt?: string | null;
-  banCount?: number;
+  bannedAt: string | null;
+  banCount: number;
 }

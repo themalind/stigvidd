@@ -5,247 +5,148 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
-import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
-  QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
+import type { MutationFunction, QueryClient, UseMutationOptions, UseMutationResult } from "@tanstack/react-query";
 
-import type {
-  EventImageResponse,
-  EventImageSetImageBody
-} from '../model';
+import type { EventImageResponse, EventImageSetImageBody } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
-const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
-  const result = { queryKey } as T & { queryKey: K };
-  for (const key of Object.keys(query)) {
-    // The explicit queryKey always wins, matching the previous
-    // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
-    Object.defineProperty(result, key, {
-      enumerable: true,
-      configurable: true,
-      get: () => (query as Record<string, unknown>)[key],
-    });
-  }
-  return result;
+export const getEventImageSetImageUrl = (identifier: string) => {
+  return `/api/v1/events/${identifier}/image`;
 };
 
-export const getEventImageSetImageUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/events/${identifier}/image`
-}
-
-export const eventImageSetImage = async (identifier: string,
-    eventImageSetImageBody?: EventImageSetImageBody, options?: RequestInit): Promise<EventImageResponse> => {
-    const formData = new FormData();
-if(eventImageSetImageBody?.image !== undefined && eventImageSetImageBody.image !== null) {
- formData.append(`image`, eventImageSetImageBody.image);
- }
-if(eventImageSetImageBody?.focusY !== undefined && eventImageSetImageBody.focusY !== null) {
- formData.append(`focusY`, eventImageSetImageBody.focusY.toString())
- }
-
-  return customFetch<EventImageResponse>(getEventImageSetImageUrl(identifier),
-  {
-    ...options,
-    method: 'POST'
-    ,
-    body: formData
+export const eventImageSetImage = async (
+  identifier: string,
+  eventImageSetImageBody?: EventImageSetImageBody,
+  options?: RequestInit,
+): Promise<EventImageResponse> => {
+  const formData = new FormData();
+  if (eventImageSetImageBody?.image !== undefined && eventImageSetImageBody.image !== null) {
+    formData.append(`image`, eventImageSetImageBody.image);
   }
-);}
+  if (eventImageSetImageBody?.focusY !== undefined && eventImageSetImageBody.focusY !== null) {
+    formData.append(`focusY`, eventImageSetImageBody.focusY.toString());
+  }
 
+  return customFetch<EventImageResponse>(getEventImageSetImageUrl(identifier), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
 
+export const getEventImageSetImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventImageSetImage>>,
+    TError,
+    { identifier: string; data?: EventImageSetImageBody },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof eventImageSetImage>>,
+  TError,
+  { identifier: string; data?: EventImageSetImageBody },
+  TContext
+> => {
+  const mutationKey = ["eventImageSetImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof eventImageSetImage>>,
+    { identifier: string; data?: EventImageSetImageBody }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return eventImageSetImage(identifier, data, requestOptions);
+  };
 
-export const getEventImageSetImageQueryKey = (identifier: string,
-    eventImageSetImageBody?: EventImageSetImageBody,) => {
-    return [
-    'POST', `/api/v1/events/${identifier}/image`, eventImageSetImageBody
-    ] as const;
-    }
+  return { mutationFn, ...mutationOptions };
+};
 
+export type EventImageSetImageMutationResult = NonNullable<Awaited<ReturnType<typeof eventImageSetImage>>>;
+export type EventImageSetImageMutationBody = EventImageSetImageBody | undefined;
+export type EventImageSetImageMutationError = unknown;
 
-export const getEventImageSetImageQueryOptions = <TData = Awaited<ReturnType<typeof eventImageSetImage>>, TError = unknown>(identifier: string,
-    eventImageSetImageBody?: EventImageSetImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventImageSetImageQueryKey(identifier,eventImageSetImageBody);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventImageSetImage>>> = ({ signal }) => eventImageSetImage(identifier,eventImageSetImageBody, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventImageSetImageQueryResult = NonNullable<Awaited<ReturnType<typeof eventImageSetImage>>>
-export type EventImageSetImageQueryError = unknown
-
-
-export function useEventImageSetImage<TData = Awaited<ReturnType<typeof eventImageSetImage>>, TError = unknown>(
- identifier: string,
-    eventImageSetImageBody: undefined |  EventImageSetImageBody, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventImageSetImage>>,
-          TError,
-          Awaited<ReturnType<typeof eventImageSetImage>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventImageSetImage<TData = Awaited<ReturnType<typeof eventImageSetImage>>, TError = unknown>(
- identifier: string,
-    eventImageSetImageBody?: EventImageSetImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventImageSetImage>>,
-          TError,
-          Awaited<ReturnType<typeof eventImageSetImage>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventImageSetImage<TData = Awaited<ReturnType<typeof eventImageSetImage>>, TError = unknown>(
- identifier: string,
-    eventImageSetImageBody?: EventImageSetImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventImageSetImage<TData = Awaited<ReturnType<typeof eventImageSetImage>>, TError = unknown>(
- identifier: string,
-    eventImageSetImageBody?: EventImageSetImageBody, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageSetImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventImageSetImageQueryOptions(identifier,eventImageSetImageBody,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getEventImageDeleteImageUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/events/${identifier}/image`
-}
+export const useEventImageSetImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventImageSetImage>>,
+      TError,
+      { identifier: string; data?: EventImageSetImageBody },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof eventImageSetImage>>,
+  TError,
+  { identifier: string; data?: EventImageSetImageBody },
+  TContext
+> => {
+  return useMutation(getEventImageSetImageMutationOptions(options), queryClient);
+};
+export const getEventImageDeleteImageUrl = (identifier: string) => {
+  return `/api/v1/events/${identifier}/image`;
+};
 
 export const eventImageDeleteImage = async (identifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getEventImageDeleteImageUrl(identifier),
-  {
+  return customFetch<Blob>(getEventImageDeleteImageUrl(identifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getEventImageDeleteImageMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof eventImageDeleteImage>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, { identifier: string }, TContext> => {
+  const mutationKey = ["eventImageDeleteImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof eventImageDeleteImage>>, { identifier: string }> = (
+    props,
+  ) => {
+    const { identifier } = props ?? {};
 
+    return eventImageDeleteImage(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type EventImageDeleteImageMutationResult = NonNullable<Awaited<ReturnType<typeof eventImageDeleteImage>>>;
 
+export type EventImageDeleteImageMutationError = unknown;
 
-export const getEventImageDeleteImageQueryKey = (identifier: string,) => {
-    return [
-    'DELETE', `/api/v1/events/${identifier}/image`
-    ] as const;
-    }
-
-
-export const getEventImageDeleteImageQueryOptions = <TData = Awaited<ReturnType<typeof eventImageDeleteImage>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getEventImageDeleteImageQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof eventImageDeleteImage>>> = ({ signal }) => eventImageDeleteImage(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type EventImageDeleteImageQueryResult = NonNullable<Awaited<ReturnType<typeof eventImageDeleteImage>>>
-export type EventImageDeleteImageQueryError = unknown
-
-
-export function useEventImageDeleteImage<TData = Awaited<ReturnType<typeof eventImageDeleteImage>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventImageDeleteImage>>,
-          TError,
-          Awaited<ReturnType<typeof eventImageDeleteImage>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventImageDeleteImage<TData = Awaited<ReturnType<typeof eventImageDeleteImage>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof eventImageDeleteImage>>,
-          TError,
-          Awaited<ReturnType<typeof eventImageDeleteImage>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useEventImageDeleteImage<TData = Awaited<ReturnType<typeof eventImageDeleteImage>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useEventImageDeleteImage<TData = Awaited<ReturnType<typeof eventImageDeleteImage>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getEventImageDeleteImageQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
+export const useEventImageDeleteImage = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof eventImageDeleteImage>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof eventImageDeleteImage>>, TError, { identifier: string }, TContext> => {
+  return useMutation(getEventImageDeleteImageMutationOptions(options), queryClient);
+};

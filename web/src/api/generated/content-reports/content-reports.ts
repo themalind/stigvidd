@@ -5,10 +5,7 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation,
-  useQuery
-} from '@tanstack/react-query';
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -21,28 +18,23 @@ import type {
   UseMutationOptions,
   UseMutationResult,
   UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
-import type {
-  ContentReportResponse,
-  CreateContentReportRequest,
-  ProblemDetails
-} from '../model';
+import type { ContentReportResponse, CreateContentReportRequest, ProblemDetails } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
-
-
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
   const result = { queryKey } as T & { queryKey: K };
   for (const key of Object.keys(query)) {
     // The explicit queryKey always wins, matching the previous
     // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
+    if (key === "queryKey") continue;
     Object.defineProperty(result, key, {
       enumerable: true,
       configurable: true,
@@ -53,160 +45,261 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getContentReportsCreateContentReportUrl = () => {
+  return `/api/v1/ContentReports`;
+};
 
-
-
-
-  return `/api/v1/ContentReports`
-}
-
-export const contentReportsCreateContentReport = async (createContentReportRequest: CreateContentReportRequest, options?: RequestInit): Promise<ContentReportResponse> => {
-
-  return customFetch<ContentReportResponse>(getContentReportsCreateContentReportUrl(),
-  {
+export const contentReportsCreateContentReport = async (
+  createContentReportRequest: CreateContentReportRequest,
+  options?: RequestInit,
+): Promise<ContentReportResponse> => {
+  return customFetch<ContentReportResponse>(getContentReportsCreateContentReportUrl(), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(createContentReportRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createContentReportRequest),
+  });
+};
 
+export const getContentReportsCreateContentReportMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof contentReportsCreateContentReport>>,
+    TError,
+    { data: CreateContentReportRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof contentReportsCreateContentReport>>,
+  TError,
+  { data: CreateContentReportRequest },
+  TContext
+> => {
+  const mutationKey = ["contentReportsCreateContentReport"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof contentReportsCreateContentReport>>,
+    { data: CreateContentReportRequest }
+  > = (props) => {
+    const { data } = props ?? {};
 
+    return contentReportsCreateContentReport(data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getContentReportsCreateContentReportQueryKey = (createContentReportRequest?: CreateContentReportRequest,) => {
-    return [
-    'POST', `/api/v1/ContentReports`, createContentReportRequest
-    ] as const;
-    }
+export type ContentReportsCreateContentReportMutationResult = NonNullable<
+  Awaited<ReturnType<typeof contentReportsCreateContentReport>>
+>;
+export type ContentReportsCreateContentReportMutationBody = CreateContentReportRequest;
+export type ContentReportsCreateContentReportMutationError = ProblemDetails;
 
+export const useContentReportsCreateContentReport = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof contentReportsCreateContentReport>>,
+      TError,
+      { data: CreateContentReportRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof contentReportsCreateContentReport>>,
+  TError,
+  { data: CreateContentReportRequest },
+  TContext
+> => {
+  return useMutation(getContentReportsCreateContentReportMutationOptions(options), queryClient);
+};
+export const getContentReportsGetReportReasonsUrl = () => {
+  return `/api/v1/ContentReports/reasons`;
+};
 
-export const getContentReportsCreateContentReportQueryOptions = <TData = Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError = ProblemDetails>(createContentReportRequest: CreateContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
+export const contentReportsGetReportReasons = async (options?: RequestInit): Promise<string[]> => {
+  return customFetch<string[]>(getContentReportsGetReportReasonsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
 
-const {query: queryOptions, request: requestOptions} = options ?? {};
+export const getContentReportsGetReportReasonsQueryKey = () => {
+  return [`/api/v1/ContentReports/reasons`] as const;
+};
 
-  const queryKey =  queryOptions?.queryKey ?? getContentReportsCreateContentReportQueryKey(createContentReportRequest);
+export const getContentReportsGetReportReasonsQueryOptions = <
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getContentReportsGetReportReasonsQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof contentReportsGetReportReasons>>> = ({ signal }) =>
+    contentReportsGetReportReasons({ signal, ...requestOptions });
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof contentReportsCreateContentReport>>> = ({ signal }) => contentReportsCreateContentReport(createContentReportRequest, { signal, ...requestOptions });
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type ContentReportsGetReportReasonsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof contentReportsGetReportReasons>>
+>;
+export type ContentReportsGetReportReasonsQueryError = unknown;
 
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ContentReportsCreateContentReportQueryResult = NonNullable<Awaited<ReturnType<typeof contentReportsCreateContentReport>>>
-export type ContentReportsCreateContentReportQueryError = ProblemDetails
-
-
-export function useContentReportsCreateContentReport<TData = Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError = ProblemDetails>(
- createContentReportRequest: CreateContentReportRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError, TData>> & Pick<
+export function useContentReportsGetReportReasons<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>> &
+      Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof contentReportsCreateContentReport>>,
+          Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
           TError,
-          Awaited<ReturnType<typeof contentReportsCreateContentReport>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useContentReportsCreateContentReport<TData = Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError = ProblemDetails>(
- createContentReportRequest: CreateContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError, TData>> & Pick<
+          Awaited<ReturnType<typeof contentReportsGetReportReasons>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useContentReportsGetReportReasons<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>> &
+      Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof contentReportsCreateContentReport>>,
+          Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
           TError,
-          Awaited<ReturnType<typeof contentReportsCreateContentReport>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useContentReportsCreateContentReport<TData = Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError = ProblemDetails>(
- createContentReportRequest: CreateContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+          Awaited<ReturnType<typeof contentReportsGetReportReasons>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useContentReportsGetReportReasons<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-export function useContentReportsCreateContentReport<TData = Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError = ProblemDetails>(
- createContentReportRequest: CreateContentReportRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsCreateContentReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+export function useContentReportsGetReportReasons<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getContentReportsGetReportReasonsQueryOptions(options);
 
-  const queryOptions = getContentReportsCreateContentReportQueryOptions(createContentReportRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getContentReportsGetReportReasonsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getContentReportsGetReportReasonsQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof contentReportsGetReportReasons>>> = ({ signal }) =>
+    contentReportsGetReportReasons({ signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type ContentReportsGetReportReasonsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof contentReportsGetReportReasons>>
+>;
+export type ContentReportsGetReportReasonsSuspenseQueryError = unknown;
 
-export const getContentReportsGetReportReasonsUrl = () => {
+export function useContentReportsGetReportReasonsSuspense<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useContentReportsGetReportReasonsSuspense<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useContentReportsGetReportReasonsSuspense<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useContentReportsGetReportReasonsSuspense<
+  TData = Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getContentReportsGetReportReasonsSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-
-  return `/api/v1/ContentReports/reasons`
+  return withQueryKey(query, queryOptions.queryKey);
 }
-
-export const contentReportsGetReportReasons = async ( options?: RequestInit): Promise<string[]> => {
-
-  return customFetch<string[]>(getContentReportsGetReportReasonsUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getContentReportsGetReportReasonsMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError,void, TContext> => {
-
-const mutationKey = ['contentReportsGetReportReasons'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, void> = () => {
-
-
-          return  contentReportsGetReportReasons(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type ContentReportsGetReportReasonsMutationResult = NonNullable<Awaited<ReturnType<typeof contentReportsGetReportReasons>>>
-
-    export type ContentReportsGetReportReasonsMutationError = unknown
-
-    export const useContentReportsGetReportReasons = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof contentReportsGetReportReasons>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof contentReportsGetReportReasons>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getContentReportsGetReportReasonsMutationOptions(options), queryClient);
-    }

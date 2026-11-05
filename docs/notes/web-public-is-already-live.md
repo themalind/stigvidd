@@ -43,7 +43,7 @@ No router knows anything about them. Verified by building the real image
 1. **Link with a plain `<a href>`, never react-router's `<Link>`.** `Link` handles the click
    client-side, matches no route, and renders `NotFoundPage` — the server is never asked for
    the file. `site/src/components/site-footer.tsx` links them relatively, because the site
-   serves them. `web/src/pages/login/login-page.tsx` links the same three as **absolute**
+   serves them. `web/src/app/routes/login.tsx` links the same three as **absolute**
    URLs on `https://stigvidd.se`, because the admin no longer serves them and a relative
    href there would 404.
 2. **The trailing slash is load-bearing.** These are *directories*. `/privacy-policy/` is

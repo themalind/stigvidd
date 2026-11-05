@@ -10,7 +10,7 @@ public class SimilarTrailResponse
     public required string Name { get; set; }
     public required string Kind { get; set; }
     // keep-comment: shares from 0 to 1; the first is how much of the walk runs along the other route, the second the reverse
-    public double WalkOnRoute { get; set; }
-    public double RouteOnWalk { get; set; }
-    public bool LikelyDuplicate { get; set; }
+    public required double WalkOnRoute { get; set; }
+    public required double RouteOnWalk { get; set; }
+    public required bool LikelyDuplicate { get; set; }
 }

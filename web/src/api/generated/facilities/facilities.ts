@@ -5,148 +5,394 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation
-} from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
-  MutationFunction,
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   QueryClient,
-  UseMutationOptions,
-  UseMutationResult
-} from '@tanstack/react-query';
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
+  UseQueryOptions,
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
-import { customFetch } from '../../mutator';
+import type { FacilityResponse } from "../model";
 
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === "queryKey") continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export const getFacilitiesGetAllUrl = () => {
+  return `/api/v1/Facilities`;
+};
 
+export const facilitiesGetAll = async (options?: RequestInit): Promise<FacilityResponse[]> => {
+  return customFetch<FacilityResponse[]>(getFacilitiesGetAllUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
 
+export const getFacilitiesGetAllQueryKey = () => {
+  return [`/api/v1/Facilities`] as const;
+};
 
+export const getFacilitiesGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof facilitiesGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  return `/api/v1/Facilities`
+  const queryKey = queryOptions?.queryKey ?? getFacilitiesGetAllQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof facilitiesGetAll>>> = ({ signal }) =>
+    facilitiesGetAll({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof facilitiesGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type FacilitiesGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof facilitiesGetAll>>>;
+export type FacilitiesGetAllQueryError = unknown;
+
+export function useFacilitiesGetAll<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof facilitiesGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof facilitiesGetAll>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetAll<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof facilitiesGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof facilitiesGetAll>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetAll<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useFacilitiesGetAll<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getFacilitiesGetAllQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const facilitiesGetAll = async ( options?: RequestInit): Promise<Blob> => {
+export const getFacilitiesGetAllSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof facilitiesGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  return customFetch<Blob>(getFacilitiesGetAllUrl(),
-  {
-    ...options,
-    method: 'GET'
+  const queryKey = queryOptions?.queryKey ?? getFacilitiesGetAllQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof facilitiesGetAll>>> = ({ signal }) =>
+    facilitiesGetAll({ signal, ...requestOptions });
 
-  }
-);}
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof facilitiesGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type FacilitiesGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof facilitiesGetAll>>>;
+export type FacilitiesGetAllSuspenseQueryError = unknown;
 
+export function useFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useFacilitiesGetAllSuspense<TData = Awaited<ReturnType<typeof facilitiesGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getFacilitiesGetAllSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-export const getFacilitiesGetAllMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError,void, TContext> => {
-
-const mutationKey = ['facilitiesGetAll'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof facilitiesGetAll>>, void> = () => {
-
-
-          return  facilitiesGetAll(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FacilitiesGetAllMutationResult = NonNullable<Awaited<ReturnType<typeof facilitiesGetAll>>>
-
-    export type FacilitiesGetAllMutationError = unknown
-
-    export const useFacilitiesGetAll = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facilitiesGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof facilitiesGetAll>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getFacilitiesGetAllMutationOptions(options), queryClient);
-    }
-    export const getFacilitiesGetByIdentifierUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/Facilities/${identifier}`
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const facilitiesGetByIdentifier = async (identifier: string, options?: RequestInit): Promise<Blob> => {
+export const getFacilitiesGetByIdentifierUrl = (identifier: string) => {
+  return `/api/v1/Facilities/${identifier}`;
+};
 
-  return customFetch<Blob>(getFacilitiesGetByIdentifierUrl(identifier),
-  {
+export const facilitiesGetByIdentifier = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<FacilityResponse> => {
+  return customFetch<FacilityResponse>(getFacilitiesGetByIdentifierUrl(identifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getFacilitiesGetByIdentifierQueryKey = (identifier: string) => {
+  return [`/api/v1/Facilities/${identifier}`] as const;
+};
 
-  }
-);}
+export const getFacilitiesGetByIdentifierQueryOptions = <
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getFacilitiesGetByIdentifierQueryKey(identifier);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>> = ({ signal }) =>
+    facilitiesGetByIdentifier(identifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type FacilitiesGetByIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>>;
+export type FacilitiesGetByIdentifierQueryError = unknown;
 
-export const getFacilitiesGetByIdentifierMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError,{identifier: string}, TContext> => {
+export function useFacilitiesGetByIdentifier<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof facilitiesGetByIdentifier>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetByIdentifier<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof facilitiesGetByIdentifier>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetByIdentifier<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-const mutationKey = ['facilitiesGetByIdentifier'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export function useFacilitiesGetByIdentifier<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getFacilitiesGetByIdentifierQueryOptions(identifier, options);
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
+export const getFacilitiesGetByIdentifierSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
+  const queryKey = queryOptions?.queryKey ?? getFacilitiesGetByIdentifierQueryKey(identifier);
 
-          return  facilitiesGetByIdentifier(identifier,requestOptions)
-        }
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>> = ({ signal }) =>
+    facilitiesGetByIdentifier(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type FacilitiesGetByIdentifierSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof facilitiesGetByIdentifier>>
+>;
+export type FacilitiesGetByIdentifierSuspenseQueryError = unknown;
 
+export function useFacilitiesGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useFacilitiesGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useFacilitiesGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getFacilitiesGetByIdentifierSuspenseQueryOptions(identifier, options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-  return  { mutationFn, ...mutationOptions }}
-
-    export type FacilitiesGetByIdentifierMutationResult = NonNullable<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>>
-
-    export type FacilitiesGetByIdentifierMutationError = unknown
-
-    export const useFacilitiesGetByIdentifier = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof facilitiesGetByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof facilitiesGetByIdentifier>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getFacilitiesGetByIdentifierMutationOptions(options), queryClient);
-    }
+  return withQueryKey(query, queryOptions.queryKey);
+}

@@ -3,27 +3,6 @@
 
 namespace Core.Interfaces.Services.Mail;
 
-/// <summary>
-/// One {{Placeholder}} a template may use, described well enough to put in front of an
-/// operator who has never seen the calling code.
-/// </summary>
-/// <param name="Name">Exactly as written between the braces, e.g. "VerificationUrl".</param>
-/// <param name="Label">A human name for it, e.g. "Verification link".</param>
-/// <param name="Description">What the value actually is, one sentence.</param>
-/// <param name="SampleValue">Stand-in used by the preview, so a draft can be rendered
-/// without sending anything.</param>
-public sealed record MailTemplateToken(
-    string Name,
-    string Label,
-    string Description,
-    string SampleValue);
-
-/// <summary>What one template key is for, and every token its caller supplies.</summary>
-public sealed record MailTemplateDefinition(
-    string Key,
-    string Purpose,
-    IReadOnlyList<MailTemplateToken> Tokens);
-
 // The tokens each template key may use. This exists because the set was previously implicit:
 // it lived only in the model dictionary built at the call site, and as a free-text sentence
 // in MailTemplate.Description that nothing validated. An operator editing a template could

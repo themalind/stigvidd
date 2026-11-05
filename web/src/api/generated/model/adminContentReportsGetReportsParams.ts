@@ -7,18 +7,18 @@
  */
 
 export type AdminContentReportsGetReportsParams = {
-/**
- * @nullable
- */
-status?: string | null;
-/**
- * @nullable
- */
-contentType?: string | null;
-/**
- * @nullable
- */
-hideOutcome?: string | null;
-page?: number;
-pageSize?: number;
+  /**
+   * @nullable
+   */
+  status?: string | null;
+  /**
+   * @nullable
+   */
+  contentType?: string | null;
+  /**
+   * @nullable
+   */
+  hideOutcome?: string | null;
+  page?: number;
+  pageSize?: number;
 };

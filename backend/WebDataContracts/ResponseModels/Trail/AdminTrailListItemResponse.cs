@@ -8,15 +8,17 @@ public class AdminTrailListItemResponse
     public required string Identifier { get; set; }
     public required string Name { get; set; }
     public required decimal TrailLength { get; set; }
-    public bool Accessibility { get; set; }
-    public int Classification { get; set; }
+    public required bool Accessibility { get; set; }
+    public required int Classification { get; set; }
     public required string City { get; set; }
-    public bool IsVerified { get; set; }
-    public bool HasImages { get; set; }
-    public bool HasExampleImages { get; set; }
-    public bool HasSymbol { get; set; }
-    public bool HasDescription { get; set; }
-    public bool HasFullDescription { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime LastUpdatedAt { get; set; }
+    public required bool IsVerified { get; set; }
+    public required bool HasImages { get; set; }
+    public required bool HasExampleImages { get; set; }
+    public required bool HasSymbol { get; set; }
+    public required bool HasDescription { get; set; }
+    public required bool HasFullDescription { get; set; }
+    public required DateTime CreatedAt { get; set; }
+    public required DateTime LastUpdatedAt { get; set; }
+    // keep-comment: null for a curated trail; set for a user walk published from a hike submission
+    public AdminTrailContributionResponse? Contribution { get; set; }
 }

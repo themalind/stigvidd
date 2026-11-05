@@ -108,7 +108,7 @@ export default function HomeScreen() {
         onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(home)/area/area-list-screen"))}
       />
 
-      <PopularContributions />
+      <PopularContributions latitude={latitude} longitude={longitude} enabled={!locationPending} />
 
       {/* Held for the returning user, who is the one this slot is usually for: a first-time
           user resolves to "empty" and gets the get-started card above the carousel. */}

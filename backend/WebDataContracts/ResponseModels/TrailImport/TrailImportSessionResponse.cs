@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.TrailImport;
 
 // An uploaded file and how far it has got. Counts are only filled in once the analysis
@@ -12,19 +14,19 @@ public class TrailImportSessionResponse
     public required string Source { get; set; }
     public required string FileName { get; set; }
     public required string FileHash { get; set; }
-    public long FileSizeBytes { get; set; }
-    public required string Status { get; set; }
-    public string? UploadedBy { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime? AnalyzedAt { get; set; }
-    public DateTime? AppliedAt { get; set; }
-    public int FeatureCount { get; set; }
-    public string? ErrorMessage { get; set; }
-    public TrailImportCountsResponse? Counts { get; set; }
+    public required long FileSizeBytes { get; set; }
+    public required ImportSessionStatus Status { get; set; }
+    public required string? UploadedBy { get; set; }
+    public required DateTime CreatedAt { get; set; }
+    public required DateTime? AnalyzedAt { get; set; }
+    public required DateTime? AppliedAt { get; set; }
+    public required int FeatureCount { get; set; }
+    public required string? ErrorMessage { get; set; }
+    public required TrailImportCountsResponse? Counts { get; set; }
 
     // What applying wrote, for a session that has been applied. Null for every other
     // status, so a session in review cannot be mistaken for one that is done.
-    public TrailImportApplyResponse? Applied { get; set; }
+    public required TrailImportApplyResponse? Applied { get; set; }
 
     // Earlier sessions built from a byte-identical file. Empty is the normal case.
     public IReadOnlyCollection<string>? DuplicateOf { get; set; }
@@ -36,7 +38,7 @@ public class TrailImportSessionResponse
         string fileName,
         string fileHash,
         long fileSizeBytes,
-        string status,
+        ImportSessionStatus status,
         string? uploadedBy,
         DateTime createdAt,
         DateTime? analyzedAt,

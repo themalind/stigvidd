@@ -1,0 +1,44 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { describe, expect, it } from "vitest";
+import { displayName, formatBytes, formatDateTime } from "./format";
+
+describe("formatBytes", () => {
+  it("switches unit at each threshold", () => {
+    expect(formatBytes(512)).toBe("512 B");
+    expect(formatBytes(1024)).toBe("1 KB");
+    expect(formatBytes(1024 * 1024)).toBe("1.0 MB");
+    expect(formatBytes(2.5 * 1024 * 1024)).toBe("2.5 MB");
+  });
+
+  it("reads a missing size as unknown rather than as empty", () => {
+    expect(formatBytes(0)).toBe("—");
+    expect(formatBytes(null)).toBe("—");
+    expect(formatBytes(undefined)).toBe("—");
+  });
+
+  it("stays just under the megabyte in kilobytes", () => {
+    expect(formatBytes(1024 * 1024 - 1)).toBe("1024 KB");
+  });
+});
+
+describe("displayName", () => {
+  it("uses the nickname when there is one", () => {
+    expect(displayName("SkogsGreven")).toBe("SkogsGreven");
+  });
+
+  it.each([null, undefined, "", "   "])("says the account is gone for %p", (value) => {
+    expect(displayName(value)).toBe("Account deleted");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("formats a timestamp in the browser's locale", () => {
+    expect(formatDateTime("2026-09-18T11:00:00Z")).toBe(new Date("2026-09-18T11:00:00Z").toLocaleString());
+  });
+
+  it.each([null, undefined, ""])("shows a dash for %p", (value) => {
+    expect(formatDateTime(value)).toBe("—");
+  });
+});

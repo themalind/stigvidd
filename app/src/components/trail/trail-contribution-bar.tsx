@@ -9,6 +9,7 @@ import { getTrailLike, likeTrail, unlikeTrail } from "@/api/trails";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { useAuth } from "@/components/auth/auth-provider";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
+import ContributionInfo from "@/components/trail/contribution-info";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailContribution, TrailLike } from "@/data/types";
 import { TRAIL_LIKES_STALE_TIME } from "@/constants/cache";
@@ -79,7 +80,10 @@ export default function TrailContributionBar({ trailIdentifier, contribution }: 
       style={[s.container, { backgroundColor: theme.colors.surface, borderLeftColor: theme.colors.primary }]}
     >
       <View style={s.byline}>
-        <Text style={[s.badge, { color: theme.colors.primary }]}>{t("trail.contributed")}</Text>
+        <View style={s.badgeRow}>
+          <Text style={[s.badge, { color: theme.colors.primary }]}>{t("trail.contributed")}</Text>
+          <ContributionInfo testID="trail-contribution-info" />
+        </View>
         {contribution.submitterNickName && (
           <View style={s.submitter}>
             <Icon source="account-outline" size={16} color={theme.colors.onSurfaceVariant} />
@@ -127,6 +131,11 @@ const s = StyleSheet.create({
   byline: {
     flex: 1,
     gap: 2,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   badge: {
     fontFamily: "Inter_600SemiBold",

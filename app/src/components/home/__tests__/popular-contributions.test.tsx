@@ -13,7 +13,9 @@ import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
 const mockGetPopular = jest.fn();
-jest.mock("@/api/trails", () => ({ getPopularContributedTrails: () => mockGetPopular() }));
+jest.mock("@/api/trails", () => ({
+  getPopularContributedTrails: (...args: unknown[]) => mockGetPopular(...args),
+}));
 
 const mockNavigate = jest.fn();
 jest.mock("expo-router", () => ({ router: { navigate: (...args: unknown[]) => mockNavigate(...args) } }));
@@ -60,6 +62,65 @@ it("lists the walks in the order the server ranked them, with likes and credit",
   expect(screen.getByText("7,2 km · Vandrarvennen")).toBeTruthy();
   expect(screen.getByText("7,2 km")).toBeTruthy();
   expect(screen.getByText("234")).toBeTruthy();
+});
+
+it("asks for the walks around the user's position and says they are nearby", async () => {
+  mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
+  renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
+  await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
+
+  expect(mockGetPopular).toHaveBeenCalledWith(57.71, 11.97);
+  expect(screen.getByText("Delat av vandrare nära dig")).toBeTruthy();
+});
+
+it("asks for the walks from the whole country without a position", async () => {
+  mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
+  renderWithProviders(<PopularContributions />);
+  await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
+
+  expect(mockGetPopular.mock.calls).toEqual([[]]);
+  expect(screen.getByText("Delat av andra vandrare")).toBeTruthy();
+});
+
+it("falls back to the whole country when no walk is nearby", async () => {
+  mockGetPopular.mockImplementation((latitude?: number) =>
+    Promise.resolve(latitude === undefined ? [card("k", "Kirunaslingan", 3, null)] : []),
+  );
+  renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
+  await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
+
+  expect(mockGetPopular.mock.calls).toEqual([[57.71, 11.97], []]);
+  expect(screen.getByText("Kirunaslingan")).toBeTruthy();
+  expect(screen.getByText("Delat av andra vandrare")).toBeTruthy();
+});
+
+it("asks only once when walks are nearby", async () => {
+  mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
+  renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
+  await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
+  await settle();
+
+  expect(mockGetPopular).toHaveBeenCalledTimes(1);
+});
+
+it("waits while the position is still resolving", async () => {
+  mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
+  renderWithProviders(<PopularContributions enabled={false} />);
+  await settle();
+
+  expect(mockGetPopular).not.toHaveBeenCalled();
+});
+
+it("explains what a user walk is from the info button by the title", async () => {
+  mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
+  renderWithProviders(<PopularContributions />);
+  await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
+
+  fireEvent.press(screen.getByTestId("home-contribution-info-button"));
+  await settle();
+
+  expect(screen.getByText("Om användarpromenader")).toBeTruthy();
+  expect(mockNavigate).not.toHaveBeenCalled();
 });
 
 it("shows at most five walks, so the home screen keeps its height", async () => {

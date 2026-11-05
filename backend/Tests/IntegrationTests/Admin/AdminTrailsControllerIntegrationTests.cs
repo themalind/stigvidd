@@ -3,11 +3,16 @@
 
 using AwesomeAssertions;
 using ImageMagick;
+using Infrastructure.Data;
+using Infrastructure.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using WebDataContracts.RequestModels.Trail;
+using WebDataContracts.ResponseModels.HikeSubmission;
 using WebDataContracts.ResponseModels.Trail;
 
 namespace IntegrationTests.Admin;
@@ -242,7 +247,7 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<SymbolUrlResponse>(TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadFromJsonAsync<TrailSymbolResponse>(TestContext.Current.CancellationToken);
         body.Should().NotBeNull();
         body.SymbolUrl.Should().NotBeNullOrWhiteSpace();
     }
@@ -325,6 +330,48 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
 
         var publicReread = await client.GetAsync($"/api/v1/trails/{StorsjoledenIdentifier}", ctoken);
         publicReread.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetAllTrails_DescribesAUserWalkAndLinksItsSubmission()
+    {
+        // Arrange
+        var ctoken = TestContext.Current.CancellationToken;
+        var client = CreateAdminClient();
+        var submission = Guid.NewGuid().ToString();
+        using (var db = _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext())
+        {
+            db.HikeSubmissions.Add(new HikeSubmission
+            {
+                Identifier = submission,
+                UserId = 2,
+                Name = "Runt sjön",
+                GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)),
+                OriginalGeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)),
+                TrailLength = 1.3m,
+                ShowSubmitterName = false,
+                TransferAcceptedAt = DateTime.UtcNow,
+                ConsentTextId = 1,
+            });
+            await db.SaveChangesAsync(ctoken);
+        }
+        var approve = await client.PostAsync($"/api/v1/admin/hike-submissions/{submission}/approve", null, ctoken);
+        approve.StatusCode.Should().Be(HttpStatusCode.OK);
+        var approved = await approve.Content.ReadFromJsonAsync<ApproveHikeSubmissionResponse>(ctoken);
+        approved.Should().NotBeNull();
+
+        // Act
+        var trails = await client.GetFromJsonAsync<List<AdminTrailListItemResponse>>(TrailsRoute, ctoken);
+
+        // Assert
+        trails.Should().NotBeNull();
+        var walk = trails.Should().ContainSingle(t => t.Identifier == approved.TrailIdentifier).Subject;
+        walk.Contribution.Should().NotBeNull();
+        walk.Contribution.SubmitterNickName.Should().Be("VandrarVennen");
+        walk.Contribution.ShowSubmitterName.Should().BeFalse();
+        walk.Contribution.LikeCount.Should().Be(0);
+        walk.Contribution.SubmissionIdentifier.Should().Be(submission);
+        trails.Should().ContainSingle(t => t.Identifier == StorsjoledenIdentifier).Which.Contribution.Should().BeNull();
     }
 
     [Fact]
@@ -433,7 +480,4 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
-
-    /// <summary>The anonymous shape of AdminTrailsController.SetTrailSymbol's response body.</summary>
-    private sealed record SymbolUrlResponse(string SymbolUrl);
 }

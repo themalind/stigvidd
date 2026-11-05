@@ -272,7 +272,7 @@ it, so an attribute lost in an edit fails there rather than in production.
 
 The policy requires one realm role, `stigvidd-admin` by default — configurable via
 `Authorization:AdminRole` (env `Authorization__AdminRole`). The same role gates
-sign-in to the admin web client (`web/src/services/keycloak-auth.ts`), so a user
+sign-in to the admin web client (`web/src/lib/keycloak-auth.ts`), so a user
 missing it never reaches the dashboard *and* would be refused by the API anyway.
 
 No admin route needs the caller to have a StigVidd user row — the realm role alone

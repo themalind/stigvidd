@@ -16,5 +16,3 @@ public interface IMailTemplateRenderer
     // Every distinct placeholder name in a template, for tests and for whoever is writing one.
     IReadOnlyCollection<string> ExtractPlaceholders(string template);
 }
-
-public record RenderedMail(string Subject, string BodyHtml, string BodyText);

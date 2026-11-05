@@ -154,7 +154,7 @@ public class AdminTrailsController : StigViddController
     }
 
     [HttpPost("{identifier}/symbol")]
-    public async Task<ActionResult<string>> SetTrailSymbol(
+    public async Task<ActionResult<TrailSymbolResponse>> SetTrailSymbol(
         string identifier,
         [FromForm] IFormFile symbol,
         [FromForm] ImageProcessingOptionsRequest options,
@@ -170,6 +170,9 @@ public class AdminTrailsController : StigViddController
             return ToActionResult(result.Message);
         }
 
-        return Ok(new { symbolUrl = result.Value });
+        if (result.Value is null)
+            return ToActionResult(new Message(StatusCodes.Status500InternalServerError, "An error occurred while setting the symbol."));
+
+        return Ok(new TrailSymbolResponse { SymbolUrl = result.Value });
     }
 }

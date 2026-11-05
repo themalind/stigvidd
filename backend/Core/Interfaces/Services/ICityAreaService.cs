@@ -9,4 +9,8 @@ public interface ICityAreaService
 {
     Task<Result<IReadOnlyCollection<CityAreaResponse>>> GetAllAsync(CancellationToken ctoken);
     Task<Result<CityAreaResponse>> GetByIdentifierAsync(string identifier, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<AdminCityAreaResponse>>> GetAllForAdminAsync(CancellationToken ctoken);
+    Task<Result<AdminLinkSuggestionsResponse>> GetLinkSuggestionsAsync(CancellationToken ctoken);
+    Task<Result> SetFacilityLinkAsync(string areaIdentifier, string facilityIdentifier, bool linked, CancellationToken ctoken);
+    Task<Result> SetTrailLinkAsync(string areaIdentifier, string trailIdentifier, bool linked, CancellationToken ctoken);
 }

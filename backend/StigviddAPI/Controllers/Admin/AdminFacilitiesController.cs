@@ -27,10 +27,23 @@ public class AdminFacilitiesController : StigViddController
         _facilityService = facilityService;
     }
 
-    [HttpPost]
-    public async Task<ActionResult<FacilityResponse>> Create([FromBody] CreateFacilityRequest request, CancellationToken ctoken)
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyCollection<AdminFacilityResponse>>> GetAll(CancellationToken ctoken)
     {
-        var result = await _facilityService.CreateFacilityAsync(request.Name, request.FacilityType, request.IsAccessible, request.Longitude, request.Latitude, ctoken);
+        var result = await _facilityService.GetAllIncludingUnmappedAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<AdminFacilityResponse>> Create([FromBody] SaveFacilityRequest request, CancellationToken ctoken)
+    {
+        var result = await _facilityService.CreateFacilityAsync(request, ctoken);
 
         if (!result.Success && result.Message != null)
         {
@@ -41,11 +54,11 @@ public class AdminFacilitiesController : StigViddController
     }
 
     [HttpPut("{identifier}")]
-    public async Task<ActionResult<FacilityResponse>> Update(
+    public async Task<ActionResult<AdminFacilityResponse>> Update(
         [FromRoute] string identifier,
-        [FromBody] UpdateFacilityRequest request, CancellationToken ctoken)
+        [FromBody] SaveFacilityRequest request, CancellationToken ctoken)
     {
-        var result = await _facilityService.UpdateFacilityAsync(identifier, request.Name, request.FacilityType, request.IsAccessible, request.Longitude, request.Latitude, ctoken);
+        var result = await _facilityService.UpdateFacilityAsync(identifier, request, ctoken);
 
         if (!result.Success && result.Message != null)
         {

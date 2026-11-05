@@ -5,148 +5,394 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useMutation
-} from '@tanstack/react-query';
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
-  MutationFunction,
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   QueryClient,
-  UseMutationOptions,
-  UseMutationResult
-} from '@tanstack/react-query';
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
+  UseQueryOptions,
+  UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
+} from "@tanstack/react-query";
 
-import { customFetch } from '../../mutator';
+import type { CityAreaResponse } from "../model";
 
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
+const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
+  const result = { queryKey } as T & { queryKey: K };
+  for (const key of Object.keys(query)) {
+    // The explicit queryKey always wins, matching the previous
+    // `{ ...query, queryKey }` spread where it was set last.
+    if (key === "queryKey") continue;
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get: () => (query as Record<string, unknown>)[key],
+    });
+  }
+  return result;
+};
 
 export const getCityAreasGetAllUrl = () => {
+  return `/api/v1/CityAreas`;
+};
 
+export const cityAreasGetAll = async (options?: RequestInit): Promise<CityAreaResponse[]> => {
+  return customFetch<CityAreaResponse[]>(getCityAreasGetAllUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
 
+export const getCityAreasGetAllQueryKey = () => {
+  return [`/api/v1/CityAreas`] as const;
+};
 
+export const getCityAreasGetAllQueryOptions = <
+  TData = Awaited<ReturnType<typeof cityAreasGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  return `/api/v1/CityAreas`
+  const queryKey = queryOptions?.queryKey ?? getCityAreasGetAllQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof cityAreasGetAll>>> = ({ signal }) =>
+    cityAreasGetAll({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof cityAreasGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type CityAreasGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof cityAreasGetAll>>>;
+export type CityAreasGetAllQueryError = unknown;
+
+export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof cityAreasGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof cityAreasGetAll>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof cityAreasGetAll>>,
+          TError,
+          Awaited<ReturnType<typeof cityAreasGetAll>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getCityAreasGetAllQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const cityAreasGetAll = async ( options?: RequestInit): Promise<Blob> => {
+export const getCityAreasGetAllSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof cityAreasGetAll>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  return customFetch<Blob>(getCityAreasGetAllUrl(),
-  {
-    ...options,
-    method: 'GET'
+  const queryKey = queryOptions?.queryKey ?? getCityAreasGetAllQueryKey();
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof cityAreasGetAll>>> = ({ signal }) =>
+    cityAreasGetAll({ signal, ...requestOptions });
 
-  }
-);}
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof cityAreasGetAll>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type CityAreasGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof cityAreasGetAll>>>;
+export type CityAreasGetAllSuspenseQueryError = unknown;
 
+export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getCityAreasGetAllSuspenseQueryOptions(options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-export const getCityAreasGetAllMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError,void, TContext> => {
-
-const mutationKey = ['cityAreasGetAll'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cityAreasGetAll>>, void> = () => {
-
-
-          return  cityAreasGetAll(requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CityAreasGetAllMutationResult = NonNullable<Awaited<ReturnType<typeof cityAreasGetAll>>>
-
-    export type CityAreasGetAllMutationError = unknown
-
-    export const useCityAreasGetAll = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof cityAreasGetAll>>,
-        TError,
-        void,
-        TContext
-      > => {
-      return useMutation(getCityAreasGetAllMutationOptions(options), queryClient);
-    }
-    export const getCityAreasGetByIdentifierUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/CityAreas/${identifier}`
+  return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const cityAreasGetByIdentifier = async (identifier: string, options?: RequestInit): Promise<Blob> => {
+export const getCityAreasGetByIdentifierUrl = (identifier: string) => {
+  return `/api/v1/CityAreas/${identifier}`;
+};
 
-  return customFetch<Blob>(getCityAreasGetByIdentifierUrl(identifier),
-  {
+export const cityAreasGetByIdentifier = async (
+  identifier: string,
+  options?: RequestInit,
+): Promise<CityAreaResponse> => {
+  return customFetch<CityAreaResponse>(getCityAreasGetByIdentifierUrl(identifier), {
     ...options,
-    method: 'GET'
+    method: "GET",
+  });
+};
 
+export const getCityAreasGetByIdentifierQueryKey = (identifier: string) => {
+  return [`/api/v1/CityAreas/${identifier}`] as const;
+};
 
-  }
-);}
+export const getCityAreasGetByIdentifierQueryOptions = <
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
+  const queryKey = queryOptions?.queryKey ?? getCityAreasGetByIdentifierQueryKey(identifier);
 
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>> = ({ signal }) =>
+    cityAreasGetByIdentifier(identifier, { signal, ...requestOptions });
 
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
 
+export type CityAreasGetByIdentifierQueryResult = NonNullable<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>>;
+export type CityAreasGetByIdentifierQueryError = unknown;
 
-export const getCityAreasGetByIdentifierMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError,{identifier: string}, TContext> => {
+export function useCityAreasGetByIdentifier<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof cityAreasGetByIdentifier>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetByIdentifier<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+          TError,
+          Awaited<ReturnType<typeof cityAreasGetByIdentifier>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetByIdentifier<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
-const mutationKey = ['cityAreasGetByIdentifier'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
+export function useCityAreasGetByIdentifier<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getCityAreasGetByIdentifierQueryOptions(identifier, options);
 
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
+export const getCityAreasGetByIdentifierSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, {identifier: string}> = (props) => {
-          const {identifier} = props ?? {};
+  const queryKey = queryOptions?.queryKey ?? getCityAreasGetByIdentifierQueryKey(identifier);
 
-          return  cityAreasGetByIdentifier(identifier,requestOptions)
-        }
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>> = ({ signal }) =>
+    cityAreasGetByIdentifier(identifier, { signal, ...requestOptions });
 
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
 
+export type CityAreasGetByIdentifierSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof cityAreasGetByIdentifier>>
+>;
+export type CityAreasGetByIdentifierSuspenseQueryError = unknown;
 
+export function useCityAreasGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useCityAreasGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
+export function useCityAreasGetByIdentifierSuspense<
+  TData = Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getCityAreasGetByIdentifierSuspenseQueryOptions(identifier, options);
 
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
 
-  return  { mutationFn, ...mutationOptions }}
-
-    export type CityAreasGetByIdentifierMutationResult = NonNullable<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>>
-
-    export type CityAreasGetByIdentifierMutationError = unknown
-
-    export const useCityAreasGetByIdentifier = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cityAreasGetByIdentifier>>, TError,{identifier: string}, TContext>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof cityAreasGetByIdentifier>>,
-        TError,
-        {identifier: string},
-        TContext
-      > => {
-      return useMutation(getCityAreasGetByIdentifierMutationOptions(options), queryClient);
-    }
+  return withQueryKey(query, queryOptions.queryKey);
+}

@@ -4,12 +4,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getValidAccessToken = vi.hoisted(() => vi.fn<() => Promise<string | null>>());
-vi.mock("@/services/keycloak-auth", () => ({ getValidAccessToken }));
+vi.mock("@/lib/keycloak-auth", () => ({ getValidAccessToken }));
 
 const logger = vi.hoisted(() => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }));
-vi.mock("@/services/telemetry", () => ({ logger }));
+vi.mock("@/lib/telemetry", () => ({ logger }));
 
-import { customFetch } from "./mutator";
+import { ApiError, customFetch } from "./mutator";
 
 /** A Response is easier to build by hand here than to fake: the code reads .text(). */
 function reply(body: string | null, status = 200): Response {
@@ -122,6 +122,28 @@ describe("customFetch", () => {
       await expect(customFetch("/api/x", {})).rejects.toThrow('{"errors":{"Name":["req"]}}');
     });
 
+    it("carries the code of a coded ProblemDetails, beside its detail", async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        reply('{"status":409,"detail":"Already a member","code":"AlreadyMember"}', 409),
+      );
+
+      const error = await customFetch("/api/x", {}).catch((e: unknown) => e);
+
+      if (!(error instanceof ApiError)) throw new Error("expected an ApiError");
+      expect(error.message).toBe("Already a member");
+      expect(error.code).toBe("AlreadyMember");
+      expect(error.status).toBe(409);
+    });
+
+    it("has no code for a plain string refusal", async () => {
+      vi.mocked(fetch).mockResolvedValue(reply('"Trail is already linked"', 409));
+
+      const error = await customFetch("/api/x", {}).catch((e: unknown) => e);
+
+      if (!(error instanceof ApiError)) throw new Error("expected an ApiError");
+      expect(error.code).toBeUndefined();
+    });
+
     it("falls back to the status on an empty body", async () => {
       vi.mocked(fetch).mockResolvedValue(reply("", 500));
 
@@ -161,6 +183,15 @@ describe("customFetch", () => {
       expect(logged).not.toContain("57.70887");
       expect(logged).not.toContain("someone");
       expect(logged).not.toContain("a-token");
+    });
+
+    it("carries the HTTP status on the error, so a caller can tell a refusal from an outage", async () => {
+      vi.mocked(fetch).mockResolvedValue(reply('"Not yours"', 403));
+
+      const error = await customFetch("/api/x", {}).catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ApiError);
+      expect(error).toMatchObject({ status: 403, message: "Not yours" });
     });
 
     it("logs a server failure as an error", async () => {

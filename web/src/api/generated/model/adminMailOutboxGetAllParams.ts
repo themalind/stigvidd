@@ -7,18 +7,18 @@
  */
 
 export type AdminMailOutboxGetAllParams = {
-/**
- * @nullable
- */
-status?: string | null;
-/**
- * @nullable
- */
-templateKey?: string | null;
-/**
- * @nullable
- */
-recipient?: string | null;
-page?: number;
-pageSize?: number;
+  /**
+   * @nullable
+   */
+  status?: string | null;
+  /**
+   * @nullable
+   */
+  templateKey?: string | null;
+  /**
+   * @nullable
+   */
+  recipient?: string | null;
+  page?: number;
+  pageSize?: number;
 };

@@ -5,40 +5,43 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
+import type { MatchConfidence } from "./matchConfidence";
+import type { ProposalDecision } from "./proposalDecision";
+import type { TrailSourceLinkRole } from "./trailSourceLinkRole";
 
 export interface TrailImportProposalResponse {
   id: number;
   externalId: string;
   featureName: string;
-  confidence: string;
-  coverageForward?: number;
-  coverageBackward?: number;
+  confidence: MatchConfidence;
+  coverageForward: number;
+  coverageBackward: number;
   /** @nullable */
-  hausdorffMeters?: number | null;
+  hausdorffMeters: number | null;
   /** @nullable */
-  matchReason?: string | null;
-  decision: string;
-  decidedRole: string;
+  matchReason: string | null;
+  decision: ProposalDecision;
+  decidedRole: TrailSourceLinkRole;
   /** @nullable */
-  suggestedTrailId?: number | null;
+  suggestedTrailId: number | null;
   /** @nullable */
-  suggestedTrailName?: string | null;
+  suggestedTrailName: string | null;
   /** @nullable */
-  nearestTrailId?: number | null;
+  nearestTrailId: number | null;
   /** @nullable */
-  nearestTrailName?: string | null;
+  nearestTrailName: string | null;
   /** @nullable */
-  decidedTrailId?: number | null;
+  decidedTrailId: number | null;
   /** @nullable */
-  decidedTrailName?: string | null;
+  decidedTrailName: string | null;
   /** @nullable */
-  decidedBy?: string | null;
+  decidedBy: string | null;
   /** @nullable */
-  decidedAt?: string | null;
+  decidedAt: string | null;
   /** @nullable */
-  note?: string | null;
+  note: string | null;
   /** @nullable */
-  decidedName?: string | null;
+  decidedName: string | null;
   /** @nullable */
-  decidedLengthKm?: number | null;
+  decidedLengthKm: number | null;
 }

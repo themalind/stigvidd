@@ -7,8 +7,8 @@
  */
 
 export interface DataTransferInfoResponse {
-  sharedServices?: boolean;
-  exportIncludesKeycloak?: boolean;
-  importRestoresKeycloak?: boolean;
-  importClearsOutbound?: boolean;
+  sharedServices: boolean;
+  exportIncludesKeycloak: boolean;
+  importRestoresKeycloak: boolean;
+  importClearsOutbound: boolean;
 }

@@ -47,12 +47,12 @@ public class TrailContributionLikeRepositoryTests : TestBase
         var twice = await repository.SetTrailLikeAsync(ContributedIdentifier, Utilities.Identifiers.User, true, ct);
 
         twice.IsSuccess.Should().BeTrue();
-        twice.Value.Should().Be(new Core.Interfaces.Repositories.TrailLikeState(1, true));
+        twice.Value.Should().Be(new TrailLikeState(1, true));
 
         var unliked = await repository.SetTrailLikeAsync(ContributedIdentifier, Utilities.Identifiers.User, false, ct);
 
         unliked.IsSuccess.Should().BeTrue();
-        unliked.Value.Should().Be(new Core.Interfaces.Repositories.TrailLikeState(0, false));
+        unliked.Value.Should().Be(new TrailLikeState(0, false));
     }
 
     [Fact]
@@ -75,6 +75,18 @@ public class TrailContributionLikeRepositoryTests : TestBase
         result.Value.Should().NotBeNull();
         result.Value.Select(i => i.Identifier).Should().Equal(ContributedIdentifier);
         result.Value.Single().LikedAt.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task RankingInputs_CarryTheTrailsStartPoint()
+    {
+        var result = await Build().GetContributionRankingInputsAsync(TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        var input = result.Value.Single();
+        input.StartLatitude.Should().BeApproximately(57.72, 1e-9);
+        input.StartLongitude.Should().BeApproximately(12.94, 1e-9);
     }
 
     [Fact]

@@ -5,39 +5,40 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import type { TrailImportSiblingResponse } from './trailImportSiblingResponse';
+import type { MatchConfidence } from "./matchConfidence";
+import type { TrailImportSiblingResponse } from "./trailImportSiblingResponse";
 
 export interface TrailImportPreviewResponse {
   proposalId: number;
   featureName: string;
-  confidence: string;
+  confidence: MatchConfidence;
   /** @nullable */
-  matchReason?: string | null;
-  coverageForward?: number;
-  coverageBackward?: number;
+  matchReason: string | null;
+  coverageForward: number;
+  coverageBackward: number;
   /** @nullable */
-  hausdorffMeters?: number | null;
+  hausdorffMeters: number | null;
   featureCoordinates: number[][];
-  featureLengthKm?: number;
+  featureLengthKm: number;
   /** @nullable */
-  sourceStatedLengthKm?: number | null;
-  sourceLengthDisagrees?: boolean;
+  sourceStatedLengthKm: number | null;
+  sourceLengthDisagrees: boolean;
   /** @nullable */
-  trailCoordinates?: number[][] | null;
+  trailCoordinates: number[][] | null;
   /** @nullable */
-  trailId?: number | null;
+  trailId: number | null;
   /** @nullable */
-  trailIdentifier?: string | null;
+  trailIdentifier: string | null;
   /** @nullable */
-  trailName?: string | null;
+  trailName: string | null;
   /** @nullable */
-  trailCuratedLengthKm?: number | null;
+  trailCuratedLengthKm: number | null;
   /** @nullable */
-  trailMeasuredLengthKm?: number | null;
+  trailMeasuredLengthKm: number | null;
   /** @nullable */
-  trailIsVerified?: boolean | null;
-  trailIsNearestOnly?: boolean;
+  trailIsVerified: boolean | null;
+  trailIsNearestOnly: boolean;
   /** @nullable */
-  featureProperties?: string | null;
-  sharingTheTrail?: TrailImportSiblingResponse[];
+  featureProperties: string | null;
+  sharingTheTrail: TrailImportSiblingResponse[];
 }

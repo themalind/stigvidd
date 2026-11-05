@@ -7,5 +7,5 @@
  */
 
 export type UsersSearchForUserByUsernameParams = {
-Username?: string;
+  Username?: string;
 };

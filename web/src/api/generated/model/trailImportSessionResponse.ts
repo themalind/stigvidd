@@ -5,8 +5,9 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import type { TrailImportApplyResponse } from './trailImportApplyResponse';
-import type { TrailImportCountsResponse } from './trailImportCountsResponse';
+import type { ImportSessionStatus } from "./importSessionStatus";
+import type { TrailImportApplyResponse } from "./trailImportApplyResponse";
+import type { TrailImportCountsResponse } from "./trailImportCountsResponse";
 
 export interface TrailImportSessionResponse {
   id: number;
@@ -14,20 +15,20 @@ export interface TrailImportSessionResponse {
   source: string;
   fileName: string;
   fileHash: string;
-  fileSizeBytes?: number;
-  status: string;
+  fileSizeBytes: number;
+  status: ImportSessionStatus;
   /** @nullable */
-  uploadedBy?: string | null;
-  createdAt?: string;
+  uploadedBy: string | null;
+  createdAt: string;
   /** @nullable */
-  analyzedAt?: string | null;
+  analyzedAt: string | null;
   /** @nullable */
-  appliedAt?: string | null;
-  featureCount?: number;
+  appliedAt: string | null;
+  featureCount: number;
   /** @nullable */
-  errorMessage?: string | null;
-  counts?: TrailImportCountsResponse | null;
-  applied?: TrailImportApplyResponse | null;
+  errorMessage: string | null;
+  counts: TrailImportCountsResponse | null;
+  applied: TrailImportApplyResponse | null;
   /** @nullable */
   duplicateOf?: string[] | null;
 }

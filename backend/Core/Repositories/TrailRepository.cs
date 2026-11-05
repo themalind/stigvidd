@@ -441,13 +441,21 @@ public class TrailRepository : ITrailRepository
     }
 
     public async Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsForAdminAsync<T>(
-        Expression<Func<Trail, T>> selector, CancellationToken ctoken)
+        Expression<Func<AdminTrailSource, T>> selector, CancellationToken ctoken)
     {
         try
         {
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             var trails = await context.Trails.AsNoTracking()
+                .Select(t => new AdminTrailSource
+                {
+                    Trail = t,
+                    SubmissionIdentifier = context.HikeSubmissions
+                        .Where(s => s.PublishedTrailId == t.Id)
+                        .Select(s => s.Identifier)
+                        .FirstOrDefault(),
+                })
                 .Select(selector)
                 .ToListAsync(ctoken);
 
@@ -516,7 +524,7 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    public async Task<RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken)
+    public async Task<RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>> GetContributionRankingInputsAsync(CancellationToken ctoken)
     {
         try
         {
@@ -527,6 +535,8 @@ public class TrailRepository : ITrailRepository
                 .Select(t => new
                 {
                     t.Identifier,
+                    StartLatitude = t.GeoPath == null ? 0.0 : t.GeoPath.StartPoint.Y,
+                    StartLongitude = t.GeoPath == null ? 0.0 : t.GeoPath.StartPoint.X,
                     Reviews = context.Reviews
                         .Where(r => r.TrailId == t.Id)
                         .Select(r => new { r.Rating, r.LastUpdatedAt })
@@ -538,19 +548,21 @@ public class TrailRepository : ITrailRepository
                 })
                 .ToListAsync(ctoken);
 
-            IReadOnlyCollection<Services.ContributionRankingInput> inputs = rows
-                .Select(r => new Services.ContributionRankingInput(
+            IReadOnlyCollection<ContributionRankingInput> inputs = rows
+                .Select(r => new ContributionRankingInput(
                     r.Identifier,
-                    r.Reviews.Select(x => new Services.RankedReview(x.Rating, x.LastUpdatedAt)).ToList(),
-                    r.Likes))
+                    r.Reviews.Select(x => new RankedReview(x.Rating, x.LastUpdatedAt)).ToList(),
+                    r.Likes,
+                    r.StartLatitude,
+                    r.StartLongitude))
                 .ToList();
 
-            return RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>.Success(inputs);
+            return RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>.Success(inputs);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "TrailRepository: GetContributionRankingInputsAsync -> Something went wrong when fetching contributed trails.");
-            return RepositoryResult<IReadOnlyCollection<Services.ContributionRankingInput>>.Error();
+            return RepositoryResult<IReadOnlyCollection<ContributionRankingInput>>.Error();
         }
     }
 

@@ -5,239 +5,141 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import {
-  useQuery
-} from '@tanstack/react-query';
-import type {
-  DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
-  QueryClient,
-  QueryFunction,
-  QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult
-} from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
+import type { MutationFunction, QueryClient, UseMutationOptions, UseMutationResult } from "@tanstack/react-query";
 
-import type {
-  BanUserRequest
-} from '../model';
+import type { BanUserRequest } from "../model";
 
-import { customFetch } from '../../mutator';
-
+import { customFetch } from "../../mutator";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
-
-
-const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
-  const result = { queryKey } as T & { queryKey: K };
-  for (const key of Object.keys(query)) {
-    // The explicit queryKey always wins, matching the previous
-    // `{ ...query, queryKey }` spread where it was set last.
-    if (key === 'queryKey') continue;
-    Object.defineProperty(result, key, {
-      enumerable: true,
-      configurable: true,
-      get: () => (query as Record<string, unknown>)[key],
-    });
-  }
-  return result;
+export const getAdminUsersBanUserUrl = (identifier: string) => {
+  return `/api/v1/admin/users/${identifier}/ban`;
 };
 
-export const getAdminUsersBanUserUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/users/${identifier}/ban`
-}
-
-export const adminUsersBanUser = async (identifier: string,
-    banUserRequest: BanUserRequest, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminUsersBanUserUrl(identifier),
-  {
+export const adminUsersBanUser = async (
+  identifier: string,
+  banUserRequest: BanUserRequest,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminUsersBanUserUrl(identifier), {
     ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(banUserRequest)
-  }
-);}
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(banUserRequest),
+  });
+};
 
+export const getAdminUsersBanUserMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUsersBanUser>>,
+    TError,
+    { identifier: string; data: BanUserRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminUsersBanUser>>,
+  TError,
+  { identifier: string; data: BanUserRequest },
+  TContext
+> => {
+  const mutationKey = ["adminUsersBanUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminUsersBanUser>>,
+    { identifier: string; data: BanUserRequest }
+  > = (props) => {
+    const { identifier, data } = props ?? {};
 
+    return adminUsersBanUser(identifier, data, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
-export const getAdminUsersBanUserQueryKey = (identifier: string,
-    banUserRequest?: BanUserRequest,) => {
-    return [
-    'POST', `/api/v1/admin/users/${identifier}/ban`, banUserRequest
-    ] as const;
-    }
+export type AdminUsersBanUserMutationResult = NonNullable<Awaited<ReturnType<typeof adminUsersBanUser>>>;
+export type AdminUsersBanUserMutationBody = BanUserRequest;
+export type AdminUsersBanUserMutationError = unknown;
 
-
-export const getAdminUsersBanUserQueryOptions = <TData = Awaited<ReturnType<typeof adminUsersBanUser>>, TError = unknown>(identifier: string,
-    banUserRequest: BanUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersBanUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsersBanUserQueryKey(identifier,banUserRequest);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsersBanUser>>> = ({ signal }) => adminUsersBanUser(identifier,banUserRequest, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsersBanUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminUsersBanUserQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsersBanUser>>>
-export type AdminUsersBanUserQueryError = unknown
-
-
-export function useAdminUsersBanUser<TData = Awaited<ReturnType<typeof adminUsersBanUser>>, TError = unknown>(
- identifier: string,
-    banUserRequest: BanUserRequest, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersBanUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsersBanUser>>,
-          TError,
-          Awaited<ReturnType<typeof adminUsersBanUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsersBanUser<TData = Awaited<ReturnType<typeof adminUsersBanUser>>, TError = unknown>(
- identifier: string,
-    banUserRequest: BanUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersBanUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsersBanUser>>,
-          TError,
-          Awaited<ReturnType<typeof adminUsersBanUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsersBanUser<TData = Awaited<ReturnType<typeof adminUsersBanUser>>, TError = unknown>(
- identifier: string,
-    banUserRequest: BanUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersBanUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminUsersBanUser<TData = Awaited<ReturnType<typeof adminUsersBanUser>>, TError = unknown>(
- identifier: string,
-    banUserRequest: BanUserRequest, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersBanUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminUsersBanUserQueryOptions(identifier,banUserRequest,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-export const getAdminUsersUnbanUserUrl = (identifier: string,) => {
-
-
-
-
-  return `/api/v1/admin/users/${identifier}/ban`
-}
+export const useAdminUsersBanUser = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminUsersBanUser>>,
+      TError,
+      { identifier: string; data: BanUserRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminUsersBanUser>>,
+  TError,
+  { identifier: string; data: BanUserRequest },
+  TContext
+> => {
+  return useMutation(getAdminUsersBanUserMutationOptions(options), queryClient);
+};
+export const getAdminUsersUnbanUserUrl = (identifier: string) => {
+  return `/api/v1/admin/users/${identifier}/ban`;
+};
 
 export const adminUsersUnbanUser = async (identifier: string, options?: RequestInit): Promise<Blob> => {
-
-  return customFetch<Blob>(getAdminUsersUnbanUserUrl(identifier),
-  {
+  return customFetch<Blob>(getAdminUsersUnbanUserUrl(identifier), {
     ...options,
-    method: 'DELETE'
+    method: "DELETE",
+  });
+};
 
+export const getAdminUsersUnbanUserMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUsersUnbanUser>>,
+    TError,
+    { identifier: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, { identifier: string }, TContext> => {
+  const mutationKey = ["adminUsersUnbanUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
 
-  }
-);}
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminUsersUnbanUser>>, { identifier: string }> = (
+    props,
+  ) => {
+    const { identifier } = props ?? {};
 
+    return adminUsersUnbanUser(identifier, requestOptions);
+  };
 
+  return { mutationFn, ...mutationOptions };
+};
 
+export type AdminUsersUnbanUserMutationResult = NonNullable<Awaited<ReturnType<typeof adminUsersUnbanUser>>>;
 
+export type AdminUsersUnbanUserMutationError = unknown;
 
-export const getAdminUsersUnbanUserQueryKey = (identifier: string,) => {
-    return [
-    'DELETE', `/api/v1/admin/users/${identifier}/ban`
-    ] as const;
-    }
-
-
-export const getAdminUsersUnbanUserQueryOptions = <TData = Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError = unknown>(identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAdminUsersUnbanUserQueryKey(identifier);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof adminUsersUnbanUser>>> = ({ signal }) => adminUsersUnbanUser(identifier, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, enabled: identifier !== null && identifier !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AdminUsersUnbanUserQueryResult = NonNullable<Awaited<ReturnType<typeof adminUsersUnbanUser>>>
-export type AdminUsersUnbanUserQueryError = unknown
-
-
-export function useAdminUsersUnbanUser<TData = Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError = unknown>(
- identifier: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsersUnbanUser>>,
-          TError,
-          Awaited<ReturnType<typeof adminUsersUnbanUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsersUnbanUser<TData = Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof adminUsersUnbanUser>>,
-          TError,
-          Awaited<ReturnType<typeof adminUsersUnbanUser>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAdminUsersUnbanUser<TData = Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAdminUsersUnbanUser<TData = Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError = unknown>(
- identifier: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAdminUsersUnbanUserQueryOptions(identifier,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
+export const useAdminUsersUnbanUser = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminUsersUnbanUser>>,
+      TError,
+      { identifier: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof adminUsersUnbanUser>>, TError, { identifier: string }, TContext> => {
+  return useMutation(getAdminUsersUnbanUserMutationOptions(options), queryClient);
+};

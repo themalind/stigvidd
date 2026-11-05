@@ -11,5 +11,3 @@ public interface IMediaUploadService
 {
     Task<Result<UploadedMedia>> ProcessAndUploadAsync(Stream stream, string subDirectory, ImageProcessingOptions options);
 }
-
-public record UploadedMedia(string Path, int Width, int Height, long SizeBytes);

@@ -1,82 +1,10 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 
 namespace Core.Interfaces.Repositories;
-
-// What a report needs to know about the thing being reported, read past the moderation
-// filter so already hidden content can still be reported.
-public record ReportableContent(
-    int ContentId,
-    string ContentIdentifier,
-    int? AuthorUserId,
-    string? AuthorNickName,
-    int? TrailId,
-    string? TrailIdentifier,
-    string? Snapshot,
-    ModerationState ModerationState);
-
-// One row in the admin queue. The nicknames are looked up on the id where the user is still
-// there and fall back to the snapshot, because the snapshot goes stale on a rename and is
-// nulled outright when the author deletes their account.
-public record ContentReportSummary(
-    string Identifier,
-    ReportedContentType ContentType,
-    string ContentIdentifier,
-    string? TrailIdentifier,
-    ReportReason Reason,
-    string? ReporterNote,
-    ReportStatus Status,
-    ReportHideOutcome HideOutcome,
-    string? ReporterNickName,
-    string? AuthorNickName,
-    // Null once the author deletes their account, which is also when there is nothing to ban.
-    string? AuthorIdentifier,
-    // Set while the account is banned, so the queue can offer to lift it.
-    DateTime? AuthorBannedAt,
-    string? ContentSnapshot,
-    bool ContentStillExists,
-    string? DecidedBy,
-    DateTime? DecidedAt,
-    string? DecisionNote,
-    DateTime CreatedAt);
-
-// A reporter's own record, which is what the withholding rule reads and what the queue shows
-// next to their name.
-public record ReporterRecord(int Total, int Pending, int Dismissed, int Upheld);
-
-// One row in the Reporters tab. Who keeps pressing the button, and how often they were
-// right about it.
-public record ReporterStatistic(
-    int ReporterUserId,
-    string? NickName,
-    int Total,
-    int Pending,
-    int Dismissed,
-    int Upheld,
-    DateTime LastReportedAt);
-
-// One row in the Authors tab. Strikes are counted on distinct content, so a review three
-// people reported is one strike; this is the list an account removal is decided from.
-public record AuthorStatistic(
-    int AuthorUserId,
-    string? Identifier,
-    string? NickName,
-    int Strikes,
-    // Null while the account can still write; the row offers Ban or Unban on it.
-    DateTime? BannedAt,
-    int BanCount);
-
-// What applying a decision actually did. The image URLs come back so the caller can clear
-// them off WebDAV after the row is gone.
-public record DecisionOutcome(
-    ReportStatus AppliedStatus,
-    IReadOnlyCollection<string> DeletedImageUrls,
-    int ReportsSettled,
-    IReadOnlyList<PushMessage> Pushes);
 
 public interface IContentReportRepository
 {

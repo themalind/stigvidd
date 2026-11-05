@@ -1,0 +1,344 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { ApiError } from "@/api/mutator";
+import { QueryBoundary } from "@/components/query-boundary";
+import { renderWithProviders } from "@/testing/render";
+
+const api = await vi.hoisted(async () => {
+  const { createApiMock } = await import("@/testing/mock-api");
+  return { mock: createApiMock() };
+});
+vi.mock("@/api/mutator", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/mutator")>()),
+  customFetch: api.mock.customFetch,
+}));
+
+const transfer = vi.hoisted(() => ({ exportData: vi.fn(), importData: vi.fn() }));
+vi.mock("@/features/migration/api/admin", () => transfer);
+
+vi.mock("@/features/migration/components/user-mapping-card", () => ({
+  default: () => <div data-testid="user-mapping-card" />,
+}));
+
+const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+vi.mock("sonner", () => ({ toast: toasts }));
+
+import MigrationPage from "./migration";
+
+const TRANSFER_INFO = "/api/v1/admin/transfer-info";
+
+function transferInfo(sharedServices: boolean) {
+  return {
+    sharedServices,
+    exportIncludesKeycloak: !sharedServices,
+    importRestoresKeycloak: !sharedServices,
+    importClearsOutbound: sharedServices,
+  };
+}
+
+async function renderPage() {
+  const rendered = renderWithProviders(
+    <QueryBoundary>
+      <MigrationPage />
+    </QueryBoundary>,
+  );
+  await screen.findByRole("button", { name: /Import and replace/ });
+  return rendered;
+}
+
+// The confirmation phrase is this host's name, which under jsdom is `localhost`.
+const HOST = window.location.hostname;
+
+// The label becomes "Importing…" while the restore is in flight, so the button has to be
+// found by either of its two names.
+const importButton = () => screen.getByRole("button", { name: /Import and replace|Importing/ });
+const confirmBox = () => screen.getByLabelText(/to confirm you want to overwrite/);
+const archiveBox = () => screen.getByLabelText(/Migration archive/);
+
+function archive(name = "host.zip") {
+  return new File(["zip-bytes"], name, { type: "application/zip" });
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  api.mock.reset();
+  api.mock.on("GET", TRANSFER_INFO, () => transferInfo(false));
+  transfer.exportData.mockResolvedValue(undefined);
+  transfer.importData.mockResolvedValue({ message: "Restored 41 trails.", notes: [] });
+});
+
+describe("export", () => {
+  it("downloads a full export by default", async () => {
+    await renderPage();
+
+    await userEvent.click(screen.getByRole("button", { name: /Export all data/ }));
+
+    await waitFor(() => expect(transfer.exportData).toHaveBeenCalledOnce());
+    expect(transfer.exportData).toHaveBeenCalledWith({ anonymize: false });
+    expect(toasts.success).toHaveBeenCalled();
+  });
+
+  it("asks for an anonymized export once the box is ticked", async () => {
+    await renderPage();
+
+    await userEvent.click(screen.getByLabelText(/Anonymize personal data/));
+    await userEvent.click(screen.getByRole("button", { name: /Export anonymized data/ }));
+
+    await waitFor(() => expect(transfer.exportData).toHaveBeenCalledWith({ anonymize: true }));
+  });
+
+  it("reports a failed export rather than a finished one", async () => {
+    transfer.exportData.mockRejectedValue(new Error("Export failed (HTTP 500)"));
+    await renderPage();
+
+    await userEvent.click(screen.getByRole("button", { name: /Export all data/ }));
+
+    await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("Export failed (HTTP 500)"));
+    expect(toasts.success).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Import overwrites the database, the media and the Keycloak realm on this host. The
+ * operator has to name the host to arm it, and that arming is the only thing standing
+ * between a stray click and losing everything.
+ */
+describe("what this host does on import", () => {
+  it("warns a primary host that Keycloak is overwritten", async () => {
+    await renderPage();
+
+    expect(await screen.findByText(/overwrites ALL data on this host/)).toBeInTheDocument();
+  });
+
+  it("tells a shared-services host that Keycloak is left alone and outbound is cleared", async () => {
+    api.mock.on("GET", TRANSFER_INFO, () => transferInfo(true));
+    await renderPage();
+
+    expect(await screen.findByText(/Keycloak users in the archive are not/)).toBeInTheDocument();
+    expect(screen.queryByText(/overwrites ALL data on this host/)).not.toBeInTheDocument();
+  });
+
+  it("shows the server's notes beside its message", async () => {
+    transfer.importData.mockResolvedValue({
+      message: "Import complete.",
+      notes: ["Keycloak users were not restored."],
+    });
+    await renderPage();
+    await userEvent.upload(archiveBox(), archive());
+    await userEvent.type(confirmBox(), HOST);
+
+    await userEvent.click(importButton());
+
+    await waitFor(() =>
+      expect(toasts.success).toHaveBeenCalledWith(
+        "Import complete.",
+        expect.objectContaining({ description: "Keycloak users were not restored." }),
+      ),
+    );
+  });
+});
+
+describe("the import arming gate", () => {
+  it("is dead on arrival", async () => {
+    await renderPage();
+
+    expect(importButton()).toBeDisabled();
+  });
+
+  it("stays dead with an archive but no confirmation", async () => {
+    await renderPage();
+
+    await userEvent.upload(archiveBox(), archive());
+
+    expect(importButton()).toBeDisabled();
+  });
+
+  it("stays dead with the confirmation but no archive", async () => {
+    await renderPage();
+
+    await userEvent.type(confirmBox(), HOST);
+
+    expect(importButton()).toBeDisabled();
+  });
+
+  it("refuses a confirmation that is merely close", async () => {
+    await renderPage();
+    await userEvent.upload(archiveBox(), archive());
+
+    await userEvent.type(confirmBox(), `${HOST} `);
+
+    expect(importButton()).toBeDisabled();
+  });
+
+  it("refuses a confirmation in the wrong case", async () => {
+    await renderPage();
+    await userEvent.upload(archiveBox(), archive());
+
+    await userEvent.type(confirmBox(), HOST.toUpperCase());
+
+    expect(importButton()).toBeDisabled();
+  });
+
+  it("arms only on the archive and the host's own name together", async () => {
+    await renderPage();
+
+    await userEvent.upload(archiveBox(), archive());
+    await userEvent.type(confirmBox(), HOST);
+
+    expect(importButton()).toBeEnabled();
+  });
+
+  it("disarms again when the confirmation is edited away", async () => {
+    await renderPage();
+    await userEvent.upload(archiveBox(), archive());
+    await userEvent.type(confirmBox(), HOST);
+
+    await userEvent.type(confirmBox(), "x");
+
+    expect(importButton()).toBeDisabled();
+  });
+
+  it("names the host the operator has to type", async () => {
+    await renderPage();
+
+    expect(confirmBox()).toHaveAttribute("placeholder", HOST);
+  });
+});
+
+describe("running the import", () => {
+  async function arm() {
+    await renderPage();
+    await userEvent.upload(archiveBox(), archive());
+    await userEvent.type(confirmBox(), HOST);
+  }
+
+  it("sends the archive that was picked", async () => {
+    await arm();
+
+    await userEvent.click(importButton());
+
+    await waitFor(() => expect(transfer.importData).toHaveBeenCalledOnce());
+    expect(vi.mocked(transfer.importData).mock.calls[0][0]).toBeInstanceOf(File);
+    expect((vi.mocked(transfer.importData).mock.calls[0][0] as File).name).toBe("host.zip");
+  });
+
+  // Two clicks on a restore that replaces the host must not be two restores.
+  it("sends one request however fast the button is clicked twice", async () => {
+    let release: (value: { message: string; notes: string[] }) => void = () => {};
+    transfer.importData.mockReturnValue(
+      new Promise<{ message: string; notes: string[] }>((resolve) => (release = resolve)),
+    );
+    await arm();
+
+    await userEvent.click(importButton());
+
+    expect(importButton()).toBeDisabled();
+    expect(transfer.importData).toHaveBeenCalledOnce();
+
+    release({ message: "Restored.", notes: [] });
+  });
+
+  it("locks the inputs while it runs, so the archive cannot change under it", async () => {
+    let release: (value: { message: string; notes: string[] }) => void = () => {};
+    transfer.importData.mockReturnValue(
+      new Promise<{ message: string; notes: string[] }>((resolve) => (release = resolve)),
+    );
+    await arm();
+
+    await userEvent.click(importButton());
+
+    expect(archiveBox()).toBeDisabled();
+    expect(confirmBox()).toBeDisabled();
+
+    release({ message: "Restored.", notes: [] });
+  });
+
+  it("shows what the server said it restored", async () => {
+    await arm();
+
+    await userEvent.click(importButton());
+
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith("Restored 41 trails.", expect.anything()));
+  });
+
+  it("disarms after a successful run, so a second click cannot repeat it", async () => {
+    await arm();
+
+    await userEvent.click(importButton());
+
+    await waitFor(() => expect(importButton()).toBeDisabled());
+    expect(confirmBox()).toHaveValue("");
+  });
+
+  // A failed restore leaves the host in an unknown state; the operator should be able to
+  // read the reason and try again without re-arming from scratch.
+  it("reports a refusal and does not claim success", async () => {
+    transfer.importData.mockRejectedValue(new Error("Archive was produced by a newer version."));
+    await arm();
+
+    await userEvent.click(importButton());
+
+    await waitFor(() => expect(toasts.error).toHaveBeenCalledWith("Archive was produced by a newer version."));
+    expect(toasts.success).not.toHaveBeenCalled();
+  });
+
+  it("stays armed after a failure, rather than silently dropping the archive", async () => {
+    transfer.importData.mockRejectedValue(new Error("HTTP 500"));
+    await arm();
+
+    await userEvent.click(importButton());
+
+    await waitFor(() => expect(toasts.error).toHaveBeenCalled());
+    expect(importButton()).toBeEnabled();
+    expect(confirmBox()).toHaveValue(HOST);
+  });
+});
+
+describe("when this host cannot say what an import does", () => {
+  it("offers no import at all rather than guessing which warning applies", async () => {
+    api.mock.on("GET", TRANSFER_INFO, () => {
+      throw new ApiError("Service unavailable", 503);
+    });
+
+    renderWithProviders(
+      <QueryBoundary>
+        <MigrationPage />
+      </QueryBoundary>,
+    );
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Service unavailable");
+    expect(screen.queryByRole("button", { name: /Import and replace/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("user mapping", () => {
+  it("is offered on a shared-services host", async () => {
+    api.mock.on("GET", TRANSFER_INFO, () => transferInfo(true));
+    await renderPage();
+
+    expect(screen.getByTestId("user-mapping-card")).toBeInTheDocument();
+  });
+
+  it("is not offered on a primary host", async () => {
+    await renderPage();
+
+    expect(screen.queryByTestId("user-mapping-card")).not.toBeInTheDocument();
+  });
+});
+
+describe("the cache after an import", () => {
+  it("marks every cached query stale, since every table was replaced", async () => {
+    const { client } = await renderPage();
+    client.setQueryData(["/api/v1/admin/trails"], []);
+    await userEvent.upload(archiveBox(), archive());
+    await userEvent.type(confirmBox(), HOST);
+
+    await userEvent.click(importButton());
+
+    await waitFor(() => expect(client.getQueryState(["/api/v1/admin/trails"])?.isInvalidated).toBe(true));
+  });
+});

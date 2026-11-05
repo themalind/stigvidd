@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 using WebDataContracts.RequestModels.Media;
+using WebDataContracts.Enums;
 using WebDataContracts.ResponseModels.Media;
 
 namespace Core.Services.Media;
@@ -184,7 +185,7 @@ public class MediaReprocessService : IMediaReprocessService
 
         var itemResponses = items.Value
             .Select(i => MediaReprocessItemResponse.Create(
-                i.Identifier, i.MediaIdentifier, i.OwnerType, i.Status.ToString(), i.LastError, i.CreatedAt, i.LastUpdatedAt))
+                i.Identifier, i.MediaIdentifier, i.OwnerType, i.Status.ToContract<MediaReprocessItemStatus>(), i.LastError, i.CreatedAt, i.LastUpdatedAt))
             .ToList();
 
         return Result.Ok(MediaReprocessJobDetailResponse.Create(ToSummary(counts.Value), itemResponses));

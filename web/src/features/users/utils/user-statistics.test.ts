@@ -1,0 +1,90 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import { describe, expect, it } from "vitest";
+import { reporterStatistic as reporter } from "@/testing/fixtures/users";
+import {
+  emptyExplanation,
+  reporterAccuracy,
+  strikeSeverity,
+  totalStrikes,
+  withheldNote,
+  withheldReporters,
+} from "./user-statistics";
+
+describe("reporterAccuracy", () => {
+  it("counts upheld against decided reports", () => {
+    expect(reporterAccuracy(reporter({ pending: 1, dismissed: 1, upheld: 2 }))).toBe(67);
+  });
+
+  // Pending reports are not evidence either way. Counting them as wrong would make every
+  // new reporter look unreliable the moment they report something.
+  it("ignores pending reports", () => {
+    expect(reporterAccuracy(reporter({ pending: 7, dismissed: 0, upheld: 2 }))).toBe(100);
+  });
+
+  it("has no accuracy at all when nothing has been decided", () => {
+    expect(reporterAccuracy(reporter({ pending: 3, dismissed: 0, upheld: 0 }))).toBeNull();
+  });
+
+  it("reports zero for a reporter who was always wrong", () => {
+    expect(reporterAccuracy(reporter({ pending: 0, dismissed: 2, upheld: 0 }))).toBe(0);
+  });
+});
+
+describe("strikeSeverity", () => {
+  it.each([
+    [0, "none"],
+    [1, "watch"],
+    [2, "watch"],
+    [3, "serious"],
+    [12, "serious"],
+  ] as const)("calls %i strikes %s", (strikes, expected) => {
+    expect(strikeSeverity(strikes)).toBe(expected);
+  });
+});
+
+describe("withheldNote", () => {
+  // Rows climbing while nothing gets hidden looks like a broken hiding rule unless the tab
+  // says why.
+  it("explains a reporter whose reports no longer hide", () => {
+    expect(withheldNote({ reportsAreWithheld: true })).toContain("no longer hide");
+  });
+
+  it("says nothing about an ordinary reporter", () => {
+    expect(withheldNote({ reportsAreWithheld: false })).toBeNull();
+  });
+});
+
+describe("withheldReporters", () => {
+  it("picks out only the withheld ones", () => {
+    const rows = [
+      reporter({ nickName: "A" }),
+      reporter({ nickName: "B", reportsAreWithheld: true }),
+      reporter({ nickName: "C", reportsAreWithheld: true }),
+    ];
+
+    expect(withheldReporters(rows).map((r) => r.nickName)).toEqual(["B", "C"]);
+  });
+
+  it("returns nothing when every reporter still hides", () => {
+    expect(withheldReporters([reporter(), reporter()])).toEqual([]);
+  });
+});
+
+describe("totalStrikes", () => {
+  it("adds the page up", () => {
+    const authors = [{ strikes: 3 }, { strikes: 1 }, { strikes: 2 }];
+
+    expect(totalStrikes(authors)).toBe(6);
+  });
+});
+
+describe("emptyExplanation", () => {
+  // Two different empty states: nothing reported at all, or reports that never led to a
+  // strike. They mean opposite things about the moderation backlog.
+  it("distinguishes the two empty tabs", () => {
+    expect(emptyExplanation("reporters")).not.toBe(emptyExplanation("authors"));
+    expect(emptyExplanation("authors")).toContain("upheld");
+  });
+});

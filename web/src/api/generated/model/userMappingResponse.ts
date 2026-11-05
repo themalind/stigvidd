@@ -7,10 +7,10 @@
  */
 
 export interface UserMappingResponse {
-  packageUserId?: number;
+  packageUserId: number;
   keycloakSubjectId: string;
   keycloakUsername: string;
   nickName: string;
   email: string;
-  createdAt?: string;
+  createdAt: string;
 }

@@ -26,10 +26,3 @@ public interface IHikeSubmissionRepository
     Task<RepositoryResult<IReadOnlyCollection<string>>> WithdrawAsync(string identifier, int userId, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<RoutePath>>> GetComparableRoutesAsync(string exceptSubmissionIdentifier, CancellationToken ctoken);
 }
-
-public enum RouteKind { Trail, Contribution, Submission }
-
-public record RoutePath(string Identifier, string Name, RouteKind Kind, LineString GeoPath);
-
-// keep-comment: DiscardedImageUrls are copies whose hike photo was hidden by moderation; their files are the caller's to delete
-public record ApprovedSubmission(string TrailIdentifier, IReadOnlyCollection<string> DiscardedImageUrls);

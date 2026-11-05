@@ -14,11 +14,24 @@ public class TrailContributionRankingTests
     private static TrailContributionRanking Ranking(Dictionary<string, string?>? settings = null) =>
         new(new ConfigurationBuilder().AddInMemoryCollection(settings ?? []).Build());
 
-    private static ContributionRankingInput Trail(string id, IEnumerable<(decimal Rating, int DaysAgo)>? reviews = null, IEnumerable<int>? likesDaysAgo = null) =>
-        new(
+    // keep-comment: Göteborg centre; Borås is about 55 km east, Kungsbacka about 25 km south, Kiruna about 1200 km north
+    private const double GothenburgLatitude = 57.7089;
+    private const double GothenburgLongitude = 11.9746;
+
+    private static ContributionRankingInput Trail(
+        string id,
+        IEnumerable<(decimal Rating, int DaysAgo)>? reviews = null,
+        IEnumerable<int>? likesDaysAgo = null,
+        double latitude = GothenburgLatitude,
+        double longitude = GothenburgLongitude)
+    {
+        return new(
             id,
             (reviews ?? []).Select(r => new RankedReview(r.Rating, Now.AddDays(-r.DaysAgo))).ToList(),
-            (likesDaysAgo ?? []).Select(d => Now.AddDays(-d)).ToList());
+            (likesDaysAgo ?? []).Select(d => Now.AddDays(-d)).ToList(),
+            latitude,
+            longitude);
+    }
 
     [Fact]
     public void Defaults_AreTheAgreedOnes()
@@ -29,6 +42,7 @@ public class TrailContributionRankingTests
         ranking.Z.Should().Be(1.96);
         ranking.LikeBonusWeight.Should().Be(0.05);
         ranking.Take.Should().Be(10);
+        ranking.NearbyRadiusKm.Should().Be(50);
     }
 
     [Fact]
@@ -40,12 +54,14 @@ public class TrailContributionRankingTests
             ["ContributionRanking:Z"] = "1.645",
             ["ContributionRanking:LikeBonusWeight"] = "0.1",
             ["ContributionRanking:Take"] = "3",
+            ["ContributionRanking:NearbyRadiusKm"] = "25",
         });
 
         ranking.HalfLifeDays.Should().Be(90);
         ranking.Z.Should().Be(1.645);
         ranking.LikeBonusWeight.Should().Be(0.1);
         ranking.Take.Should().Be(3);
+        ranking.NearbyRadiusKm.Should().Be(25);
     }
 
     [Theory]
@@ -109,7 +125,7 @@ public class TrailContributionRankingTests
     }
 
     [Fact]
-    public void Rank_OrdersByScoreAndTakesTheConfiguredCount()
+    public void Rank_OrdersByScoreAndPickTakesTheConfiguredCount()
     {
         var ranking = Ranking(new() { ["ContributionRanking:Take"] = "2" });
 
@@ -121,6 +137,63 @@ public class TrailContributionRankingTests
             ],
             Now);
 
-        ranked.Should().Equal("best", "middle");
+        ranked.Select(r => r.Identifier).Should().Equal("best", "middle", "none");
+        ranking.Pick(ranked, null, null).Should().Equal("best", "middle");
+    }
+
+    [Fact]
+    public void Rank_CarriesEachTrailsStartPoint()
+    {
+        var ranked = Ranking().Rank([Trail("kiruna", latitude: 67.8558, longitude: 20.2253)], Now);
+
+        ranked.Should().Equal(new RankedContribution("kiruna", 67.8558, 20.2253));
+    }
+
+    [Fact]
+    public void Pick_WithAPosition_LeavesOutTrailsBeyondTheRadius_AndKeepsTheScoreOrder()
+    {
+        var ranking = Ranking();
+        var ranked = ranking.Rank(
+            [
+                Trail("kiruna", Enumerable.Repeat((5m, 0), 50), latitude: 67.8558, longitude: 20.2253),
+                Trail("boras", Enumerable.Repeat((5m, 0), 30), latitude: 57.7210, longitude: 12.9401),
+                Trail("kungsbacka", Enumerable.Repeat((4m, 0), 5), latitude: 57.4875, longitude: 12.0761),
+                Trail("gothenburg"),
+            ],
+            Now);
+
+        ranking.Pick(ranked, GothenburgLatitude, GothenburgLongitude).Should().Equal("kungsbacka", "gothenburg");
+    }
+
+    [Fact]
+    public void Pick_WithAPosition_IncludesBorasOnceTheRadiusReachesIt()
+    {
+        var ranking = Ranking(new() { ["ContributionRanking:NearbyRadiusKm"] = "100" });
+        var ranked = ranking.Rank(
+            [
+                Trail("kiruna", latitude: 67.8558, longitude: 20.2253),
+                Trail("boras", latitude: 57.7210, longitude: 12.9401),
+            ],
+            Now);
+
+        ranking.Pick(ranked, GothenburgLatitude, GothenburgLongitude).Should().Equal("boras");
+    }
+
+    [Fact]
+    public void Pick_WithAPosition_AndNothingNearby_IsEmpty()
+    {
+        var ranking = Ranking();
+        var ranked = ranking.Rank([Trail("kiruna", latitude: 67.8558, longitude: 20.2253)], Now);
+
+        ranking.Pick(ranked, GothenburgLatitude, GothenburgLongitude).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Pick_WithOnlyHalfAPosition_IgnoresIt()
+    {
+        var ranking = Ranking();
+        var ranked = ranking.Rank([Trail("kiruna", latitude: 67.8558, longitude: 20.2253)], Now);
+
+        ranking.Pick(ranked, GothenburgLatitude, null).Should().Equal("kiruna");
     }
 }

@@ -5,26 +5,27 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
+import type { OutboxEmailStatus } from "./outboxEmailStatus";
 
 export interface OutboxEmailSummaryResponse {
   identifier: string;
   toAddress: string;
   /** @nullable */
-  toName?: string | null;
+  toName: string | null;
   subject: string;
   /** @nullable */
-  templateKey?: string | null;
-  status: string;
-  attempts?: number;
-  nextAttemptAt?: string;
+  templateKey: string | null;
+  status: OutboxEmailStatus;
+  attempts: number;
+  nextAttemptAt: string;
   /** @nullable */
-  sentAt?: string | null;
+  sentAt: string | null;
   /** @nullable */
-  lastError?: string | null;
+  lastError: string | null;
   /** @nullable */
-  settledAt?: string | null;
+  settledAt: string | null;
   /** @nullable */
-  redactedAt?: string | null;
-  createdAt?: string;
-  lastUpdatedAt?: string;
+  redactedAt: string | null;
+  createdAt: string;
+  lastUpdatedAt: string;
 }

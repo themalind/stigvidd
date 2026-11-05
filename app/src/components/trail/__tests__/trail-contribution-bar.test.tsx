@@ -67,6 +67,17 @@ it("leaves out the credit when the submitter is not named", async () => {
   expect(screen.getByText("Användarpromenad")).toBeTruthy();
 });
 
+it("explains what a user walk is from the info button", async () => {
+  renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await settle();
+
+  fireEvent.press(screen.getByTestId("trail-contribution-info-button"));
+  await settle();
+
+  expect(screen.getByText("Om användarpromenader")).toBeTruthy();
+  expect(mockLike).not.toHaveBeenCalled();
+});
+
 it("likes and then unlikes", async () => {
   renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await flushUntil(pressable);

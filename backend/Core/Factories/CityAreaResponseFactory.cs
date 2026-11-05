@@ -61,4 +61,73 @@ public class CityAreaResponseFactory
     {
         return cityAreas.Select(Create).ToList();
     }
+
+    public AdminLinkSuggestionsResponse CreateLinkSuggestions(
+        IReadOnlyCollection<SuggestedFacility> facilities, IReadOnlyCollection<SuggestedTrail> trails)
+    {
+        return new AdminLinkSuggestionsResponse
+        {
+            Facilities = facilities
+                .Select(f => new AdminUnlinkedFacilityResponse
+                {
+                    Identifier = f.Facility.Identifier,
+                    Name = f.Facility.Name,
+                    FacilityType = f.Facility.FacilityType,
+                    Suggestions = CreateSuggestions(f.Suggestions)
+                })
+                .ToList(),
+            Trails = trails
+                .Select(t => new AdminUnlinkedTrailResponse
+                {
+                    Identifier = t.Trail.Identifier,
+                    Name = t.Trail.Name,
+                    City = t.Trail.City,
+                    IsVerified = t.Trail.IsVerified,
+                    Suggestions = CreateSuggestions(t.Suggestions)
+                })
+                .ToList()
+        };
+    }
+
+    private static IReadOnlyCollection<AdminAreaSuggestionResponse> CreateSuggestions(IReadOnlyList<AreaSuggestion> suggestions)
+    {
+        return suggestions
+            .Select(suggestion => new AdminAreaSuggestionResponse
+            {
+                AreaIdentifier = suggestion.AreaIdentifier,
+                AreaName = suggestion.AreaName,
+                Reason = suggestion.Reason,
+                DistanceKm = suggestion.DistanceKm is double km ? Math.Round(km, 1) : null,
+                NearestName = suggestion.NearestName
+            })
+            .ToList();
+    }
+
+    public IReadOnlyCollection<AdminCityAreaResponse> CreateAdmin(IReadOnlyCollection<AdminCityAreaProjection> cityAreas)
+    {
+        return cityAreas
+            .Select(area => new AdminCityAreaResponse
+            {
+                Identifier = area.Identifier,
+                Name = area.Name,
+                Location = area.Location,
+                Facilities = area.Facilities
+                    .Select(f => new AdminCityAreaFacilityResponse
+                    {
+                        Identifier = f.Identifier,
+                        Name = f.Name,
+                        FacilityType = f.FacilityType
+                    })
+                    .ToList(),
+                Trails = area.Trails
+                    .Select(t => new AdminCityAreaTrailResponse
+                    {
+                        Identifier = t.Identifier,
+                        Name = t.Name,
+                        IsVerified = t.IsVerified
+                    })
+                    .ToList()
+            })
+            .ToList();
+    }
 }

@@ -3,14 +3,6 @@
 
 namespace WebDataContracts.RequestModels.Media;
 
-public enum MediaSort
-{
-    Newest,
-    Oldest,
-    Largest,
-    Widest
-}
-
 // keep-comment: one list, because the validator, the repository's ordering and the web's sort control are otherwise three independent copies of the same four strings and nothing compares them
 public static class MediaSorts
 {

@@ -358,6 +358,22 @@ public class AdminHikeSubmissionsControllerIntegrationTests : IClassFixture<Stig
         (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Should().Contain("ImageIdentifiers");
     }
 
+    // keep-comment: the shipped app compares status to "Pending"/"Approved"/"Rejected"; ReadFromJsonAsync would also accept a number, so read the raw body
+    [Fact]
+    public async Task MySubmissions_SendTheStatusAsItsNameToTheApp()
+    {
+        var identifier = await SeedPendingSubmissionAsync();
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+
+        var response = await client.GetAsync("/api/v1/HikeSubmissions", TestContext.Current.CancellationToken);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        json.Should().Contain(identifier);
+        json.Should().Contain("\"status\":\"Pending\"");
+    }
+
     private HttpClient AdminClient()
     {
         var client = _factory.CreateClient();

@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using WebDataContracts.Enums;
+
 namespace WebDataContracts.ResponseModels.TrailImport;
 
 // What applying a session actually wrote. The same figures are stored on the session as
@@ -8,18 +10,18 @@ namespace WebDataContracts.ResponseModels.TrailImport;
 public class TrailImportApplyResponse
 {
     public required int SessionId { get; set; }
-    public required string Status { get; set; }
-    public DateTime? AppliedAt { get; set; }
+    public required ImportSessionStatus Status { get; set; }
+    public required DateTime? AppliedAt { get; set; }
 
-    public int TrailsCreated { get; set; }
-    public int TrailsUpdated { get; set; }
-    public int LinksWritten { get; set; }
-    public int FeaturesExcluded { get; set; }
+    public required int TrailsCreated { get; set; }
+    public required int TrailsUpdated { get; set; }
+    public required int LinksWritten { get; set; }
+    public required int FeaturesExcluded { get; set; }
 
     // Existing trails the decisions linked to. TrailsUpdated counts the subset that also
     // changed, which on a first sync is none of them. Null on a session applied before
     // this figure was recorded.
-    public int? TrailsLinked { get; set; }
+    public required int? TrailsLinked { get; set; }
 
     // Source-owned fields where both sides had changed. Ours stands; these are for a human
     // to look at.
@@ -27,7 +29,7 @@ public class TrailImportApplyResponse
 
     public static TrailImportApplyResponse Create(
         int sessionId,
-        string status,
+        ImportSessionStatus status,
         DateTime? appliedAt,
         int trailsCreated,
         int trailsUpdated,
@@ -47,30 +49,6 @@ public class TrailImportApplyResponse
             FeaturesExcluded = featuresExcluded,
             TrailsLinked = trailsLinked,
             Conflicts = conflicts.ToList()
-        };
-    }
-}
-
-public class TrailImportApplyConflictResponse
-{
-    public required int TrailId { get; set; }
-    public required string TrailName { get; set; }
-    public required string Field { get; set; }
-
-    // What the trail kept, and what the source would have written over it.
-    public required string Ours { get; set; }
-    public required string Theirs { get; set; }
-
-    public static TrailImportApplyConflictResponse Create(
-        int trailId, string trailName, string field, string ours, string theirs)
-    {
-        return new TrailImportApplyConflictResponse
-        {
-            TrailId = trailId,
-            TrailName = trailName,
-            Field = field,
-            Ours = ours,
-            Theirs = theirs
         };
     }
 }

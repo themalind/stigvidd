@@ -5,36 +5,37 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
+import type { ReportStatus } from "./reportStatus";
 
 export interface ContentReportSummaryResponse {
   identifier: string;
   contentType: string;
   contentIdentifier: string;
   /** @nullable */
-  trailIdentifier?: string | null;
+  trailIdentifier: string | null;
   reason: string;
   /** @nullable */
-  reporterNote?: string | null;
-  status: string;
+  reporterNote: string | null;
+  status: ReportStatus;
   hideOutcome: string;
   /** @nullable */
-  reporterNickName?: string | null;
+  reporterNickName: string | null;
   /** @nullable */
-  authorNickName?: string | null;
+  authorNickName: string | null;
   /** @nullable */
-  authorIdentifier?: string | null;
+  authorIdentifier: string | null;
   /** @nullable */
-  authorBannedAt?: string | null;
+  authorBannedAt: string | null;
   /** @nullable */
-  contentSnapshot?: string | null;
+  contentSnapshot: string | null;
   /** @nullable */
-  contentImageUrl?: string | null;
-  contentStillExists?: boolean;
+  contentImageUrl: string | null;
+  contentStillExists: boolean;
   /** @nullable */
-  decidedBy?: string | null;
+  decidedBy: string | null;
   /** @nullable */
-  decidedAt?: string | null;
+  decidedAt: string | null;
   /** @nullable */
-  decisionNote?: string | null;
-  createdAt?: string;
+  decisionNote: string | null;
+  createdAt: string;
 }

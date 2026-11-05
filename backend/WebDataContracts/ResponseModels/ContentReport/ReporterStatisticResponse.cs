@@ -7,13 +7,13 @@ namespace WebDataContracts.ResponseModels.ContentReport;
 // hide anything, which is why their content can look unmoderated while the count climbs.
 public class ReporterStatisticResponse
 {
-    public string? NickName { get; set; }
-    public int Total { get; set; }
-    public int Pending { get; set; }
-    public int Dismissed { get; set; }
-    public int Upheld { get; set; }
-    public DateTime LastReportedAt { get; set; }
-    public bool ReportsAreWithheld { get; set; }
+    public required string? NickName { get; set; }
+    public required int Total { get; set; }
+    public required int Pending { get; set; }
+    public required int Dismissed { get; set; }
+    public required int Upheld { get; set; }
+    public required DateTime LastReportedAt { get; set; }
+    public required bool ReportsAreWithheld { get; set; }
 
     public static ReporterStatisticResponse Create(
         string? nickName,

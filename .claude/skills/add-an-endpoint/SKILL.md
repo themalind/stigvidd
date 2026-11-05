@@ -64,6 +64,15 @@ build now does most of this for you:
    tracked. Read the operation you added.)
 3. `cd web && npm run generate:api`, then commit `web/src/api/generated` — the typed client
    is the only half of this that is committed.
+4. Use it from `web/src/features/<domain>/api/<domain>.ts` (or `web/src/api/` when two
+   features need it): wrap orval's `get…QueryOptions`/`get…SuspenseQueryOptions` and its
+   `get…QueryKey` for invalidation, and put mutations there as `useX()` hooks. Components
+   and `app/routes/` never import `@/api/generated/<tag>` or `@/api/mutator` — `npm run lint`
+   refuses it (`no-restricted-imports` in `web/eslint.config.js`). Model types from
+   `@/api/generated/model` are fine anywhere. A response DTO only the admin reads gets
+   `required` on its non-nullable properties, or orval types every field as optional — but
+   not one another service deserializes (`TrailResponse` in the link service): a missing
+   field then throws there, and only the full `dotnet test` (LinkTests) shows it.
 
 Steps 1 and 3 both happen automatically if you build the web app instead: `codegen.mjs`
 runs as its `prebuild`. Either way the client ends up in `git status`, which is the point.

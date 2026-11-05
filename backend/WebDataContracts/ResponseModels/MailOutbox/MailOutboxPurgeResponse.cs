@@ -9,9 +9,9 @@ namespace WebDataContracts.ResponseModels.MailOutbox;
 /// </summary>
 public class MailOutboxPurgeResponse
 {
-    public int Deleted { get; set; }
-    public int OlderThanDays { get; set; }
-    public DateTime CutoffUtc { get; set; }
+    public required int Deleted { get; set; }
+    public required int OlderThanDays { get; set; }
+    public required DateTime CutoffUtc { get; set; }
 
     public static MailOutboxPurgeResponse Create(int deleted, int olderThanDays, DateTime cutoffUtc) => new()
     {

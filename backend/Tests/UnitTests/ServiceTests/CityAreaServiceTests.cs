@@ -130,4 +130,49 @@ public class CityAreaServiceTests
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(500);
     }
+
+    [Fact]
+    public async Task GetLinkSuggestionsAsync_SuggestsAnAreaForEachUnlinkedItem()
+    {
+        // Arrange
+        var sources = new LinkSuggestionSourcesProjection(
+            [new SuggestionAreaProjection("area-rya", "Rya åsar", [new LinkedPlaceProjection("Ryaslingan", 57.71, 12.90)])],
+            [
+                new UnlinkedFacilityProjection("fac-near", "Grillplats", 1, 57.70, 12.90),
+                new UnlinkedFacilityProjection("fac-far", "Fiskevatten", 4, null, null),
+            ],
+            [new UnlinkedTrailProjection("trail-rya", "Rya åsar runt", "Borås", true, null, null)]);
+        var repo = new Mock<ICityAreaRepository>();
+        repo.Setup(r => r.GetLinkSuggestionSourcesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<LinkSuggestionSourcesProjection>.Success(sources));
+
+        // Act
+        var result = await Build(repo).GetLinkSuggestionsAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Facilities.Single(f => f.Identifier == "fac-near").Suggestions
+            .Should().ContainSingle().Which.AreaIdentifier.Should().Be("area-rya");
+        result.Value.Facilities.Single(f => f.Identifier == "fac-far").Suggestions.Should().BeEmpty();
+        result.Value.Trails.Should().ContainSingle().Which.Suggestions
+            .Should().ContainSingle().Which.AreaName.Should().Be("Rya åsar");
+    }
+
+    [Fact]
+    public async Task GetLinkSuggestionsAsync_WhenRepositoryFails_Returns500()
+    {
+        // Arrange
+        var repo = new Mock<ICityAreaRepository>();
+        repo.Setup(r => r.GetLinkSuggestionSourcesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<LinkSuggestionSourcesProjection>.Error());
+
+        // Act
+        var result = await Build(repo).GetLinkSuggestionsAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
+    }
 }

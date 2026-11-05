@@ -50,11 +50,3 @@ public interface IKeycloakAdminRepository
     /// <summary>The Keycloak user with this subject id, or null when there is none.</summary>
     Task<KeycloakUserSummary?> FindUserAsync(string subjectId, CancellationToken ctoken);
 }
-
-public record KeycloakUserSummary(string Id, string Username, string? Email, bool Enabled);
-
-/// <summary>Thrown when Keycloak rejects user creation because the user already exists.</summary>
-public class KeycloakUserConflictException : Exception
-{
-    public KeycloakUserConflictException(string message) : base(message) { }
-}

@@ -5,35 +5,36 @@
  * Stigvidd API. This is free software, licensed under the GNU Affero General Public License version 3 or later. Under section 13 of that licence you are entitled to the Corresponding Source of this running service: https://github.com/themalind/stigvidd
  * OpenAPI spec version: 1.0.0
  */
-import type { HikeSubmissionImageResponse } from './hikeSubmissionImageResponse';
+import type { HikeSubmissionImageResponse } from "./hikeSubmissionImageResponse";
+import type { HikeSubmissionStatus } from "./hikeSubmissionStatus";
 
 export interface AdminHikeSubmissionResponse {
   identifier: string;
   name: string;
   description: string;
-  classification?: number;
+  classification: number;
   parking: string;
   gettingThere: string;
   publicTransport: string;
   accessibilityInfo: string;
   city: string;
-  showSubmitterName?: boolean;
+  showSubmitterName: boolean;
   /** @nullable */
-  submitterNickName?: string | null;
-  transferAcceptedAt?: string;
-  status: string;
+  submitterNickName: string | null;
+  transferAcceptedAt: string;
+  status: HikeSubmissionStatus;
   /** @nullable */
-  rejectionReason?: string | null;
+  rejectionReason: string | null;
   /** @nullable */
-  decidedBy?: string | null;
+  decidedBy: string | null;
   /** @nullable */
-  decidedAt?: string | null;
-  createdAt?: string;
-  lastUpdatedAt?: string;
-  trailLength?: number;
+  decidedAt: string | null;
+  createdAt: string;
+  lastUpdatedAt: string;
+  trailLength: number;
   coordinates: string;
   originalCoordinates: string;
   /** @nullable */
-  publishedTrailIdentifier?: string | null;
-  images?: HikeSubmissionImageResponse[];
+  publishedTrailIdentifier: string | null;
+  images: HikeSubmissionImageResponse[];
 }

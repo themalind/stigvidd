@@ -18,13 +18,22 @@ type Props = {
   children: ReactNode;
   title?: string;
   subtitle?: string;
+  titleAccessory?: ReactNode;
   headerAction?: ReactNode;
   testID?: string;
   style?: StyleProp<ViewStyle>;
 };
 
 // keep-comment: anything drawn on a panel that needs its own plate uses theme.colors.background, which differs from surface in every theme
-export default function SectionPanel({ children, title, subtitle, headerAction, testID, style }: Props) {
+export default function SectionPanel({
+  children,
+  title,
+  subtitle,
+  titleAccessory,
+  headerAction,
+  testID,
+  style,
+}: Props) {
   const theme = useTheme();
 
   return (
@@ -32,7 +41,10 @@ export default function SectionPanel({ children, title, subtitle, headerAction, 
       {title && (
         <View style={s.header}>
           <View style={s.headerText}>
-            <Text style={[s.title, { color: theme.colors.onSurface }]}>{title}</Text>
+            <View style={s.titleRow}>
+              <Text style={[s.title, { color: theme.colors.onSurface }]}>{title}</Text>
+              {titleAccessory}
+            </View>
             {subtitle && <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>{subtitle}</Text>}
           </View>
           {headerAction}
@@ -58,6 +70,11 @@ const s = StyleSheet.create({
   },
   headerText: {
     flex: 1,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
   title: {
     fontFamily: "Inter_600SemiBold",

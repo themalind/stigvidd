@@ -54,6 +54,10 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 - `"AdminOnly"` is an unchecked string; `EndpointAuthorizationTests` pins it and every route behind it.
 - Nullable warnings are errors. **Never use the null-forgiving `!`** in C# or TS, tests included. C# tests:
   `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`.
+  A many-to-many join (`CityAreaFacility`, `CityAreaTrail`) needs no nullable navigation: query/add rows via
+  `context.Set<Dictionary<string, object>>("CityAreaFacility")` + `EF.Property<int>(row, "CityAreaId")` (`CityAreaRepository.SetLinkAsync`).
+- A user walk ("contribution") is a `Trail` with a `TrailContribution` row; its source is the `HikeSubmission` with
+  `PublishedTrailId == trail.Id` (no inverse navigation; see `TrailRepository.GetAllTrailsForAdminAsync`).
 - A `DateTime` from a request or query string goes through `UtcDates.ToUtc` before it reaches a timestamptz
   column or a comparison: Npgsql refuses a non-UTC Kind (500), and the SQLite tests never show it.
 - Geometry is SRID 4326, built only via `GeoPointFactory.FromLonLat(lon, lat)`. Any other
@@ -62,6 +66,12 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
   `TestContext.Current.CancellationToken`. Integration tests inherit appsettings **and your user secrets**, so a
   local green run proves nothing about config ([note](docs/notes/integration-tests-inherit-api-config.md)).
 - Web tests: Vitest (`web/vitest.config.ts`), `*.test.ts` beside source; for one file, `npx vitest run <path>`.
+  Mock the network, not hooks: `createApiMock()` on `@/api/mutator`, render with `renderWithProviders`.
+- Web structure (bulletproof-react, lint-enforced): server data only via React Query in `features/<x>/api/`
+  (query options from orval's `get…QueryOptions`/`get…QueryKey`, never hand-made keys; mutations toast through
+  `meta`). A feature never imports another feature or `app/`; compose two features in `app/routes/`.
+  A new page is one row in `app/pages.ts` (route, title, sidebar); links via `config/paths.ts`. Reuse before
+  writing: `useSearchState` (URL filters), `Pager`, `useConfirm`, `ToneBadge`, `useMapLibre`, `underUrl` (invalidation).
 - A test that has never failed is not evidence (skill `prove-it-bites`).
 
 ## Cross-cutting

@@ -6,10 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type EventSort = typeof EventSort[keyof typeof EventSort];
-
+export type EventSort = (typeof EventSort)[keyof typeof EventSort];
 
 export const EventSort = {
-  Date: 'Date',
-  Distance: 'Distance',
+  Date: "Date",
+  Distance: "Distance",
 } as const;

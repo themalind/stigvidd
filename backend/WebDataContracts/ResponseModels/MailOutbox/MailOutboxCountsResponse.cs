@@ -8,12 +8,12 @@ namespace WebDataContracts.ResponseModels.MailOutbox;
 /// </summary>
 public class MailOutboxCountsResponse
 {
-    public int Pending { get; set; }
-    public int Sending { get; set; }
-    public int Sent { get; set; }
-    public int Failed { get; set; }
-    public int Cancelled { get; set; }
-    public int Total { get; set; }
+    public required int Pending { get; set; }
+    public required int Sending { get; set; }
+    public required int Sent { get; set; }
+    public required int Failed { get; set; }
+    public required int Cancelled { get; set; }
+    public required int Total { get; set; }
 
     public static MailOutboxCountsResponse Create(
         int pending, int sending, int sent, int failed, int cancelled) => new()

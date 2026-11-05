@@ -9,5 +9,5 @@
 export interface TrailImportDiffTrailResponse {
   trailId: number;
   trailName: string;
-  duplicateLinks?: number;
+  duplicateLinks: number;
 }

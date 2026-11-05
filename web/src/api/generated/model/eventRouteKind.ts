@@ -6,10 +6,9 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type EventRouteKind = typeof EventRouteKind[keyof typeof EventRouteKind];
-
+export type EventRouteKind = (typeof EventRouteKind)[keyof typeof EventRouteKind];
 
 export const EventRouteKind = {
-  Trail: 'Trail',
-  Own: 'Own',
+  Trail: "Trail",
+  Own: "Own",
 } as const;
