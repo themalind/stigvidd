@@ -176,6 +176,7 @@ export * from "./trailObstacleUpdateRequest";
 export * from "./trailOverviewResponse";
 export * from "./trailResponse";
 export * from "./trailsAddTrailBody";
+export * from "./trailsGetPopularContributedTrailsParams";
 export * from "./trailsGetPopularTrailsParams";
 export * from "./trailShortInfoResponse";
 export * from "./trailSourceLinkRole";

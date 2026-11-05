@@ -9,8 +9,8 @@
 export type ReportStatus = (typeof ReportStatus)[keyof typeof ReportStatus];
 
 export const ReportStatus = {
-  Pending: 0,
-  Dismissed: 1,
-  Upheld: 2,
-  ContentExpired: 3,
+  Pending: "Pending",
+  Dismissed: "Dismissed",
+  Upheld: "Upheld",
+  ContentExpired: "ContentExpired",
 } as const;

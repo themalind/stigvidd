@@ -6,10 +6,13 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type EventPostsGetPostsParams = {
-  Limit?: number;
+export type TrailsGetPopularContributedTrailsParams = {
   /**
    * @nullable
    */
-  Cursor?: string | null;
+  latitude?: number | null;
+  /**
+   * @nullable
+   */
+  longitude?: number | null;
 };
