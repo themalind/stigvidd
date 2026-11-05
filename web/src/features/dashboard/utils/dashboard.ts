@@ -11,7 +11,9 @@ export type TrailStats = {
   withoutDescription: number;
 };
 
-export function trailStats(trails: AdminTrailListItemResponse[]): TrailStats {
+// keep-comment: user walks are left out because every tile links to the Trails page, which does not list them
+export function trailStats(all: AdminTrailListItemResponse[]): TrailStats {
+  const trails = all.filter((t) => !t.contribution);
   return {
     total: trails.length,
     inactive: trails.filter((t) => !t.isVerified).length,

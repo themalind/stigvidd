@@ -20,6 +20,15 @@ import type { LngLat } from "@/utils/geometry-edit";
 
 export const trailsQueryOptions = () => getAdminTrailsGetAllTrailsSuspenseQueryOptions();
 
+const curated = (trails: AdminTrailListItemResponse[]) => trails.filter((trail) => !trail.contribution);
+const userWalks = (trails: AdminTrailListItemResponse[]) => trails.filter((trail) => !!trail.contribution);
+
+export const curatedTrailsQueryOptions = () =>
+  getAdminTrailsGetAllTrailsSuspenseQueryOptions({ query: { select: curated } });
+
+export const userWalksQueryOptions = () =>
+  getAdminTrailsGetAllTrailsSuspenseQueryOptions({ query: { select: userWalks } });
+
 export const trailQueryOptions = (identifier: string) => getAdminTrailsGetTrailSuspenseQueryOptions(identifier);
 
 const toLngLats = ({ coordinates }: AdminTrailPathResponse): LngLat[] =>

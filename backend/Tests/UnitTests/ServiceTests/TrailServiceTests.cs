@@ -509,7 +509,7 @@ public class TrailServiceTests
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
-        repo.Setup(r => r.GetAllTrailsForAdminAsync(It.IsAny<Expression<Func<Trail, AdminTrailListItemResponse>>>(), It.IsAny<CancellationToken>()))
+        repo.Setup(r => r.GetAllTrailsForAdminAsync(It.IsAny<Expression<Func<AdminTrailSource, AdminTrailListItemResponse>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<AdminTrailListItemResponse>>.Error());
 
         // Act

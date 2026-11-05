@@ -67,6 +67,21 @@ describe("the trail list", () => {
     expect(screen.getByText("2 of 2 trails")).toBeInTheDocument();
   });
 
+  it("leaves out user walks, which have a page of their own", async () => {
+    stored = [
+      ...stored,
+      trailListItem({
+        identifier: "walk-1",
+        name: "Runt sjön",
+        contribution: { showSubmitterName: true, publishedAt: "2026-10-01T00:00:00Z", likeCount: 3 },
+      }),
+    ];
+    renderPage();
+
+    expect(await screen.findByText("2 of 2 trails")).toBeInTheDocument();
+    expect(screen.queryByRole("row", { name: /Runt sjön/ })).not.toBeInTheDocument();
+  });
+
   it("narrows the list by search", async () => {
     renderPage();
     await screen.findByText("2 of 2 trails");

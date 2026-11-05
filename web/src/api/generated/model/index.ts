@@ -25,6 +25,7 @@ export * from "./adminHikeSubmissionsGetSubmissionsParams";
 export * from "./adminMailOutboxGetAllParams";
 export * from "./adminMediaGetAllParams";
 export * from "./adminMediaGetReprocessJobsParams";
+export * from "./adminTrailContributionResponse";
 export * from "./adminTrailListItemResponse";
 export * from "./adminTrailPathResponse";
 export * from "./adminTrailsAddTrailImagesBody";

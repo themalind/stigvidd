@@ -29,3 +29,10 @@ public record ContributedTrailProjection(
 internal record TrailOverviewProjection(
     string Identifier, string Name, decimal TrailLength, decimal AverageRating,
     TrailCardImageProjection? Image);
+
+// keep-comment: a class with setters, not a record, so EF can inline it into the selector that follows
+public class AdminTrailSource
+{
+    public required Infrastructure.Data.Entities.Trail Trail { get; init; }
+    public string? SubmissionIdentifier { get; init; }
+}

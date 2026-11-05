@@ -19,4 +19,6 @@ public class AdminTrailListItemResponse
     public required bool HasFullDescription { get; set; }
     public required DateTime CreatedAt { get; set; }
     public required DateTime LastUpdatedAt { get; set; }
+    // keep-comment: null for a curated trail; set for a user walk published from a hike submission
+    public AdminTrailContributionResponse? Contribution { get; set; }
 }
