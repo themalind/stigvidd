@@ -12,7 +12,10 @@
     "lint": "expo lint",
     "test": "jest",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "publish:preview": "node scripts/publish-update.mjs preview",
+    "publish:production": "node scripts/publish-update.mjs production",
+    "test:scripts": "node --test scripts/publish-checks.test.mjs"
   },
   "jest": {
     "preset": "jest-expo",
