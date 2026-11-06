@@ -674,6 +674,48 @@ describe("loadTokens / clearTokens", () => {
     expect(refreshToken).toBe("refresh-1");
   });
 
+  it("keeps tokens issued by this realm", async () => {
+    mockJwtDecode.mockReturnValue({ sub: "user-1", iss: "https://kc.test/auth/realms/stigvidd" });
+    const { refreshToken } = await seedTokens((NOW_S + 300) * 1000);
+    expect(refreshToken).toBe("refresh-1");
+    expect(mockDeleteItem).not.toHaveBeenCalled();
+  });
+
+  it("discards tokens issued by another realm and restores no session", async () => {
+    jest.spyOn(Date, "now").mockReturnValue(NOW_MS);
+    mockJwtDecode.mockReturnValue({ sub: "user-1", iss: "https://kc.test/auth/realms/stigvidd-staging" });
+    global.fetch = jest.fn();
+
+    const { refreshToken } = await seedTokens((NOW_S + 300) * 1000);
+    expect(refreshToken).toBeNull();
+    expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.accessToken);
+    expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.refreshToken);
+    expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.accessExpiresAt);
+    expect(mockInfo).toHaveBeenCalledWith("Discarded tokens from another realm", {
+      issuer: "https://kc.test/auth/realms/stigvidd-staging",
+    });
+
+    expect(await restoreSession()).toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("discards the tokens when only the refresh token is from another realm", async () => {
+    mockJwtDecode.mockImplementation((token: string) => ({
+      sub: "user-1",
+      iss: token === "refresh-1" ? "https://kc.test/auth/realms/other" : "https://kc.test/auth/realms/stigvidd",
+    }));
+    const { refreshToken } = await seedTokens((NOW_S + 300) * 1000);
+    expect(refreshToken).toBeNull();
+  });
+
+  it("keeps tokens it cannot decode, leaving them to Keycloak", async () => {
+    mockJwtDecode.mockImplementation(() => {
+      throw new Error("Invalid token specified");
+    });
+    const { refreshToken } = await seedTokens((NOW_S + 300) * 1000);
+    expect(refreshToken).toBe("refresh-1");
+  });
+
   it("clearTokens deletes all three stored keys", async () => {
     await clearTokens();
     expect(mockDeleteItem).toHaveBeenCalledWith(STORAGE_KEYS.accessToken);

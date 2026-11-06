@@ -25,7 +25,8 @@ const OIDC_URL = process.env.EXPO_PUBLIC_OIDC_URL ?? "";
 const REALM = process.env.EXPO_PUBLIC_OIDC_REALM ?? "";
 const CLIENT_ID = process.env.EXPO_PUBLIC_CLIENT_ID ?? "";
 
-const REALM_BASE = `${OIDC_URL}/realms/${REALM}/protocol/openid-connect`;
+const ISSUER = `${OIDC_URL}/realms/${REALM}`;
+const REALM_BASE = `${ISSUER}/protocol/openid-connect`;
 const TOKEN_ENDPOINT = `${REALM_BASE}/token`;
 const LOGOUT_ENDPOINT = `${REALM_BASE}/logout`;
 
@@ -157,13 +158,30 @@ async function persistTokens(tokens: KeycloakTokenResponse): Promise<void> {
   ]);
 }
 
-/** Loads tokens from secure storage into memory. Call once on app start. */
+function issuerOf(token: string | null): string | null {
+  if (!token) return null;
+  try {
+    return jwtDecode<{ iss?: string }>(token).iss ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Loads tokens from secure storage into memory, discarding any issued by another realm. Call once on app start. */
 export async function loadTokens(): Promise<{ refreshToken: string | null }> {
   const [storedAccess, storedRefresh, storedExpiry] = await Promise.all([
     SecureStore.getItemAsync(STORAGE_KEYS.accessToken),
     SecureStore.getItemAsync(STORAGE_KEYS.refreshToken),
     SecureStore.getItemAsync(STORAGE_KEYS.accessExpiresAt),
   ]);
+
+  // Every build shares one bundle id, so the keychain can hold another build's tokens. keep-comment: hidden platform behaviour
+  const foreignIssuer = [storedAccess, storedRefresh].map(issuerOf).find((iss) => iss !== null && iss !== ISSUER);
+  if (foreignIssuer) {
+    logger.info("Discarded tokens from another realm", { issuer: foreignIssuer });
+    await clearTokens();
+    return { refreshToken: null };
+  }
 
   accessToken = storedAccess;
   refreshToken = storedRefresh;
