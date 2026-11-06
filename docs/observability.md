@@ -464,7 +464,9 @@ table is the source to recreate them from. Every alert e-mails the destination
 `stigvidd_alarm_email` (template `prebuilt_email`), which needs `ZO_SMTP_*` on `openobserve` in
 `docker-compose.yml`: without SMTP OpenObserve refuses to create an e-mail destination at all.
 Staging has no OpenObserve of its own, so its org on the same instance gets its own destination
-and the two staging rows below.
+and the two staging rows below. OpenObserve only e-mails addresses that are users of the org, and
+the open-source edition only allows the `admin` role, so each recipient is an admin user with a
+random password nobody keeps.
 
 Each query is `SQL` type and returns a row only when it should fire, so every trigger is
 "rows >= 1"; frequency 5 minutes, silence 60 minutes.
