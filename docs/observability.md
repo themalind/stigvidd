@@ -461,7 +461,8 @@ perfectly healthy API whenever the database blipped.
 
 Alerts and their destination live in OpenObserve's own SQLite metadata, not in this repo, so this
 table is the source to recreate them from. Every alert e-mails the destination
-`stigvidd_alarm_email` (template `prebuilt_email`), which needs `ZO_SMTP_*` on `openobserve` in
+`stigvidd_alarm_email` (template `stigvidd_alarm_sv`: the alert's Swedish description, which says what
+it means and what to do, plus `{alert_count}`, the window and `{alert_url}`), which needs `ZO_SMTP_*` on `openobserve` in
 `docker-compose.yml`: without SMTP OpenObserve refuses to create an e-mail destination at all.
 Staging has no OpenObserve of its own, so its org on the same instance gets its own destination
 and the two staging rows below. OpenObserve only e-mails addresses that are users of the org, and
