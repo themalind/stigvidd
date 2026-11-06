@@ -50,6 +50,13 @@
     "guard-commit-message.mjs denies a `git commit` whose message mentions Claude/Anthropic",
     "authorship, or runs past 72 characters. Extracts the message from -m or a heredoc.",
     "",
+    "guard-eas-publish.mjs denies a direct `eas update`/republish/rollback, so every OTA update",
+    "goes through app/scripts/publish-update.mjs (git, EAS variables and the built bundle are",
+    "checked). It also denies EAS variable writes touching production, production builds,",
+    "`eas submit` and `publish:production --yes`: those are handed to the user. Added after the",
+    "2026-11-05 production update shipped the staging API from a variable shared with preview.",
+    "It matches PowerShell too, unlike the older Bash-only guards.",
+    "",
     "Machine-specific overrides belong in .claude/settings.local.json, which .gitignore",
     "already excludes.",
     "",
@@ -129,6 +136,17 @@
             "type": "command",
             "command": "node",
             "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-commit-message.mjs"],
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-eas-publish.mjs"],
             "timeout": 10
           }
         ]
