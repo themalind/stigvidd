@@ -165,6 +165,7 @@ console.log(`  API ${pulled.EXPO_PUBLIC_API_URL}, realm ${pulled.EXPO_PUBLIC_OID
 console.log(`  ${bundles.length} bundle(s) checked in ${outDir}`);
 
 if (options.dryRun) {
+  rmSync(outDir, { recursive: true, force: true });
   console.log("\nDry run: nothing was published.");
   process.exit(0);
 }
