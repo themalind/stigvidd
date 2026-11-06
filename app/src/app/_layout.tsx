@@ -14,6 +14,8 @@ import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";
 import { SessionRecovery } from "@/components/auth/session-recovery";
 import { createQueryClient } from "@/api/query-client";
 import { DialogHost } from "@/components/dialog/dialog-host";
+import EnvironmentBadge from "@/components/environment-badge";
+import { APP_ENVIRONMENT } from "@/utils/app-environment";
 import { GlobalSnackbar } from "@/components/global-snackbar";
 import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
@@ -188,6 +190,7 @@ export default function RootLayout() {
             <PaperThemeProvider theme={theme}>
               <GlobalSnackbar />
             </PaperThemeProvider>
+            <EnvironmentBadge environment={APP_ENVIRONMENT} />
           </View>
         </GestureHandlerRootView>
       </ThemeProvider>
