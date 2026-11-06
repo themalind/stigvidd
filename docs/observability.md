@@ -457,6 +457,34 @@ Stopping Postgres correctly yields `readyz` 503 while `healthz` stays 200 —
 liveness is not readiness, and conflating them would make Docker restart a
 perfectly healthy API whenever the database blipped.
 
+## Alerts
+
+Alerts and their destination live in OpenObserve's own SQLite metadata, not in this repo, so this
+table is the source to recreate them from. Every alert e-mails the destination
+`stigvidd_alarm_email` (template `prebuilt_email`), which needs `ZO_SMTP_*` on `openobserve` in
+`docker-compose.yml`: without SMTP OpenObserve refuses to create an e-mail destination at all.
+Staging has no OpenObserve of its own, so its org on the same instance gets its own destination
+and the two staging rows below.
+
+Each query is `SQL` type and returns a row only when it should fire, so every trigger is
+"rows >= 1"; frequency 5 minutes, silence 60 minutes.
+
+| Name | Org | Stream | Period | Fires when |
+|---|---|---|---|---|
+| `jwt_issuer_mismatch` | production, staging | logs `stigvidd_api_logs` | 15 min | `body LIKE 'JWT rejected (issuer)%'` count >= 3: a build talks to the wrong API for its realm (2026-11-05) |
+| `app_environment_mismatch` | production, staging | logs `stigvidd_app_logs` | 60 min | `message = 'App environment mismatch'` count >= 1 |
+| `api_errors` | production | logs `stigvidd_api_logs` | 15 min | `severity IN ('Error','Critical')` count >= 1 |
+| `app_unhandled_js_errors` | production | logs `stigvidd_app_logs` | 30 min | `message = 'Unhandled JS error'` count >= 3 |
+| `app_login_failures` | production | logs `stigvidd_app_logs` | 30 min | `message = 'Login failed'` count >= 10 |
+| `api_not_reporting` | production | metrics `dotnet_process_cpu_time` | 10 min | `HAVING count(*) = 0`: the API exports ~2 samples/min, so none means it is down |
+| `host_disk_full` | production | metrics `system_filesystem_usage` | 15 min | used / (used + free) on `/` > 0.85 |
+| `host_memory_high` | production | metrics `system_memory_usage` | 15 min | `used` / all states > 0.9 |
+
+The template for a count rule is
+`SELECT count(*) AS n FROM "<stream>" WHERE <filter> HAVING count(*) >= <threshold>`.
+The ratio rules aggregate every sample in the window, which leaves the ratio unchanged.
+OpenObserve runs on the same host, so a host or OpenObserve outage cannot alert about itself.
+
 ## What the mobile app emits
 
 `app/src/services/logger.ts` replaces the ~70 scattered `console.*` calls in error
