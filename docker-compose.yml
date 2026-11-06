@@ -435,6 +435,16 @@ services:
       # stack is entirely self-hosted, and under GDPR that default would be an
       # outbound transfer of data to a US processor — so this is not optional.
       ZO_TELEMETRY: "false"
+      # Alert e-mail goes out through our own mail server as no-reply@. Without
+      # SMTP, OpenObserve refuses to create an e-mail destination at all.
+      ZO_SMTP_ENABLED: "true"
+      ZO_SMTP_HOST: ${MAIL_DOMAIN:?MAIL_DOMAIN must be set}
+      ZO_SMTP_PORT: "587"
+      ZO_SMTP_ENCRYPTION: starttls
+      ZO_SMTP_USER_NAME: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
+      ZO_SMTP_PASSWORD: ${SMTP_NOREPLY_PASSWORD:-}
+      ZO_SMTP_FROM_EMAIL: ${SMTP_NOREPLY_USER:-no-reply@stigvidd.se}
+      ZO_SMTP_REPLY_TO: info@stigvidd.se
       TZ: ${TZ:-Europe/Stockholm}
     volumes:
       - observatory:/data
