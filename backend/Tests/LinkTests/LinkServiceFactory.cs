@@ -22,11 +22,20 @@ public class LinkServiceFactory : WebApplicationFactory<Program>
         ["AppLinks:AndroidTestUrl"] = "",
     };
 
+    // keep-comment: hidden constraint; an empty setting cannot clear the appsettings array
+    private string[] _fingerprints = [];
+
     public StubApiHandler Api { get; } = new();
 
     public LinkServiceFactory With(string key, string value)
     {
         _settings[key] = value;
+        return this;
+    }
+
+    public LinkServiceFactory WithFingerprint(string fingerprint)
+    {
+        _fingerprints = [fingerprint];
         return this;
     }
 
@@ -38,6 +47,7 @@ public class LinkServiceFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.AddHttpClient<ApiClient>().ConfigurePrimaryHttpMessageHandler(() => Api);
+            services.PostConfigure<AppLinksOptions>(options => options.AndroidSha256Fingerprints = _fingerprints);
         });
     }
 
