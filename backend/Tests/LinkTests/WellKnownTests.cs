@@ -40,7 +40,7 @@ public class WellKnownTests
     [Fact]
     public async Task The_android_file_names_the_package_and_fingerprint()
     {
-        using var factory = new LinkServiceFactory().With("AppLinks:AndroidSha256Fingerprints:0", "AA:BB");
+        using var factory = new LinkServiceFactory().WithFingerprint("AA:BB");
 
         var response = await factory.CreateClient().GetAsync(AssetLinks, TestContext.Current.CancellationToken);
         var json = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
