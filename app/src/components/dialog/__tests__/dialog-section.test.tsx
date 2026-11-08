@@ -21,8 +21,8 @@ function section(
   );
 }
 
-it("sets the heading in small bold capitals in the accent colour", () => {
-  section();
+it("sets the heading in small bold capitals in the accent colour", async () => {
+  await section();
 
   expect(screen.getByText("Namn")).toHaveStyle({
     fontSize: 11,
@@ -33,8 +33,8 @@ it("sets the heading in small bold capitals in the accent colour", () => {
   });
 });
 
-it("keeps the text readable and the example quieter than it", () => {
-  section();
+it("keeps the text readable and the example quieter than it", async () => {
+  await section();
 
   expect(screen.getByText("Ett kort namn.")).toHaveStyle({
     fontSize: 13,
@@ -47,16 +47,16 @@ it("keeps the text readable and the example quieter than it", () => {
   });
 });
 
-it("leaves out what it is not given", () => {
-  section({ text: undefined, example: undefined });
+it("leaves out what it is not given", async () => {
+  await section({ text: undefined, example: undefined });
 
   expect(screen.getByText("Namn")).toBeTruthy();
   expect(screen.queryByText("Ett kort namn.")).toBeNull();
   expect(screen.queryByText("T.ex. Runt Ballasjön")).toBeNull();
 });
 
-it("is a card with the shared radius", () => {
-  section();
+it("is a card with the shared radius", async () => {
+  await section();
 
   expect(screen.getByTestId("section")).toHaveStyle({
     borderRadius: BORDER_RADIUS,
@@ -65,14 +65,14 @@ it("is a card with the shared radius", () => {
   });
 });
 
-it("stands out from the dark dialog surface", () => {
-  section({}, AppDarkTheme);
+it("stands out from the dark dialog surface", async () => {
+  await section({}, AppDarkTheme);
 
   expect(screen.getByTestId("section")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.elevation.level3 });
 });
 
-it("outlines, fills and badges the selected card", () => {
-  section({ selected: true, badge: "Den här leden" });
+it("outlines, fills and badges the selected card", async () => {
+  await section({ selected: true, badge: "Den här leden" });
 
   expect(screen.getByTestId("section")).toHaveStyle({
     borderColor: AppDefaultTheme.colors.primary,
@@ -82,24 +82,24 @@ it("outlines, fills and badges the selected card", () => {
   expect(screen.getByText("Den här leden")).toHaveStyle({ color: AppDefaultTheme.colors.onPrimaryContainer });
 });
 
-it("turns into a warning in the error container colours", () => {
-  section({ tone: "danger" });
+it("turns into a warning in the error container colours", async () => {
+  await section({ tone: "danger" });
 
   expect(screen.getByTestId("section")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.errorContainer });
   expect(screen.getByText("Namn")).toHaveStyle({ color: AppDefaultTheme.colors.onErrorContainer });
   expect(screen.getByText("Ett kort namn.")).toHaveStyle({ color: AppDefaultTheme.colors.onErrorContainer });
 });
 
-it("lists items behind their own icon", () => {
-  renderWithProviders(<DialogListItem icon="check" color="rgb(1, 2, 3)" text="Bilder tagna i dagsljus" />);
+it("lists items behind their own icon", async () => {
+  await renderWithProviders(<DialogListItem icon="check" color="rgb(1, 2, 3)" text="Bilder tagna i dagsljus" />);
 
   const check = screen.getByTestId("icon-check", { includeHiddenElements: true });
   expect(check.props.color).toBe("rgb(1, 2, 3)");
   expect(screen.getByText("Bilder tagna i dagsljus")).toBeTruthy();
 });
 
-it("sets body text a size up from the cards, in the quieter colour", () => {
-  renderWithProviders(<DialogText>Vill du ta bort promenaden?</DialogText>);
+it("sets body text a size up from the cards, in the quieter colour", async () => {
+  await renderWithProviders(<DialogText>Vill du ta bort promenaden?</DialogText>);
 
   expect(screen.getByText("Vill du ta bort promenaden?")).toHaveStyle({
     fontSize: 15,

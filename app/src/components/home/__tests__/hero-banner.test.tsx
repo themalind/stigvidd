@@ -57,9 +57,9 @@ function banner() {
   return screen.getByTestId("hero-banner");
 }
 
-it("greets the walker by the hour, and asks them out", () => {
+it("greets the walker by the hour, and asks them out", async () => {
   atHour(7);
-  show();
+  await show();
 
   expect(screen.getByText("God morgon!")).toBeTruthy();
   expect(screen.getByText("Dags för en promenad?")).toBeTruthy();
@@ -76,42 +76,42 @@ it.each([
   [21, "God kväll!"],
   [22, "God natt!"],
   [0, "God natt!"],
-])("greets at %i with %s", (hour, greeting) => {
+])("greets at %i with %s", async (hour, greeting) => {
   atHour(hour);
-  show();
+  await show();
 
   expect(screen.getByText(greeting)).toBeTruthy();
 });
 
-it("greets by the new hour when the app returns from the background", () => {
+it("greets by the new hour when the app returns from the background", async () => {
   atHour(23);
-  show();
+  await show();
   expect(screen.getByText("God natt!")).toBeTruthy();
 
   atHour(10);
-  act(() => onAppState?.("active"));
+  await act(() => onAppState?.("active"));
 
   expect(screen.getByText("Hej!")).toBeTruthy();
 });
 
-it("asks the forecast and the geocoder about the position it was given", () => {
-  show();
+it("asks the forecast and the geocoder about the position it was given", async () => {
+  await show();
 
   expect(mockWeather).toHaveBeenCalledWith(LAT, LON);
   expect(mockCityName).toHaveBeenCalledWith(LAT, LON);
 });
 
-it("shows the temperature in whole degrees beside its symbol", () => {
+it("shows the temperature in whole degrees beside its symbol", async () => {
   weatherIs(1, 14);
-  show();
+  await show();
 
   expect(screen.getByText("14°")).toBeTruthy();
   expect(within(screen.getByTestId("hero-banner-weather")).getByTestId("icon-sunny")).toBeTruthy();
 });
 
-it("shows a temperature below freezing as it is", () => {
+it("shows a temperature below freezing as it is", async () => {
   weatherIs(17, -3);
-  show();
+  await show();
 
   expect(screen.getByText("-3°")).toBeTruthy();
 });
@@ -134,9 +134,9 @@ it.each([
   [24, "icon-rainy"],
   [25, "icon-snow"],
   [27, "icon-snow"],
-])("draws symbol %i as %s", (code, icon) => {
+])("draws symbol %i as %s", async (code, icon) => {
   weatherIs(code);
-  show();
+  await show();
 
   expect(screen.getByTestId(icon)).toBeTruthy();
   expect(screen.getByTestId(icon).props.size).toBe(30);
@@ -154,67 +154,67 @@ it.each([
   [26, "tertiaryContainer", "tertiary"],
   [8, "surfaceVariant", "onSurfaceVariant"],
   [7, "surfaceVariant", "onSurfaceVariant"],
-] as const)("tints the card for symbol %i", (code, tint, accent) => {
+] as const)("tints the card for symbol %i", async (code, tint, accent) => {
   weatherIs(code);
-  show();
+  await show();
 
   expect(banner()).toHaveStyle({ backgroundColor: AppDefaultTheme.colors[tint] });
   expect(screen.getByTestId("icon-location-pin").props.color).toBe(AppDefaultTheme.colors[accent]);
 });
 
-it("stays on the plain surface until the forecast arrives", () => {
+it("stays on the plain surface until the forecast arrives", async () => {
   mockWeather.mockReturnValue({ data: undefined });
-  show();
+  await show();
 
   expect(banner()).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.surfaceVariant });
   expect(screen.queryByTestId("hero-banner-weather")).toBeNull();
   expect(screen.getByTestId("icon-location-pin").props.color).toBe(AppDefaultTheme.colors.onSurfaceVariant);
 });
 
-it("names the place the walker is standing in", () => {
+it("names the place the walker is standing in", async () => {
   mockCityName.mockReturnValue({ data: "Borås", isPending: false });
-  show();
+  await show();
 
   expect(screen.getByText("Borås")).toBeTruthy();
   expect(screen.getByTestId("icon-location-pin").props.size).toBe(15);
 });
 
 // A pin with nothing beside it would read as a broken row; the whole row waits instead.
-it("leaves the pin out while the geocoder is still working", () => {
+it("leaves the pin out while the geocoder is still working", async () => {
   mockCityName.mockReturnValue({ data: undefined, isPending: true });
-  show();
+  await show();
 
   expect(screen.queryByTestId("hero-banner-location")).toBeNull();
   expect(screen.queryByText("Plats okänd")).toBeNull();
 });
 
-it("says the place is unknown once the geocoder has given up", () => {
+it("says the place is unknown once the geocoder has given up", async () => {
   mockCityName.mockReturnValue({ data: null, isPending: false });
-  show();
+  await show();
 
   expect(screen.getByText("Plats okänd")).toBeTruthy();
 });
 
 // Without a position there is nothing to wait for, and one line covers the missing weather too.
-it("says the place is unknown straight away when there is no position", () => {
+it("says the place is unknown straight away when there is no position", async () => {
   mockWeather.mockReturnValue({ data: undefined });
   mockCityName.mockReturnValue({ data: undefined, isPending: true });
-  show(AppDefaultTheme, false);
+  await show(AppDefaultTheme, false);
 
   expect(screen.getByText("Plats okänd")).toBeTruthy();
   expect(mockWeather).toHaveBeenCalledWith(undefined, undefined);
 });
 
 // Half a position is no position: the geocoder is never asked, so nothing waits for it.
-it("says the place is unknown when only one half of the position arrived", () => {
+it("says the place is unknown when only one half of the position arrived", async () => {
   mockCityName.mockReturnValue({ data: undefined, isPending: true });
-  renderWithProviders(<HeroBanner lat={LAT} />);
+  await renderWithProviders(<HeroBanner lat={LAT} />);
 
   expect(screen.getByText("Plats okänd")).toBeTruthy();
 });
 
-it("lays the greeting and the weather out on opposite sides of the card", () => {
-  show();
+it("lays the greeting and the weather out on opposite sides of the card", async () => {
+  await show();
 
   expect(banner()).toHaveStyle({
     flexDirection: "row",
@@ -229,14 +229,14 @@ it("lays the greeting and the weather out on opposite sides of the card", () => 
 });
 
 // The greeting takes the room that is left, so a long place name never pushes it out of the card.
-it("gives the greeting the width the weather does not need", () => {
-  show();
+it("gives the greeting the width the weather does not need", async () => {
+  await show();
 
   expect(screen.getByTestId("hero-banner-text")).toHaveStyle({ flex: 1, gap: 6 });
 });
 
-it("stacks the temperature over the place name", () => {
-  show();
+it("stacks the temperature over the place name", async () => {
+  await show();
 
   expect(screen.getByTestId("hero-banner-aside")).toHaveStyle({
     flexDirection: "column",
@@ -255,9 +255,9 @@ it("stacks the temperature over the place name", () => {
   });
 });
 
-it("sets the greeting largest, then the temperature, then the invitation", () => {
+it("sets the greeting largest, then the temperature, then the invitation", async () => {
   atHour(12);
-  show();
+  await show();
 
   expect(screen.getByText("Hej!")).toHaveStyle({
     fontSize: 22,
@@ -275,9 +275,9 @@ it("sets the greeting largest, then the temperature, then the invitation", () =>
   });
 });
 
-it("carries the dark theme's colours too", () => {
+it("carries the dark theme's colours too", async () => {
   atHour(12);
-  show(AppDarkTheme);
+  await show(AppDarkTheme);
 
   expect(banner()).toHaveStyle({ backgroundColor: AppDarkTheme.colors.primaryContainer });
   expect(screen.getByText("Hej!")).toHaveStyle({ color: AppDarkTheme.colors.onSurface });

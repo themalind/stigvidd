@@ -13,8 +13,8 @@ import { screen } from "@testing-library/react-native";
 import { Text } from "react-native";
 
 describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
-  it("draws the panel on the theme's surface", () => {
-    renderWithProviders(
+  it("draws the panel on the theme's surface", async () => {
+    await renderWithProviders(
       <SectionPanel testID="panel">
         <Text>Innehåll</Text>
       </SectionPanel>,
@@ -29,8 +29,8 @@ describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
     expect(screen.getByText("Innehåll")).toBeTruthy();
   });
 
-  it("puts the title accessory beside the title", () => {
-    renderWithProviders(
+  it("puts the title accessory beside the title", async () => {
+    await renderWithProviders(
       <SectionPanel title="Rubrik" titleAccessory={<Text testID="accessory">i</Text>}>
         <Text>Innehåll</Text>
       </SectionPanel>,
@@ -40,8 +40,8 @@ describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
     expect(screen.getByTestId("accessory")).toBeTruthy();
   });
 
-  it("renders the title, subtitle and header action above the content", () => {
-    renderWithProviders(
+  it("renders the title, subtitle and header action above the content", async () => {
+    await renderWithProviders(
       <SectionPanel title="Rubrik" subtitle="Underrubrik" headerAction={<Text>Visa alla</Text>}>
         <Text>Innehåll</Text>
       </SectionPanel>,
@@ -53,8 +53,8 @@ describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
     expect(screen.getByText("Visa alla")).toBeTruthy();
   });
 
-  it("renders no header without a title", () => {
-    renderWithProviders(
+  it("renders no header without a title", async () => {
+    await renderWithProviders(
       <SectionPanel subtitle="Underrubrik" headerAction={<Text>Visa alla</Text>}>
         <Text>Innehåll</Text>
       </SectionPanel>,

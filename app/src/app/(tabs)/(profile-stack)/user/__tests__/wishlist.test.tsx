@@ -41,20 +41,20 @@ beforeEach(() => {
   mockWishlistQuery = { data: [], isLoading: false, isError: false };
 });
 
-it("lets the user retry loading the wishlist after a failure", () => {
+it("lets the user retry loading the wishlist after a failure", async () => {
   const refetch = jest.fn();
   mockWishlistQuery = { isLoading: false, isError: true, error: new Error("nätverket"), refetch };
-  renderWithProviders(<WishlistScreen />);
+  await renderWithProviders(<WishlistScreen />);
 
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
 
   expect(refetch).toHaveBeenCalledTimes(1);
   expect(screen.queryByTestId("collection")).toBeNull();
 });
 
-it("keeps the wishlist on screen when a later refetch fails", () => {
+it("keeps the wishlist on screen when a later refetch fails", async () => {
   mockWishlistQuery = { data: [{}, {}], isLoading: false, isError: true, error: new Error("nätverket") };
-  renderWithProviders(<WishlistScreen />);
+  await renderWithProviders(<WishlistScreen />);
 
   expect(screen.getByTestId("collection")).toHaveTextContent("2");
   expect(screen.queryByText("Försök igen")).toBeNull();

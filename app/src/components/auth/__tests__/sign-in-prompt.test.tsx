@@ -22,32 +22,32 @@ beforeEach(() => {
 });
 
 describe("SignInPrompt", () => {
-  it("remembers the screen it was shown on and opens the login", () => {
-    const { store } = renderWithProviders(<SignInPrompt message="Logga in" />);
+  it("remembers the screen it was shown on and opens the login", async () => {
+    const { store } = await renderWithProviders(<SignInPrompt message="Logga in" />);
 
-    fireEvent.press(screen.getByTestId("sign-in-prompt-login"));
+    await fireEvent.press(screen.getByTestId("sign-in-prompt-login"));
 
     expect(store.get(loginReturnPathAtom)).toBe("/events/event/ev1");
     expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
   });
 
-  it("forgets the screen when the user leaves it still signed out", () => {
-    const { store, unmount } = renderWithProviders(<SignInPrompt message="Logga in" />);
-    fireEvent.press(screen.getByTestId("sign-in-prompt-login"));
+  it("forgets the screen when the user leaves it still signed out", async () => {
+    const { store, unmount } = await renderWithProviders(<SignInPrompt message="Logga in" />);
+    await fireEvent.press(screen.getByTestId("sign-in-prompt-login"));
 
-    unmount();
+    await unmount();
 
     expect(store.get(loginReturnPathAtom)).toBeNull();
   });
 
-  it("keeps the screen when it goes away because the login succeeded", () => {
-    const { store, unmount } = renderWithProviders(<SignInPrompt message="Logga in" />);
-    fireEvent.press(screen.getByTestId("sign-in-prompt-login"));
+  it("keeps the screen when it goes away because the login succeeded", async () => {
+    const { store, unmount } = await renderWithProviders(<SignInPrompt message="Logga in" />);
+    await fireEvent.press(screen.getByTestId("sign-in-prompt-login"));
 
-    act(() => {
+    await act(() => {
       store.set(userAtom, { id: "u1", email: "a@b.se", username: "jag" });
     });
-    unmount();
+    await unmount();
 
     expect(store.get(loginReturnPathAtom)).toBe("/events/event/ev1");
   });

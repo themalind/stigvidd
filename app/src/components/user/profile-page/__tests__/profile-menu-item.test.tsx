@@ -28,28 +28,28 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("navigates to the route it was given", () => {
-  renderWithProviders(<ProfileMenuItem text="Mina vandringar" route="/user/my-hikes" />);
+it("navigates to the route it was given", async () => {
+  await renderWithProviders(<ProfileMenuItem text="Mina vandringar" route="/user/my-hikes" />);
 
-  fireEvent.press(screen.getByText("Mina vandringar"));
+  await fireEvent.press(screen.getByText("Mina vandringar"));
 
   expect(mockNavigate).toHaveBeenCalledWith("/user/my-hikes");
 });
 
-it("shows the badge only when there is something to count", () => {
-  const { rerender } = renderWithProviders(
+it("shows the badge only when there is something to count", async () => {
+  const { rerender } = await renderWithProviders(
     <ProfileMenuItem text="Vänner" route="/(tabs)/(profile-stack)/user/friends" badge={3} />,
   );
   expect(screen.getByText("3")).toBeTruthy();
 
-  rerender(<ProfileMenuItem text="Vänner" route="/(tabs)/(profile-stack)/user/friends" badge={0} />);
+  await rerender(<ProfileMenuItem text="Vänner" route="/(tabs)/(profile-stack)/user/friends" badge={0} />);
   expect(screen.queryByText("0")).toBeNull();
 });
 
 // A fixed-width row: a label on the left, a badge and chevron on the right. The label side takes
 // the leftover space and gives it back; the actions side never yields any.
-it("gives the label the leftover width and keeps the actions at their own size", () => {
-  renderWithProviders(
+it("gives the label the leftover width and keeps the actions at their own size", async () => {
+  await renderWithProviders(
     <ProfileMenuItem text="En mycket lång rubrik som inte får krocka" route="/user/my-hikes" badge={12} />,
   );
 
@@ -58,14 +58,14 @@ it("gives the label the leftover width and keeps the actions at their own size",
   expect(screen.getByTestId("menu-item-actions")).toHaveStyle({ flexShrink: 0 });
 });
 
-it("draws the badge in the theme's tertiary colours, in both themes", () => {
-  const { rerender, unmount } = renderWithProviders(
+it("draws the badge in the theme's tertiary colours, in both themes", async () => {
+  const { rerender, unmount } = await renderWithProviders(
     <ProfileMenuItem text="Vänner" route="/(tabs)/(profile-stack)/user/friends" badge={2} />,
   );
   expect(screen.getByText("2")).toHaveStyle({ backgroundColor: "rgb(196, 92, 38)", color: "rgb(255, 255, 255)" });
 
-  unmount();
-  renderWithProviders(<ProfileMenuItem text="Vänner" route="/(tabs)/(profile-stack)/user/friends" badge={2} />, {
+  await unmount();
+  await renderWithProviders(<ProfileMenuItem text="Vänner" route="/(tabs)/(profile-stack)/user/friends" badge={2} />, {
     theme: AppDarkTheme,
   });
   expect(screen.getByText("2")).toHaveStyle({

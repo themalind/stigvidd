@@ -58,7 +58,7 @@ async function settle() {
 
 // The location switch needs the trail geometry, which is a second query resolving after the first flush.
 async function showLoaded() {
-  const rendered = show();
+  const rendered = await show();
   await waitFor(() => expect(mockCoordinates).toHaveBeenCalled());
   await settle();
   await settle();
@@ -72,17 +72,17 @@ function position(coords: { latitude: number; longitude: number }) {
 // Every interaction is flushed before the next: a queried element carries the closure of its own
 // render, so a switch pressed before the re-render commits still sees the geometry as unloaded.
 async function fillDescription(text = DESCRIPTION) {
-  fireEvent.changeText(screen.getByTestId("obstacle-description"), text);
+  await fireEvent.changeText(screen.getByTestId("obstacle-description"), text);
   await settle();
 }
 
 async function toggleLocationOn() {
-  fireEvent(screen.getByTestId("obstacle-location-switch"), "valueChange", true);
+  await fireEvent(screen.getByTestId("obstacle-location-switch"), "valueChange", true);
   await settle();
 }
 
 async function submit() {
-  fireEvent.press(screen.getByTestId("obstacle-submit"));
+  await fireEvent.press(screen.getByTestId("obstacle-submit"));
   await settle();
 }
 
@@ -194,7 +194,7 @@ it("drops the attached position when the switch goes back off", async () => {
   await toggleLocationOn();
   expect(screen.getByText("📍 Plats kommer att bifogas")).toBeTruthy();
 
-  fireEvent(screen.getByTestId("obstacle-location-switch"), "valueChange", false);
+  await fireEvent(screen.getByTestId("obstacle-location-switch"), "valueChange", false);
   await settle();
 
   await submit();
@@ -203,7 +203,7 @@ it("drops the attached position when the switch goes back off", async () => {
 
 // The component is mounted on every trail detail screen, so nothing is fetched until the sheet opens.
 it("fetches nothing until it is opened", async () => {
-  renderWithProviders(<TrailObstacleForm trailIdentifier="trail-1" visible={false} onDismiss={onDismiss} />);
+  await renderWithProviders(<TrailObstacleForm trailIdentifier="trail-1" visible={false} onDismiss={onDismiss} />);
   await settle();
 
   expect(mockIssueTypes).not.toHaveBeenCalled();

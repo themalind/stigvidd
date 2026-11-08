@@ -38,7 +38,7 @@ function show(visible = true) {
 
 // The reason list arrives from a query the modal only enables once it is open.
 async function showLoaded() {
-  const rendered = show();
+  const rendered = await show();
   await flushUntil(() => mockReasons.mock.calls.length > 0);
   await settle();
   return rendered;
@@ -53,7 +53,7 @@ beforeEach(() => {
 // The list is inside a modal that is always mounted next to the content it reports, so
 // without the gate every rendered row would fetch it.
 it("does not look up the reasons until it is opened", async () => {
-  show(false);
+  await show(false);
   await settle();
 
   expect(mockReasons).not.toHaveBeenCalled();
@@ -68,8 +68,8 @@ it("looks up the reasons once it is opened", async () => {
 it("sends the reported content, the chosen reason and the note", async () => {
   await showLoaded();
 
-  fireEvent.changeText(screen.getByTestId("report-note"), "Innehåller personuppgifter");
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.changeText(screen.getByTestId("report-note"), "Innehåller personuppgifter");
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(mockCreate).toHaveBeenCalledWith({
@@ -84,7 +84,7 @@ it("sends the reported content, the chosen reason and the note", async () => {
 it("leaves the note out when nothing was typed", async () => {
   await showLoaded();
 
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ reporterNote: undefined }));
@@ -93,8 +93,8 @@ it("leaves the note out when nothing was typed", async () => {
 it("sends nothing when the note is longer than the limit", async () => {
   await showLoaded();
 
-  fireEvent.changeText(screen.getByTestId("report-note"), "x".repeat(301));
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.changeText(screen.getByTestId("report-note"), "x".repeat(301));
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(mockCreate).not.toHaveBeenCalled();
@@ -103,7 +103,7 @@ it("sends nothing when the note is longer than the limit", async () => {
 it("closes the modal once the report is accepted", async () => {
   await showLoaded();
 
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalled();
@@ -114,7 +114,7 @@ it("closes the modal once the report is accepted", async () => {
 it("confirms in the snackbar that the report was sent", async () => {
   const { store } = await showLoaded();
 
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "success" });
@@ -124,7 +124,7 @@ it("says so when this user has already reported the same content", async () => {
   mockCreate.mockRejectedValue(new ApiError("conflict", 409));
   const { store } = await showLoaded();
 
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(store.get(snackbarAtom)).toMatchObject({
@@ -139,7 +139,7 @@ it("says something different when the daily cap is reached", async () => {
   mockCreate.mockRejectedValue(new ApiError("too many", 429));
   const { store } = await showLoaded();
 
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(store.get(snackbarAtom)).toMatchObject({
@@ -153,7 +153,7 @@ it("falls back to a generic message on any other failure", async () => {
   mockCreate.mockRejectedValue(new ApiError("boom", 500));
   const { store } = await showLoaded();
 
-  fireEvent.press(screen.getByTestId("report-submit"));
+  await fireEvent.press(screen.getByTestId("report-submit"));
   await settle();
 
   expect(store.get(snackbarAtom)).toMatchObject({
@@ -167,9 +167,9 @@ it("lifts the modal above the iOS keyboard so the send button stays reachable", 
   const keyboard = captureKeyboard();
   await showLoaded();
 
-  keyboard.show(300);
+  await keyboard.show(300);
   expect(screen.getByTestId("modal-wrapper")).toHaveStyle({ marginBottom: 310 });
 
-  keyboard.hide();
+  await keyboard.hide();
   expect(screen.getByTestId("modal-wrapper")).not.toHaveStyle({ marginBottom: 310 });
 });

@@ -22,14 +22,14 @@ const BOARD = ["events", "board", "e1", "u1"];
 const OTHER_BOARD = ["events", "board", "e2", "u1"];
 const FEED = ["events", "feed", "u1"];
 
-function render() {
+async function render() {
   let hook: ReturnType<typeof useEventBoardMutations> | undefined;
   function Probe() {
     hook = useEventBoardMutations("e1");
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   // Seeded without an observer, and renderWithProviders sets gcTime 0. keep-comment: why gcTime is raised
   for (const key of [BOARD, OTHER_BOARD, FEED]) {
     rendered.queryClient.setQueryDefaults(key, { gcTime: Infinity });
@@ -43,7 +43,7 @@ function render() {
         if (!hook) throw new Error("expected the hook to have rendered");
         return hook.markReadMutation;
       };
-      act(() => current().mutate("2026-11-01T10:00:00Z"));
+      await act(() => current().mutate("2026-11-01T10:00:00Z"));
       await flushUntil(() => current().isError || current().isSuccess);
     },
     post: async () => {
@@ -51,7 +51,7 @@ function render() {
         if (!hook) throw new Error("expected the hook to have rendered");
         return hook.createPostMutation;
       };
-      act(() => current().mutate("Hej"));
+      await act(() => current().mutate("Hej"));
       await flushUntil(() => current().isError || current().isSuccess);
     },
     invalidated: (key: unknown[]) => rendered.queryClient.getQueryState(key)?.isInvalidated === true,
@@ -65,7 +65,7 @@ beforeEach(() => {
 describe("useEventBoardMutations", () => {
   it("refetches only this board after a post", async () => {
     mockCreatePost.mockResolvedValue({});
-    const { post, invalidated } = render();
+    const { post, invalidated } = await render();
 
     await post();
 
@@ -75,7 +75,7 @@ describe("useEventBoardMutations", () => {
   });
 
   it("clears the unread count on this event's detail once the board is read", async () => {
-    const { queryClient, markRead } = render();
+    const { queryClient, markRead } = await render();
     const detail = ["events", "detail", "e1", "u1"];
     const otherDetail = ["events", "detail", "e2", "u1"];
     for (const key of [detail, otherDetail]) {
@@ -92,7 +92,7 @@ describe("useEventBoardMutations", () => {
 
   it("refreshes every event query when a post is refused", async () => {
     mockCreatePost.mockRejectedValue(new ApiError("HTTP error", 403, "removed_from_event"));
-    const { post, invalidated } = render();
+    const { post, invalidated } = await render();
 
     await post();
 

@@ -60,8 +60,8 @@ beforeEach(() => {
 });
 
 describe("useTrailCard", () => {
-  it("returns null card and no loading when identifier is null", () => {
-    const { result } = renderHook(() => useTrailCard(null));
+  it("returns null card and no loading when identifier is null", async () => {
+    const { result } = await renderHook(() => useTrailCard(null));
     expect(result.current.card).toBeNull();
     expect(result.current.isLoading).toBe(false);
   });
@@ -70,7 +70,7 @@ describe("useTrailCard", () => {
     const card = makeCard("trail-1");
     mockGetItem.mockResolvedValue(JSON.stringify({ data: card, cachedAt: Date.now() }));
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     await waitFor(() => {
       expect(result.current.card).toEqual(card);
@@ -84,7 +84,7 @@ describe("useTrailCard", () => {
     const card = makeCard("trail-1");
     mockGetTrailCard.mockResolvedValue(card);
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     await waitFor(() => {
       expect(result.current.card).toEqual(card);
@@ -105,7 +105,7 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(JSON.stringify(staleEntry));
     mockGetTrailCard.mockResolvedValue(newCard);
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     await waitFor(() => {
       expect(result.current.card).toEqual(newCard);
@@ -121,7 +121,7 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(null);
     mockGetTrailCard.mockReturnValue(cardPromise);
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     // After AsyncStorage.getItem resolves with null, the hook sets isLoading=true
     await waitFor(() => expect(result.current.isLoading).toBe(true));
@@ -140,13 +140,13 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(null);
     mockGetTrailCard.mockResolvedValueOnce(card1).mockResolvedValueOnce(card2);
 
-    const { result, rerender } = renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
+    const { result, rerender } = await renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
       initialProps: { id: "trail-1" as string | null },
     });
 
     await waitFor(() => expect(result.current.card).toEqual(card1));
 
-    rerender({ id: "trail-2" });
+    await rerender({ id: "trail-2" });
 
     await waitFor(() => expect(result.current.card).toEqual(card2));
     expect(mockGetTrailCard).toHaveBeenCalledWith("trail-2");
@@ -156,13 +156,13 @@ describe("useTrailCard", () => {
     const card = makeCard("trail-1");
     mockGetItem.mockResolvedValue(JSON.stringify({ data: card, cachedAt: Date.now() }));
 
-    const { result, rerender } = renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
+    const { result, rerender } = await renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
       initialProps: { id: "trail-1" as string | null },
     });
 
     await waitFor(() => expect(result.current.card).toEqual(card));
 
-    rerender({ id: null });
+    await rerender({ id: null });
 
     await waitFor(() => expect(result.current.card).toBeNull());
     expect(result.current.isLoading).toBe(false);
@@ -172,7 +172,7 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(null);
     mockGetTrailCard.mockRejectedValue(new Error("network error"));
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.card).toBeNull();
@@ -183,7 +183,7 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(JSON.stringify({ data: expiredCard, cachedAt: Date.now() - 2 * HOUR_MS }));
     mockGetTrailCard.mockRejectedValue(new Error("network error"));
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     await waitFor(() => expect(result.current.card).toEqual(expiredCard));
     expect(mockGetTrailCard).toHaveBeenCalledWith("trail-1");
@@ -195,7 +195,7 @@ describe("useTrailCard", () => {
     const card = makeCard("trail-1");
     mockGetTrailCard.mockResolvedValue(card);
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     await waitFor(() => expect(result.current.card).toEqual(card));
     expect(mockGetTrailCard).toHaveBeenCalledWith("trail-1");
@@ -210,7 +210,7 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(JSON.stringify(atBoundary));
     mockGetTrailCard.mockResolvedValue(freshCard);
 
-    const { result } = renderHook(() => useTrailCard("trail-1"));
+    const { result } = await renderHook(() => useTrailCard("trail-1"));
 
     await waitFor(() => expect(result.current.card).toEqual(freshCard));
     expect(mockGetTrailCard).toHaveBeenCalledWith("trail-1");
@@ -219,7 +219,7 @@ describe("useTrailCard", () => {
 
 describe("useTrailCards", () => {
   it("returns empty cards for an empty identifier list and never hits the network", async () => {
-    const { result } = renderHook(() => useTrailCards([]));
+    const { result } = await renderHook(() => useTrailCards([]));
 
     expect(result.current.cards).toEqual({});
     expect(result.current.isLoading).toBe(false);
@@ -237,7 +237,7 @@ describe("useTrailCards", () => {
       }),
     );
 
-    const { result } = renderHook(() => useTrailCards(["t1", "t2"]));
+    const { result } = await renderHook(() => useTrailCards(["t1", "t2"]));
 
     await waitFor(() => expect(result.current.cards).toEqual({ t1: card1, t2: card2 }));
     expect(mockGetTrailCards).not.toHaveBeenCalled();
@@ -257,7 +257,7 @@ describe("useTrailCards", () => {
     );
     mockGetTrailCards.mockResolvedValue([fetchedStale, fetchedMissing]);
 
-    const { result } = renderHook(() => useTrailCards(["t1", "t2", "t3"]));
+    const { result } = await renderHook(() => useTrailCards(["t1", "t2", "t3"]));
 
     await waitFor(() => expect(result.current.cards).toEqual({ t1: cachedCard, t2: fetchedStale, t3: fetchedMissing }));
     // Exactly one batched call, for only the missing/stale ids.
@@ -275,7 +275,7 @@ describe("useTrailCards", () => {
     );
     mockGetTrailCards.mockRejectedValue(new Error("network error"));
 
-    const { result } = renderHook(() => useTrailCards(["t1", "t2"]));
+    const { result } = await renderHook(() => useTrailCards(["t1", "t2"]));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.cards).toEqual({ t1: cachedCard });
@@ -294,7 +294,7 @@ describe("useTrailCards", () => {
     );
     mockGetTrailCards.mockRejectedValue(new Error("network error"));
 
-    const { result } = renderHook(() => useTrailCards(["t1", "t2", "t3"]));
+    const { result } = await renderHook(() => useTrailCards(["t1", "t2", "t3"]));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.cards).toEqual({ t1: freshCard, t2: expiredCard });
@@ -306,7 +306,7 @@ describe("useTrailCards", () => {
     mockGetItem.mockResolvedValue(null); // nothing cached
     mockGetTrailCards.mockRejectedValueOnce(new Error("network error")).mockResolvedValueOnce([fetched]);
 
-    const { result } = renderHook(() => useTrailCards(["t1"]));
+    const { result } = await renderHook(() => useTrailCards(["t1"]));
 
     await waitFor(() => expect(result.current.isError).toBe(true));
 

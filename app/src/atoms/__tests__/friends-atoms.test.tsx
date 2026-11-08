@@ -45,14 +45,14 @@ interface QueryResult {
 }
 
 // A query atom only fetches once something subscribes to it, so a mounted probe drives it.
-function renderQuery(queryAtom: Atom<unknown>, user: AuthUser | null = USER) {
+async function renderQuery(queryAtom: Atom<unknown>, user: AuthUser | null = USER) {
   let result!: QueryResult;
   function Probe() {
     result = useAtomValue(queryAtom as never) as unknown as QueryResult;
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />, { initialAtoms: [[userAtom, user]] });
+  const rendered = await renderWithProviders(<Probe />, { initialAtoms: [[userAtom, user]] });
   return {
     ...rendered,
     result: () => result,
@@ -60,14 +60,14 @@ function renderQuery(queryAtom: Atom<unknown>, user: AuthUser | null = USER) {
   };
 }
 
-function renderBadge(user: AuthUser | null = USER) {
+async function renderBadge(user: AuthUser | null = USER) {
   let count = -1;
   function Probe() {
     count = useAtomValue(pendingNotificationsCountAtom);
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />, { initialAtoms: [[userAtom, user]] });
+  const rendered = await renderWithProviders(<Probe />, { initialAtoms: [[userAtom, user]] });
   return { ...rendered, count: () => count };
 }
 
@@ -81,21 +81,21 @@ beforeEach(() => {
 
 describe("incoming friend requests", () => {
   it("fetches them for a signed-in user", async () => {
-    const harness = renderQuery(incomingRequestsAtom);
+    const harness = await renderQuery(incomingRequestsAtom);
     await harness.settled();
 
     expect(harness.result().data).toEqual([{ userIdentifier: "u2" }]);
   });
 
   it("is fresh for only a short while, so a request handled on another device soon disappears", async () => {
-    const harness = renderQuery(incomingRequestsAtom);
+    const harness = await renderQuery(incomingRequestsAtom);
     await harness.settled();
 
     expect(staleTimeOf(harness.queryClient, ["friends", "incoming", "u1"])).toBe(REQUESTS_STALE_TIME);
   });
 
   it("asks for nothing at all while signed out", async () => {
-    const harness = renderQuery(incomingRequestsAtom, null);
+    const harness = await renderQuery(incomingRequestsAtom, null);
     await settle();
 
     expect(mockGetIncomingRequests).not.toHaveBeenCalled();
@@ -104,7 +104,7 @@ describe("incoming friend requests", () => {
 
   // Two accounts on one device must not read each other's requests out of the cache.
   it("keys the cache on the user", async () => {
-    const harness = renderQuery(incomingRequestsAtom);
+    const harness = await renderQuery(incomingRequestsAtom);
     await harness.settled();
 
     expect(harness.queryClient.getQueryCache().find({ queryKey: ["friends", "incoming", "u1"] })).toBeDefined();
@@ -113,21 +113,21 @@ describe("incoming friend requests", () => {
 
 describe("incoming shared hikes", () => {
   it("fetches them for a signed-in user", async () => {
-    const harness = renderQuery(incomingSharedHikesAtom);
+    const harness = await renderQuery(incomingSharedHikesAtom);
     await harness.settled();
 
     expect(harness.result().data).toEqual([{ hikeIdentifier: "h1" }]);
   });
 
   it("asks for nothing at all while signed out", async () => {
-    renderQuery(incomingSharedHikesAtom, null);
+    await renderQuery(incomingSharedHikesAtom, null);
     await settle();
 
     expect(mockGetIncomingSharedHikes).not.toHaveBeenCalled();
   });
 
   it("is fresh for only a short while, so a share handled on another device soon disappears", async () => {
-    const harness = renderQuery(incomingSharedHikesAtom);
+    const harness = await renderQuery(incomingSharedHikesAtom);
     await harness.settled();
 
     expect(staleTimeOf(harness.queryClient, ["shared-hikes", "incoming", "u1"])).toBe(REQUESTS_STALE_TIME);
@@ -136,7 +136,7 @@ describe("incoming shared hikes", () => {
 
 describe("the friends list", () => {
   it("fetches it for a signed-in user", async () => {
-    const harness = renderQuery(friendsAtom);
+    const harness = await renderQuery(friendsAtom);
     await harness.settled();
 
     expect(harness.result().data).toEqual([{ userIdentifier: "u3" }]);
@@ -144,14 +144,14 @@ describe("the friends list", () => {
 
   // Unlike the request lists, a friends list barely changes and keeps.
   it("holds for the shared friends stale time", async () => {
-    const harness = renderQuery(friendsAtom);
+    const harness = await renderQuery(friendsAtom);
     await harness.settled();
 
     expect(staleTimeOf(harness.queryClient, ["friends", "u1"])).toBe(FRIENDS_STALE_TIME);
   });
 
   it("asks for nothing at all while signed out", async () => {
-    renderQuery(friendsAtom, null);
+    await renderQuery(friendsAtom, null);
     await settle();
 
     expect(mockGetFriends).not.toHaveBeenCalled();
@@ -164,7 +164,7 @@ describe("searching for users", () => {
     ["s", "one character"],
     ["  s  ", "whitespace around one character"],
   ])("does not search on %s (%s)", async (query) => {
-    renderQuery(userSearchAtomFamily(query));
+    await renderQuery(userSearchAtomFamily(query));
     await settle();
 
     expect(mockSearchUsers).not.toHaveBeenCalled();
@@ -172,7 +172,7 @@ describe("searching for users", () => {
 
   // keep-comment: a two-letter nickname is valid, so its owner must be findable by the whole name
   it("searches from two characters", async () => {
-    const harness = renderQuery(userSearchAtomFamily("st"));
+    const harness = await renderQuery(userSearchAtomFamily("st"));
     await harness.settled();
 
     expect(mockSearchUsers).toHaveBeenCalledWith("st");
@@ -180,7 +180,7 @@ describe("searching for users", () => {
   });
 
   it("does not search while signed out", async () => {
-    renderQuery(userSearchAtomFamily("stig"), null);
+    await renderQuery(userSearchAtomFamily("stig"), null);
     await settle();
 
     expect(mockSearchUsers).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe("searching for users", () => {
 
   // Two searches must not share a cache entry, or the results of one show under the other.
   it("keys the cache on the search term", async () => {
-    const harness = renderQuery(userSearchAtomFamily("stig"));
+    const harness = await renderQuery(userSearchAtomFamily("stig"));
     await harness.settled();
 
     expect(harness.queryClient.getQueryCache().find({ queryKey: ["users", "search", "u1", "stig"] })).toBeDefined();
@@ -199,21 +199,23 @@ describe("the tab-bar badge", () => {
   it("counts both request lists together", async () => {
     mockGetIncomingRequests.mockResolvedValue([{ userIdentifier: "u2" }, { userIdentifier: "u5" }]);
     mockGetIncomingSharedHikes.mockResolvedValue([{ hikeIdentifier: "h1" }]);
-    const harness = renderBadge();
+    const harness = await renderBadge();
     await flushUntil(() => harness.count() === 3);
 
     expect(harness.count()).toBe(3);
   });
 
   // Before either list has landed the badge must be absent, not a zero-less guess.
-  it("counts nothing while the lists are still loading", () => {
-    const harness = renderBadge();
+  it("counts nothing while the lists are still loading", async () => {
+    mockGetIncomingRequests.mockReturnValue(new Promise(() => {}));
+    mockGetIncomingSharedHikes.mockReturnValue(new Promise(() => {}));
+    const harness = await renderBadge();
 
     expect(harness.count()).toBe(0);
   });
 
   it("counts nothing while signed out", async () => {
-    const harness = renderBadge(null);
+    const harness = await renderBadge(null);
     await settle();
 
     expect(harness.count()).toBe(0);
@@ -222,7 +224,7 @@ describe("the tab-bar badge", () => {
   it("counts shared hikes even with no friend requests", async () => {
     mockGetIncomingRequests.mockResolvedValue([]);
     mockGetIncomingSharedHikes.mockResolvedValue([{ hikeIdentifier: "h1" }, { hikeIdentifier: "h2" }]);
-    const harness = renderBadge();
+    const harness = await renderBadge();
     await flushUntil(() => harness.count() === 2);
 
     expect(harness.count()).toBe(2);
@@ -231,7 +233,7 @@ describe("the tab-bar badge", () => {
   it("counts friend requests even with no shared hikes", async () => {
     mockGetIncomingRequests.mockResolvedValue([{ userIdentifier: "u2" }]);
     mockGetIncomingSharedHikes.mockResolvedValue([]);
-    const harness = renderBadge();
+    const harness = await renderBadge();
     await flushUntil(() => harness.count() === 1);
 
     expect(harness.count()).toBe(1);

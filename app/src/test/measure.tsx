@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { render } from "@testing-library/react-native";
-import { createRef } from "react";
+import { ComponentRef, createRef } from "react";
 import { View } from "react-native";
 
 type Rect = { x: number; y: number; width: number; height: number };
@@ -17,14 +17,14 @@ type Rect = { x: number; y: number; width: number; height: number };
 //
 // Every host instance shares one prototype, so patching it once covers whatever renders next. The
 // rectangle is made up; only the arithmetic done on it is under test.
-export function stubMeasureInWindow(rect: Rect = { x: 300, y: 50, width: 24, height: 24 }) {
-  const ref = createRef<View>();
-  const probe = render(<View ref={ref} collapsable={false} />);
+export async function stubMeasureInWindow(rect: Rect = { x: 300, y: 50, width: 24, height: 24 }) {
+  const ref = createRef<ComponentRef<typeof View>>();
+  const probe = await render(<View ref={ref} collapsable={false} />);
   const prototype = Object.getPrototypeOf(ref.current) as {
     measureInWindow?: (callback: (x: number, y: number, width: number, height: number) => void) => void;
   };
   const original = prototype.measureInWindow;
-  probe.unmount();
+  await probe.unmount();
 
   prototype.measureInWindow = (callback) => callback(rect.x, rect.y, rect.width, rect.height);
 

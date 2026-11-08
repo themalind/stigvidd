@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { getByType } from "@/test/composites";
 import { render } from "@testing-library/react-native";
 import { Platform } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
@@ -16,20 +17,20 @@ afterEach(() => {
   Platform.OS = originalOS;
 });
 
-function scrollProps() {
-  const { UNSAFE_getByType } = render(<ModalFormScrollView />);
-  return UNSAFE_getByType(KeyboardAwareScrollView).props;
+async function scrollProps() {
+  await render(<ModalFormScrollView />);
+  return getByType(KeyboardAwareScrollView).props;
 }
 
 describe("ModalFormScrollView", () => {
-  it("leaves scrolling to the modal lift on iOS", () => {
+  it("leaves scrolling to the modal lift on iOS", async () => {
     Platform.OS = "ios";
-    expect(scrollProps().enableAutomaticScroll).toBe(false);
+    expect((await scrollProps()).enableAutomaticScroll).toBe(false);
   });
 
-  it("scrolls the focused field into view on Android", () => {
+  it("scrolls the focused field into view on Android", async () => {
     Platform.OS = "android";
-    const props = scrollProps();
+    const props = await scrollProps();
     expect(props.enableAutomaticScroll).toBe(true);
     expect(props.enableOnAndroid).toBe(true);
   });

@@ -69,7 +69,7 @@ function summary(identifier: string, title: string, overrides: Partial<EventSumm
 }
 
 async function show() {
-  renderWithProviders(<EventsListScreen />, {
+  await renderWithProviders(<EventsListScreen />, {
     initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
   });
   await flushUntil(() => screen.queryByText("Fikapromenad") !== null);
@@ -77,13 +77,13 @@ async function show() {
 
 async function showMine() {
   await show();
-  fireEvent.press(screen.getByTestId("events-tabs-mine"));
+  await fireEvent.press(screen.getByTestId("events-tabs-mine"));
   await flushUntil(() => screen.queryByTestId("event-invitations") !== null);
 }
 
 async function showSignedOut() {
   mockSignedIn = false;
-  const rendered = renderWithProviders(<EventsListScreen />);
+  const rendered = await renderWithProviders(<EventsListScreen />);
   await flushUntil(() => screen.queryByText("Fikapromenad") !== null);
   return rendered;
 }
@@ -143,7 +143,7 @@ describe("EventsListScreen", () => {
     await showMine();
     await flushUntil(() => screen.queryByText("Min tur") !== null);
 
-    fireEvent(screen.getByTestId("events-list"), "endReached");
+    await fireEvent(screen.getByTestId("events-list"), "endReached");
     await flushUntil(() => screen.queryByText("Andra egna") !== null);
 
     expect(screen.getByText("Andra egna")).toBeTruthy();
@@ -178,7 +178,7 @@ describe("EventsListScreen", () => {
   it("opens a feed event in the events tab", async () => {
     await show();
 
-    fireEvent.press(screen.getByText("Fikapromenad"));
+    await fireEvent.press(screen.getByText("Fikapromenad"));
 
     expect(mockNavigate).toHaveBeenCalledWith({
       pathname: "/(tabs)/events/event/[identifier]",
@@ -189,7 +189,7 @@ describe("EventsListScreen", () => {
   it("opens the create form", async () => {
     await show();
 
-    fireEvent.press(screen.getByTestId("events-create"));
+    await fireEvent.press(screen.getByTestId("events-create"));
 
     expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/events/create");
   });
@@ -197,7 +197,7 @@ describe("EventsListScreen", () => {
   it("accepts an invitation inline", async () => {
     await showMine();
 
-    fireEvent.press(screen.getByText("Tacka ja"));
+    await fireEvent.press(screen.getByText("Tacka ja"));
     await flushUntil(() => mockAccept.mock.calls.length > 0);
 
     expect(mockAccept).toHaveBeenCalledWith("inv");
@@ -215,14 +215,14 @@ describe("EventsListScreen", () => {
           : { items: [summary("old1", "Höstpromenaden")], nextCursor: "c1" },
       );
     });
-    fireEvent.press(screen.getByTestId("events-tabs-past"));
+    await fireEvent.press(screen.getByTestId("events-tabs-past"));
     await flushUntil(() => screen.queryByText("Höstpromenaden") !== null);
 
     expect(screen.queryByText("Fikapromenad")).toBeNull();
     expect(screen.getAllByTestId("event-past-tag")).toHaveLength(1);
     expect(screen.getByTestId("event-card-old1")).toHaveTextContent(/Avslutat/);
 
-    fireEvent(screen.getByTestId("events-list"), "endReached");
+    await fireEvent(screen.getByTestId("events-list"), "endReached");
     await flushUntil(() => screen.queryByText("Svampturen") !== null);
 
     expect(screen.getByText("Svampturen")).toBeTruthy();
@@ -233,7 +233,7 @@ describe("EventsListScreen", () => {
     mockGetMine.mockImplementation(() => Promise.resolve({ items: [], nextCursor: null }));
     await show();
 
-    fireEvent.press(screen.getByTestId("events-tabs-past"));
+    await fireEvent.press(screen.getByTestId("events-tabs-past"));
     await flushUntil(() => screen.queryByText("Du har inga tidigare evenemang.") !== null);
 
     expect(screen.getByText("Du har inga tidigare evenemang.")).toBeTruthy();
@@ -255,11 +255,11 @@ describe("EventsListScreen", () => {
     it("asks for a login instead of opening the create form, and returns here after it", async () => {
       const { store } = await showSignedOut();
 
-      fireEvent.press(screen.getByTestId("events-create"));
+      await fireEvent.press(screen.getByTestId("events-create"));
       expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
       expect(mockNavigate).not.toHaveBeenCalledWith("/(tabs)/events/create");
 
-      fireEvent.press(screen.getByText("Logga in"));
+      await fireEvent.press(screen.getByText("Logga in"));
 
       expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
       expect(store.get(loginReturnPathAtom)).toBe("/events");
@@ -277,7 +277,7 @@ describe("EventsListScreen", () => {
     it("sends the typed text to the server, trimmed", async () => {
       await show();
 
-      fireEvent.changeText(screen.getByTestId("events-search"), "  kype ");
+      await fireEvent.changeText(screen.getByTestId("events-search"), "  kype ");
 
       await settleOn(() => lastFeedQuery()?.search === "kype");
       expect(lastFeedQuery()).toEqual(expect.objectContaining({ excludeMine: true, search: "kype" }));
@@ -286,7 +286,7 @@ describe("EventsListScreen", () => {
     it("sends a weekend window from the quick filter and counts it on the filter button", async () => {
       await show();
 
-      fireEvent.press(screen.getByTestId("events-chip-weekend"));
+      await fireEvent.press(screen.getByTestId("events-chip-weekend"));
 
       await settleOn(() => lastFeedQuery()?.from !== undefined);
       const { from, to } = lastFeedQuery();
@@ -300,10 +300,10 @@ describe("EventsListScreen", () => {
       await show();
       expect(screen.queryByTestId("events-chip-near-me")).toBeNull();
 
-      screen.unmount();
+      await screen.unmount();
       mockLocation = { latitude: 57.72106, longitude: 12.93987 };
       await show();
-      fireEvent.press(screen.getByTestId("events-chip-near-me"));
+      await fireEvent.press(screen.getByTestId("events-chip-near-me"));
 
       await settleOn(() => lastFeedQuery()?.sort === "Distance");
       expect(lastFeedQuery()).toEqual(
@@ -317,11 +317,11 @@ describe("EventsListScreen", () => {
       );
       await show();
 
-      fireEvent.changeText(screen.getByTestId("events-search"), "kajak");
+      await fireEvent.changeText(screen.getByTestId("events-search"), "kajak");
       await settleOn(() => screen.queryByTestId("events-no-matches") !== null);
       expect(screen.getByText("Inga evenemang matchar")).toBeTruthy();
 
-      fireEvent.press(screen.getByTestId("events-clear-filters"));
+      await fireEvent.press(screen.getByTestId("events-clear-filters"));
       await settleOn(() => screen.queryByText("Fikapromenad") !== null);
       expect(lastFeedQuery()?.search).toBeUndefined();
       expect(screen.queryByTestId("events-clear-filters")).toBeNull();
@@ -332,11 +332,11 @@ describe("EventsListScreen", () => {
         Promise.resolve({ items: query.past ? [summary("old", "Gammal tur")] : [], nextCursor: null }),
       );
       await show();
-      fireEvent.press(screen.getByTestId("events-tabs-past"));
+      await fireEvent.press(screen.getByTestId("events-tabs-past"));
       await settleOn(() => screen.queryByText("Gammal tur") !== null);
 
       expect(screen.queryByTestId("events-chip-today")).toBeNull();
-      fireEvent.changeText(screen.getByTestId("events-search"), "gammal");
+      await fireEvent.changeText(screen.getByTestId("events-search"), "gammal");
 
       await settleOn(() => mockGetMine.mock.lastCall?.[0]?.search === "gammal");
       expect(mockGetMine.mock.lastCall?.[0]).toEqual(expect.objectContaining({ past: true, search: "gammal" }));
@@ -345,10 +345,10 @@ describe("EventsListScreen", () => {
 
     it("does not count a date choice on the past tab, where it does not apply", async () => {
       await show();
-      fireEvent.press(screen.getByTestId("events-chip-weekend"));
+      await fireEvent.press(screen.getByTestId("events-chip-weekend"));
       await settleOn(() => screen.queryByTestId("events-filter-button-count") !== null);
 
-      fireEvent.press(screen.getByTestId("events-tabs-past"));
+      await fireEvent.press(screen.getByTestId("events-tabs-past"));
       await settleOn(() => mockGetMine.mock.lastCall?.[0]?.past === true);
 
       expect(screen.queryByTestId("events-filter-button-count")).toBeNull();
@@ -358,13 +358,13 @@ describe("EventsListScreen", () => {
 
     it("clears the filters from the sheet but keeps the typed text", async () => {
       await show();
-      fireEvent.press(screen.getByTestId("events-chip-spots"));
+      await fireEvent.press(screen.getByTestId("events-chip-spots"));
       await settleOn(() => lastFeedQuery()?.onlyWithSpots === true);
-      fireEvent.changeText(screen.getByTestId("events-search"), "kype");
+      await fireEvent.changeText(screen.getByTestId("events-search"), "kype");
       await settleOn(() => lastFeedQuery()?.search === "kype");
 
-      fireEvent.press(screen.getByTestId("events-filter-button"));
-      fireEvent.press(screen.getByTestId("filter-sheet-clear"));
+      await fireEvent.press(screen.getByTestId("events-filter-button"));
+      await fireEvent.press(screen.getByTestId("filter-sheet-clear"));
 
       await settleOn(() => lastFeedQuery()?.onlyWithSpots === undefined);
       expect(lastFeedQuery()?.search).toBe("kype");
@@ -373,11 +373,11 @@ describe("EventsListScreen", () => {
 
     it("applies the length, route and spots choices from the filter sheet", async () => {
       await show();
-      fireEvent.press(screen.getByTestId("events-filter-button"));
+      await fireEvent.press(screen.getByTestId("events-filter-button"));
 
-      fireEvent.press(screen.getByTestId("event-length-mid"));
-      fireEvent.press(screen.getByTestId("event-route-own"));
-      fireEvent(screen.getByTestId("event-filter-spots"), "valueChange", true);
+      await fireEvent.press(screen.getByTestId("event-length-mid"));
+      await fireEvent.press(screen.getByTestId("event-route-own"));
+      await fireEvent(screen.getByTestId("event-filter-spots"), "valueChange", true);
 
       await settleOn(() => lastFeedQuery()?.onlyWithSpots === true);
       expect(lastFeedQuery()).toEqual(
@@ -388,8 +388,8 @@ describe("EventsListScreen", () => {
 
     it("sends a picked date range with its last day included", async () => {
       await show();
-      fireEvent.press(screen.getByTestId("events-filter-button"));
-      fireEvent.press(screen.getByTestId("event-when-custom"));
+      await fireEvent.press(screen.getByTestId("events-filter-button"));
+      await fireEvent.press(screen.getByTestId("event-when-custom"));
 
       const picker = mockPickers.date;
       if (!picker) throw new Error("expected the range picker to open");

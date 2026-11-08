@@ -7,6 +7,7 @@
 
 import UserTrailCollection from "@/components/user/user-trail-collection";
 import { UserFavoritesTrail } from "@/data/types";
+import { getAllByType } from "@/test/composites";
 import { stubMeasureInWindow } from "@/test/measure";
 import { renderWithProviders } from "@/test/render";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
@@ -26,12 +27,12 @@ jest.mock("@/hooks/useUserLocation", () => ({
 
 const onDelete = jest.fn();
 
-let measured: ReturnType<typeof stubMeasureInWindow>;
+let measured: Awaited<ReturnType<typeof stubMeasureInWindow>>;
 
 // The sort menu measures an anchor and the filter sheet's selects only list options on Android;
 // both have their own suites.
-beforeAll(() => {
-  measured = stubMeasureInWindow();
+beforeAll(async () => {
+  measured = await stubMeasureInWindow();
   Platform.OS = "android";
 });
 
@@ -71,9 +72,9 @@ function show(props: Partial<React.ComponentProps<typeof UserTrailCollection>> =
   );
 }
 
-function search(query: string) {
-  fireEvent.press(screen.getByTestId("icon-search"));
-  fireEvent.changeText(screen.getByPlaceholderText("Sök efter led eller ort..."), query);
+async function search(query: string) {
+  await fireEvent.press(screen.getByTestId("icon-search"));
+  await fireEvent.changeText(screen.getByPlaceholderText("Sök efter led eller ort..."), query);
 }
 
 beforeEach(() => {
@@ -88,8 +89,8 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("lists what is saved, with its city, length and difficulty", () => {
-  show();
+it("lists what is saved, with its city, length and difficulty", async () => {
+  await show();
 
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
   expect(screen.getByText("Borås")).toBeTruthy();
@@ -97,10 +98,10 @@ it("lists what is saved, with its city, length and difficulty", () => {
   expect(screen.getByText("Medel")).toBeTruthy();
 });
 
-it("opens the trail that was tapped", () => {
-  show();
+it("opens the trail that was tapped", async () => {
+  await show();
 
-  fireEvent.press(screen.getByText("Sjöleden"));
+  await fireEvent.press(screen.getByText("Sjöleden"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
@@ -109,109 +110,108 @@ it("opens the trail that was tapped", () => {
 });
 
 // The cross sits inside the card's Pressable, and removing a trail must not also open it.
-it("removes a trail without opening it", () => {
-  show();
+it("removes a trail without opening it", async () => {
+  await show();
 
-  fireEvent.press(screen.getAllByTestId("icon-cross")[0]);
+  await fireEvent.press(screen.getAllByTestId("icon-cross")[0]);
 
   expect(onDelete).toHaveBeenCalledWith("trail-1");
   expect(mockNavigate).not.toHaveBeenCalled();
 });
 
 // Two empty states: nothing saved yet, and a filter that hid everything.
-it("tells an empty collection apart from a filter that matched nothing", () => {
-  const { unmount } = show({ trails: [] });
+it("tells an empty collection apart from a filter that matched nothing", async () => {
+  const { unmount } = await show({ trails: [] });
   expect(screen.getByText("Inga favoriter sparade än.")).toBeTruthy();
   expect(screen.queryByText("Inga leder hittades")).toBeNull();
-  unmount();
+  await unmount();
 
-  show();
-  search("finns inte");
+  await show();
+  await search("finns inte");
 
   expect(screen.getByText("Inga leder hittades")).toBeTruthy();
   expect(screen.getByText("Prova att ändra dina filter")).toBeTruthy();
   expect(screen.queryByText("Inga favoriter sparade än.")).toBeNull();
 });
 
-it("hides the search and filter controls while nothing is saved", () => {
-  show({ trails: [] });
+it("hides the search and filter controls while nothing is saved", async () => {
+  await show({ trails: [] });
 
   expect(screen.queryByTestId("icon-search")).toBeNull();
   expect(screen.queryByTestId("icon-filter-list")).toBeNull();
   expect(screen.queryByText("Tryck på en promenad för att se detaljer")).toBeNull();
 });
 
-it("searches by name and by city", () => {
-  const { unmount } = show();
-  search("sjö");
+it("searches by name and by city", async () => {
+  const { unmount } = await show();
+  await search("sjö");
   expect(screen.getByText("Sjöleden")).toBeTruthy();
   expect(screen.queryByText("Kvarnstigen")).toBeNull();
-  unmount();
+  await unmount();
 
-  show();
-  search("borås");
+  await show();
+  await search("borås");
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
   expect(screen.queryByText("Sjöleden")).toBeNull();
 });
 
 // The hint and the result counter share one line, and the counter wins while filtering.
-it("gives the tap hint's slot to the result counter while filtering", () => {
-  show();
+it("gives the tap hint's slot to the result counter while filtering", async () => {
+  await show();
   expect(screen.getByText(/Tryck på en promenad/)).toBeTruthy();
 
-  search("sjö");
+  await search("sjö");
 
   expect(screen.queryByText(/Tryck på en promenad/)).toBeNull();
   expect(screen.getByText("Visar 1 av 2 leder")).toBeTruthy();
 });
 
 // Without a fix there is no distance, so neither the per-card line nor the sort field appears.
-it("keeps distance out of it until the position is real", () => {
-  const { unmount } = show();
+it("keeps distance out of it until the position is real", async () => {
+  const { unmount } = await show();
   expect(screen.queryByText(/bort/)).toBeNull();
-  fireEvent.press(screen.getByTestId("icon-filter-list"));
+  await fireEvent.press(screen.getByTestId("icon-filter-list"));
   expect(screen.queryByText("Avstånd")).toBeNull();
-  unmount();
+  await unmount();
 
   mockUserLocation.mockReturnValue({ latitude: 57.72, longitude: 12.94 });
-  show();
+  await show();
   expect(screen.getAllByText(/bort/).length).toBeGreaterThan(0);
-  fireEvent.press(screen.getByTestId("icon-filter-list"));
+  await fireEvent.press(screen.getByTestId("icon-filter-list"));
   expect(screen.getByText("Avstånd")).toBeTruthy();
 });
 
 // The badge counts choices, not keys: minLength and maxLength are one choice to the user.
-it("counts a length range as a single filter", () => {
-  show();
+it("counts a length range as a single filter", async () => {
+  await show();
   expect(screen.queryByText("1")).toBeNull();
 
-  fireEvent.press(screen.getByTestId("icon-filter-list"));
-  fireEvent.press(screen.getByText("Fler filter…"));
-  fireEvent.press(screen.getByText("Alla orter"));
+  await fireEvent.press(screen.getByTestId("icon-filter-list"));
+  await fireEvent.press(screen.getByText("Fler filter…"));
+  await fireEvent.press(screen.getByText("Alla orter"));
   // The city also appears on the trail card behind the sheet; the row is the later one.
-  fireEvent.press(screen.getAllByText("Borås").at(-1)!);
+  await fireEvent.press(screen.getAllByText("Borås").at(-1)!);
 
-  const lengthSlider = screen
-    .UNSAFE_getAllByType(RangeSlider as never)
-    .find((node) => node.props.maximumValue === 150)!;
-  act(() => lengthSlider.props.onSlidingComplete([2, 6]));
+  const lengthSlider = getAllByType(RangeSlider).find((node) => node.props.maximumValue === 150);
+  if (!lengthSlider) throw new Error("expected the length slider");
+  await act(() => lengthSlider.props.onSlidingComplete([2, 6]));
 
-  fireEvent.press(screen.getByText("Klar"));
+  await fireEvent.press(screen.getByText("Klar"));
 
   expect(screen.getByText("2")).toBeTruthy();
   expect(screen.getByText("Visar 1 av 2 leder")).toBeTruthy();
 });
 
-it("shows no difficulty for a trail that has not been classified", () => {
-  show({ trails: [trail({ classification: 0 })] });
+it("shows no difficulty for a trail that has not been classified", async () => {
+  await show({ trails: [trail({ classification: 0 })] });
 
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
   expect(screen.queryByText("Inte klassificerad")).toBeNull();
 });
 
 // The API answers with an empty array rather than omitting the field.
-it("draws no image for a trail whose image list is empty", () => {
-  show({ trails: [trail({ trailImages: [] })] });
+it("draws no image for a trail whose image list is empty", async () => {
+  await show({ trails: [trail({ trailImages: [] })] });
 
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
 });

@@ -30,14 +30,14 @@ const TRAIL = "0a5f0f5e-1f65-4a52-9a2e-1e35a1c9c7b1";
 
 type Result = ReturnType<typeof useHasReviewedTrail>;
 
-function render() {
+async function render() {
   let hook!: Result;
   function Probe() {
     hook = useHasReviewedTrail(TRAIL);
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   return {
     ...rendered,
     settled: () => flushUntil(() => hook.isSuccess || hook.isError),
@@ -67,14 +67,14 @@ describe("hasReviewedTrailKey", () => {
 
 describe("useHasReviewedTrail", () => {
   it("asks about the trail it was given", async () => {
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(mockHasReviewedTrail).toHaveBeenCalledWith(TRAIL);
   });
 
   it("returns the server's answer", async () => {
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(harness.hook().data).toBe(true);
@@ -82,7 +82,7 @@ describe("useHasReviewedTrail", () => {
 
   it("returns false when the user has not reviewed the trail", async () => {
     mockHasReviewedTrail.mockResolvedValue(false);
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(harness.hook().data).toBe(false);
@@ -90,7 +90,7 @@ describe("useHasReviewedTrail", () => {
 
   it("asks nothing while signed out", async () => {
     mockIsAuthenticated = false;
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(mockHasReviewedTrail).not.toHaveBeenCalled();
@@ -100,7 +100,7 @@ describe("useHasReviewedTrail", () => {
   // The key needs the identifier, so asking before it arrives would cache under the wrong key.
   it("asks nothing before the user is known", async () => {
     mockUser = undefined;
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(mockHasReviewedTrail).not.toHaveBeenCalled();

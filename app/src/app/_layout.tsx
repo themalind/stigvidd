@@ -36,7 +36,7 @@ import { openPushRoute } from "@/services/open-push-route";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { ThemeProvider } from "expo-router/react-navigation";
-import { Stack, usePathname } from "expo-router";
+import { Stack, useNavigationContainerRef, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
@@ -61,6 +61,7 @@ function NotificationHandler() {
   const signedInUserId = useRef<string | undefined>(undefined);
   const pathname = usePathname();
   const currentPath = useRef(pathname);
+  const navigation = useNavigationContainerRef();
 
   useEffect(() => {
     signedInUserId.current = user?.id;
@@ -100,7 +101,10 @@ function NotificationHandler() {
         const handler = notificationHandlerFor(data);
         if (handler) {
           invalidateForPush(queryClient, handler, data);
-          await openPushRoute(handler, data, currentPath.current);
+          await openPushRoute(handler, data, {
+            currentPath: () => currentPath.current,
+            rootState: () => navigation.getRootState(),
+          });
         }
         Notifications.clearLastNotificationResponse();
       })
@@ -128,7 +132,7 @@ export default function RootLayout() {
   // queryClient.clear() to drop the signed-out user's cached data from memory.
   // Auth-specific screens reset on login/logout because Stack.Protected unmounts
   // them when the guard flips — no full navigator remount needed.
-  const queryClient = useMemo(createQueryClient, []);
+  const queryClient = useMemo(() => createQueryClient(), []);
 
   const setQueryClient = useSetAtom(queryClientAtom);
   useEffect(() => {

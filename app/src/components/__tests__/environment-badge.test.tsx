@@ -24,34 +24,34 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it("shows nothing in production", () => {
-  show("production");
+it("shows nothing in production", async () => {
+  await show("production");
 
   expect(screen.queryByTestId("environment-badge")).toBeNull();
 });
 
-it("shows nothing when the environment is unknown", () => {
-  show("unknown");
+it("shows nothing when the environment is unknown", async () => {
+  await show("unknown");
 
   expect(screen.queryByTestId("environment-badge")).toBeNull();
 });
 
-it("marks a staging build", () => {
-  show("staging");
+it("marks a staging build", async () => {
+  await show("staging");
 
   expect(screen.getByText("STAGING")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.tertiary });
   expect(logger.error).not.toHaveBeenCalled();
 });
 
-it("warns in red and logs when the API and the realm disagree", () => {
-  show("mixed");
+it("warns in red and logs when the API and the realm disagree", async () => {
+  await show("mixed");
 
   expect(screen.getByText("BLANDAD MILJÖ")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.error });
   expect(logger.error).toHaveBeenCalledWith("App environment mismatch", expect.any(Object));
 });
 
-it("sits below the status bar and lets touches through", () => {
-  show("staging");
+it("sits below the status bar and lets touches through", async () => {
+  await show("staging");
 
   const badge = screen.getByTestId("environment-badge");
   // renderWithProviders gives a 47 pt top inset. keep-comment: fixture value

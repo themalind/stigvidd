@@ -12,9 +12,10 @@ import { render, RenderOptions } from "@testing-library/react-native";
 import { createStore, Provider as JotaiProvider } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { ReactElement, ReactNode } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider } from "react-native-paper";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { rememberQueryClient, rememberRender } from "./tree";
+import { rememberQueryClient } from "./tree";
 import "@/i18n";
 
 // react-native-safe-area-context reads native insets that do not exist under Jest, and without
@@ -33,7 +34,7 @@ interface Options extends Omit<RenderOptions, "wrapper"> {
   theme?: AppTheme;
 }
 
-export function renderWithProviders(
+export async function renderWithProviders(
   ui: ReactElement,
   { initialAtoms = [], theme = AppDefaultTheme, ...options }: Options = {},
 ) {
@@ -74,17 +75,17 @@ export function renderWithProviders(
     <QueryClientProvider client={queryClient}>
       <JotaiProvider store={store}>
         <SafeAreaProvider initialMetrics={METRICS}>
-          <PaperProvider theme={instantTheme}>
-            <ThemeProvider value={theme}>{children}</ThemeProvider>
-          </PaperProvider>
+          <GestureHandlerRootView>
+            <PaperProvider theme={instantTheme}>
+              <ThemeProvider value={theme}>{children}</ThemeProvider>
+            </PaperProvider>
+          </GestureHandlerRootView>
         </SafeAreaProvider>
       </JotaiProvider>
     </QueryClientProvider>
   );
 
-  const rendered = render(ui, { wrapper: Wrapper, ...options });
-  // Handed to jest.after-env.js, which checks every rendered tree for strings outside a Text.
-  rememberRender(rendered);
+  const rendered = await render(ui, { wrapper: Wrapper, ...options });
 
   return { store, queryClient, theme, ...rendered };
 }

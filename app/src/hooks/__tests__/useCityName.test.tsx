@@ -19,13 +19,13 @@ jest.mock("expo-location", () => ({
 
 type Result = UseQueryResult<string | null>;
 
-function renderHook(latitude?: number, longitude?: number) {
+async function renderHook(latitude?: number, longitude?: number) {
   let query!: Result;
   function Probe() {
     query = useCityName(latitude, longitude);
     return null;
   }
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   return {
     ...rendered,
     query: () => query,
@@ -40,7 +40,7 @@ beforeEach(() => {
 describe("looking a position up", () => {
   it("reverse-geocodes the position it was given", async () => {
     mockReverseGeocode.mockResolvedValue([{ city: "Borås" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(mockReverseGeocode).toHaveBeenCalledWith({ latitude: 57.72, longitude: 12.94 });
@@ -50,7 +50,7 @@ describe("looking a position up", () => {
   // Reverse geocoding needs foreground permission, so a stand-in coordinate would either
   // name the wrong town or throw.
   it("looks nothing up without a position", async () => {
-    const harness = renderHook(undefined, undefined);
+    const harness = await renderHook(undefined, undefined);
     await settle();
 
     expect(mockReverseGeocode).not.toHaveBeenCalled();
@@ -58,7 +58,7 @@ describe("looking a position up", () => {
   });
 
   it("looks nothing up with only half a position", async () => {
-    renderHook(57.72, undefined);
+    await renderHook(57.72, undefined);
     await settle();
 
     expect(mockReverseGeocode).not.toHaveBeenCalled();
@@ -67,7 +67,7 @@ describe("looking a position up", () => {
   // Latitude 0 is a real coordinate, and a falsy check here would refuse to look it up.
   it("treats a zero coordinate as a position", async () => {
     mockReverseGeocode.mockResolvedValue([{ city: "Null Island" }]);
-    const harness = renderHook(0, 0);
+    const harness = await renderHook(0, 0);
     await harness.settled();
 
     expect(mockReverseGeocode).toHaveBeenCalledWith({ latitude: 0, longitude: 0 });
@@ -77,7 +77,7 @@ describe("looking a position up", () => {
 describe("choosing a name", () => {
   it("prefers the city", async () => {
     mockReverseGeocode.mockResolvedValue([{ city: "Borås", district: "Norrby", subregion: "Borås kommun" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBe("Borås");
@@ -85,7 +85,7 @@ describe("choosing a name", () => {
 
   it("falls back to the district", async () => {
     mockReverseGeocode.mockResolvedValue([{ city: null, district: "Norrby", subregion: "Borås kommun" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBe("Norrby");
@@ -93,7 +93,7 @@ describe("choosing a name", () => {
 
   it("falls back to the subregion", async () => {
     mockReverseGeocode.mockResolvedValue([{ city: null, district: null, subregion: "Borås kommun" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBe("Borås kommun");
@@ -103,7 +103,7 @@ describe("choosing a name", () => {
   // address is the last resort — with the postcode stripped off it.
   it("digs the town out of the formatted address as a last resort", async () => {
     mockReverseGeocode.mockResolvedValue([{ formattedAddress: "Stora Vägen 1, 501 15 Borås, Sverige" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBe("Borås");
@@ -111,7 +111,7 @@ describe("choosing a name", () => {
 
   it("reports nothing when the address has no second line", async () => {
     mockReverseGeocode.mockResolvedValue([{ formattedAddress: "Sverige" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBeNull();
@@ -121,7 +121,7 @@ describe("choosing a name", () => {
   // component that renders the banner.
   it("reports nothing when the geocoder has nothing to offer", async () => {
     mockReverseGeocode.mockResolvedValue([]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBeNull();
@@ -129,7 +129,7 @@ describe("choosing a name", () => {
 
   it("takes the first result when the geocoder returns several", async () => {
     mockReverseGeocode.mockResolvedValue([{ city: "Borås" }, { city: "Göteborg" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBe("Borås");
@@ -139,7 +139,7 @@ describe("choosing a name", () => {
 describe("caching", () => {
   it("keeps a name for ten minutes", async () => {
     mockReverseGeocode.mockResolvedValue([{ city: "Borås" }]);
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(staleTimeOf(harness.queryClient, ["reverseGeocode", 57.72, 12.94])).toBe(1000 * 60 * 10);
@@ -149,7 +149,7 @@ describe("caching", () => {
   // settling on its "location unknown" wording.
   it("does not retry a failure", async () => {
     mockReverseGeocode.mockRejectedValue(new Error("permission denied"));
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().isError).toBe(true);

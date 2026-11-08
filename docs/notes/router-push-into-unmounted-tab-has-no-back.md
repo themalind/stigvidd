@@ -38,13 +38,20 @@ drops it ("The action 'POP_TO' ... was not handled by any navigator"). Making it
 **A board post opens with its event beneath the board** (`routeBeneath`,
 [open-push-route.ts](../../app/src/services/open-push-route.ts)). Two `navigate` calls in a row into
 an unmounted tab keep only the last one, because the tab holds just the latest nested params: the
-stack was `[index, board]`. One `requestAnimationFrame` between them gives `[index, event, board]`
-(measured with real timers; not yet on a device). If the frame ever comes too early, the result is
-that same `[index, board]`: the event is skipped, but the tab is not stuck.
+stack was `[index, board]`. One `requestAnimationFrame` between them lost the event under load (2 of
+24 parallel runs on SDK 55, and in full suite runs on SDK 58), so the second `navigate` now waits, for
+at most about 2 s, until the path is the event's and no focused route still holds its target in
+`params.screen`. Parallel runs measured 24 of 24 green; not yet on a device.
 `renderRouter` turns on fake timers, so a test that awaits a frame hangs until the 5 s timeout. Call
-`jest.useRealTimers()` after it and start the navigation outside `act`, which holds back the render
-the tab mounts in. All eight push types are in
+`jest.useRealTimers()` after it and navigate with `IS_REACT_ACT_ENVIRONMENT` off, since `act` holds
+back the render the tab mounts in. All eight push types are in
 [notification-navigation.test.tsx](../../app/src/app/__tests__/notification-navigation.test.tsx).
+
+**A shared link in a running app skips the anchor on SDK 58.** `useLinking` hands it to
+`NAVIGATE_TO_HREF` without `withAnchor`, so back left the tab. `+native-intent.tsx` navigates itself
+when `initial` is false and returns `null`, with a name-only `dangerouslySingular` so a second link
+replaces the first. To reach that path in a test, pass `legacy_subscribe` in the `+native-intent` entry
+of the `renderRouter` context: its `linking.subscribe` option is not called.
 
 **Measured** with the real router in
 [(profile-stack)/__tests__/_layout.test.tsx](../../app/src/app/%28tabs%29/%28profile-stack%29/__tests__/_layout.test.tsx).

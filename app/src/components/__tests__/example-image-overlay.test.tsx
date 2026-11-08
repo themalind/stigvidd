@@ -19,47 +19,47 @@ function show(source: unknown = MOCK_URL, variant?: "badge" | "watermark") {
 }
 
 // The overlay sizes itself after the image, and nothing measures under Jest; this event gives it a box.
-function measure(width: number) {
-  fireEvent(screen.getByTestId("example-image-overlay"), "layout", {
+async function measure(width: number) {
+  await fireEvent(screen.getByTestId("example-image-overlay"), "layout", {
     nativeEvent: { layout: { width, height: 180 } },
   });
 }
 
 // The badge is a claim about the picture, so it goes as soon as an upload replaces the placeholder.
-it("stays out of the way of a real photograph", () => {
-  show(REAL_URL);
+it("stays out of the way of a real photograph", async () => {
+  await show(REAL_URL);
 
   expect(screen.queryByTestId("example-image-overlay")).toBeNull();
 });
 
-it("stays away from a bundled image and from no image at all", () => {
-  show(42);
+it("stays away from a bundled image and from no image at all", async () => {
+  await show(42);
   expect(screen.queryByTestId("example-image-overlay")).toBeNull();
 
-  screen.unmount();
+  await screen.unmount();
   // A trail with no images hands over an undefined source, which show()'s default would stand in for.
-  renderWithProviders(<ExampleImageOverlay source={undefined} />);
+  await renderWithProviders(<ExampleImageOverlay source={undefined} />);
   expect(screen.queryByTestId("example-image-overlay")).toBeNull();
 });
 
-it("marks a mock image handed over as a { uri } object", () => {
-  show({ uri: MOCK_URL });
-  measure(300);
+it("marks a mock image handed over as a { uri } object", async () => {
+  await show({ uri: MOCK_URL });
+  await measure(300);
 
   expect(screen.getByText(LABEL)).toBeTruthy();
 });
 
 // The rule is a substring match on the path, and the path's case is not ours to assume.
-it("marks a mock image whatever case its path is in", () => {
-  show("https://stigvidd.se/trails/MOCK/a.jpg");
-  measure(300);
+it("marks a mock image whatever case its path is in", async () => {
+  await show("https://stigvidd.se/trails/MOCK/a.jpg");
+  await measure(300);
 
   expect(screen.getByText(LABEL)).toBeTruthy();
 });
 
 // Nothing is drawn before the width is known, or a full-size pill flashes across a 60 px thumbnail.
-it("draws nothing until it has been measured", () => {
-  show();
+it("draws nothing until it has been measured", async () => {
+  await show();
 
   expect(screen.getByTestId("example-image-overlay")).toBeTruthy();
   // A width of zero is narrower than every threshold, so an unmeasured overlay would draw the ribbon.
@@ -70,9 +70,9 @@ it("draws nothing until it has been measured", () => {
   expect(screen.queryByText(SHORT_LABEL)).toBeNull();
 });
 
-it("puts a pill in the corner of a full-width picture", () => {
-  show();
-  measure(360);
+it("puts a pill in the corner of a full-width picture", async () => {
+  await show();
+  await measure(360);
 
   expect(screen.getByTestId("example-image-badge")).toHaveStyle({
     position: "absolute",
@@ -85,9 +85,9 @@ it("puts a pill in the corner of a full-width picture", () => {
 });
 
 // A card-sized picture takes the tighter pill: the same badge with less around the text.
-it("tightens the pill on a card-sized picture", () => {
-  show();
-  measure(180);
+it("tightens the pill on a card-sized picture", async () => {
+  await show();
+  await measure(180);
 
   expect(screen.getByTestId("example-image-badge")).toHaveStyle({
     top: 4,
@@ -98,17 +98,17 @@ it("tightens the pill on a card-sized picture", () => {
   expect(screen.getByText(LABEL)).toHaveStyle({ fontSize: 9, letterSpacing: 0 });
 });
 
-it("keeps the roomy pill at exactly the width the tighter one starts below", () => {
-  show();
-  measure(220);
+it("keeps the roomy pill at exactly the width the tighter one starts below", async () => {
+  await show();
+  await measure(220);
 
   expect(screen.getByTestId("example-image-badge")).toHaveStyle({ top: 6, paddingHorizontal: 6 });
 });
 
 // Below this width a corner pill would cover most of the picture, so the label becomes a bottom ribbon.
-it("lays a ribbon along the bottom of a thumbnail", () => {
-  show();
-  measure(72);
+it("lays a ribbon along the bottom of a thumbnail", async () => {
+  await show();
+  await measure(72);
 
   expect(screen.queryByTestId("example-image-badge")).toBeNull();
   expect(screen.getByTestId("example-image-ribbon")).toHaveStyle({
@@ -120,18 +120,18 @@ it("lays a ribbon along the bottom of a thumbnail", () => {
   });
 });
 
-it("still shows a pill at exactly the width the ribbon starts below", () => {
-  show();
-  measure(120);
+it("still shows a pill at exactly the width the ribbon starts below", async () => {
+  await show();
+  await measure(120);
 
   expect(screen.getByTestId("example-image-badge")).toBeTruthy();
   expect(screen.queryByTestId("example-image-ribbon")).toBeNull();
 });
 
 // The ribbon abbreviates "Exempelbild", but a screen reader is told the whole word.
-it("shortens the ribbon's label on screen but not for a screen reader", () => {
-  show();
-  measure(72);
+it("shortens the ribbon's label on screen but not for a screen reader", async () => {
+  await show();
+  await measure(72);
 
   expect(screen.getByText(SHORT_LABEL)).toBeTruthy();
   expect(screen.queryByText(LABEL)).toBeNull();
@@ -141,29 +141,29 @@ it("shortens the ribbon's label on screen but not for a screen reader", () => {
 });
 
 // A layout width arrives as a float, and 119.6 is a picture wide enough for the pill.
-it("rounds the measured width before it decides", () => {
-  show();
-  measure(119.6);
+it("rounds the measured width before it decides", async () => {
+  await show();
+  await measure(119.6);
 
   expect(screen.getByTestId("example-image-badge")).toBeTruthy();
   expect(screen.queryByTestId("example-image-ribbon")).toBeNull();
 });
 
 // The overlay is re-laid out when its host changes size: a rotated phone, a thumbnail opened full screen.
-it("changes form when the picture is measured again at another size", () => {
-  show();
-  measure(72);
+it("changes form when the picture is measured again at another size", async () => {
+  await show();
+  await measure(72);
   expect(screen.getByTestId("example-image-ribbon")).toBeTruthy();
 
-  measure(360);
+  await measure(360);
 
   expect(screen.getByTestId("example-image-badge")).toBeTruthy();
   expect(screen.queryByTestId("example-image-ribbon")).toBeNull();
 });
 
-it("writes the label diagonally across the picture as a watermark", () => {
-  show(MOCK_URL, "watermark");
-  measure(300);
+it("writes the label diagonally across the picture as a watermark", async () => {
+  await show(MOCK_URL, "watermark");
+  await measure(300);
 
   expect(screen.getByTestId("example-image-watermark")).toHaveStyle({
     alignItems: "center",
@@ -173,37 +173,37 @@ it("writes the label diagonally across the picture as a watermark", () => {
 });
 
 // The watermark is drawn wherever it is asked for, and the pill's width thresholds do not override that.
-it("keeps the watermark a watermark on a thumbnail", () => {
-  show(MOCK_URL, "watermark");
-  measure(60);
+it("keeps the watermark a watermark on a thumbnail", async () => {
+  await show(MOCK_URL, "watermark");
+  await measure(60);
 
   expect(screen.getByTestId("example-image-watermark")).toBeTruthy();
   expect(screen.queryByTestId("example-image-ribbon")).toBeNull();
   expect(screen.queryByTestId("example-image-badge")).toBeNull();
 });
 
-it("scales the watermark to the picture it lies on", () => {
-  show(MOCK_URL, "watermark");
-  measure(200);
+it("scales the watermark to the picture it lies on", async () => {
+  await show(MOCK_URL, "watermark");
+  await measure(200);
 
   expect(screen.getByText(LABEL)).toHaveStyle({ fontSize: 22 });
 });
 
 // The clamp keeps a hero's letters from running off the edges and a thumbnail's from being unreadable.
-it("holds the watermark between a readable and a containable size", () => {
-  show(MOCK_URL, "watermark");
-  measure(1000);
+it("holds the watermark between a readable and a containable size", async () => {
+  await show(MOCK_URL, "watermark");
+  await measure(1000);
   expect(screen.getByText(LABEL)).toHaveStyle({ fontSize: 28 });
 
-  screen.unmount();
-  show(MOCK_URL, "watermark");
-  measure(60);
+  await screen.unmount();
+  await show(MOCK_URL, "watermark");
+  await measure(60);
   expect(screen.getByText(LABEL)).toHaveStyle({ fontSize: 10 });
 });
 
 // The overlay covers the whole picture, and the picture is usually a link.
-it("covers the picture without taking its taps", () => {
-  show();
+it("covers the picture without taking its taps", async () => {
+  await show();
 
   expect(screen.getByTestId("example-image-overlay")).toHaveStyle({
     position: "absolute",
@@ -216,16 +216,16 @@ it("covers the picture without taking its taps", () => {
 });
 
 // A large system font size would push the label out of its pill and across the picture.
-it("holds every form of the label at its own size", () => {
-  show();
-  measure(360);
+it("holds every form of the label at its own size", async () => {
+  await show();
+  await measure(360);
   expect(screen.getByText(LABEL).props.allowFontScaling).toBe(false);
 
-  measure(72);
+  await measure(72);
   expect(screen.getByText(SHORT_LABEL).props.allowFontScaling).toBe(false);
 
-  screen.unmount();
-  show(MOCK_URL, "watermark");
-  measure(300);
+  await screen.unmount();
+  await show(MOCK_URL, "watermark");
+  await measure(300);
   expect(screen.getByText(LABEL).props.allowFontScaling).toBe(false);
 });

@@ -50,11 +50,11 @@ function hike(overrides: Partial<Hike> = {}): Hike {
 }
 
 async function open(overrides: Partial<Hike> = {}, city = "Borås") {
-  const rendered = renderWithProviders(
+  const rendered = await renderWithProviders(
     <PublishHikeModal hike={hike(overrides)} nickName="Vandrarvennen" onDismiss={onDismiss} />,
   );
   await flushUntil(() => screen.queryByTestId("publish-submit"));
-  fireEvent.changeText(screen.getByTestId("publish-city"), city);
+  await fireEvent.changeText(screen.getByTestId("publish-city"), city);
   return rendered;
 }
 
@@ -72,16 +72,16 @@ it("keeps the submit button disabled until the transfer is accepted", async () =
 
   expect(isDisabled("publish-submit")).toBe(true);
 
-  fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
 
   expect(isDisabled("publish-submit")).toBe(false);
 });
 
 it("requires a difficulty before sending", async () => {
   await open();
-  fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await settle();
 
   expect(mockCreateSubmission).not.toHaveBeenCalled();
@@ -90,10 +90,10 @@ it("requires a difficulty before sending", async () => {
 
 it("requires a description and how to get there, but not parking", async () => {
   await open({ description: undefined, gettingThere: undefined });
-  fireEvent.press(screen.getByTestId("publish-consent"));
-  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-2"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await settle();
 
   expect(mockCreateSubmission).not.toHaveBeenCalled();
@@ -103,10 +103,10 @@ it("requires a description and how to get there, but not parking", async () => {
 
 it("sends the untrimmed walk with all photos, the nickname choice and the consent", async () => {
   const { store } = await open();
-  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
-  fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await flushUntil(() => mockCreateSubmission.mock.calls.length > 0);
   await settle();
 
@@ -134,10 +134,10 @@ it("sends the untrimmed walk with all photos, the nickname choice and the consen
 
 it("requires a city, since every trail is listed under one", async () => {
   await open({}, "   ");
-  fireEvent.press(screen.getByTestId("publish-consent"));
-  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-2"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await settle();
 
   expect(mockCreateSubmission).not.toHaveBeenCalled();
@@ -146,10 +146,10 @@ it("requires a city, since every trail is listed under one", async () => {
 
 it("sends the city trimmed", async () => {
   await open({}, "  Ulricehamn ");
-  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
-  fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await flushUntil(() => mockCreateSubmission.mock.calls.length > 0);
 
   expect(mockCreateSubmission).toHaveBeenCalledWith(expect.objectContaining({ city: "Ulricehamn" }));
@@ -157,11 +157,11 @@ it("sends the city trimmed", async () => {
 
 it("sends the variation, trimmed", async () => {
   await open();
-  fireEvent.press(screen.getByTestId("publish-difficulty-2"));
-  fireEvent.press(screen.getByTestId("publish-consent"));
-  fireEvent.changeText(screen.getByTestId("publish-accessibilityInfo"), "  Grus och rötter  ");
+  await fireEvent.press(screen.getByTestId("publish-difficulty-2"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.changeText(screen.getByTestId("publish-accessibilityInfo"), "  Grus och rötter  ");
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await flushUntil(() => mockCreateSubmission.mock.calls.length > 0);
 
   expect(mockCreateSubmission).toHaveBeenCalledWith(expect.objectContaining({ accessibilityInfo: "Grus och rötter" }));
@@ -169,12 +169,12 @@ it("sends the variation, trimmed", async () => {
 
 it("leaves out deselected photos and the nickname when unticked", async () => {
   await open();
-  fireEvent.press(screen.getByTestId("publish-image-img-1"));
-  fireEvent.press(screen.getByTestId("publish-show-name"));
-  fireEvent.press(screen.getByTestId("publish-difficulty-1"));
-  fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-image-img-1"));
+  await fireEvent.press(screen.getByTestId("publish-show-name"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-1"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await flushUntil(() => mockCreateSubmission.mock.calls.length > 0);
 
   expect(mockCreateSubmission).toHaveBeenCalledWith(
@@ -186,10 +186,10 @@ it("says the walk is already sent in or published when the server answers 409, a
   mockCreateSubmission.mockRejectedValue(new ApiError("conflict", 409));
   const { store, queryClient } = await open();
   const invalidate = jest.spyOn(queryClient, "invalidateQueries");
-  fireEvent.press(screen.getByTestId("publish-difficulty-3"));
-  fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-3"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await flushUntil(() => store.get(snackbarAtom).visible);
 
   expect(store.get(snackbarAtom)).toMatchObject({
@@ -203,10 +203,10 @@ it("says the walk is already sent in or published when the server answers 409, a
 it("says the limit is reached when the server answers 429", async () => {
   mockCreateSubmission.mockRejectedValue(new ApiError("too many", 429));
   const { store } = await open();
-  fireEvent.press(screen.getByTestId("publish-difficulty-3"));
-  fireEvent.press(screen.getByTestId("publish-consent"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-3"));
+  await fireEvent.press(screen.getByTestId("publish-consent"));
 
-  fireEvent.press(screen.getByTestId("publish-submit"));
+  await fireEvent.press(screen.getByTestId("publish-submit"));
   await flushUntil(() => store.get(snackbarAtom).visible);
 
   expect(store.get(snackbarAtom)).toMatchObject({
@@ -218,7 +218,7 @@ it("says the limit is reached when the server answers 429", async () => {
 it("explains what to write in each field from the info button by the heading", async () => {
   await open();
 
-  fireEvent.press(screen.getByLabelText("Vad ska jag skriva?"));
+  await fireEvent.press(screen.getByLabelText("Vad ska jag skriva?"));
 
   const dialog = screen.getByTestId("info-dialog");
   expect(within(dialog).getByText("Beskrivning")).toBeTruthy();
@@ -229,7 +229,7 @@ it("explains what to write in each field from the info button by the heading", a
 it("gives photo advice from the info button by the photos heading", async () => {
   await open();
 
-  fireEvent.press(screen.getByLabelText("Tips om bilder"));
+  await fireEvent.press(screen.getByLabelText("Tips om bilder"));
 
   const dialog = screen.getByTestId("info-dialog");
   expect(within(dialog).getByText("Undvik")).toBeTruthy();
@@ -245,7 +245,7 @@ it("tells a walk without photos that example images are used", async () => {
 it("opens the difficulty guide from the info icon", async () => {
   await open();
 
-  fireEvent.press(screen.getByTestId("publish-difficulty-help"));
+  await fireEvent.press(screen.getByTestId("publish-difficulty-help"));
   await flushUntil(() => screen.queryByTestId("difficulty-info"));
 
   expect(screen.getAllByTestId("difficulty-info-card")).toHaveLength(4);
@@ -291,13 +291,13 @@ it("lifts and shrinks the card above the iOS keyboard so the submit button stays
   const keyboard = captureKeyboard();
   await open();
 
-  keyboard.show(300);
+  await keyboard.show(300);
 
   expect(screen.getByTestId("modal-wrapper")).toHaveStyle({ marginBottom: 310 });
   const { maxHeight } = StyleSheet.flatten(screen.getByTestId("publish-card").props.style);
   expect(maxHeight).toBeLessThanOrEqual(Dimensions.get("window").height - 310 - 10);
 
-  keyboard.hide();
+  await keyboard.hide();
 
   expect(screen.getByTestId("modal-wrapper")).not.toHaveStyle({ marginBottom: 310 });
 });

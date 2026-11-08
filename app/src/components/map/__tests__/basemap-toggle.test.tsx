@@ -19,8 +19,8 @@ beforeEach(async () => {
   await AsyncStorage.clear();
 });
 
-function show(initial: "outdoor" | "satellite" = "outdoor") {
-  renderWithProviders(
+async function show(initial: "outdoor" | "satellite" = "outdoor") {
+  await renderWithProviders(
     <>
       <Map />
       <BasemapToggle />
@@ -33,18 +33,18 @@ function mapStyle() {
   return screen.getByTestId("maplibre-Map").props.mapStyle;
 }
 
-it("offers satellite while the outdoor map shows", () => {
-  show();
+it("offers satellite while the outdoor map shows", async () => {
+  await show();
 
   expect(mapStyle()).toBe(getMapStyle("outdoor"));
   expect(screen.getByLabelText("Visa satellitkarta")).toBeTruthy();
 });
 
 it("switches the map to satellite and remembers it", async () => {
-  show();
+  await show();
 
   await act(async () => {
-    fireEvent.press(screen.getByTestId("basemap-toggle"));
+    await fireEvent.press(screen.getByTestId("basemap-toggle"));
   });
 
   expect(mapStyle()).toBe(getMapStyle("satellite"));
@@ -53,10 +53,10 @@ it("switches the map to satellite and remembers it", async () => {
 });
 
 it("switches back to the outdoor map", async () => {
-  show("satellite");
+  await show("satellite");
 
   await act(async () => {
-    fireEvent.press(screen.getByTestId("basemap-toggle"));
+    await fireEvent.press(screen.getByTestId("basemap-toggle"));
   });
 
   expect(mapStyle()).toBe(getMapStyle("outdoor"));
@@ -72,10 +72,10 @@ it("uses MapTiler's hybrid style for satellite", () => {
 it("keeps the current map while offline", async () => {
   onlineManager.setOnline(false);
   try {
-    show();
+    await show();
 
     await act(async () => {
-      fireEvent.press(screen.getByTestId("basemap-toggle"));
+      await fireEvent.press(screen.getByTestId("basemap-toggle"));
     });
 
     expect(mapStyle()).toBe(getMapStyle("outdoor"));

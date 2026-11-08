@@ -9,6 +9,7 @@ import AdventureCard from "@/components/home/adventure-card";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
 import { UserLocation } from "@/hooks/useUserLocation";
+import { getAllByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
@@ -91,7 +92,7 @@ function show(theme: AppTheme = AppDefaultTheme) {
 // The trail list has to land before the button does anything, and the pitch renders before
 // the query resolves, so the sheet's city list is the signal.
 async function showLoaded(theme: AppTheme = AppDefaultTheme) {
-  show(theme);
+  await show(theme);
   await flushUntil(() => (mockModal.props?.cities.length ?? 0) > 0);
 }
 
@@ -126,9 +127,9 @@ describe("AdventureCard", () => {
 
     expect(screen.getByTestId("adventure-hero")).toBeTruthy();
     // The bundled cover, not a remote one, so the pitch renders offline.
-    expect(screen.UNSAFE_getAllByType(Image)[0].props.source).not.toEqual({ uri: expect.anything() });
+    expect(getAllByType(Image)[0].props.source).not.toEqual({ uri: expect.anything() });
 
-    fireEvent.press(screen.getByTestId("adventure-roll"));
+    await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
 
     expect(screen.queryByTestId("adventure-hero")).toBeNull();
@@ -141,7 +142,7 @@ describe("AdventureCard", () => {
     await act(async () => mockModal.props!.onUpdateFilter("city", "Sandared"));
     expect(screen.getByTestId("adventure-filter-summary")).toHaveTextContent("1 filter");
 
-    fireEvent.press(screen.getByTestId("adventure-clear-filters"));
+    await fireEvent.press(screen.getByTestId("adventure-clear-filters"));
     await settle();
 
     expect(screen.getByTestId("adventure-filter-summary")).toHaveTextContent("Alla leder");
@@ -154,7 +155,7 @@ describe("AdventureCard", () => {
     await showLoaded();
     await act(async () => mockModal.props!.onUpdateFilter("city", "Sandared"));
 
-    fireEvent.press(screen.getByTestId("adventure-roll"));
+    await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
 
     expect(screen.getByText("Rya åsar")).toBeTruthy();
@@ -169,7 +170,7 @@ describe("AdventureCard", () => {
         resolve = r;
       }),
     );
-    show();
+    await show();
     await settle();
 
     expect(screen.getByTestId("adventure-roll")).toBeDisabled();
@@ -181,7 +182,7 @@ describe("AdventureCard", () => {
   it("draws a trail and swaps the pitch for the result", async () => {
     await showLoaded();
 
-    fireEvent.press(screen.getByTestId("adventure-roll"));
+    await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
 
     expect(screen.getByText("Din promenad blev…")).toBeTruthy();
@@ -193,12 +194,12 @@ describe("AdventureCard", () => {
   it("never re-draws the trail already showing", async () => {
     await showLoaded();
 
-    fireEvent.press(screen.getByTestId("adventure-roll"));
+    await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
     expect(screen.getByText("Kvarnstigen")).toBeTruthy();
 
     // Math.random is pinned to 0, so without the exclusion this lands on Kvarnstigen again.
-    fireEvent.press(screen.getByTestId("adventure-reroll"));
+    await fireEvent.press(screen.getByTestId("adventure-reroll"));
     await settle();
 
     expect(screen.getByText("Kypesjön runt")).toBeTruthy();
@@ -207,10 +208,10 @@ describe("AdventureCard", () => {
 
   it("opens the drawn trail on the home stack", async () => {
     await showLoaded();
-    fireEvent.press(screen.getByTestId("adventure-roll"));
+    await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
 
-    fireEvent.press(screen.getByTestId("adventure-open"));
+    await fireEvent.press(screen.getByTestId("adventure-open"));
 
     expect(mockNavigate).toHaveBeenCalledWith({
       pathname: "/(tabs)/(home)/trail/[identifier]",
@@ -221,7 +222,7 @@ describe("AdventureCard", () => {
   it("hands the filter sheet the trail list's cities and difficulties, without sorting", async () => {
     await showLoaded();
 
-    fireEvent.press(screen.getByTestId("adventure-filter-button"));
+    await fireEvent.press(screen.getByTestId("adventure-filter-button"));
     await settle();
 
     expect(screen.getByTestId("filter-modal")).toBeTruthy();
@@ -237,7 +238,7 @@ describe("AdventureCard", () => {
     mockLocation = { latitude: 57.65, longitude: 13.02 } as UserLocation;
     await showLoaded();
 
-    fireEvent.press(screen.getByTestId("adventure-filter-button"));
+    await fireEvent.press(screen.getByTestId("adventure-filter-button"));
     await settle();
 
     expect(mockModal.props?.hasLocation).toBe(true);
@@ -257,7 +258,7 @@ describe("AdventureCard", () => {
     await showLoaded();
 
     await act(async () => mockModal.props!.onUpdateFilter("city", "Sandared"));
-    fireEvent.press(screen.getByTestId("adventure-roll"));
+    await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
 
     expect(screen.getByText("Rya åsar")).toBeTruthy();
@@ -271,7 +272,7 @@ describe("AdventureCard", () => {
     expect(screen.getByTestId("adventure-no-match")).toBeTruthy();
     expect(screen.queryByTestId("adventure-roll")).toBeNull();
 
-    fireEvent.press(screen.getByTestId("adventure-clear-filters"));
+    await fireEvent.press(screen.getByTestId("adventure-clear-filters"));
     await settle();
 
     expect(screen.queryByTestId("adventure-no-match")).toBeNull();
@@ -281,7 +282,7 @@ describe("AdventureCard", () => {
 
   it("drops a drawn trail the filters no longer allow", async () => {
     await showLoaded();
-    fireEvent.press(screen.getByTestId("adventure-roll"));
+    await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
     expect(screen.getByText("Kvarnstigen")).toBeTruthy();
 
@@ -299,7 +300,7 @@ describe("AdventureCard", () => {
       backgroundColor: AppDefaultTheme.colors.primary,
     });
 
-    screen.unmount();
+    await screen.unmount();
     await showLoaded(AppDarkTheme);
     expect(screen.getByTestId("adventure-roll")).toHaveStyle({
       backgroundColor: AppDarkTheme.colors.primary,

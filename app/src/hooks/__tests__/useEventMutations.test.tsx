@@ -34,7 +34,7 @@ const INVITATIONS = ["events", "invitations", "u1"];
 type Mutations = ReturnType<typeof useEventMutations>;
 type SimpleMutation = "joinMutation" | "leaveMutation" | "acceptInvitationMutation" | "declineInvitationMutation";
 
-function render() {
+async function render() {
   let hook: Mutations | undefined;
   function Probe() {
     hook = useEventMutations();
@@ -46,7 +46,7 @@ function render() {
     return hook;
   };
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   // Seeded without an observer, and renderWithProviders sets gcTime 0. keep-comment: why gcTime is raised
   for (const key of [DETAIL, INVITATIONS]) {
     rendered.queryClient.setQueryDefaults(key, { gcTime: Infinity });
@@ -56,11 +56,11 @@ function render() {
   return {
     ...rendered,
     run: async (name: SimpleMutation, arg: string) => {
-      act(() => current()[name].mutate(arg));
+      await act(() => current()[name].mutate(arg));
       await flushUntil(() => current()[name].isError || current()[name].isSuccess);
     },
     setInterested: async (interested: boolean) => {
-      act(() => current().interestedMutation.mutate({ identifier: "e1", interested }));
+      await act(() => current().interestedMutation.mutate({ identifier: "e1", interested }));
       await flushUntil(() => current().interestedMutation.isError || current().interestedMutation.isSuccess);
     },
     invalidated: (key: unknown[]) => rendered.queryClient.getQueryState(key)?.isInvalidated === true,
@@ -80,7 +80,7 @@ beforeEach(() => {
 
 describe("useEventMutations", () => {
   it("joins and refreshes every event query", async () => {
-    const { run, store, invalidated } = render();
+    const { run, store, invalidated } = await render();
     await run("joinMutation", "e1");
 
     expect(mockJoin).toHaveBeenCalledWith("e1");
@@ -91,7 +91,7 @@ describe("useEventMutations", () => {
 
   it("names a full event as the reason a join failed, and redraws", async () => {
     mockJoin.mockRejectedValue(coded(409, "event_full"));
-    const { run, store, invalidated } = render();
+    const { run, store, invalidated } = await render();
     await run("joinMutation", "e1");
 
     expect(store.get(snackbarAtom)).toMatchObject({ type: "warning", message: "Evenemanget är fullt." });
@@ -100,7 +100,7 @@ describe("useEventMutations", () => {
 
   it.each(["removed_from_event", "event_gone"])("gives a join refused with %s no reason", async (code) => {
     mockJoin.mockRejectedValue(coded(409, code));
-    const { run, store } = render();
+    const { run, store } = await render();
     await run("joinMutation", "e1");
 
     expect(store.get(snackbarAtom)).toMatchObject({
@@ -111,7 +111,7 @@ describe("useEventMutations", () => {
 
   it("names a revoked invitation when accepting", async () => {
     mockAccept.mockRejectedValue(coded(404, "invitation_gone"));
-    const { run, store, invalidated } = render();
+    const { run, store, invalidated } = await render();
     await run("acceptInvitationMutation", "e1");
 
     expect(store.get(snackbarAtom)).toMatchObject({ type: "warning", message: "Inbjudan är inte längre aktuell." });
@@ -120,14 +120,14 @@ describe("useEventMutations", () => {
 
   it("falls back to a generic error when the failure has no known code", async () => {
     mockLeave.mockRejectedValue(new ApiError("HTTP error: 500", 500));
-    const { run, store } = render();
+    const { run, store } = await render();
     await run("leaveMutation", "e1");
 
     expect(store.get(snackbarAtom)).toMatchObject({ type: "error", message: "Något gick fel. Försök igen." });
   });
 
   it("declines and refreshes the invitations", async () => {
-    const { run, store, invalidated } = render();
+    const { run, store, invalidated } = await render();
     await run("declineInvitationMutation", "e1");
 
     expect(mockDecline).toHaveBeenCalledWith("e1");
@@ -138,7 +138,7 @@ describe("useEventMutations", () => {
   it.each(["leaveMutation", "declineInvitationMutation"] as const)(
     "%s on a private event refreshes the lists but not the event it can no longer read",
     async (name) => {
-      const { run, queryClient, invalidated } = render();
+      const { run, queryClient, invalidated } = await render();
       queryClient.setQueryData(DETAIL, { visibility: "Private" });
       await run(name, "e1");
 
@@ -150,7 +150,7 @@ describe("useEventMutations", () => {
   it.each(["leaveMutation", "declineInvitationMutation"] as const)(
     "%s on an open event refreshes the event too",
     async (name) => {
-      const { run, queryClient, invalidated } = render();
+      const { run, queryClient, invalidated } = await render();
       queryClient.setQueryData(DETAIL, { visibility: "Public" });
       await run(name, "e1");
 
@@ -159,7 +159,7 @@ describe("useEventMutations", () => {
   );
 
   it("marks and unmarks interest through the matching endpoint", async () => {
-    const { setInterested } = render();
+    const { setInterested } = await render();
     await setInterested(true);
     await setInterested(false);
 

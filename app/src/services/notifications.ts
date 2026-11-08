@@ -185,6 +185,7 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
+      // eslint-disable-next-line import/namespace -- the rule cannot follow expo-notifications' re-exported enum
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
     });

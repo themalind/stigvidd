@@ -137,25 +137,10 @@ timing it out. Wait on something unique — a placeholder, a testID.
 **A raw string under a non-`Text` host is invisible to `queryByText`.** `{list.length && <X/>}`
 renders the number `0` when the list is empty, and the tree that comes back is
 `{"type":"View","children":["0"]}` — which on a device is React Native's *"Text strings must be
-rendered within a `<Text>` component"* red box, and in a test is nothing at all:
-`queryByText("0")` returns null and the suite stays green. `trail-obstacle-update-form.tsx` had
-exactly that on its category picker (`issueTypes?.length &&`, fixed to `!!issueTypes?.length &&`).
-
-Since that is a whole class of bug that no assertion anyone forgets to write will catch, it is
-checked for **every test, automatically**: [`app/jest.after-env.js`](../../app/jest.after-env.js)
-walks the last rendered tree after each test and fails it with the offending string and the host
-path leading to it. Two constraints shape that file, and breaking either makes it silently do
-nothing:
-
-- It must be declared **before** `@testing-library/react-native` is imported anywhere, because
-  `afterEach` hooks run in declaration order and the library declares its own cleanup on import;
-  after that cleanup `screen.toJSON()` throws and there is no tree left to inspect.
-- For the same reason it must not import the library at all — a *first* import during a run
-  registers that cleanup hook inside a test, and Jest fails every test in the file with "Hooks
-  cannot be defined inside tests". So `renderWithProviders` hands the tree over instead, through
-  `rememberRender`/`takeRender` in [`app/src/test/tree.ts`](../../app/src/test/tree.ts).
-
-`strayText` is exported from that module for a test that wants to name the case explicitly.
+rendered within a `<Text>` component"* red box. `trail-obstacle-update-form.tsx` had exactly that
+on its category picker (`issueTypes?.length &&`, fixed to `!!issueTypes?.length &&`). Since
+Testing Library 14 the test renderer throws that same error on every render, measured with a
+stray `"0"` under a `View`, so the repo's own `strayText` after-each guard was removed.
 
 **Its mirror image is an `<Text />` with nothing in it**, which the guard does not catch and no
 query can find either. `{value ? <Text>{t(value)}</Text> : null}` mutated to drop the condition

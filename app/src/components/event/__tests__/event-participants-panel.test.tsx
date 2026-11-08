@@ -35,8 +35,8 @@ const PARTICIPANTS: EventParticipants = {
   invited: [],
 };
 
-function show(permissions: EventPermissions, participants: EventParticipants = PARTICIPANTS) {
-  renderWithProviders(
+async function show(permissions: EventPermissions, participants: EventParticipants = PARTICIPANTS) {
+  await renderWithProviders(
     <EventParticipantsPanel
       participants={participants}
       permissions={permissions}
@@ -49,23 +49,23 @@ function show(permissions: EventPermissions, participants: EventParticipants = P
 }
 
 describe("EventParticipantsPanel", () => {
-  it("shows a role chip for the organizer and co-host, not for a participant", () => {
-    show(NO_PERMISSIONS);
+  it("shows a role chip for the organizer and co-host, not for a participant", async () => {
+    await show(NO_PERMISSIONS);
 
     expect(screen.getByTestId("event-participant-role-jag")).toHaveTextContent("Arrangör");
     expect(screen.getByTestId("event-participant-role-bertil")).toHaveTextContent("Medarrangör");
     expect(screen.queryByTestId("event-participant-role-cissi")).toBeNull();
   });
 
-  it("gives the organizer no menu while others can be managed", () => {
-    show({ ...NO_PERMISSIONS, canChangeRoles: true, canRemoveParticipants: true });
+  it("gives the organizer no menu while others can be managed", async () => {
+    await show({ ...NO_PERMISSIONS, canChangeRoles: true, canRemoveParticipants: true });
 
     expect(screen.queryByTestId("event-participant-menu-jag")).toBeNull();
     expect(screen.getByTestId("event-participant-menu-bertil")).toBeTruthy();
     expect(screen.getByTestId("event-participant-menu-cissi")).toBeTruthy();
   });
 
-  it("shows the first page of a long list and grows it a page per press until all are shown", () => {
+  it("shows the first page of a long list and grows it a page per press until all are shown", async () => {
     const total = PARTICIPANTS_PAGE * 2 + 3;
     const many = Array.from({ length: total }, (_, i) => ({
       userIdentifier: `u${i}`,
@@ -73,7 +73,7 @@ describe("EventParticipantsPanel", () => {
       role: i === 0 ? ("Organizer" as const) : ("Participant" as const),
       joinedAt: "2026-10-01T10:00:00Z",
     }));
-    show(NO_PERMISSIONS, { ...PARTICIPANTS, participantCount: total, participants: many });
+    await show(NO_PERMISSIONS, { ...PARTICIPANTS, participantCount: total, participants: many });
 
     expect(screen.getByTestId("event-participant-deltagare0")).toBeTruthy();
     expect(screen.getByTestId(`event-participant-deltagare${PARTICIPANTS_PAGE - 1}`)).toBeTruthy();
@@ -82,11 +82,11 @@ describe("EventParticipantsPanel", () => {
       `Visa fler (${total - PARTICIPANTS_PAGE} till)`,
     );
 
-    fireEvent.press(screen.getByTestId("event-participants-more"));
+    await fireEvent.press(screen.getByTestId("event-participants-more"));
     expect(screen.getByTestId(`event-participant-deltagare${PARTICIPANTS_PAGE * 2 - 1}`)).toBeTruthy();
     expect(screen.getByTestId("event-participants-more")).toHaveTextContent("Visa fler (3 till)");
 
-    fireEvent.press(screen.getByTestId("event-participants-more"));
+    await fireEvent.press(screen.getByTestId("event-participants-more"));
     expect(screen.getByTestId(`event-participant-deltagare${total - 1}`)).toBeTruthy();
     expect(screen.queryByTestId("event-participants-more")).toBeNull();
   });
@@ -101,34 +101,34 @@ describe("EventParticipantsPanel", () => {
     };
     const revokeButton = (nickName: string) => screen.queryByLabelText(`Dra tillbaka inbjudan till ${nickName}`);
 
-    it("lets a participant who may invite revoke only the invitations they sent", () => {
-      show({ ...NO_PERMISSIONS, canInvite: true }, INVITED);
+    it("lets a participant who may invite revoke only the invitations they sent", async () => {
+      await show({ ...NO_PERMISSIONS, canInvite: true }, INVITED);
 
       expect(screen.getByTestId("event-invitee-erik")).toBeTruthy();
       expect(revokeButton("dagny")).toBeTruthy();
       expect(revokeButton("erik")).toBeNull();
     });
 
-    it("lets a host revoke every invitation", () => {
-      show({ ...NO_PERMISSIONS, canInvite: true, canPinOrDeletePosts: true }, INVITED);
+    it("lets a host revoke every invitation", async () => {
+      await show({ ...NO_PERMISSIONS, canInvite: true, canPinOrDeletePosts: true }, INVITED);
 
       expect(revokeButton("dagny")).toBeTruthy();
       expect(revokeButton("erik")).toBeTruthy();
     });
   });
 
-  it("tells a host that a removal can be undone by inviting again, with no 'cannot be undone' warning", () => {
-    show({ ...NO_PERMISSIONS, canChangeRoles: true, canRemoveParticipants: true });
+  it("tells a host that a removal can be undone by inviting again, with no 'cannot be undone' warning", async () => {
+    await show({ ...NO_PERMISSIONS, canChangeRoles: true, canRemoveParticipants: true });
 
-    fireEvent.press(screen.getByTestId("event-participant-menu-cissi"));
-    fireEvent.press(screen.getByText("Ta bort från evenemanget"));
+    await fireEvent.press(screen.getByTestId("event-participant-menu-cissi"));
+    await fireEvent.press(screen.getByText("Ta bort från evenemanget"));
 
     expect(screen.getByText(/du kan bjuda in personen igen/)).toBeTruthy();
     expect(screen.queryByTestId("event-remove-participant-dialog-warning")).toBeNull();
   });
 
-  it("offers no 'show more' when everyone fits on the first page", () => {
-    show(NO_PERMISSIONS);
+  it("offers no 'show more' when everyone fits on the first page", async () => {
+    await show(NO_PERMISSIONS);
 
     expect(screen.queryByTestId("event-participants-more")).toBeNull();
   });

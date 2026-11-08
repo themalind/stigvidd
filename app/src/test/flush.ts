@@ -5,7 +5,15 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { act } from "@testing-library/react-native";
+import { act, fireEvent } from "@testing-library/react-native";
+import type { TestInstance } from "test-renderer";
+
+// fireEvent also waits for what the handler returns, so a request the test holds open would hang it. keep-comment: RNTL 14 returns the handler's promise from an async function
+export async function pressWhileHeld(element: TestInstance) {
+  void fireEvent.press(element);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await settle();
+}
 
 // Lets everything already in flight resolve. Use after an interaction instead of waitFor; see
 // docs/notes/app-component-testing-what-layout-can-be-asserted.md.

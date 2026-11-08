@@ -46,19 +46,19 @@ let emit: (position: ReturnType<typeof fix>) => void;
 let appStateListener: (state: AppStateStatus) => void;
 let removeWatcher: jest.Mock;
 
-function render(enabled = true) {
+async function render(enabled = true) {
   let live: LiveUserLocation | null = null;
   function Probe() {
     live = useLiveUserLocation(enabled);
     return null;
   }
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   return { ...rendered, live: () => live };
 }
 
 // Mounted and armed: permission granted, seed applied, watcher installed.
 async function renderArmed() {
-  const harness = render();
+  const harness = await render();
   await flushUntil(() => mockWatchPosition.mock.calls.length > 0);
   await settle();
   return harness;
@@ -86,7 +86,7 @@ afterEach(() => {
 
 describe("arming", () => {
   it("does nothing at all while disabled", async () => {
-    const harness = render(false);
+    const harness = await render(false);
     await settle();
 
     expect(harness.live()).toBeNull();
@@ -137,7 +137,7 @@ describe("arming", () => {
   // A follow screen without a puck is still a usable map of the route.
   it("installs the watcher without waiting for the one-shot fix", async () => {
     mockCurrentPosition.mockImplementation(() => new Promise(() => {}));
-    render();
+    await render();
     await flushUntil(() => mockWatchPosition.mock.calls.length > 0);
 
     expect(mockWatchPosition).toHaveBeenCalledTimes(1);
@@ -145,7 +145,7 @@ describe("arming", () => {
 
   it("survives a watcher that refuses to start", async () => {
     mockWatchPosition.mockRejectedValue(new Error("location services off"));
-    const harness = render();
+    const harness = await render();
     await flushUntil(() => harness.live() !== null);
 
     expect(harness.live()?.position).toEqual([12.5, 57.5]);
@@ -164,7 +164,7 @@ describe("permission", () => {
   it("asks at most once per mount, however often it re-arms", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
     mockRequestPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
-    render();
+    await render();
     await settle();
 
     await act(async () => appStateListener("active"));
@@ -181,7 +181,7 @@ describe("permission", () => {
   // request here feeds itself and livelocks the screen.
   it("never asks when the system says it cannot ask again", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: false });
-    render();
+    await render();
     await settle();
 
     expect(mockRequestPermissions).not.toHaveBeenCalled();
@@ -322,7 +322,7 @@ describe("overlapping arms", () => {
       return watcher;
     });
 
-    const harness = render();
+    const harness = await render();
     await settle();
 
     // The foreground arm overtakes the mount arm, which is still waiting on its seed, and
@@ -366,7 +366,7 @@ describe("overlapping arms", () => {
 describe("unmounting", () => {
   it("removes the watcher", async () => {
     const harness = await renderArmed();
-    harness.unmount();
+    await harness.unmount();
     await settle();
 
     expect(removeWatcher).toHaveBeenCalledTimes(1);
@@ -380,7 +380,7 @@ describe("unmounting", () => {
     }) as never);
 
     const harness = await renderArmed();
-    harness.unmount();
+    await harness.unmount();
 
     expect(removeListener).toHaveBeenCalledTimes(1);
   });

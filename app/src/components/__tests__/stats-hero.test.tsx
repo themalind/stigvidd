@@ -8,6 +8,7 @@
 import StatsHero, { HeroSatellite } from "@/components/stats-hero";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { queryAllByType } from "@/test/composites";
 import { renderWithProviders } from "@/test/render";
 import { screen } from "@testing-library/react-native";
 import { Text } from "react-native";
@@ -30,15 +31,15 @@ function show(
 
 // An empty <Text /> is invisible to every query but still takes a gap on a device.
 function emptyTexts() {
-  return screen.UNSAFE_queryAllByType(Text).filter((node) => {
+  return queryAllByType(Text).filter((node) => {
     const children = node.props.children;
     return children === "" || (Array.isArray(children) && children.length === 0);
   });
 }
 
 // The unit is set smaller than the number, so it has to be its own Text.
-it("sets the unit apart from the figure", () => {
-  show();
+it("sets the unit apart from the figure", async () => {
+  await show();
 
   expect(screen.getByText("142")).toBeTruthy();
   expect(screen.getByText("km")).toBeTruthy();
@@ -47,28 +48,28 @@ it("sets the unit apart from the figure", () => {
 });
 
 // Only the last space splits, so a figure like "1 234 km" keeps its thousands separator.
-it("splits only the trailing unit off a grouped number", () => {
-  show({ figure: "1 234 km" });
+it("splits only the trailing unit off a grouped number", async () => {
+  await show({ figure: "1 234 km" });
 
   expect(screen.getByText("1 234")).toBeTruthy();
   expect(screen.getByText("km")).toBeTruthy();
 });
 
-it("shows a figure that carries no unit, and no empty line where one would be", () => {
-  show({ figure: "7", satellites: [] });
+it("shows a figure that carries no unit, and no empty line where one would be", async () => {
+  await show({ figure: "7", satellites: [] });
 
   expect(screen.getByText("7")).toBeTruthy();
   expect(emptyTexts()).toHaveLength(0);
 });
 
-it("labels the figure", () => {
-  show();
+it("labels the figure", async () => {
+  await show();
 
   expect(screen.getByText("totalt gått")).toHaveStyle({ textTransform: "uppercase", letterSpacing: 1 });
 });
 
-it("shows every satellite with its icon", () => {
-  show();
+it("shows every satellite with its icon", async () => {
+  await show();
 
   expect(screen.getByText("12")).toBeTruthy();
   expect(screen.getByText("promenader")).toBeTruthy();
@@ -79,48 +80,48 @@ it("shows every satellite with its icon", () => {
 });
 
 // "12 promenader" reads one way round and "flest från Olof" the other.
-it("puts the value first by default", () => {
-  show({ satellites: [{ icon: "walk", value: "12", label: "promenader" }] });
+it("puts the value first by default", async () => {
+  await show({ satellites: [{ icon: "walk", value: "12", label: "promenader" }] });
 
   expect(screen.getByTestId("stats-hero-satellite-0")).toHaveTextContent("12promenader");
 });
 
-it("puts the label first when the phrase reads that way", () => {
-  show({ satellites: [{ icon: "account", value: "Olof", label: "flest från", labelFirst: true }] });
+it("puts the label first when the phrase reads that way", async () => {
+  await show({ satellites: [{ icon: "account", value: "Olof", label: "flest från", labelFirst: true }] });
 
   expect(screen.getByTestId("stats-hero-satellite-0")).toHaveTextContent("flest frånOlof");
 });
 
 // The rule sits between two satellites, so a lone one must not get a leading rule.
-it("rules between the satellites, not before the first", () => {
-  show();
+it("rules between the satellites, not before the first", async () => {
+  await show();
 
   expect(screen.getAllByTestId("stats-hero-separator")).toHaveLength(1);
 });
 
-it("draws no rule for a single satellite", () => {
-  show({ satellites: [SATELLITES[0]] });
+it("draws no rule for a single satellite", async () => {
+  await show({ satellites: [SATELLITES[0]] });
 
   expect(screen.queryByTestId("stats-hero-separator")).toBeNull();
 });
 
-it("still draws the figure when there are no satellites at all", () => {
-  show({ satellites: [] });
+it("still draws the figure when there are no satellites at all", async () => {
+  await show({ satellites: [] });
 
   expect(screen.getByText("142")).toBeTruthy();
   expect(screen.queryByTestId("stats-hero-separator")).toBeNull();
 });
 
 // A twenty-character nickname truncates rather than pushing its neighbour off the row.
-it("keeps a long satellite on one line", () => {
-  show({ satellites: [{ icon: "account", value: "Olof Långnamnsson", label: "flest från", labelFirst: true }] });
+it("keeps a long satellite on one line", async () => {
+  await show({ satellites: [{ icon: "account", value: "Olof Långnamnsson", label: "flest från", labelFirst: true }] });
 
   expect(screen.getByText("Olof Långnamnsson").props.numberOfLines).toBe(1);
   expect(screen.getByText("Olof Långnamnsson")).toHaveStyle({ flexShrink: 1 });
 });
 
-it("sits on the light theme's container colour", () => {
-  show();
+it("sits on the light theme's container colour", async () => {
+  await show();
 
   expect(screen.getByTestId("stats-hero-card")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.secondaryContainer,
@@ -129,16 +130,16 @@ it("sits on the light theme's container colour", () => {
 });
 
 // The dark theme's container colour is too close to the page behind it to read as a card.
-it("swaps to the surface variant in the dark theme", () => {
-  show({}, AppDarkTheme);
+it("swaps to the surface variant in the dark theme", async () => {
+  await show({}, AppDarkTheme);
 
   expect(screen.getByTestId("stats-hero-card")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surfaceVariant });
   expect(screen.getByText("142")).toHaveStyle({ color: AppDarkTheme.colors.onSurface });
 });
 
 // The banner is drawn inside a padded screen but has to reach both edges.
-it("breaks out of the screen's padding, and clips what it draws", () => {
-  show();
+it("breaks out of the screen's padding, and clips what it draws", async () => {
+  await show();
 
   expect(screen.getByTestId("stats-hero-card")).toHaveStyle({
     marginHorizontal: -SCREEN_PADDING,
@@ -147,8 +148,8 @@ it("breaks out of the screen's padding, and clips what it draws", () => {
 });
 
 // The lane gives back the content padding to span the card, and lifts into the headroom under the label.
-it("spans the route lane across the card, tucked under the label", () => {
-  show();
+it("spans the route lane across the card, tucked under the label", async () => {
+  await show();
 
   expect(screen.getByTestId("stats-hero-route")).toHaveStyle({
     height: 68,

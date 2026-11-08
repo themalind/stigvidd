@@ -25,14 +25,14 @@ const INCOMING = ["shared-hikes", "incoming", "u1"];
 
 type Mutations = ReturnType<typeof useSharedHikeMutations>;
 
-function render() {
+async function render() {
   let hook!: Mutations;
   function Probe() {
     hook = useSharedHikeMutations();
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   for (const key of [MINE, INCOMING]) {
     rendered.queryClient.setQueryDefaults(key, { gcTime: Infinity });
     rendered.queryClient.setQueryData(key, []);
@@ -41,7 +41,7 @@ function render() {
   return {
     ...rendered,
     run: async (name: keyof Mutations, arg: string) => {
-      act(() => hook[name].mutate(arg));
+      await act(() => hook[name].mutate(arg));
       await flushUntil(() => hook[name].isError || hook[name].isSuccess);
     },
     invalidated: (key: unknown[]) => rendered.queryClient.getQueryState(key)?.isInvalidated === true,
@@ -57,7 +57,7 @@ beforeEach(() => {
 describe("useSharedHikeMutations", () => {
   describe("accepting a shared hike", () => {
     it("accepts the hike it was given", async () => {
-      const { run } = render();
+      const { run } = await render();
       await run("acceptMutation", "h1");
 
       expect(mockAccept).toHaveBeenCalledWith("h1");
@@ -65,7 +65,7 @@ describe("useSharedHikeMutations", () => {
 
     // Accepting moves a hike from the incoming list into the user's own.
     it("refreshes both the incoming list and the user's own", async () => {
-      const { run, invalidated } = render();
+      const { run, invalidated } = await render();
       await run("acceptMutation", "h1");
 
       expect(invalidated(INCOMING)).toBe(true);
@@ -73,7 +73,7 @@ describe("useSharedHikeMutations", () => {
     });
 
     it("confirms the hike was added", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run("acceptMutation", "h1");
 
       expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "success", message: "Promenaden tillagd!" });
@@ -81,7 +81,7 @@ describe("useSharedHikeMutations", () => {
 
     it("reports a failure without touching the lists", async () => {
       mockAccept.mockRejectedValue(new Error("500"));
-      const { run, store, invalidated } = render();
+      const { run, store, invalidated } = await render();
       await run("acceptMutation", "h1");
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -94,7 +94,7 @@ describe("useSharedHikeMutations", () => {
 
     it("drops a share that is no longer there instead of inviting a retry", async () => {
       mockAccept.mockRejectedValue(new ApiError("HTTP error: acceptSharedHike: 404", 404));
-      const { run, store, invalidated } = render();
+      const { run, store, invalidated } = await render();
       await run("acceptMutation", "h1");
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -107,7 +107,7 @@ describe("useSharedHikeMutations", () => {
 
     it("still reports a server error as one", async () => {
       mockAccept.mockRejectedValue(new ApiError("HTTP error: acceptSharedHike: 500", 500));
-      const { run, store, invalidated } = render();
+      const { run, store, invalidated } = await render();
       await run("acceptMutation", "h1");
 
       expect(store.get(snackbarAtom)).toMatchObject({ type: "error" });
@@ -117,7 +117,7 @@ describe("useSharedHikeMutations", () => {
 
   describe("rejecting a shared hike", () => {
     it("rejects the hike it was given", async () => {
-      const { run } = render();
+      const { run } = await render();
       await run("rejectMutation", "h1");
 
       expect(mockReject).toHaveBeenCalledWith("h1");
@@ -125,7 +125,7 @@ describe("useSharedHikeMutations", () => {
 
     // A rejected hike is never added, so the user's own list is left as it is.
     it("refreshes the incoming list only", async () => {
-      const { run, invalidated } = render();
+      const { run, invalidated } = await render();
       await run("rejectMutation", "h1");
 
       expect(invalidated(INCOMING)).toBe(true);
@@ -133,7 +133,7 @@ describe("useSharedHikeMutations", () => {
     });
 
     it("confirms the rejection", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run("rejectMutation", "h1");
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -145,7 +145,7 @@ describe("useSharedHikeMutations", () => {
 
     it("reports a failure", async () => {
       mockReject.mockRejectedValue(new Error("500"));
-      const { run, store } = render();
+      const { run, store } = await render();
       await run("rejectMutation", "h1");
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -157,7 +157,7 @@ describe("useSharedHikeMutations", () => {
 
     it("counts a share that is already gone as rejected", async () => {
       mockReject.mockRejectedValue(new ApiError("HTTP error: rejectSharedHike: 404", 404));
-      const { run, store, invalidated } = render();
+      const { run, store, invalidated } = await render();
       await run("rejectMutation", "h1");
 
       expect(store.get(snackbarAtom)).toMatchObject({ type: "success", message: "Promenaden har tagits bort" });

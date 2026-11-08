@@ -11,6 +11,7 @@ import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { USER_LOCATION_KEY } from "@/hooks/useUserLocation";
+import { getByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { QueryClient } from "@tanstack/react-query";
@@ -98,14 +99,14 @@ type AppTheme = typeof AppDefaultTheme | typeof AppDarkTheme;
 
 async function showGranted(atoms = user(), theme: AppTheme = AppDefaultTheme) {
   mockGetPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
-  const rendered = renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms, theme });
+  const rendered = await renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms, theme });
   await flushUntil(() => screen.queryByTestId("create-hike-screen"));
   return rendered;
 }
 
 async function showDisclosure({ foregroundGranted = false, atoms = user() } = {}) {
   mockGetPermissions.mockResolvedValue({ granted: foregroundGranted, canAskAgain: true });
-  const rendered = renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms });
+  const rendered = await renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms });
   await flushUntil(() => screen.queryByText("Stigvidd behöver din plats"));
   return rendered;
 }
@@ -114,9 +115,9 @@ async function showDisclosure({ foregroundGranted = false, atoms = user() } = {}
 async function showDenied({ canAskAgain = true, atoms = user(), theme = AppDefaultTheme as AppTheme } = {}) {
   mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
   mockRequestPermissions.mockResolvedValue({ granted: false, canAskAgain });
-  const rendered = renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms, theme });
+  const rendered = await renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms, theme });
   await flushUntil(() => screen.queryByText("Fortsätt"));
-  fireEvent.press(screen.getByText("Fortsätt"));
+  await fireEvent.press(screen.getByText("Fortsätt"));
   await flushUntil(() => screen.queryByTestId("create-hike-denied"));
   return rendered;
 }
@@ -136,11 +137,11 @@ it("reads the current permission on arrival and never prompts for it", async () 
   expect(mockRequestPermissions).not.toHaveBeenCalled();
 });
 
-it("shows nothing but a spinner while the status is still being read", () => {
+it("shows nothing but a spinner while the status is still being read", async () => {
   mockGetPermissions.mockReturnValue(new Promise(() => {}));
-  renderWithProviders(<CreateHikeScreen />, { initialAtoms: user() });
+  await renderWithProviders(<CreateHikeScreen />, { initialAtoms: user() });
 
-  expect(screen.UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
+  expect(getByType(ActivityIndicator)).toBeTruthy();
   expect(screen.queryByText("Stigvidd behöver din plats")).toBeNull();
   expect(screen.queryByTestId("hike-recorder")).toBeNull();
 });
@@ -193,7 +194,7 @@ describe("on Android", () => {
     await showDisclosure({ foregroundGranted: true });
     mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: true });
 
-    fireEvent.press(screen.getByText("Fortsätt"));
+    await fireEvent.press(screen.getByText("Fortsätt"));
     await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
     expect(screen.getByTestId("hike-recorder")).toBeTruthy();
@@ -228,7 +229,7 @@ it("does not read the background status on iOS", async () => {
 it("does not let the disclosure be tapped away", async () => {
   await showDisclosure();
 
-  fireEvent.press(screen.getByTestId("location-disclosure-backdrop"));
+  await fireEvent.press(screen.getByTestId("location-disclosure-backdrop"));
   await settle();
 
   expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
@@ -241,7 +242,7 @@ it("raises the system prompt on Fortsätt", async () => {
   await showDisclosure();
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
-  fireEvent.press(screen.getByText("Fortsätt"));
+  await fireEvent.press(screen.getByText("Fortsätt"));
   await settle();
 
   expect(mockRequestPermissions).toHaveBeenCalled();
@@ -251,7 +252,7 @@ it("opens the creator once the prompt is granted", async () => {
   await showDisclosure();
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
-  fireEvent.press(screen.getByText("Fortsätt"));
+  await fireEvent.press(screen.getByText("Fortsätt"));
   await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
   expect(screen.getByTestId("hike-recorder")).toBeTruthy();
@@ -264,7 +265,7 @@ it("refreshes the shared location query when the permission arrives", async () =
   await showDisclosure();
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
-  fireEvent.press(screen.getByText("Fortsätt"));
+  await fireEvent.press(screen.getByText("Fortsätt"));
   await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
   expect(invalidate).toHaveBeenCalledWith({ queryKey: USER_LOCATION_KEY });
@@ -282,7 +283,7 @@ it("leaves the screen on Inte nu when there is somewhere to go back to", async (
   mockCanGoBack.mockReturnValue(true);
   await showDisclosure();
 
-  fireEvent.press(screen.getByText("Inte nu"));
+  await fireEvent.press(screen.getByText("Inte nu"));
   await settle();
 
   expect(mockBack).toHaveBeenCalled();
@@ -294,7 +295,7 @@ it("falls back to the denied screen on Inte nu when there is no back stack", asy
   mockGetBackgroundPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
   await showDisclosure();
 
-  fireEvent.press(screen.getByText("Inte nu"));
+  await fireEvent.press(screen.getByText("Inte nu"));
   await flushUntil(() => screen.queryByTestId("create-hike-denied"));
 
   expect(screen.getByText("Platsåtkomst behövs")).toBeTruthy();
@@ -315,7 +316,7 @@ it("asks again from the denied screen, and moves on when it is granted", async (
   await showDenied({ canAskAgain: true });
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
-  fireEvent.press(screen.getByText("Tillåt plats"));
+  await fireEvent.press(screen.getByText("Tillåt plats"));
   await flushUntil(() => screen.queryByTestId("hike-recorder"));
 
   expect(screen.getByTestId("hike-recorder")).toBeTruthy();
@@ -334,7 +335,7 @@ it("opens the system settings from that button", async () => {
   const openSettings = jest.spyOn(Linking, "openSettings").mockResolvedValue(undefined);
   await showDenied({ canAskAgain: false });
 
-  fireEvent.press(screen.getByText("Öppna inställningar"));
+  await fireEvent.press(screen.getByText("Öppna inställningar"));
   await settle();
 
   expect(openSettings).toHaveBeenCalled();
@@ -345,7 +346,7 @@ it("survives a settings call the platform refuses", async () => {
   jest.spyOn(Linking, "openSettings").mockRejectedValue(new Error("unsupported"));
   await showDenied({ canAskAgain: false });
 
-  fireEvent.press(screen.getByText("Öppna inställningar"));
+  await fireEvent.press(screen.getByText("Öppna inställningar"));
   await settle();
 
   expect(screen.getByTestId("create-hike-denied")).toBeTruthy();
@@ -357,7 +358,7 @@ it("listens for a foreground return only while the permission is denied", async 
   await showGranted();
   expect(AppState.addEventListener).not.toHaveBeenCalled();
 
-  screen.unmount();
+  await screen.unmount();
   await showDenied();
   expect(AppState.addEventListener).toHaveBeenCalledWith("change", expect.any(Function));
 });
@@ -463,7 +464,7 @@ it("keeps the recording rules behind the info button", async () => {
   await showGranted();
   expect(screen.queryByText("Innan du börjar")).toBeNull();
 
-  fireEvent.press(screen.getByTestId("create-hike-info"));
+  await fireEvent.press(screen.getByTestId("create-hike-info"));
   await flushUntil(() => screen.queryByText("Innan du börjar"));
 
   expect(screen.getByText(/Inspelningen fortsätter i bakgrunden/)).toBeTruthy();
@@ -476,7 +477,7 @@ it("keeps the recording rules behind the info button", async () => {
 it("opens that dialog as a reference, not as the start confirmation", async () => {
   await showGranted();
 
-  fireEvent.press(screen.getByTestId("create-hike-info"));
+  await fireEvent.press(screen.getByTestId("create-hike-info"));
   await flushUntil(() => screen.queryByText("Innan du börjar"));
 
   expect(screen.getByText("Ok")).toBeTruthy();
@@ -486,10 +487,10 @@ it("opens that dialog as a reference, not as the start confirmation", async () =
 
 it("closes the info dialog again", async () => {
   await showGranted();
-  fireEvent.press(screen.getByTestId("create-hike-info"));
+  await fireEvent.press(screen.getByTestId("create-hike-info"));
   await flushUntil(() => screen.queryByText("Innan du börjar"));
 
-  fireEvent.press(screen.getByText("Ok"));
+  await fireEvent.press(screen.getByText("Ok"));
   await flushUntil(() => !screen.queryByText("Innan du börjar"));
 
   expect(screen.queryByText("Innan du börjar")).toBeNull();
@@ -503,7 +504,7 @@ it("sits on the theme's background, in both themes", async () => {
     backgroundColor: AppDefaultTheme.colors.background,
   });
 
-  screen.unmount();
+  await screen.unmount();
   await showGranted(user(), AppDarkTheme);
   expect(screen.getByTestId("create-hike-screen")).toHaveStyle({
     backgroundColor: AppDarkTheme.colors.background,
@@ -558,7 +559,7 @@ it("centres the denied explanation and caps its width", async () => {
 
 it("offers the disclosure when the permission status cannot be read", async () => {
   mockGetPermissions.mockRejectedValue(new Error("location service unavailable"));
-  renderWithProviders(<CreateHikeScreen />, { initialAtoms: user() });
+  await renderWithProviders(<CreateHikeScreen />, { initialAtoms: user() });
   await flushUntil(() => screen.queryByText("Stigvidd behöver din plats"));
 
   expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();

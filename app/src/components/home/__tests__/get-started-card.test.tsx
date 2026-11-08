@@ -7,6 +7,7 @@
 
 import GetStartedCard from "@/components/home/get-started-card";
 import { OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { getAllByType, getByType } from "@/test/composites";
 import { renderWithProviders } from "@/test/render";
 import { buildDecorativeRoute } from "@/utils/decorative-route";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -37,8 +38,8 @@ function show(signedIn = false) {
   return renderWithProviders(<GetStartedCard signedIn={signedIn} />);
 }
 
-function press(label: string) {
-  fireEvent.press(screen.getByText(label));
+async function press(label: string) {
+  await fireEvent.press(screen.getByText(label));
 }
 
 beforeEach(() => {
@@ -51,8 +52,8 @@ afterEach(() => {
 });
 
 // The card stands in for the latest-hike card, telling a signed-out visitor what the app does.
-it("pitches the app to someone who is not signed in", () => {
-  show();
+it("pitches the app to someone who is not signed in", async () => {
+  await show();
 
   expect(screen.getByText(SIGNED_OUT_TITLE)).toBeTruthy();
   expect(
@@ -61,8 +62,8 @@ it("pitches the app to someone who is not signed in", () => {
   expect(screen.getByText(SIGNED_OUT_ACTION)).toBeTruthy();
 });
 
-it("asks a signed-in user with no walks to record one", () => {
-  show(true);
+it("asks a signed-in user with no walks to record one", async () => {
+  await show(true);
 
   expect(screen.getByText(SIGNED_IN_TITLE)).toBeTruthy();
   expect(
@@ -74,44 +75,44 @@ it("asks a signed-in user with no walks to record one", () => {
   expect(screen.queryByText(SIGNED_OUT_TITLE)).toBeNull();
 });
 
-it("sends someone who is not signed in to the login screen", () => {
-  show();
+it("sends someone who is not signed in to the login screen", async () => {
+  await show();
 
-  press(SIGNED_OUT_ACTION);
+  await press(SIGNED_OUT_ACTION);
 
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login", { withAnchor: true });
 });
 
-it("sends a signed-in user straight to recording", () => {
-  show(true);
+it("sends a signed-in user straight to recording", async () => {
+  await show(true);
 
-  press(SIGNED_IN_ACTION);
+  await press(SIGNED_IN_ACTION);
 
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true });
 });
 
 // A second tap while the screen is still there must not push a second copy of it.
-it("opens the screen once however fast the button is pressed twice", () => {
+it("opens the screen once however fast the button is pressed twice", async () => {
   jest.spyOn(Date, "now").mockReturnValue((clock += 10_000));
-  show(true);
+  await show(true);
 
-  press(SIGNED_IN_ACTION);
-  press(SIGNED_IN_ACTION);
+  await press(SIGNED_IN_ACTION);
+  await press(SIGNED_IN_ACTION);
 
   expect(mockNavigate).toHaveBeenCalledTimes(1);
 });
 
-it("carries the icon of the action it offers", () => {
-  show(true);
-  expect(screen.UNSAFE_getByType(Button).props.icon).toBe("record-circle-outline");
+it("carries the icon of the action it offers", async () => {
+  await show(true);
+  expect(getByType(Button).props.icon).toBe("record-circle-outline");
 
-  screen.unmount();
-  show();
-  expect(screen.UNSAFE_getByType(Button).props.icon).toBe("login");
+  await screen.unmount();
+  await show();
+  expect(getByType(Button).props.icon).toBe("login");
 });
 
-it("keeps the card a fixed height inside the screen's margins", () => {
-  show();
+it("keeps the card a fixed height inside the screen's margins", async () => {
+  await show();
 
   expect(screen.getByTestId("get-started-card")).toHaveStyle({
     height: 240,
@@ -123,20 +124,20 @@ it("keeps the card a fixed height inside the screen's margins", () => {
 });
 
 // A portrait photo in a landscape card: cover takes a horizontal slice from the middle.
-it("fills the card with the photograph", () => {
-  show();
+it("fills the card with the photograph", async () => {
+  await show();
 
-  const image = screen.UNSAFE_getByType(Image);
+  const image = getByType(Image);
   expect(image.props.contentFit).toBe("cover");
   expect(image.props.contentPosition).toBe("center");
   expect(StyleSheet.flatten(image.props.style)).toMatchObject({ position: "absolute", top: 0, bottom: 0 });
 });
 
 // The words sit on a photograph; the gradient runs clear at the top to near-solid under the text.
-it("darkens the photograph from the bottom up", () => {
-  show();
+it("darkens the photograph from the bottom up", async () => {
+  await show();
 
-  const gradient = screen.UNSAFE_getByType(LinearGradient);
+  const gradient = getByType(LinearGradient);
   expect(gradient.props.colors).toEqual([
     "rgba(0,0,0,0)",
     "rgba(0,0,0,0.05)",
@@ -148,8 +149,8 @@ it("darkens the photograph from the bottom up", () => {
   expect(StyleSheet.flatten(gradient.props.style)).toMatchObject({ position: "absolute", top: 0, bottom: 0 });
 });
 
-it("draws the route across the top of the card, out of the way of a tap", () => {
-  show();
+it("draws the route across the top of the card, out of the way of a tap", async () => {
+  await show();
 
   expect(screen.getByTestId("get-started-route")).toHaveStyle({
     position: "absolute",
@@ -161,20 +162,20 @@ it("draws the route across the top of the card, out of the way of a tap", () => 
   expect(screen.getByTestId("get-started-route").props.pointerEvents).toBe("none");
 });
 
-it("gives the route the full width of the card to wander across", () => {
-  show();
+it("gives the route the full width of the card to wander across", async () => {
+  await show();
 
-  const svg = screen.UNSAFE_getByType(Svg);
+  const svg = getByType(Svg);
   expect(svg.props.width).toBe(CARD_WIDTH);
   expect(svg.props.height).toBe(ROUTE_BAND_HEIGHT);
 });
 
 // The route is generated, not a real walk: the shape the util hands out for this card's width.
-it("draws the generated route rather than a map", () => {
-  show();
+it("draws the generated route rather than a map", async () => {
+  await show();
 
   const route = buildDecorativeRoute(CARD_WIDTH, ROUTE_BAND_HEIGHT);
-  for (const path of screen.UNSAFE_getAllByType(Path)) {
+  for (const path of getAllByType(Path)) {
     expect(path.props.d).toBe(route.d);
     expect(path.props.strokeDasharray).toBe(route.length);
     expect(path.props.fill).toBe("none");
@@ -183,10 +184,10 @@ it("draws the generated route rather than a map", () => {
 });
 
 // A white line alone disappears against sky, so it is drawn twice: a dark halo under a thinner white line.
-it("gives the white line a dark halo so it reads over any photograph", () => {
-  show();
+it("gives the white line a dark halo so it reads over any photograph", async () => {
+  await show();
 
-  const [halo, line] = screen.UNSAFE_getAllByType(Path);
+  const [halo, line] = getAllByType(Path);
   expect(halo.props.stroke).toBe("rgba(0,0,0,0.35)");
   expect(halo.props.strokeWidth).toBe(7);
   expect(line.props.stroke).toBe("#ffffff");
@@ -194,11 +195,11 @@ it("gives the white line a dark halo so it reads over any photograph", () => {
   expect(line.props.strokeLinecap).toBe("round");
 });
 
-it("marks where the route starts", () => {
-  show();
+it("marks where the route starts", async () => {
+  await show();
 
   const route = buildDecorativeRoute(CARD_WIDTH, ROUTE_BAND_HEIGHT);
-  const marker = screen.UNSAFE_getByType(Circle);
+  const marker = getByType(Circle);
   expect(marker.props.cx).toBe(route.start[0]);
   expect(marker.props.cy).toBe(route.start[1]);
   expect(marker.props.r).toBe(5);
@@ -206,23 +207,23 @@ it("marks where the route starts", () => {
 });
 
 // The route is drawn with a dash as long as the whole path, offset by its full length, so it walks itself in.
-it("starts with the route undrawn, so it appears to be walked in", () => {
-  show();
+it("starts with the route undrawn, so it appears to be walked in", async () => {
+  await show();
 
   const route = buildDecorativeRoute(CARD_WIDTH, ROUTE_BAND_HEIGHT);
-  for (const path of screen.UNSAFE_getAllByType(Path)) {
-    expect(path.props.strokeDashoffset).toBe(route.length);
+  for (const path of getAllByType(Path)) {
+    expect(path.props.animatedProps.strokeDashoffset).toBe(route.length);
   }
 });
 
-it("sets the words in from the card's edges, one under the other", () => {
-  show();
+it("sets the words in from the card's edges, one under the other", async () => {
+  await show();
 
   expect(screen.getByTestId("get-started-content")).toHaveStyle({ padding: 14, gap: 5 });
 });
 
-it("sets the words in white over the darkened half of the photograph", () => {
-  show();
+it("sets the words in white over the darkened half of the photograph", async () => {
+  await show();
 
   expect(screen.getByText(SIGNED_OUT_TITLE)).toHaveStyle({
     color: "#ffffff",
@@ -235,10 +236,10 @@ it("sets the words in white over the darkened half of the photograph", () => {
   ).toHaveStyle({ color: "#ffffff", fontSize: 13, lineHeight: 18, ...OVERLAY_TEXT_SHADOW });
 });
 
-it("keeps the button at its own width under the text", () => {
-  show();
+it("keeps the button at its own width under the text", async () => {
+  await show();
 
-  expect(StyleSheet.flatten(screen.UNSAFE_getByType(Button).props.style)).toMatchObject({
+  expect(StyleSheet.flatten(getByType(Button).props.style)).toMatchObject({
     alignSelf: "flex-start",
     marginTop: 8,
   });

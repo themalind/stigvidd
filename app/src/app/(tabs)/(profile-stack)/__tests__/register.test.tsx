@@ -27,20 +27,20 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-function fillForm({
+async function fillForm({
   nickName = "stigvandraren",
   email = "vandrare@example.com",
   password = "hemligt123",
   confirmPassword = "hemligt123",
 } = {}) {
-  fireEvent.changeText(screen.getByTestId("register-nickname"), nickName);
-  fireEvent.changeText(screen.getByTestId("register-email"), email);
-  fireEvent.changeText(screen.getByTestId("register-password"), password);
-  fireEvent.changeText(screen.getByTestId("register-confirm-password"), confirmPassword);
+  await fireEvent.changeText(screen.getByTestId("register-nickname"), nickName);
+  await fireEvent.changeText(screen.getByTestId("register-email"), email);
+  await fireEvent.changeText(screen.getByTestId("register-password"), password);
+  await fireEvent.changeText(screen.getByTestId("register-confirm-password"), confirmPassword);
 }
 
-function submit() {
-  fireEvent.press(screen.getByTestId("register-submit"));
+async function submit() {
+  await fireEvent.press(screen.getByTestId("register-submit"));
 }
 
 // Each assertion names the container: a message rendered under the wrong field is still on screen.
@@ -54,9 +54,9 @@ function noErrorUnder(field: "nickname" | "email" | "password" | "confirm-passwo
 
 describe("validation errors", () => {
   it("shows one badge per empty field and does not call register", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    submit();
+    await submit();
 
     expect(await errorUnder("nickname")).toHaveTextContent("Ange ett användarnamn");
     expect(screen.getByTestId("register-email-error")).toHaveTextContent("Du måste ange en e-post");
@@ -65,10 +65,10 @@ describe("validation errors", () => {
   });
 
   it("rejects an address that is not an email", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm({ email: "vandrare@" });
-    submit();
+    await fillForm({ email: "vandrare@" });
+    await submit();
 
     expect(await errorUnder("email")).toHaveTextContent("Ange en giltig e-post");
     noErrorUnder("nickname");
@@ -76,30 +76,30 @@ describe("validation errors", () => {
   });
 
   it("rejects a one-character nickname", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm({ nickName: "B" });
-    submit();
+    await fillForm({ nickName: "B" });
+    await submit();
 
     expect(await errorUnder("nickname")).toHaveTextContent("Namn för kort. Minst 2 tecken");
     expect(mockRegister).not.toHaveBeenCalled();
   });
 
   it("rejects a nickname with spaces or punctuation", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm({ nickName: "stig vandraren!" });
-    submit();
+    await fillForm({ nickName: "stig vandraren!" });
+    await submit();
 
     expect(await errorUnder("nickname")).toHaveTextContent("Endast a–ö, 0–9, _ och - är tillåtna");
     noErrorUnder("email");
   });
 
   it("accepts å, ä and ö in a nickname", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm({ nickName: "Skogsälvan_Åsa-Ö" });
-    submit();
+    await fillForm({ nickName: "Skogsälvan_Åsa-Ö" });
+    await submit();
 
     await waitFor(() =>
       expect(mockRegister).toHaveBeenCalledWith(expect.objectContaining({ nickName: "Skogsälvan_Åsa-Ö" })),
@@ -108,10 +108,10 @@ describe("validation errors", () => {
   });
 
   it("accepts a nickname and address the keyboard left a space after, and sends them without it", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm({ nickName: "Skogsälvan ", email: " vandrare@example.com " });
-    submit();
+    await fillForm({ nickName: "Skogsälvan ", email: " vandrare@example.com " });
+    await submit();
 
     await waitFor(() =>
       expect(mockRegister).toHaveBeenCalledWith(
@@ -121,8 +121,8 @@ describe("validation errors", () => {
     noErrorUnder("nickname");
   });
 
-  it("keeps the keyboard from suggesting words, and the space it adds after one, in the nickname and address", () => {
-    renderWithProviders(<RegisterScreen />);
+  it("keeps the keyboard from suggesting words, and the space it adds after one, in the nickname and address", async () => {
+    await renderWithProviders(<RegisterScreen />);
 
     for (const field of ["register-nickname", "register-email"]) {
       expect(screen.getByTestId(field)).toHaveProp("autoCorrect", false);
@@ -131,20 +131,20 @@ describe("validation errors", () => {
   });
 
   it("reports the mismatch on the repeat field, not the password field", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm({ password: "hemligt123", confirmPassword: "hemligt124" });
-    submit();
+    await fillForm({ password: "hemligt123", confirmPassword: "hemligt124" });
+    await submit();
 
     expect(await errorUnder("confirm-password")).toHaveTextContent("Lösenorden matchar inte");
     noErrorUnder("password");
   });
 
   it("submits the typed values once every field is valid", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm();
-    submit();
+    await fillForm();
+    await submit();
 
     await waitFor(() =>
       expect(mockRegister).toHaveBeenCalledWith({
@@ -161,10 +161,10 @@ describe("validation errors", () => {
 describe("conflicts reported by the backend", () => {
   it("puts a taken nickname on the nickname field", async () => {
     mockRegister.mockRejectedValueOnce(new ApiError("nickname-taken", 409));
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm();
-    submit();
+    await fillForm();
+    await submit();
 
     expect(await errorUnder("nickname")).toHaveTextContent("Smeknamnet upptaget!");
     noErrorUnder("email");
@@ -173,10 +173,10 @@ describe("conflicts reported by the backend", () => {
 
   it("puts a taken email on the email field", async () => {
     mockRegister.mockRejectedValueOnce(new ApiError("email-taken", 409));
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm();
-    submit();
+    await fillForm();
+    await submit();
 
     expect(await errorUnder("email")).toHaveTextContent("E-postadressen är redan registrerad!");
     noErrorUnder("nickname");
@@ -185,10 +185,10 @@ describe("conflicts reported by the backend", () => {
   // The account is created disabled, so there is no session to land in — the user goes to the
   // verification step, carrying the address they just typed.
   it("sends the user to the verification screen with the address they registered", async () => {
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm({ email: "vandrare@example.com" });
-    submit();
+    await fillForm({ email: "vandrare@example.com" });
+    await submit();
 
     await waitFor(() =>
       expect(mockReplace).toHaveBeenCalledWith({
@@ -201,10 +201,10 @@ describe("conflicts reported by the backend", () => {
 
   it("falls back to the generic message for an error it cannot place", async () => {
     mockRegister.mockRejectedValueOnce(new Error("socket hang up"));
-    renderWithProviders(<RegisterScreen />);
+    await renderWithProviders(<RegisterScreen />);
 
-    fillForm();
-    submit();
+    await fillForm();
+    await submit();
 
     expect(await screen.findByText("Ett oväntat fel inträffade")).toBeTruthy();
     noErrorUnder("nickname");

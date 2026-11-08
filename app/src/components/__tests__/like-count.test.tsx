@@ -10,14 +10,14 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
 import { screen } from "@testing-library/react-native";
 
-it("shows the count in the primary colour", () => {
-  renderWithProviders(<LikeCount count={7} />);
+it("shows the count in the primary colour", async () => {
+  await renderWithProviders(<LikeCount count={7} />);
 
   expect(screen.getByText("7")).toHaveStyle({ color: AppDefaultTheme.colors.primary, fontSize: 14 });
 });
 
-it("shrinks the text in the small size", () => {
-  renderWithProviders(<LikeCount count={0} size="small" />);
+it("shrinks the text in the small size", async () => {
+  await renderWithProviders(<LikeCount count={0} size="small" />);
 
   expect(screen.getByText("0")).toHaveStyle({ fontSize: 12 });
 });

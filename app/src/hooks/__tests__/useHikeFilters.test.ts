@@ -95,15 +95,15 @@ const sharedNames = (hikes: TestSharedHike[]) => hikes.map((h) => h.hikeName);
 
 describe("useHikeFilters", () => {
   describe("defaults", () => {
-    it("sorts by name ascending, matching the order the backend delivers", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("sorts by name ascending, matching the order the backend delivers", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
       expect(result.current.sortBy).toBe("name-asc");
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Bokskogsrundan", "Kvällsrundan", "Ängspromenaden"]);
     });
 
-    it("returns an empty list rather than throwing when hikes are undefined", () => {
-      const { result } = renderHook(() => useHikeFilters(undefined, hikeAccessors));
+    it("returns an empty list rather than throwing when hikes are undefined", async () => {
+      const { result } = await renderHook(() => useHikeFilters(undefined, hikeAccessors));
 
       expect(result.current.filteredHikes).toEqual([]);
       expect(result.current.sharedByNames).toEqual([]);
@@ -111,19 +111,19 @@ describe("useHikeFilters", () => {
       expect(result.current.filteredCount).toBe(0);
     });
 
-    it("reports counts before and after filtering", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("reports counts before and after filtering", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSearchQuery("rundan"));
+      await act(() => result.current.setSearchQuery("rundan"));
 
       expect(result.current.totalCount).toBe(3);
       expect(result.current.filteredCount).toBe(2);
     });
 
-    it("returns the original objects, not copies", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("returns the original objects, not copies", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSearchQuery("bokskog"));
+      await act(() => result.current.setSearchQuery("bokskog"));
 
       // The screens pass the result straight back into HikeDetails, so identity matters.
       expect(result.current.filteredHikes[0]).toBe(HIKES[1]);
@@ -131,125 +131,125 @@ describe("useHikeFilters", () => {
   });
 
   describe("sharedByNames", () => {
-    it("lists unique sharer names in Swedish order", () => {
-      const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
+    it("lists unique sharer names in Swedish order", async () => {
+      const { result } = await renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
       expect(result.current.sharedByNames).toEqual(["Anna", "Bosse"]);
     });
 
-    it("leaves out a sharer who deleted their account, and searching still works", () => {
+    it("leaves out a sharer who deleted their account, and searching still works", async () => {
       const withDeleted = [
         ...SHARED,
         { ...SHARED[0], hikeIdentifier: "d", hikeName: "Mossleden", sharedByName: null },
         { ...SHARED[0], hikeIdentifier: "e", hikeName: "Kärrleden", sharedByName: null },
       ];
-      const { result } = renderHook(() => useHikeFilters(withDeleted, sharedAccessors));
+      const { result } = await renderHook(() => useHikeFilters(withDeleted, sharedAccessors));
 
       expect(result.current.sharedByNames).toEqual(["Anna", "Bosse"]);
 
-      act(() => result.current.setSearchQuery("anna"));
+      await act(() => result.current.setSearchQuery("anna"));
 
       expect(sharedNames(result.current.filteredHikes)).toEqual(["Sjöstigen", "Åspromenaden"]);
     });
 
-    it("is empty when the accessor is absent", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("is empty when the accessor is absent", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
       expect(result.current.sharedByNames).toEqual([]);
     });
   });
 
   describe("search", () => {
-    it("matches on name, case-insensitively", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("matches on name, case-insensitively", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSearchQuery("KVÄLLS"));
+      await act(() => result.current.setSearchQuery("KVÄLLS"));
 
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Kvällsrundan"]);
     });
 
-    it("matches on the sharer's name when that accessor exists", () => {
-      const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
+    it("matches on the sharer's name when that accessor exists", async () => {
+      const { result } = await renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
-      act(() => result.current.setSearchQuery("anna"));
+      await act(() => result.current.setSearchQuery("anna"));
 
       expect(sharedNames(result.current.filteredHikes)).toEqual(["Sjöstigen", "Åspromenaden"]);
     });
 
-    it("ignores surrounding whitespace", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("ignores surrounding whitespace", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSearchQuery("   bokskog   "));
+      await act(() => result.current.setSearchQuery("   bokskog   "));
 
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Bokskogsrundan"]);
     });
 
-    it("treats a whitespace-only query as no query at all", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("treats a whitespace-only query as no query at all", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSearchQuery("   "));
+      await act(() => result.current.setSearchQuery("   "));
 
       expect(result.current.filteredHikes).toHaveLength(3);
     });
 
-    it("returns nothing when the query matches no hike", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("returns nothing when the query matches no hike", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSearchQuery("finns inte"));
+      await act(() => result.current.setSearchQuery("finns inte"));
 
       expect(result.current.filteredHikes).toEqual([]);
     });
   });
 
   describe("shared-by filter", () => {
-    it("keeps only hikes shared by the chosen person", () => {
-      const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
+    it("keeps only hikes shared by the chosen person", async () => {
+      const { result } = await renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
-      act(() => result.current.updateFilter("sharedBy", "Anna"));
+      await act(() => result.current.updateFilter("sharedBy", "Anna"));
 
       expect(sharedNames(result.current.filteredHikes)).toEqual(["Sjöstigen", "Åspromenaden"]);
     });
 
-    it("is a no-op on a list without a sharer accessor", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("is a no-op on a list without a sharer accessor", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.updateFilter("sharedBy", "Anna"));
+      await act(() => result.current.updateFilter("sharedBy", "Anna"));
 
       expect(result.current.filteredHikes).toHaveLength(3);
     });
   });
 
   describe("range filters", () => {
-    it("applies a length range inclusively at both ends", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("applies a length range inclusively at both ends", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.updateRangeFilter("length", 3.2, 7.5));
+      await act(() => result.current.updateRangeFilter("length", 3.2, 7.5));
 
       // Both boundary values survive; the 12 km hike does not.
       expect(result.current.filteredHikes.map((h) => h.hikeLength).sort((a, b) => a - b)).toEqual([3.2, 7.5]);
     });
 
-    it("applies a duration range given in minutes against a value stored in milliseconds", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("applies a duration range given in minutes against a value stored in milliseconds", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.updateRangeFilter("duration", 45, 90));
+      await act(() => result.current.updateRangeFilter("duration", 45, 90));
 
       expect(result.current.filteredHikes.map((h) => h.duration / MINUTE).sort((a, b) => a - b)).toEqual([45, 90]);
     });
 
-    it("excludes durations just outside the range", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("excludes durations just outside the range", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.updateRangeFilter("duration", 46, 89));
+      await act(() => result.current.updateRangeFilter("duration", 46, 89));
 
       expect(result.current.filteredHikes).toEqual([]);
     });
 
-    it("keeps the two ranges independent of each other", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("keeps the two ranges independent of each other", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.updateRangeFilter("length", 0, 50));
-      act(() => result.current.updateRangeFilter("duration", 0, 60));
+      await act(() => result.current.updateRangeFilter("length", 0, 50));
+      await act(() => result.current.updateRangeFilter("duration", 0, 60));
 
       expect(result.current.filters).toEqual({
         minLength: 0,
@@ -260,26 +260,26 @@ describe("useHikeFilters", () => {
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Kvällsrundan"]);
     });
 
-    it("combines a range with the shared-by filter", () => {
-      const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
+    it("combines a range with the shared-by filter", async () => {
+      const { result } = await renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
-      act(() => result.current.updateFilter("sharedBy", "Anna"));
-      act(() => result.current.updateRangeFilter("length", 4, 10));
+      await act(() => result.current.updateFilter("sharedBy", "Anna"));
+      await act(() => result.current.updateRangeFilter("length", 4, 10));
 
       expect(sharedNames(result.current.filteredHikes)).toEqual(["Sjöstigen"]);
     });
   });
 
   describe("clearFilters", () => {
-    it("resets filters, search and sort order to the defaults", () => {
-      const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
+    it("resets filters, search and sort order to the defaults", async () => {
+      const { result } = await renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
-      act(() => result.current.updateFilter("sharedBy", "Anna"));
-      act(() => result.current.updateRangeFilter("duration", 0, 45));
-      act(() => result.current.setSearchQuery("sjö"));
-      act(() => result.current.setSortBy("duration-desc"));
+      await act(() => result.current.updateFilter("sharedBy", "Anna"));
+      await act(() => result.current.updateRangeFilter("duration", 0, 45));
+      await act(() => result.current.setSearchQuery("sjö"));
+      await act(() => result.current.setSortBy("duration-desc"));
 
-      act(() => result.current.clearFilters());
+      await act(() => result.current.clearFilters());
 
       expect(result.current.filters).toEqual({});
       expect(result.current.searchQuery).toBe("");
@@ -289,64 +289,64 @@ describe("useHikeFilters", () => {
   });
 
   describe("sorting", () => {
-    it("sorts by name descending", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("sorts by name descending", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSortBy("name-desc"));
+      await act(() => result.current.setSortBy("name-desc"));
 
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Ängspromenaden", "Kvällsrundan", "Bokskogsrundan"]);
     });
 
-    it("orders å, ä and ö last, as Swedish collation requires", () => {
-      const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
+    it("orders å, ä and ö last, as Swedish collation requires", async () => {
+      const { result } = await renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
       // Bergsleden, Sjöstigen, then Åspromenaden — Å sorts after Z in Swedish.
       expect(sharedNames(result.current.filteredHikes)).toEqual(["Bergsleden", "Sjöstigen", "Åspromenaden"]);
     });
 
-    it("sorts by date in both directions", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("sorts by date in both directions", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSortBy("date-desc"));
+      await act(() => result.current.setSortBy("date-desc"));
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Ängspromenaden", "Kvällsrundan", "Bokskogsrundan"]);
 
-      act(() => result.current.setSortBy("date-asc"));
+      await act(() => result.current.setSortBy("date-asc"));
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Bokskogsrundan", "Kvällsrundan", "Ängspromenaden"]);
     });
 
-    it("sorts shared hikes by the date they were shared", () => {
-      const { result } = renderHook(() => useHikeFilters(SHARED, sharedAccessors));
+    it("sorts shared hikes by the date they were shared", async () => {
+      const { result } = await renderHook(() => useHikeFilters(SHARED, sharedAccessors));
 
-      act(() => result.current.setSortBy("date-desc"));
+      await act(() => result.current.setSortBy("date-desc"));
 
       expect(sharedNames(result.current.filteredHikes)).toEqual(["Åspromenaden", "Bergsleden", "Sjöstigen"]);
     });
 
-    it("sorts by length in both directions", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("sorts by length in both directions", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSortBy("length-asc"));
+      await act(() => result.current.setSortBy("length-asc"));
       expect(result.current.filteredHikes.map((h) => h.hikeLength)).toEqual([3.2, 7.5, 12]);
 
-      act(() => result.current.setSortBy("length-desc"));
+      await act(() => result.current.setSortBy("length-desc"));
       expect(result.current.filteredHikes.map((h) => h.hikeLength)).toEqual([12, 7.5, 3.2]);
     });
 
-    it("sorts by duration in both directions", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("sorts by duration in both directions", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.setSortBy("duration-asc"));
+      await act(() => result.current.setSortBy("duration-asc"));
       expect(result.current.filteredHikes.map((h) => h.duration / MINUTE)).toEqual([45, 90, 180]);
 
-      act(() => result.current.setSortBy("duration-desc"));
+      await act(() => result.current.setSortBy("duration-desc"));
       expect(result.current.filteredHikes.map((h) => h.duration / MINUTE)).toEqual([180, 90, 45]);
     });
 
-    it("sorts what is left after filtering, not the whole list", () => {
-      const { result } = renderHook(() => useHikeFilters(HIKES, hikeAccessors));
+    it("sorts what is left after filtering, not the whole list", async () => {
+      const { result } = await renderHook(() => useHikeFilters(HIKES, hikeAccessors));
 
-      act(() => result.current.updateRangeFilter("length", 0, 8));
-      act(() => result.current.setSortBy("length-desc"));
+      await act(() => result.current.updateRangeFilter("length", 0, 8));
+      await act(() => result.current.setSortBy("length-desc"));
 
       expect(hikeNames(result.current.filteredHikes)).toEqual(["Ängspromenaden", "Kvällsrundan"]);
     });

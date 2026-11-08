@@ -100,7 +100,7 @@ async function mount(seed?: StoredHikeState) {
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   // The mount effect recovers, then reads storage into React state.
   await settle();
   await settle();
@@ -614,7 +614,7 @@ describe("staying in step with the background task", () => {
         hike: { segments: [], totalDistance: 250, totalTime: 0 },
       }),
     );
-    act(() => emitAppState("active"));
+    await act(() => emitAppState("active"));
     await flushUntil(() => harness.hook().hike.totalDistance === 250);
 
     expect(harness.hook().currentSegment).toMatchObject({ distance: 250 });
@@ -624,7 +624,7 @@ describe("staying in step with the background task", () => {
     const harness = await mount(state({ isTracking: true, currentSegment: segment({ distance: 5 }) }));
 
     await writeHikeState(state({ isTracking: true, currentSegment: segment({ distance: 250 }) }));
-    act(() => emitAppState("background"));
+    await act(() => emitAppState("background"));
     await settle();
 
     expect(harness.hook().currentSegment).toMatchObject({ distance: 5 });

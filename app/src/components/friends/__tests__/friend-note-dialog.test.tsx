@@ -12,48 +12,50 @@ import FriendNoteDialog from "../friend-note-dialog";
 const onSave = jest.fn();
 const onDismiss = jest.fn();
 
-function show(note: string | null) {
-  renderWithProviders(<FriendNoteDialog visible nickName="anna" note={note} onDismiss={onDismiss} onSave={onSave} />);
+async function show(note: string | null) {
+  await renderWithProviders(
+    <FriendNoteDialog visible nickName="anna" note={note} onDismiss={onDismiss} onSave={onSave} />,
+  );
 }
 
 beforeEach(() => jest.clearAllMocks());
 
-it("saves the trimmed text and closes", () => {
-  show(null);
+it("saves the trimmed text and closes", async () => {
+  await show(null);
 
-  fireEvent.changeText(screen.getByTestId("note-input"), "  Från jobbet  ");
-  fireEvent.press(screen.getByTestId("note-save"));
+  await fireEvent.changeText(screen.getByTestId("note-input"), "  Från jobbet  ");
+  await fireEvent.press(screen.getByTestId("note-save"));
 
   expect(onSave).toHaveBeenCalledWith("Från jobbet");
   expect(onDismiss).toHaveBeenCalled();
 });
 
-it("cannot save an unchanged note", () => {
-  show("Från jobbet");
+it("cannot save an unchanged note", async () => {
+  await show("Från jobbet");
 
-  fireEvent.press(screen.getByTestId("note-save"));
+  await fireEvent.press(screen.getByTestId("note-save"));
 
   expect(onSave).not.toHaveBeenCalled();
 });
 
-it("saves a cleared note as a removal", () => {
-  show("Från jobbet");
+it("saves a cleared note as a removal", async () => {
+  await show("Från jobbet");
 
-  fireEvent.changeText(screen.getByTestId("note-input"), "   ");
-  fireEvent.press(screen.getByTestId("note-save"));
+  await fireEvent.changeText(screen.getByTestId("note-input"), "   ");
+  await fireEvent.press(screen.getByTestId("note-save"));
 
   expect(onSave).toHaveBeenCalledWith(null);
 });
 
-it("offers removal only when there is a note", () => {
-  show(null);
+it("offers removal only when there is a note", async () => {
+  await show(null);
 
   expect(screen.queryByTestId("note-remove")).toBeNull();
   expect(screen.getByText("Bara du ser anteckningen.")).toBeTruthy();
 });
 
-it("caps the note at the backend's limit", () => {
-  show(null);
+it("caps the note at the backend's limit", async () => {
+  await show(null);
 
   expect(screen.getByTestId("note-input").props.maxLength).toBe(60);
 });

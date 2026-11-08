@@ -17,15 +17,17 @@ function trail(overrides: Partial<Trail> = {}): Trail {
 const VISITOR_INFO = { parking: "Finns på höga" } as Trail["visitorInformation"];
 const LINKS: TrailLink[] = [{ identifier: "l1", link: "https://example.se", title: "Kommunen" }];
 
-it("separates a single section from the guide row", () => {
-  renderWithProviders(<TrailMiscInfo trail={trail({ visitorInformation: VISITOR_INFO })} onOpenGuide={jest.fn()} />);
+it("separates a single section from the guide row", async () => {
+  await renderWithProviders(
+    <TrailMiscInfo trail={trail({ visitorInformation: VISITOR_INFO })} onOpenGuide={jest.fn()} />,
+  );
 
   expect(screen.getByText("Praktisk information")).toBeTruthy();
   expect(screen.queryAllByTestId("trail-misc-divider")).toHaveLength(1);
 });
 
-it("draws a divider between sections and before the guide row", () => {
-  renderWithProviders(
+it("draws a divider between sections and before the guide row", async () => {
+  await renderWithProviders(
     <TrailMiscInfo
       trail={trail({ visitorInformation: VISITOR_INFO, fullDescription: "Lång text.", trailLinksResponse: LINKS })}
       onOpenGuide={jest.fn()}
@@ -35,8 +37,8 @@ it("draws a divider between sections and before the guide row", () => {
   expect(screen.queryAllByTestId("trail-misc-divider")).toHaveLength(3);
 });
 
-it("draws no extra divider when an earlier section is missing", () => {
-  renderWithProviders(
+it("draws no extra divider when an earlier section is missing", async () => {
+  await renderWithProviders(
     <TrailMiscInfo
       trail={trail({ fullDescription: "Lång text.", trailLinksResponse: LINKS })}
       onOpenGuide={jest.fn()}
@@ -46,8 +48,8 @@ it("draws no extra divider when an earlier section is missing", () => {
   expect(screen.queryAllByTestId("trail-misc-divider")).toHaveLength(2);
 });
 
-it("still offers the guide, without a divider, when the trail has none of the sections", () => {
-  renderWithProviders(
+it("still offers the guide, without a divider, when the trail has none of the sections", async () => {
+  await renderWithProviders(
     <TrailMiscInfo trail={trail({ visitorInformation: {} as Trail["visitorInformation"] })} onOpenGuide={jest.fn()} />,
   );
 
@@ -56,13 +58,13 @@ it("still offers the guide, without a divider, when the trail has none of the se
   expect(screen.queryAllByTestId("trail-misc-divider")).toHaveLength(0);
 });
 
-it("opens the guide when its row is pressed", () => {
+it("opens the guide when its row is pressed", async () => {
   const onOpenGuide = jest.fn();
-  renderWithProviders(<TrailMiscInfo trail={trail()} onOpenGuide={onOpenGuide} />);
+  await renderWithProviders(<TrailMiscInfo trail={trail()} onOpenGuide={onOpenGuide} />);
 
   expect(screen.getByText("Naturguide")).toBeTruthy();
   expect(screen.getByText("Allemansrätten och naturreservat")).toBeTruthy();
-  fireEvent.press(screen.getByTestId("trail-misc-guide"));
+  await fireEvent.press(screen.getByTestId("trail-misc-guide"));
 
   expect(onOpenGuide).toHaveBeenCalledTimes(1);
 });

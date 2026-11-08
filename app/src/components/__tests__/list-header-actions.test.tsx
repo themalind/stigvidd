@@ -23,10 +23,10 @@ const SORT_FIELDS: SortField[] = [
   { key: "shared-date", labelKey: "filter.fieldShared", defaultDirection: "desc" },
 ];
 
-let measured: ReturnType<typeof stubMeasureInWindow>;
+let measured: Awaited<ReturnType<typeof stubMeasureInWindow>>;
 
-beforeAll(() => {
-  measured = stubMeasureInWindow();
+beforeAll(async () => {
+  measured = await stubMeasureInWindow();
 });
 
 afterAll(() => {
@@ -53,20 +53,20 @@ function show(props: Partial<React.ComponentProps<typeof ListHeaderAction>> = {}
   );
 }
 
-function openSearch() {
-  fireEvent.press(screen.getByTestId("icon-search"));
+async function openSearch() {
+  await fireEvent.press(screen.getByTestId("icon-search"));
 }
 
-function openSort() {
-  fireEvent.press(screen.getByTestId("icon-filter-list"));
+async function openSort() {
+  await fireEvent.press(screen.getByTestId("icon-filter-list"));
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it("keeps the header itself out of the way until an icon is pressed", () => {
-  show();
+it("keeps the header itself out of the way until an icon is pressed", async () => {
+  await show();
 
   expect(screen.getByText("Mina promenader")).toBeTruthy();
   expect(screen.queryByPlaceholderText("Sök promenad")).toBeNull();
@@ -74,35 +74,35 @@ it("keeps the header itself out of the way until an icon is pressed", () => {
 });
 
 // The two panels share one slot under the header, so opening either closes the other.
-it("never has both panels open at once", () => {
-  show();
+it("never has both panels open at once", async () => {
+  await show();
 
-  openSearch();
+  await openSearch();
   expect(screen.getByPlaceholderText("Sök promenad")).toBeTruthy();
 
-  openSort();
+  await openSort();
   expect(screen.queryByPlaceholderText("Sök promenad")).toBeNull();
   expect(screen.getByText("Fler filter…")).toBeTruthy();
 
-  openSearch();
+  await openSearch();
   expect(screen.getByPlaceholderText("Sök promenad")).toBeTruthy();
   expect(screen.queryByText("Fler filter…")).toBeNull();
 });
 
-it("reports what is typed and closes on the field's own clear", () => {
-  show({ searchQuery: "kväll" });
+it("reports what is typed and closes on the field's own clear", async () => {
+  await show({ searchQuery: "kväll" });
 
-  openSearch();
-  fireEvent.changeText(screen.getByPlaceholderText("Sök promenad"), "morgon");
+  await openSearch();
+  await fireEvent.changeText(screen.getByPlaceholderText("Sök promenad"), "morgon");
   expect(onSearchChange).toHaveBeenCalledWith("morgon");
 });
 
 // The field collapses on blur, so the icon carries the live query.
-it("tints the search icon while a query is active", () => {
-  const { rerender } = show();
+it("tints the search icon while a query is active", async () => {
+  const { rerender } = await show();
   expect(screen.getByTestId("icon-search").props.color).toBe(AppDefaultTheme.colors.onBackground);
 
-  rerender(
+  await rerender(
     <ListHeaderAction
       searchQuery="kväll"
       onSearchChange={onSearchChange}
@@ -123,60 +123,60 @@ it("tints the search icon while a query is active", () => {
 });
 
 // Tapping the field already sorted by reverses it, which is the only way to a descending name sort.
-it("flips the direction when the active field is picked again", () => {
-  show({ sortBy: "name-asc" });
+it("flips the direction when the active field is picked again", async () => {
+  await show({ sortBy: "name-asc" });
 
-  openSort();
-  fireEvent.press(screen.getByText("Namn"));
+  await openSort();
+  await fireEvent.press(screen.getByText("Namn"));
 
   expect(onSortChange).toHaveBeenCalledWith("name-desc");
 });
 
 // A date is most useful newest-first, so each field brings its own first direction.
-it("uses a field's own default direction the first time it is picked", () => {
-  show({ sortBy: "name-asc" });
+it("uses a field's own default direction the first time it is picked", async () => {
+  await show({ sortBy: "name-asc" });
 
-  openSort();
-  fireEvent.press(screen.getByText("Delningsdatum"));
+  await openSort();
+  await fireEvent.press(screen.getByText("Delningsdatum"));
 
   expect(onSortChange).toHaveBeenCalledWith("shared-date-desc");
 });
 
 // "shared-date-desc" splits on its last dash; the first would sort by a field called "shared".
-it("splits a field key that contains a dash at the right place", () => {
-  show({ sortBy: "shared-date-desc" });
+it("splits a field key that contains a dash at the right place", async () => {
+  await show({ sortBy: "shared-date-desc" });
 
-  openSort();
-  fireEvent.press(screen.getByText("Delningsdatum"));
+  await openSort();
+  await fireEvent.press(screen.getByText("Delningsdatum"));
 
   expect(onSortChange).toHaveBeenCalledWith("shared-date-asc");
 });
 
-it("marks the active field with the direction it is sorted in", () => {
-  const { unmount } = show({ sortBy: "name-asc" });
-  openSort();
+it("marks the active field with the direction it is sorted in", async () => {
+  const { unmount } = await show({ sortBy: "name-asc" });
+  await openSort();
   expect(screen.getByTestId("icon-arrow-upward")).toBeTruthy();
-  unmount();
+  await unmount();
 
-  show({ sortBy: "name-desc" });
-  openSort();
+  await show({ sortBy: "name-desc" });
+  await openSort();
   expect(screen.getByTestId("icon-arrow-downward")).toBeTruthy();
 });
 
 // The popover is portalled, so it carries its own full-screen catcher for presses outside it.
-it("closes the sort menu when the screen behind it is pressed", () => {
-  show();
+it("closes the sort menu when the screen behind it is pressed", async () => {
+  await show();
 
-  openSort();
-  fireEvent.press(screen.getByLabelText("Stäng"));
+  await openSort();
+  await fireEvent.press(screen.getByLabelText("Stäng"));
 
   expect(screen.queryByText("Fler filter…")).toBeNull();
 });
 
-it("positions the menu under its anchor, against the right edge", () => {
-  show();
+it("positions the menu under its anchor, against the right edge", async () => {
+  await show();
 
-  openSort();
+  await openSort();
 
   const { x, y, width, height } = measured.rect;
   expect(screen.getByTestId("sort-popover")).toHaveStyle({
@@ -185,32 +185,32 @@ it("positions the menu under its anchor, against the right edge", () => {
   });
 });
 
-it("hands the full filter sheet over from the menu", () => {
-  show();
+it("hands the full filter sheet over from the menu", async () => {
+  await show();
 
-  openSort();
-  fireEvent.press(screen.getByText("Fler filter…"));
+  await openSort();
+  await fireEvent.press(screen.getByText("Fler filter…"));
 
   expect(onOpenFilters).toHaveBeenCalledTimes(1);
   expect(screen.queryByText("Fler filter…")).toBeNull();
 });
 
 // The counter row appears only once something is filtering, so an untouched page keeps its height.
-it("shows the counter row only while a filter or a query is active", () => {
-  const { unmount } = show();
+it("shows the counter row only while a filter or a query is active", async () => {
+  const { unmount } = await show();
   expect(screen.queryByText("Visar 3 av 12")).toBeNull();
-  unmount();
+  await unmount();
 
-  show({ activeFilterCount: 2 });
+  await show({ activeFilterCount: 2 });
   expect(screen.getByText("Visar 3 av 12")).toBeTruthy();
   expect(screen.getByText("2")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Rensa filter"));
+  await fireEvent.press(screen.getByText("Rensa filter"));
   expect(onClearFilters).toHaveBeenCalledTimes(1);
 });
 
-it("counts a search query as active even with no filters set", () => {
-  show({ searchQuery: "kväll" });
+it("counts a search query as active even with no filters set", async () => {
+  await show({ searchQuery: "kväll" });
 
   expect(screen.getByText("Visar 3 av 12")).toBeTruthy();
 });

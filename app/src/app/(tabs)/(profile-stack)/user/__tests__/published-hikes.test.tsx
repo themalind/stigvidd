@@ -63,7 +63,7 @@ afterEach(() => {
 
 async function show(items: HikeSubmission[]) {
   mockGetSubmissions.mockResolvedValue(items);
-  const rendered = renderWithProviders(<PublishedHikesScreen />);
+  const rendered = await renderWithProviders(<PublishedHikesScreen />);
   await flushUntil(() => screen.queryByText("Mina publicerade promenader"));
   await settle();
   return rendered;
@@ -98,7 +98,7 @@ it("offers no withdraw on a published walk, which belongs to Stigvidd", async ()
 it("opens the published trail in the profile stack", async () => {
   await show([submission({ identifier: "a", status: "Approved", publishedTrailIdentifier: "t1" })]);
 
-  fireEvent.press(screen.getByTestId("submission-a"));
+  await fireEvent.press(screen.getByTestId("submission-a"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
@@ -109,10 +109,10 @@ it("opens the published trail in the profile stack", async () => {
 it("withdraws a pending submission after confirming", async () => {
   await show([submission({ identifier: "b" })]);
 
-  fireEvent.press(screen.getByLabelText("Dra tillbaka"));
+  await fireEvent.press(screen.getByLabelText("Dra tillbaka"));
   expect(mockWithdraw).not.toHaveBeenCalled();
 
-  fireEvent.press(screen.getByText("Dra tillbaka"));
+  await fireEvent.press(screen.getByText("Dra tillbaka"));
   await settle();
 
   expect(mockWithdraw).toHaveBeenCalledWith("b");

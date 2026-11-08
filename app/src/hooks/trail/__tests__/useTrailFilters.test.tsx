@@ -33,13 +33,13 @@ const SAVED = [
   trail({ identifier: "saved-four", ratingResponse: [{ rating: 5 }, { rating: 3 }] }),
 ];
 
-function renderFilters(trails: FilterableTrail[]) {
+async function renderFilters(trails: FilterableTrail[]) {
   let hook!: ReturnType<typeof useTrailFilters<FilterableTrail>>;
   function Probe() {
     hook = useTrailFilters(trails, null);
     return null;
   }
-  renderWithProviders(<Probe />);
+  await renderWithProviders(<Probe />);
   return {
     ids: () => hook.filteredTrails.map((t) => t.identifier),
     setFilter: (key: Parameters<typeof hook.updateFilter>[0], value: unknown) =>
@@ -67,85 +67,85 @@ describe("reading a trail's rating", () => {
 });
 
 describe("filtering on rating", () => {
-  it("keeps only the trails at or above the chosen step", () => {
-    const f = renderFilters(LISTED);
+  it("keeps only the trails at or above the chosen step", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setFilter("minRating", 4);
+    await f.setFilter("minRating", 4);
 
     expect(f.ids()).toEqual(["five", "four-two"]);
   });
 
-  it("counts a rating exactly on the step", () => {
-    const f = renderFilters(LISTED);
+  it("counts a rating exactly on the step", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setFilter("minRating", 3);
+    await f.setFilter("minRating", 3);
 
     expect(f.ids()).toContain("three");
   });
 
   // 0 is "no reviews", not a bad trail, but it cannot satisfy "at least three stars".
-  it("drops unreviewed trails from every step", () => {
-    const f = renderFilters(LISTED);
+  it("drops unreviewed trails from every step", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setFilter("minRating", 3);
+    await f.setFilter("minRating", 3);
 
     expect(f.ids()).not.toContain("unrated");
   });
 
-  it("filters a saved trail on its own ratings", () => {
-    const f = renderFilters(SAVED);
+  it("filters a saved trail on its own ratings", async () => {
+    const f = await renderFilters(SAVED);
 
-    f.setFilter("minRating", 4);
+    await f.setFilter("minRating", 4);
 
     expect(f.ids()).toEqual(["saved-four"]);
   });
 
-  it("puts every trail back when the step is cleared", () => {
-    const f = renderFilters(LISTED);
+  it("puts every trail back when the step is cleared", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setFilter("minRating", 4.5);
+    await f.setFilter("minRating", 4.5);
     expect(f.ids()).toEqual(["five"]);
 
-    f.setFilter("minRating", undefined);
+    await f.setFilter("minRating", undefined);
     expect(f.ids()).toHaveLength(LISTED.length);
   });
 });
 
 describe("sorting on rating", () => {
-  it("orders best first, and worst first the other way", () => {
-    const f = renderFilters(LISTED);
+  it("orders best first, and worst first the other way", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setSort("rating-desc");
+    await f.setSort("rating-desc");
     expect(f.ids()).toEqual(["five", "four-two", "three", "unrated"]);
 
-    f.setSort("rating-asc");
+    await f.setSort("rating-asc");
     expect(f.ids()).toEqual(["unrated", "three", "four-two", "five"]);
   });
 
   // A minimum rating carries its own order, as "near me" already does.
-  it("switches to best-first as soon as a minimum rating is chosen", () => {
-    const f = renderFilters(LISTED);
+  it("switches to best-first as soon as a minimum rating is chosen", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setFilter("minRating", 3);
+    await f.setFilter("minRating", 3);
 
     expect(f.sortBy()).toBe("rating-desc");
     expect(f.ids()).toEqual(["five", "four-two", "three"]);
   });
 
-  it("leaves the order alone when the rating filter is cleared", () => {
-    const f = renderFilters(LISTED);
+  it("leaves the order alone when the rating filter is cleared", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setSort("name-asc");
-    f.setFilter("minRating", undefined);
+    await f.setSort("name-asc");
+    await f.setFilter("minRating", undefined);
 
     expect(f.sortBy()).toBe("name-asc");
   });
 
-  it("returns to the default order when the filters are cleared", () => {
-    const f = renderFilters(LISTED);
+  it("returns to the default order when the filters are cleared", async () => {
+    const f = await renderFilters(LISTED);
 
-    f.setFilter("minRating", 4);
-    f.clear();
+    await f.setFilter("minRating", 4);
+    await f.clear();
 
     expect(f.sortBy()).toBe("name-asc");
     expect(f.ids()).toHaveLength(LISTED.length);

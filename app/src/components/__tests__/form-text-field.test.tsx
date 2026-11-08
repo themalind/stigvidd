@@ -15,25 +15,25 @@ function Field({ error }: { error?: FieldError }) {
   return <FormTextField name="note" testID="note" label="Anteckning" control={control} maxLength={10} error={error} />;
 }
 
-it("binds the form value and counts it against the limit", () => {
-  renderWithProviders(<Field />);
+it("binds the form value and counts it against the limit", async () => {
+  await renderWithProviders(<Field />);
 
   expect(screen.getByTestId("note")).toHaveProp("value", "hej");
   expect(screen.getByTestId("note-count")).toHaveTextContent("3/10");
 
-  fireEvent.changeText(screen.getByTestId("note"), "hej hopp");
+  await fireEvent.changeText(screen.getByTestId("note"), "hej hopp");
 
   expect(screen.getByTestId("note-count")).toHaveTextContent("8/10");
 });
 
-it("shows no error until one is passed in", () => {
-  renderWithProviders(<Field />);
+it("shows no error until one is passed in", async () => {
+  await renderWithProviders(<Field />);
 
   expect(screen.queryByTestId("note-error")).toBeNull();
 });
 
-it("translates the error message under the field", () => {
-  renderWithProviders(<Field error={{ type: "too_small", message: "hike.nameTooShort" }} />);
+it("translates the error message under the field", async () => {
+  await renderWithProviders(<Field error={{ type: "too_small", message: "hike.nameTooShort" }} />);
 
   expect(screen.getByTestId("note-error")).toHaveTextContent("Namnet är för kort. Minst 3 tecken");
 });

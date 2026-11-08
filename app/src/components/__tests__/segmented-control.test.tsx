@@ -15,13 +15,13 @@ const OPTIONS = [
   { value: "b", label: "Beta" },
 ] as const;
 
-function show(value: "a" | "b", onChange = jest.fn()) {
-  renderWithProviders(<SegmentedControl testID="seg" options={[...OPTIONS]} value={value} onChange={onChange} />);
+async function show(value: "a" | "b", onChange = jest.fn()) {
+  await renderWithProviders(<SegmentedControl testID="seg" options={[...OPTIONS]} value={value} onChange={onChange} />);
   return onChange;
 }
 
-it("marks only the chosen segment as selected", () => {
-  show("b");
+it("marks only the chosen segment as selected", async () => {
+  await show("b");
 
   expect(screen.getByTestId("seg-a").props.accessibilityState).toMatchObject({ selected: false });
   expect(screen.getByTestId("seg-b").props.accessibilityState).toMatchObject({ selected: true });
@@ -30,16 +30,16 @@ it("marks only the chosen segment as selected", () => {
   expect(screen.getByTestId("seg-a")).not.toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primaryContainer });
 });
 
-it("reports the pressed segment's value", () => {
-  const onChange = show("a");
+it("reports the pressed segment's value", async () => {
+  const onChange = await show("a");
 
-  fireEvent.press(screen.getByTestId("seg-b"));
+  await fireEvent.press(screen.getByTestId("seg-b"));
 
   expect(onChange).toHaveBeenCalledWith("b");
 });
 
-it("shows a segment's badge only when it counts something", () => {
-  renderWithProviders(
+it("shows a segment's badge only when it counts something", async () => {
+  await renderWithProviders(
     <SegmentedControl
       testID="seg"
       options={[
@@ -56,8 +56,8 @@ it("shows a segment's badge only when it counts something", () => {
   expect(screen.getByLabelText("3 nya")).toBeTruthy();
 });
 
-it("draws the badge large enough to read, orange with bold white digits", () => {
-  renderWithProviders(
+it("draws the badge large enough to read, orange with bold white digits", async () => {
+  await renderWithProviders(
     <SegmentedControl
       testID="seg"
       options={[
@@ -78,8 +78,8 @@ it("draws the badge large enough to read, orange with bold white digits", () => 
   });
 });
 
-it("centres the badge beside the label, not at the bottom where Paper puts it", () => {
-  renderWithProviders(
+it("centres the badge beside the label, not at the bottom where Paper puts it", async () => {
+  await renderWithProviders(
     <SegmentedControl
       testID="seg"
       options={[{ value: "a", label: "Alfa", badge: 5 }]}
@@ -91,8 +91,8 @@ it("centres the badge beside the label, not at the bottom where Paper puts it", 
   expect(screen.getByTestId("seg-a-badge")).toHaveStyle({ alignSelf: "center" });
 });
 
-it("keeps the same orange badge, without a ring, on the chosen segment", () => {
-  renderWithProviders(
+it("keeps the same orange badge, without a ring, on the chosen segment", async () => {
+  await renderWithProviders(
     <SegmentedControl
       testID="seg"
       options={[{ value: "a", label: "Alfa", badge: 8 }]}

@@ -6,6 +6,9 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { redirectSystemPath } from "@/app/+native-intent";
+import { router } from "expo-router";
+
+jest.mock("expo-router", () => ({ router: { navigate: jest.fn() } }));
 
 const TRAIL_ROUTE = "/trails/trail/abc-123";
 
@@ -45,5 +48,19 @@ describe("redirectSystemPath", () => {
     expect(redirect("https://link.stigvidd.se/other/trail/abc-123")).toBe(
       "https://link.stigvidd.se/other/trail/abc-123",
     );
+  });
+
+  it("opens a shared link itself in a running app, so the tab's list stays beneath", () => {
+    const result = redirectSystemPath({ path: "https://link.stigvidd.se/trail/abc-123", initial: false });
+
+    expect(result).toBeNull();
+    expect(router.navigate).toHaveBeenCalledWith(TRAIL_ROUTE, expect.objectContaining({ withAnchor: true }));
+  });
+
+  it("leaves other links in a running app to the router", () => {
+    (router.navigate as jest.Mock).mockClear();
+
+    expect(redirectSystemPath({ path: "stigvidd://hike/abc-123", initial: false })).toBe("stigvidd://hike/abc-123");
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });

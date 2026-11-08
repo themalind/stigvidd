@@ -28,64 +28,64 @@ afterEach(() => {
 });
 
 describe("ImageGallery — a thumbnail that failed on a weak connection", () => {
-  it("loads again once the large image gets through", () => {
-    show();
+  it("loads again once the large image gets through", async () => {
+    await show();
     const failed = screen.getByTestId("gallery-thumb-1");
-    fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
+    await fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
 
-    fireEvent(screen.getByTestId("gallery-page-0"), "load", { nativeEvent: {} });
+    await fireEvent(screen.getByTestId("gallery-page-0"), "load", { nativeEvent: {} });
 
     expect(screen.getByTestId("gallery-thumb-1")).not.toBe(failed);
   });
 
-  it("loads again once another thumbnail gets through", () => {
-    show();
+  it("loads again once another thumbnail gets through", async () => {
+    await show();
     const failed = screen.getByTestId("gallery-thumb-1");
-    fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
+    await fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
 
-    fireEvent(screen.getByTestId("gallery-thumb-2"), "load", { nativeEvent: {} });
+    await fireEvent(screen.getByTestId("gallery-thumb-2"), "load", { nativeEvent: {} });
 
     expect(screen.getByTestId("gallery-thumb-1")).not.toBe(failed);
   });
 
-  it("loads again when the user taps it", () => {
-    show();
+  it("loads again when the user taps it", async () => {
+    await show();
     const failed = screen.getByTestId("gallery-thumb-1");
-    fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
+    await fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
 
-    fireEvent.press(failed);
+    await fireEvent.press(failed);
 
     expect(screen.getByTestId("gallery-thumb-1")).not.toBe(failed);
   });
 
   it("loads again when the connection comes back", async () => {
     onlineManager.setOnline(false);
-    show();
+    await show();
     const failed = screen.getByTestId("gallery-thumb-1");
-    fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
+    await fireEvent(failed, "error", { nativeEvent: { error: "timeout" } });
 
     await act(async () => onlineManager.setOnline(true));
 
     expect(screen.getByTestId("gallery-thumb-1")).not.toBe(failed);
   });
 
-  it("leaves the thumbnails that did load alone", () => {
-    show();
+  it("leaves the thumbnails that did load alone", async () => {
+    await show();
     const loaded = screen.getByTestId("gallery-thumb-0");
-    fireEvent(screen.getByTestId("gallery-thumb-1"), "error", { nativeEvent: { error: "timeout" } });
+    await fireEvent(screen.getByTestId("gallery-thumb-1"), "error", { nativeEvent: { error: "timeout" } });
 
-    fireEvent(screen.getByTestId("gallery-page-0"), "load", { nativeEvent: {} });
+    await fireEvent(screen.getByTestId("gallery-page-0"), "load", { nativeEvent: {} });
 
     expect(screen.getByTestId("gallery-thumb-0")).toBe(loaded);
   });
 
-  it("does not retry a failure on its own failed attempt", () => {
-    show();
-    fireEvent(screen.getByTestId("gallery-thumb-1"), "error", { nativeEvent: { error: "timeout" } });
-    fireEvent(screen.getByTestId("gallery-page-0"), "load", { nativeEvent: {} });
+  it("does not retry a failure on its own failed attempt", async () => {
+    await show();
+    await fireEvent(screen.getByTestId("gallery-thumb-1"), "error", { nativeEvent: { error: "timeout" } });
+    await fireEvent(screen.getByTestId("gallery-page-0"), "load", { nativeEvent: {} });
     const retried = screen.getByTestId("gallery-thumb-1");
 
-    fireEvent(retried, "error", { nativeEvent: { error: "timeout" } });
+    await fireEvent(retried, "error", { nativeEvent: { error: "timeout" } });
 
     expect(screen.getByTestId("gallery-thumb-1")).toBe(retried);
   });
@@ -96,18 +96,18 @@ function selected(index: number) {
 }
 
 describe("ImageGallery — large image and thumbnails follow each other", () => {
-  it("starts on the first image", () => {
-    show();
+  it("starts on the first image", async () => {
+    await show();
 
     expect(selected(0)).toBe(true);
     expect(selected(1)).toBe(false);
   });
 
-  it("pages the large view to the tapped thumbnail", () => {
-    show();
+  it("pages the large view to the tapped thumbnail", async () => {
+    await show();
     const scrollToIndex = jest.spyOn(FlatList.prototype, "scrollToIndex").mockImplementation(() => {});
 
-    fireEvent.press(screen.getByTestId("gallery-thumb-2"));
+    await fireEvent.press(screen.getByTestId("gallery-thumb-2"));
 
     expect(scrollToIndex).toHaveBeenCalledWith({ index: 2, animated: true });
     expect(selected(2)).toBe(true);
@@ -115,11 +115,11 @@ describe("ImageGallery — large image and thumbnails follow each other", () => 
     scrollToIndex.mockRestore();
   });
 
-  it("marks the thumbnail of the image swiped to", () => {
-    show();
+  it("marks the thumbnail of the image swiped to", async () => {
+    await show();
     const { width } = Dimensions.get("window");
 
-    fireEvent(screen.getByTestId("gallery-pager"), "momentumScrollEnd", {
+    await fireEvent(screen.getByTestId("gallery-pager"), "momentumScrollEnd", {
       nativeEvent: { contentOffset: { x: width * 2 } },
     });
 
@@ -127,38 +127,38 @@ describe("ImageGallery — large image and thumbnails follow each other", () => 
     expect(selected(0)).toBe(false);
   });
 
-  it("shows every image as a page of its own", () => {
-    show();
+  it("shows every image as a page of its own", async () => {
+    await show();
 
     expect(JSON.stringify(screen.getByTestId("gallery-page-2").props.source)).toContain("c.jpg");
   });
 
-  it("opens the full-screen viewer on the image tapped", () => {
-    show();
-    fireEvent.press(screen.getByTestId("gallery-thumb-1"));
+  it("opens the full-screen viewer on the image tapped", async () => {
+    await show();
+    await fireEvent.press(screen.getByTestId("gallery-thumb-1"));
 
-    fireEvent.press(screen.getByTestId("gallery-page-button-1"));
+    await fireEvent.press(screen.getByTestId("gallery-page-button-1"));
 
     expect(screen.getByTestId("image-viewer-close")).toBeTruthy();
     expect(screen.getByTestId("review-image-list").props.initialScrollIndex).toBe(1);
   });
 
   it("lands on the image the viewer was closed on", async () => {
-    show();
-    fireEvent.press(screen.getByTestId("gallery-page-button-0"));
+    await show();
+    await fireEvent.press(screen.getByTestId("gallery-page-button-0"));
     const { width } = Dimensions.get("window");
-    fireEvent(screen.getByTestId("review-image-list"), "momentumScrollEnd", {
+    await fireEvent(screen.getByTestId("review-image-list"), "momentumScrollEnd", {
       nativeEvent: { contentOffset: { x: width * 2 } },
     });
 
-    fireEvent.press(screen.getByTestId("image-viewer-close"));
+    await fireEvent.press(screen.getByTestId("image-viewer-close"));
     await settle();
 
     expect(selected(2)).toBe(true);
   });
 
-  it("hides the thumbnail row for a single image", () => {
-    renderWithProviders(<ImageGallery images={[IMAGES[0]]} />);
+  it("hides the thumbnail row for a single image", async () => {
+    await renderWithProviders(<ImageGallery images={[IMAGES[0]]} />);
 
     expect(screen.getByTestId("gallery-page-0")).toBeTruthy();
     expect(screen.queryByTestId("gallery-thumb-0")).toBeNull();

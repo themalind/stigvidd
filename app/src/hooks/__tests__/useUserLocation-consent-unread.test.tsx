@@ -49,7 +49,7 @@ it("waits for the answer, then asks without waiting for anything else", async ()
     if (!rendered) throw new Error("expected the probe to have rendered");
     return rendered;
   }
-  renderWithProviders(<Probe />);
+  await renderWithProviders(<Probe />);
   await flushUntil(() => query().isSuccess || query().isError);
 
   expect(mockRequestPermissions).not.toHaveBeenCalled();

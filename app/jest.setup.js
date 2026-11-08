@@ -9,6 +9,21 @@ jest.mock("@react-native-community/netinfo", () => require("@react-native-commun
 // Worklets throws at import time without a native binary, and Reanimated imports it.
 jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
 
+// Reanimated 4.7's start-up asks its Jest stand-in for a CSS event handler it throws on, on import.
+jest.mock("react-native-reanimated/src/initializers", () => ({ initializeReanimatedModule: () => {} }));
+
+// Gesture Handler's own stand-ins for the native module its import calls into.
+require("react-native-gesture-handler/jestSetup");
+
+// Its animated components look up a native host instance on mount, which test-renderer does not have.
+jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
+
+// expo-notifications subscribes a default handler on import, and Jest's automock returns a subscription without remove.
+jest.mock("expo-notifications/build/NotificationsHandlerModule", () => ({
+  __esModule: true,
+  default: { addListener: () => ({ remove: () => {} }) },
+}));
+
 // MapLibre throws at import time without a native binary; see __mocks__/@maplibre/maplibre-react-native.js.
 jest.mock("@maplibre/maplibre-react-native");
 

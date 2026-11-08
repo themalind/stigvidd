@@ -23,36 +23,36 @@ const HIKE: Hike = {
   images: [],
 };
 
-it("lifts and shrinks the card above the iOS keyboard so the save button stays reachable", () => {
+it("lifts and shrinks the card above the iOS keyboard so the save button stays reachable", async () => {
   const keyboard = captureKeyboard();
-  renderWithProviders(<EditHikeModal hike={HIKE} onDismiss={jest.fn()} onSave={jest.fn()} />);
+  await renderWithProviders(<EditHikeModal hike={HIKE} onDismiss={jest.fn()} onSave={jest.fn()} />);
 
-  keyboard.show(300);
+  await keyboard.show(300);
 
   expect(screen.getByTestId("modal-wrapper")).toHaveStyle({ marginBottom: 310 });
   const { maxHeight } = StyleSheet.flatten(screen.getByTestId("edit-hike-card").props.style);
   expect(maxHeight).toBeLessThanOrEqual(Dimensions.get("window").height - 310 - 10);
 
-  keyboard.hide();
+  await keyboard.hide();
 
   expect(screen.getByTestId("modal-wrapper")).not.toHaveStyle({ marginBottom: 310 });
 });
 
-it("counts the characters in each field and turns the count red at the limit", () => {
-  renderWithProviders(<EditHikeModal hike={HIKE} onDismiss={jest.fn()} onSave={jest.fn()} />);
+it("counts the characters in each field and turns the count red at the limit", async () => {
+  await renderWithProviders(<EditHikeModal hike={HIKE} onDismiss={jest.fn()} onSave={jest.fn()} />);
 
   expect(screen.getByTestId("edit-name-count")).toHaveTextContent("9/40");
   expect(screen.getByTestId("edit-description-count")).toHaveTextContent("0/500");
 
-  fireEvent.changeText(screen.getByTestId("edit-gettingThere"), "a".repeat(200));
+  await fireEvent.changeText(screen.getByTestId("edit-gettingThere"), "a".repeat(200));
 
   expect(screen.getByTestId("edit-gettingThere-count")).toHaveTextContent("200/200");
   expect(screen.getByTestId("edit-gettingThere-count")).toHaveStyle({ color: AppDefaultTheme.colors.error });
   expect(screen.getByTestId("edit-parkingInfo-count")).not.toHaveStyle({ color: AppDefaultTheme.colors.error });
 });
 
-it("caps the card's height with no keyboard up, so the form scrolls instead of outgrowing the screen", () => {
-  renderWithProviders(<EditHikeModal hike={HIKE} onDismiss={jest.fn()} onSave={jest.fn()} />);
+it("caps the card's height with no keyboard up, so the form scrolls instead of outgrowing the screen", async () => {
+  await renderWithProviders(<EditHikeModal hike={HIKE} onDismiss={jest.fn()} onSave={jest.fn()} />);
 
   const { maxHeight } = StyleSheet.flatten(screen.getByTestId("edit-hike-card").props.style);
   expect(maxHeight).toBe(Dimensions.get("window").height * 0.85);

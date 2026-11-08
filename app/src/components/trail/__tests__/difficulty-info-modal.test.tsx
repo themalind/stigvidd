@@ -38,8 +38,8 @@ beforeEach(() => {
 
 describe("what the modal explains", () => {
   // Every level the import can assign, including the one it assigns when it cannot classify.
-  it("describes all four levels", () => {
-    show();
+  it("describes all four levels", async () => {
+    await show();
 
     expect(screen.getByText(TITLE)).toBeTruthy();
     expect(cards()).toHaveLength(4);
@@ -48,8 +48,8 @@ describe("what the modal explains", () => {
     }
   });
 
-  it("spells out what each level means on the ground", () => {
-    show();
+  it("spells out what each level means on the ground", async () => {
+    await show();
 
     expect(screen.getByText(/möjligt att ta sig fram med barnvagn/)).toBeTruthy();
     expect(screen.getByText(/mindre vägar och naturstigar/)).toBeTruthy();
@@ -57,16 +57,16 @@ describe("what the modal explains", () => {
     expect(screen.getByText("Ingen officiell klassificering finns.")).toBeTruthy();
   });
 
-  it("gives each level the marker used on the trail card", () => {
-    show();
+  it("gives each level the marker used on the trail card", async () => {
+    await show();
 
     expect(within(cards()[0]).getByTestId("icon-circle")).toBeTruthy();
     expect(within(cards()[1]).getByTestId("icon-diamond")).toBeTruthy();
     expect(within(cards()[2]).getByTestId("icon-triangle")).toBeTruthy();
   });
 
-  it("stays out of sight until it is opened", () => {
-    show(2, false);
+  it("stays out of sight until it is opened", async () => {
+    await show(2, false);
 
     expect(screen.queryByText(TITLE)).toBeNull();
   });
@@ -78,8 +78,8 @@ describe("marking the trail's own level", () => {
     [2, "Medel"],
     [3, "Svår"],
     [0, "Inte klassificerad"],
-  ])("picks out level %i", (difficulty, label) => {
-    show(difficulty);
+  ])("picks out level %i", async (difficulty, label) => {
+    await show(difficulty);
 
     const marked = highlighted();
     expect(marked).toHaveLength(1);
@@ -88,21 +88,21 @@ describe("marking the trail's own level", () => {
   });
 
   // A level the app does not know must leave every card plain rather than guess one.
-  it("marks nothing when the level is not one of the four", () => {
-    show(9);
+  it("marks nothing when the level is not one of the four", async () => {
+    await show(9);
 
     expect(highlighted()).toHaveLength(0);
     expect(screen.queryByText("Den här leden")).toBeNull();
   });
 
-  it("marks nothing when there is no trail to compare with", () => {
-    renderWithProviders(<DifficultyInfoModal visible onDismiss={onDismiss} />);
+  it("marks nothing when there is no trail to compare with", async () => {
+    await renderWithProviders(<DifficultyInfoModal visible onDismiss={onDismiss} />);
 
     expect(highlighted()).toHaveLength(0);
   });
 
-  it("marks the level in the dark theme's own colours", () => {
-    show(2, true, AppDarkTheme);
+  it("marks the level in the dark theme's own colours", async () => {
+    await show(2, true, AppDarkTheme);
 
     expect(highlighted(AppDarkTheme)).toHaveLength(1);
     expect(highlighted(AppDarkTheme)[0]).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surfaceVariant });
@@ -111,18 +111,18 @@ describe("marking the trail's own level", () => {
 
 describe("closing it again", () => {
   it("closes from the cross", async () => {
-    show();
+    await show();
 
-    fireEvent.press(screen.getByTestId("difficulty-info-close"));
+    await fireEvent.press(screen.getByTestId("difficulty-info-close"));
     await settle();
 
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
   it("closes from the Ok button", async () => {
-    show();
+    await show();
 
-    fireEvent.press(screen.getByTestId("difficulty-info-ok"));
+    await fireEvent.press(screen.getByTestId("difficulty-info-ok"));
     await settle();
 
     expect(onDismiss).toHaveBeenCalledTimes(1);

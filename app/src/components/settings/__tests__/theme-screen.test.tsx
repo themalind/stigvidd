@@ -22,8 +22,8 @@ beforeEach(async () => {
   await AsyncStorage.clear();
 });
 
-it("offers the system choice and every theme, by name", () => {
-  show();
+it("offers the system choice and every theme, by name", async () => {
+  await show();
 
   expect(screen.getByText("Följ systemet")).toBeTruthy();
   for (const name of [
@@ -43,15 +43,15 @@ it("offers the system choice and every theme, by name", () => {
   expect(screen.getAllByRole("radio")).toHaveLength(APP_THEMES.length + 1);
 });
 
-it("groups the light themes before the dark ones", () => {
-  show();
+it("groups the light themes before the dark ones", async () => {
+  await show();
 
   const texts = screen.getAllByText(/^(Ljusa|Mörka|Havsbris|Norrsken)$/).map((node) => node.props.children);
   expect(texts).toEqual(["Ljusa", "Havsbris", "Mörka", "Norrsken"]);
 });
 
-it("marks only the current choice as checked", () => {
-  show("midsommar");
+it("marks only the current choice as checked", async () => {
+  await show("midsommar");
 
   expect(screen.getByTestId("theme-option-midsommar").props.accessibilityState).toEqual({ checked: true });
   expect(screen.getByTestId("theme-option-auto").props.accessibilityState).toEqual({ checked: false });
@@ -62,9 +62,9 @@ it("marks only the current choice as checked", () => {
 });
 
 it("applies a picked theme at once and stores it for the next start", async () => {
-  const { store } = show();
+  const { store } = await show();
 
-  fireEvent.press(screen.getByTestId("theme-option-norrsken"));
+  await fireEvent.press(screen.getByTestId("theme-option-norrsken"));
   await settle();
 
   expect(store.get(userThemeAtom)).toBe("norrsken");
@@ -74,17 +74,17 @@ it("applies a picked theme at once and stores it for the next start", async () =
 
 // The old toggle had no way back to following the phone; this screen must.
 it("goes back to following the system", async () => {
-  const { store } = show("bivack");
+  const { store } = await show("bivack");
 
-  fireEvent.press(screen.getByTestId("theme-option-auto"));
+  await fireEvent.press(screen.getByTestId("theme-option-auto"));
   await settle();
 
   expect(store.get(userThemeAtom)).toBe("auto");
   expect(AsyncStorage.setItem).toHaveBeenCalledWith("my-theme", "auto");
 });
 
-it("draws each row in its own theme's colours, not the one on screen", () => {
-  show();
+it("draws each row in its own theme's colours, not the one on screen", async () => {
+  await show();
   const norrsken = APP_THEMES.find((t) => t.id === "norrsken")?.theme;
   if (!norrsken) throw new Error("expected norrsken");
 
@@ -96,8 +96,8 @@ it("draws each row in its own theme's colours, not the one on screen", () => {
   expect(screen.queryByTestId("theme-stripe-norrsken-3")).toBeNull();
 });
 
-it("shows the system choice as one light and one dark stripe", () => {
-  show();
+it("shows the system choice as one light and one dark stripe", async () => {
+  await show();
 
   expect(screen.getByTestId("theme-stripe-auto-0")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.background });
   expect(screen.getByTestId("theme-stripe-auto-1")).toHaveStyle({
@@ -112,8 +112,8 @@ function themeOf(id: ThemeChoice) {
   return theme;
 }
 
-it("previews the chosen theme", () => {
-  show("lingonris");
+it("previews the chosen theme", async () => {
+  await show("lingonris");
   const lingonris = themeOf("lingonris");
 
   expect(screen.getByTestId("theme-preview")).toHaveStyle({ backgroundColor: lingonris.colors.elevation.level2 });
@@ -121,9 +121,9 @@ it("previews the chosen theme", () => {
 });
 
 it("switches the preview as soon as another theme is picked", async () => {
-  show("lingonris");
+  await show("lingonris");
 
-  fireEvent.press(screen.getByTestId("theme-option-norrsken"));
+  await fireEvent.press(screen.getByTestId("theme-option-norrsken"));
   await settle();
 
   expect(screen.getByTestId("theme-preview")).toHaveStyle({

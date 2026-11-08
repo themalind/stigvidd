@@ -10,6 +10,7 @@ import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
 import { UserLocation } from "@/hooks/useUserLocation";
+import { getAllByType, getByType } from "@/test/composites";
 import { flushUntil, flushUntilGone } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
@@ -87,18 +88,18 @@ async function show(
   { theme = AppDefaultTheme }: { theme?: typeof AppDefaultTheme | typeof AppDarkTheme } = {},
 ) {
   mockGetAllTrails.mockResolvedValue(trails);
-  const rendered = renderWithProviders(<TrailsScreen />, { theme });
+  const rendered = await renderWithProviders(<TrailsScreen />, { theme });
   await flushUntil(() => screen.queryByTestId("trails-screen"));
   return rendered;
 }
 
-function search(text: string) {
-  fireEvent.changeText(screen.getByPlaceholderText("Sök efter led eller ort..."), text);
+async function search(text: string) {
+  await fireEvent.changeText(screen.getByPlaceholderText("Sök efter led eller ort..."), text);
 }
 
 // There is no layout to scroll, so the screen's scroll position arrives through onScroll.
-function scrollTo(y: number) {
-  fireEvent.scroll(screen.getByTestId("trail-list"), {
+async function scrollTo(y: number) {
+  await fireEvent.scroll(screen.getByTestId("trail-list"), {
     nativeEvent: {
       contentOffset: { y },
       contentSize: { height: 2000, width: 390 },
@@ -135,10 +136,10 @@ afterEach(() => {
 it("shows a spinner and nothing else until the trails are in", async () => {
   const [pending, arrive] = held();
   mockGetAllTrails.mockReturnValue(pending);
-  renderWithProviders(<TrailsScreen />);
+  await renderWithProviders(<TrailsScreen />);
 
   expect(screen.queryByTestId("trails-screen")).toBeNull();
-  expect(screen.UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
+  expect(getByType(ActivityIndicator)).toBeTruthy();
 
   // A query still in flight when the worker finishes keeps the Jest process alive, so the fetch
   // lands before the test ends.
@@ -147,13 +148,13 @@ it("shows a spinner and nothing else until the trails are in", async () => {
 
 it("offers a retry instead of an empty list when the trails cannot be fetched", async () => {
   mockGetAllTrails.mockRejectedValue(new Error("network"));
-  renderWithProviders(<TrailsScreen />);
+  await renderWithProviders(<TrailsScreen />);
   await flushUntil(() => screen.queryByText("Försök igen"));
 
   expect(screen.queryByTestId("trail-list")).toBeNull();
 
   mockGetAllTrails.mockResolvedValue(TRAILS);
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   await flushUntil(() => screen.queryByTestId("trails-screen"));
 
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
@@ -184,7 +185,7 @@ it("opens sorted by name", async () => {
 it("opens the trail that was pressed", async () => {
   await show();
 
-  fireEvent.press(screen.getByText("Åsundens strandstig"));
+  await fireEvent.press(screen.getByText("Åsundens strandstig"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/trails/trail/[identifier]",
@@ -195,7 +196,7 @@ it("opens the trail that was pressed", async () => {
 it("narrows the list to the trails whose name matches the search", async () => {
   await show();
 
-  search("kvarn");
+  await search("kvarn");
 
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
   expect(screen.queryByText("Åsundens strandstig")).toBeNull();
@@ -205,7 +206,7 @@ it("narrows the list to the trails whose name matches the search", async () => {
 it("searches the place as well as the name", async () => {
   await show();
 
-  search("ulricehamn");
+  await search("ulricehamn");
 
   expect(screen.getByText("Åsundens strandstig")).toBeTruthy();
   expect(screen.queryByText("Kvarnstigen")).toBeNull();
@@ -214,7 +215,7 @@ it("searches the place as well as the name", async () => {
 it("says so rather than showing an empty list when nothing matches", async () => {
   await show();
 
-  search("finns inte");
+  await search("finns inte");
 
   expect(screen.getByText("Inga leder hittades")).toBeTruthy();
   expect(screen.getByText("Prova att ändra dina filter")).toBeTruthy();
@@ -224,7 +225,7 @@ it("counts what is shown against what there is", async () => {
   await show();
   expect(screen.getByText("Visar 3 av 3 leder")).toBeTruthy();
 
-  search("kvarn");
+  await search("kvarn");
 
   expect(screen.getByText("Visar 1 av 3 leder")).toBeTruthy();
 });
@@ -241,7 +242,7 @@ it("keeps the clear-filters link out of the way until something is filtered", as
 
   expect(screen.queryByTestId("trails-clear-filters")).toBeNull();
 
-  search("kvarn");
+  await search("kvarn");
 
   expect(screen.getByTestId("trails-clear-filters")).toBeTruthy();
 });
@@ -249,7 +250,7 @@ it("keeps the clear-filters link out of the way until something is filtered", as
 it("offers to clear once a filter has been set in the sheet", async () => {
   await show();
 
-  act(() => mockModal.props!.onUpdateFilter("city", "Borås"));
+  await act(() => mockModal.props!.onUpdateFilter("city", "Borås"));
 
   expect(screen.getByTestId("trails-clear-filters")).toBeTruthy();
   expect(screen.queryByText("Åsundens strandstig")).toBeNull();
@@ -257,10 +258,10 @@ it("offers to clear once a filter has been set in the sheet", async () => {
 
 it("clears the search and the filters together", async () => {
   await show();
-  search("kvarn");
-  act(() => mockModal.props!.onUpdateFilter("city", "Borås"));
+  await search("kvarn");
+  await act(() => mockModal.props!.onUpdateFilter("city", "Borås"));
 
-  fireEvent.press(screen.getByTestId("trails-clear-filters"));
+  await fireEvent.press(screen.getByTestId("trails-clear-filters"));
 
   expect(screen.getByText("Visar 3 av 3 leder")).toBeTruthy();
   expect(screen.getByText("Åsundens strandstig")).toBeTruthy();
@@ -269,9 +270,9 @@ it("clears the search and the filters together", async () => {
 
 it("also clears from inside the sheet", async () => {
   await show();
-  search("kvarn");
+  await search("kvarn");
 
-  act(() => mockModal.props!.onClearFilters());
+  await act(() => mockModal.props!.onClearFilters());
 
   expect(screen.getByText("Visar 3 av 3 leder")).toBeTruthy();
 });
@@ -281,16 +282,16 @@ it("keeps the filter sheet shut until it is asked for", async () => {
 
   expect(screen.queryByTestId("filter-modal")).toBeNull();
 
-  fireEvent.press(screen.getByTestId("trails-filter-button"));
+  await fireEvent.press(screen.getByTestId("trails-filter-button"));
 
   expect(screen.getByTestId("filter-modal")).toBeTruthy();
 });
 
 it("shuts the sheet again when it asks to be closed", async () => {
   await show();
-  fireEvent.press(screen.getByTestId("trails-filter-button"));
+  await fireEvent.press(screen.getByTestId("trails-filter-button"));
 
-  act(() => mockModal.props!.onClose());
+  await act(() => mockModal.props!.onClose());
 
   expect(screen.queryByTestId("filter-modal")).toBeNull();
 });
@@ -351,19 +352,19 @@ it("keeps the back-to-top link away until the list has been scrolled well down",
 
   expect(screen.queryByTestId("trails-back-to-top")).toBeNull();
 
-  act(() => scrollTo(300));
+  await act(() => scrollTo(300));
   expect(screen.queryByTestId("trails-back-to-top")).toBeNull();
 
-  act(() => scrollTo(301));
+  await act(() => scrollTo(301));
   expect(screen.getByTestId("trails-back-to-top")).toBeTruthy();
 });
 
 it("takes the link away again on the way back up", async () => {
   await show();
-  act(() => scrollTo(800));
+  await act(() => scrollTo(800));
   expect(screen.getByTestId("trails-back-to-top")).toBeTruthy();
 
-  act(() => scrollTo(0));
+  await act(() => scrollTo(0));
 
   expect(screen.queryByTestId("trails-back-to-top")).toBeNull();
 });
@@ -371,18 +372,18 @@ it("takes the link away again on the way back up", async () => {
 it("scrolls the list back to the top when the link is pressed", async () => {
   const scrollToOffset = jest.spyOn(FlatList.prototype, "scrollToOffset").mockImplementation(() => {});
   await show();
-  act(() => scrollTo(800));
+  await act(() => scrollTo(800));
 
-  fireEvent.press(screen.getByTestId("trails-back-to-top"));
+  await fireEvent.press(screen.getByTestId("trails-back-to-top"));
 
   expect(scrollToOffset).toHaveBeenCalledWith({ offset: 0, animated: true });
 });
 
 it("clears the search from the box's own close button", async () => {
   await show();
-  search("kvarn");
+  await search("kvarn");
 
-  fireEvent.press(screen.getByTestId("search-close-icon"));
+  await fireEvent.press(screen.getByTestId("search-close-icon"));
 
   expect(screen.getByPlaceholderText("Sök efter led eller ort...").props.value).toBe("");
   expect(screen.getByText("Åsundens strandstig")).toBeTruthy();
@@ -394,7 +395,7 @@ it("shows the close button only while there is something typed", async () => {
 
   expect(screen.queryByTestId("search-close-icon")).toBeNull();
 
-  search("kvarn");
+  await search("kvarn");
 
   expect(screen.getByTestId("search-close-icon")).toBeTruthy();
 });
@@ -406,7 +407,7 @@ it("sits on the theme's background, in both themes", async () => {
     backgroundColor: AppDefaultTheme.colors.background,
   });
 
-  screen.unmount();
+  await screen.unmount();
 
   await show(TRAILS, { theme: AppDarkTheme });
   expect(screen.getByTestId("trails-screen")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
@@ -422,7 +423,7 @@ it("draws the filter button on the accent colour with a readable label", async (
 
 it("marks the clear-filters link with the tertiary accent", async () => {
   await show();
-  search("kvarn");
+  await search("kvarn");
 
   expect(screen.getByText("Rensa filter")).toHaveStyle({ color: AppDefaultTheme.colors.tertiary });
 });
@@ -430,12 +431,12 @@ it("marks the clear-filters link with the tertiary accent", async () => {
 // The hiker is a dark drawing on light and a light one on dark, so the asset itself changes.
 it("swaps the hiker drawing for the theme on screen", async () => {
   await show(TRAILS);
-  const light = screen.UNSAFE_getAllByType(Image)[0].props.source;
+  const light = getAllByType(Image)[0].props.source;
 
-  screen.unmount();
+  await screen.unmount();
 
   await show(TRAILS, { theme: AppDarkTheme });
-  const dark = screen.UNSAFE_getAllByType(Image)[0].props.source;
+  const dark = getAllByType(Image)[0].props.source;
 
   expect(dark).not.toEqual(light);
 });
@@ -467,7 +468,7 @@ describe("trails and walks from users", () => {
   it("switches to the walks from users", async () => {
     await show([...TRAILS, WALK]);
 
-    fireEvent.press(screen.getByTestId("trails-source-contributions"));
+    await fireEvent.press(screen.getByTestId("trails-source-contributions"));
 
     expect(screen.getByText("Kvällsrundan")).toBeTruthy();
     expect(screen.queryByText("Kvarnstigen")).toBeNull();
@@ -476,7 +477,7 @@ describe("trails and walks from users", () => {
 
   it("opens on the walks when the home screen asked for them", async () => {
     mockGetAllTrails.mockResolvedValue([...TRAILS, WALK]);
-    renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "contributions"]] });
+    await renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "contributions"]] });
     await flushUntil(() => screen.queryByTestId("trails-screen"));
 
     expect(screen.getByText("Kvällsrundan")).toBeTruthy();
@@ -494,7 +495,7 @@ describe("trails and walks from users", () => {
 
   it("lists the trails even if walks were asked for before any exist", async () => {
     mockGetAllTrails.mockResolvedValue(TRAILS);
-    renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "contributions"]] });
+    await renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "contributions"]] });
     await flushUntil(() => screen.queryByTestId("trails-screen"));
 
     expect(screen.getByText("Kvarnstigen")).toBeTruthy();

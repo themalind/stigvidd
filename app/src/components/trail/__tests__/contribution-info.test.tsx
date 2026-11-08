@@ -13,13 +13,13 @@ import { fireEvent, screen } from "@testing-library/react-native";
 const TITLE = "Om användarpromenader";
 
 async function open() {
-  renderWithProviders(<ContributionInfo />);
-  fireEvent.press(screen.getByTestId("contribution-info-button"));
+  await renderWithProviders(<ContributionInfo />);
+  await fireEvent.press(screen.getByTestId("contribution-info-button"));
   await settle();
 }
 
-it("stays closed until the button is pressed", () => {
-  renderWithProviders(<ContributionInfo />);
+it("stays closed until the button is pressed", async () => {
+  await renderWithProviders(<ContributionInfo />);
 
   expect(screen.queryByText(TITLE)).toBeNull();
   expect(screen.getByLabelText(TITLE)).toBeTruthy();
@@ -39,7 +39,7 @@ it("says the walk is user-made, self-assessed, unmarked and walked at one's own 
 it("closes from the Ok button", async () => {
   await open();
 
-  fireEvent.press(screen.getByTestId("contribution-info-ok"));
+  await fireEvent.press(screen.getByTestId("contribution-info-ok"));
   // keep-comment: Paper's Modal stays mounted until its exit animation ends
   await flushUntil(() => screen.queryByText(TITLE) === null);
 

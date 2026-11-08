@@ -62,15 +62,15 @@ const names = (trails: { name: string }[]) => trails.map((trail) => trail.name);
 
 describe("useTrailFilters", () => {
   describe("defaults", () => {
-    it("sorts by name ascending before the user touches anything", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("sorts by name ascending before the user touches anything", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
       expect(result.current.sortBy).toBe("name-asc");
       expect(names(result.current.filteredTrails)).toEqual(["Bokskogen", "Älvpromenaden", "Ängsstigen"]);
     });
 
-    it("returns an empty list rather than throwing when trails are undefined", () => {
-      const { result } = renderHook(() => useTrailFilters(undefined, null));
+    it("returns an empty list rather than throwing when trails are undefined", async () => {
+      const { result } = await renderHook(() => useTrailFilters(undefined, null));
 
       expect(result.current.filteredTrails).toEqual([]);
       expect(result.current.cities).toEqual([]);
@@ -79,10 +79,10 @@ describe("useTrailFilters", () => {
       expect(result.current.filteredCount).toBe(0);
     });
 
-    it("reports counts before and after filtering", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("reports counts before and after filtering", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateFilter("city", "Borås"));
+      await act(() => result.current.updateFilter("city", "Borås"));
 
       expect(result.current.totalCount).toBe(3);
       expect(result.current.filteredCount).toBe(2);
@@ -90,113 +90,113 @@ describe("useTrailFilters", () => {
   });
 
   describe("option lists", () => {
-    it("lists unique city names in alphabetical order", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("lists unique city names in alphabetical order", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
       expect(result.current.cities).toEqual(["Borås", "Rångedala"]);
     });
 
-    it("lists unique classifications and drops the unclassified zero", () => {
+    it("lists unique classifications and drops the unclassified zero", async () => {
       const withUnclassified = [...TRAILS, makeTrail({ identifier: "d", classification: 0 })];
-      const { result } = renderHook(() => useTrailFilters(withUnclassified, null));
+      const { result } = await renderHook(() => useTrailFilters(withUnclassified, null));
 
       expect(result.current.classifications).toEqual([1, 2, 3]);
     });
   });
 
   describe("search", () => {
-    it("matches on name, case-insensitively", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("matches on name, case-insensitively", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.setSearchQuery("BOKSKOG"));
-
-      expect(names(result.current.filteredTrails)).toEqual(["Bokskogen"]);
-    });
-
-    it("matches on city as well as name", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
-
-      act(() => result.current.setSearchQuery("rångedala"));
+      await act(() => result.current.setSearchQuery("BOKSKOG"));
 
       expect(names(result.current.filteredTrails)).toEqual(["Bokskogen"]);
     });
 
-    it("ignores surrounding whitespace", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("matches on city as well as name", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.setSearchQuery("   bok   "));
+      await act(() => result.current.setSearchQuery("rångedala"));
 
       expect(names(result.current.filteredTrails)).toEqual(["Bokskogen"]);
     });
 
-    it("treats a whitespace-only query as no query at all", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("ignores surrounding whitespace", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.setSearchQuery("   "));
+      await act(() => result.current.setSearchQuery("   bok   "));
+
+      expect(names(result.current.filteredTrails)).toEqual(["Bokskogen"]);
+    });
+
+    it("treats a whitespace-only query as no query at all", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
+
+      await act(() => result.current.setSearchQuery("   "));
 
       expect(result.current.filteredTrails).toHaveLength(3);
     });
 
-    it("returns nothing when the query matches no trail", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("returns nothing when the query matches no trail", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.setSearchQuery("finns inte"));
+      await act(() => result.current.setSearchQuery("finns inte"));
 
       expect(result.current.filteredTrails).toEqual([]);
     });
   });
 
   describe("filters", () => {
-    it("filters by city", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("filters by city", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateFilter("city", "Borås"));
+      await act(() => result.current.updateFilter("city", "Borås"));
 
       expect(names(result.current.filteredTrails)).toEqual(["Älvpromenaden", "Ängsstigen"]);
     });
 
-    it("filters by classification", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("filters by classification", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateFilter("classification", 3));
+      await act(() => result.current.updateFilter("classification", 3));
 
       expect(names(result.current.filteredTrails)).toEqual(["Bokskogen"]);
     });
 
-    it("keeps only accessible trails when accessibility is on", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("keeps only accessible trails when accessibility is on", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateFilter("accessibility", true));
+      await act(() => result.current.updateFilter("accessibility", true));
 
       expect(names(result.current.filteredTrails)).toEqual(["Ängsstigen"]);
     });
 
-    it("applies a length range inclusively at both ends", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("applies a length range inclusively at both ends", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateLengthFilter(2, 8));
+      await act(() => result.current.updateLengthFilter(2, 8));
 
       // 2 and 8 are the boundary values and both survive; 20 does not.
       expect(result.current.filteredTrails.map((trail) => trail.trailLength)).toEqual([2, 8]);
     });
 
-    it("combines several filters", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("combines several filters", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateFilter("city", "Borås"));
-      act(() => result.current.updateFilter("classification", 2));
+      await act(() => result.current.updateFilter("city", "Borås"));
+      await act(() => result.current.updateFilter("classification", 2));
 
       expect(names(result.current.filteredTrails)).toEqual(["Älvpromenaden"]);
     });
 
-    it("clears filters, search and sort order back to the defaults", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("clears filters, search and sort order back to the defaults", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateFilter("city", "Borås"));
-      act(() => result.current.setSearchQuery("äng"));
-      act(() => result.current.setSortBy("length-desc"));
+      await act(() => result.current.updateFilter("city", "Borås"));
+      await act(() => result.current.setSearchQuery("äng"));
+      await act(() => result.current.setSortBy("length-desc"));
 
-      act(() => result.current.clearFilters());
+      await act(() => result.current.clearFilters());
 
       expect(result.current.filters).toEqual({});
       expect(result.current.searchQuery).toBe("");
@@ -206,109 +206,109 @@ describe("useTrailFilters", () => {
   });
 
   describe("distance", () => {
-    it("leaves distanceKm undefined when the user's location is unknown", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("leaves distanceKm undefined when the user's location is unknown", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
       expect(result.current.filteredTrails.every((trail) => trail.distanceKm === undefined)).toBe(true);
     });
 
-    it("leaves distanceKm undefined for a trail without start coordinates", () => {
+    it("leaves distanceKm undefined for a trail without start coordinates", async () => {
       const noCoords = [makeTrail({ identifier: "x", startLatitude: undefined, startLongitude: undefined })];
-      const { result } = renderHook(() => useTrailFilters(noCoords, BORAS));
+      const { result } = await renderHook(() => useTrailFilters(noCoords, BORAS));
 
       expect(result.current.filteredTrails[0].distanceKm).toBeUndefined();
     });
 
-    it("ignores the near-me filter when the user's location is unknown", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("ignores the near-me filter when the user's location is unknown", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.updateFilter("nearMe", true));
+      await act(() => result.current.updateFilter("nearMe", true));
 
       expect(result.current.filteredTrails).toHaveLength(3);
     });
 
-    it("keeps only trails inside the radius when near-me is on", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, BORAS));
+    it("keeps only trails inside the radius when near-me is on", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, BORAS));
 
-      act(() => result.current.updateFilter("nearMe", true));
-      act(() => result.current.updateFilter("maxDistance", 10));
+      await act(() => result.current.updateFilter("nearMe", true));
+      await act(() => result.current.updateFilter("maxDistance", 10));
 
       // Bokskogen sits roughly 20 km out and drops away; the two Borås trails are within 10 km.
       expect(names(result.current.filteredTrails)).toEqual(["Ängsstigen", "Älvpromenaden"]);
     });
 
-    it("switches to distance sorting as soon as near-me is turned on", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, BORAS));
+    it("switches to distance sorting as soon as near-me is turned on", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, BORAS));
 
-      act(() => result.current.updateFilter("nearMe", true));
+      await act(() => result.current.updateFilter("nearMe", true));
 
       expect(result.current.sortBy).toBe("distance-asc");
     });
   });
 
   describe("sorting", () => {
-    it("sorts by name descending", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("sorts by name descending", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.setSortBy("name-desc"));
+      await act(() => result.current.setSortBy("name-desc"));
 
       expect(names(result.current.filteredTrails)).toEqual(["Ängsstigen", "Älvpromenaden", "Bokskogen"]);
     });
 
-    it("orders å, ä and ö last, as Swedish collation requires", () => {
+    it("orders å, ä and ö last, as Swedish collation requires", async () => {
       const trails = [
         makeTrail({ identifier: "1", name: "Östervik" }),
         makeTrail({ identifier: "2", name: "Zebrastigen" }),
         makeTrail({ identifier: "3", name: "Åsstigen" }),
       ];
-      const { result } = renderHook(() => useTrailFilters(trails, null));
+      const { result } = await renderHook(() => useTrailFilters(trails, null));
 
       expect(names(result.current.filteredTrails)).toEqual(["Zebrastigen", "Åsstigen", "Östervik"]);
     });
 
-    it("sorts by length in both directions", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("sorts by length in both directions", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.setSortBy("length-asc"));
+      await act(() => result.current.setSortBy("length-asc"));
       expect(result.current.filteredTrails.map((trail) => trail.trailLength)).toEqual([2, 8, 20]);
 
-      act(() => result.current.setSortBy("length-desc"));
+      await act(() => result.current.setSortBy("length-desc"));
       expect(result.current.filteredTrails.map((trail) => trail.trailLength)).toEqual([20, 8, 2]);
     });
 
-    it("sorts by distance nearest first", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, BORAS));
+    it("sorts by distance nearest first", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, BORAS));
 
-      act(() => result.current.setSortBy("distance-asc"));
+      await act(() => result.current.setSortBy("distance-asc"));
 
       expect(names(result.current.filteredTrails)).toEqual(["Ängsstigen", "Älvpromenaden", "Bokskogen"]);
     });
 
-    it("sorts by distance furthest first", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, BORAS));
+    it("sorts by distance furthest first", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, BORAS));
 
-      act(() => result.current.setSortBy("distance-desc"));
+      await act(() => result.current.setSortBy("distance-desc"));
 
       expect(names(result.current.filteredTrails)).toEqual(["Bokskogen", "Älvpromenaden", "Ängsstigen"]);
     });
 
-    it("puts trails without a distance last when sorting nearest first", () => {
+    it("puts trails without a distance last when sorting nearest first", async () => {
       const trails = [
         makeTrail({ identifier: "far", name: "Utan position", startLatitude: undefined, startLongitude: undefined }),
         makeTrail({ identifier: "near", name: "Med position", startLatitude: 57.73, startLongitude: 12.95 }),
       ];
-      const { result } = renderHook(() => useTrailFilters(trails, BORAS));
+      const { result } = await renderHook(() => useTrailFilters(trails, BORAS));
 
-      act(() => result.current.setSortBy("distance-asc"));
+      await act(() => result.current.setSortBy("distance-asc"));
 
       expect(names(result.current.filteredTrails)).toEqual(["Med position", "Utan position"]);
     });
 
-    it("sets length-ascending sort when a length range is applied", () => {
-      const { result } = renderHook(() => useTrailFilters(TRAILS, null));
+    it("sets length-ascending sort when a length range is applied", async () => {
+      const { result } = await renderHook(() => useTrailFilters(TRAILS, null));
 
-      act(() => result.current.setSortBy("name-desc"));
-      act(() => result.current.updateLengthFilter(0, 50));
+      await act(() => result.current.setSortBy("name-desc"));
+      await act(() => result.current.updateLengthFilter(0, 50));
 
       expect(result.current.sortBy).toBe("length-asc");
     });
@@ -316,16 +316,16 @@ describe("useTrailFilters", () => {
 
   describe("generic trail types", () => {
     // The hook is generic so favourites and wishlist entries reuse it: extra fields survive untouched.
-    it("preserves fields beyond FilterableTrail on the returned trails", () => {
+    it("preserves fields beyond FilterableTrail on the returned trails", async () => {
       type Favourite = FilterableTrail & { ratingResponse: { rating: number }[] };
       const favourites: Favourite[] = [
         { ...makeTrail({ identifier: "a", name: "Ängsstigen" }), ratingResponse: [{ rating: 4 }] },
         { ...makeTrail({ identifier: "b", name: "Bokskogen" }), ratingResponse: [{ rating: 5 }] },
       ];
 
-      const { result } = renderHook(() => useTrailFilters(favourites, null));
+      const { result } = await renderHook(() => useTrailFilters(favourites, null));
 
-      act(() => result.current.setSearchQuery("bok"));
+      await act(() => result.current.setSearchQuery("bok"));
 
       expect(result.current.filteredTrails).toHaveLength(1);
       expect(result.current.filteredTrails[0].ratingResponse).toEqual([{ rating: 5 }]);

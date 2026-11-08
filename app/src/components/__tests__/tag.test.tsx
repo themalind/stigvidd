@@ -11,15 +11,15 @@ import { renderWithProviders } from "@/test/render";
 import { screen } from "@testing-library/react-native";
 
 describe("Tag", () => {
-  it("draws the primary tone on the primary container by default", () => {
-    renderWithProviders(<Tag testID="tag" label="Arrangör" />);
+  it("draws the primary tone on the primary container by default", async () => {
+    await renderWithProviders(<Tag testID="tag" label="Arrangör" />);
 
     expect(screen.getByTestId("tag")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primaryContainer });
     expect(screen.getByText("Arrangör")).toHaveStyle({ color: AppDefaultTheme.colors.onPrimaryContainer });
   });
 
-  it("draws the secondary tone with its icon in the same colour as the label", () => {
-    renderWithProviders(<Tag testID="tag" label="Privat" tone="secondary" icon="lock-outline" />);
+  it("draws the secondary tone with its icon in the same colour as the label", async () => {
+    await renderWithProviders(<Tag testID="tag" label="Privat" tone="secondary" icon="lock-outline" />);
 
     expect(screen.getByTestId("tag")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.secondaryContainer });
     expect(screen.getByText("Privat")).toHaveStyle({ color: AppDefaultTheme.colors.onSecondaryContainer });

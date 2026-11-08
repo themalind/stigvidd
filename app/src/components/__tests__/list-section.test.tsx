@@ -13,8 +13,8 @@ import { Text } from "react-native";
 
 const names = (count: number) => Array.from({ length: count }, (_, i) => `person-${i + 1}`);
 
-function show(props: Partial<ComponentProps<typeof ListSection<string>>> = {}) {
-  renderWithProviders(
+async function show(props: Partial<ComponentProps<typeof ListSection<string>>> = {}) {
+  await renderWithProviders(
     <ListSection<string>
       testID="section"
       title="Vänner"
@@ -27,56 +27,56 @@ function show(props: Partial<ComponentProps<typeof ListSection<string>>> = {}) {
   );
 }
 
-it("renders the title and every item", () => {
-  show();
+it("renders the title and every item", async () => {
+  await show();
 
   expect(screen.getByText("Vänner")).toBeTruthy();
   expect(screen.getByText("person-1")).toBeTruthy();
   expect(screen.getByText("person-2")).toBeTruthy();
 });
 
-it("previews the first items and expands to all on request", () => {
-  show({ items: names(7), previewCount: 5 });
+it("previews the first items and expands to all on request", async () => {
+  await show({ items: names(7), previewCount: 5 });
 
   expect(screen.queryByText("person-6")).toBeNull();
-  fireEvent.press(screen.getByText("Visa alla (7)"));
+  await fireEvent.press(screen.getByText("Visa alla (7)"));
   expect(screen.getByText("person-7")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Visa färre"));
+  await fireEvent.press(screen.getByText("Visa färre"));
   expect(screen.queryByText("person-6")).toBeNull();
 });
 
-it("offers no expand button when everything already fits", () => {
-  show({ items: names(5), previewCount: 5 });
+it("offers no expand button when everything already fits", async () => {
+  await show({ items: names(5), previewCount: 5 });
 
   expect(screen.queryByText(/Visa alla/)).toBeNull();
 });
 
-it("renders nothing for an empty list without an empty text", () => {
-  show({ items: [] });
+it("renders nothing for an empty list without an empty text", async () => {
+  await show({ items: [] });
 
   expect(screen.queryByTestId("section")).toBeNull();
 });
 
-it("says so for an empty list with an empty text", () => {
-  show({ items: [], emptyText: "Inga vänner än" });
+it("says so for an empty list with an empty text", async () => {
+  await show({ items: [], emptyText: "Inga vänner än" });
 
   expect(screen.getByText("Inga vänner än")).toBeTruthy();
 });
 
-it("shows a loader rather than the empty text while pending", () => {
-  show({ items: undefined, isPending: true, emptyText: "Inga vänner än" });
+it("shows a loader rather than the empty text while pending", async () => {
+  await show({ items: undefined, isPending: true, emptyText: "Inga vänner än" });
 
   expect(screen.getByTestId("section")).toBeTruthy();
   expect(screen.queryByText("Inga vänner än")).toBeNull();
 });
 
-it("shows the error with a retry instead of the items", () => {
+it("shows the error with a retry instead of the items", async () => {
   const onRetry = jest.fn();
-  show({ isError: true, errorText: "Kunde inte hämta", onRetry });
+  await show({ isError: true, errorText: "Kunde inte hämta", onRetry });
 
   expect(screen.queryByText("person-1")).toBeNull();
   expect(screen.getByText("Kunde inte hämta")).toBeTruthy();
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   expect(onRetry).toHaveBeenCalledTimes(1);
 });

@@ -29,7 +29,7 @@ let openURL: jest.SpyInstance;
 beforeEach(() => {
   jest.clearAllMocks();
   maplibre.resetHandles();
-  openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+  openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -77,8 +77,8 @@ async function mapLoaded() {
   });
 }
 
-it("draws the recorded walk as a line through every point", () => {
-  show();
+it("draws the recorded walk as a line through every point", async () => {
+  await show();
 
   expect(source("hike-route")?.props.data).toEqual({
     type: "Feature",
@@ -88,23 +88,23 @@ it("draws the recorded walk as a line through every point", () => {
   expect(layer("hike-route-line")?.props.type).toBe("line");
 });
 
-it("draws the line in the route colour, rounded at its joins and ends", () => {
-  show();
+it("draws the line in the route colour, rounded at its joins and ends", async () => {
+  await show();
 
   expect(layer("hike-route-line")?.props.paint).toEqual({ "line-color": ROUTE_LINE_COLOR, "line-width": 3 });
   expect(layer("hike-route-line")?.props.layout).toEqual({ "line-join": "round", "line-cap": "round" });
 });
 
-it("marks the start of the walk", () => {
-  show();
+it("marks the start of the walk", async () => {
+  await show();
 
   expect(source("hike-start")?.props.data.geometry.coordinates).toEqual(PATH[0]);
   expect(layer("hike-start-label")?.props.layout["text-field"]).toBe("Start");
 });
 
 // MapLibre keys sources and layers by id, so two previews on one screen need distinct prefixes.
-it("keeps each preview's sources and layers under its own prefix", () => {
-  show({ idPrefix: "delad-tur" });
+it("keeps each preview's sources and layers under its own prefix", async () => {
+  await show({ idPrefix: "delad-tur" });
 
   expect(source("delad-tur-route")).toBeTruthy();
   expect(source("delad-tur-start")).toBeTruthy();
@@ -113,23 +113,23 @@ it("keeps each preview's sources and layers under its own prefix", () => {
 });
 
 // A route still loading has no coordinates, and an empty line would put an empty source on the map.
-it("draws no map at all for a route with no points", () => {
-  show({ path: [], onOpen });
+it("draws no map at all for a route with no points", async () => {
+  await show({ path: [], onOpen });
 
   expect(screen.queryByTestId("maplibre-Map")).toBeNull();
   expect(screen.queryByLabelText("Visa kartvy")).toBeNull();
 });
 
 // One point is a real walk — a recording with a single fix — and it has a trailhead but no line.
-it("marks the start of a one-point walk without drawing a line", () => {
-  show({ path: [PATH[0]] });
+it("marks the start of a one-point walk without drawing a line", async () => {
+  await show({ path: [PATH[0]] });
 
   expect(source("hike-route")).toBeFalsy();
   expect(source("hike-start")).toBeTruthy();
 });
 
 it("fits the whole walk on screen once the map is ready", async () => {
-  show();
+  await show();
 
   await mapLoaded();
 
@@ -141,7 +141,7 @@ it("fits the whole walk on screen once the map is ready", async () => {
 
 // A single point has a zero-area bounding box, which fitBounds resolves to maximum zoom.
 it("centres a one-point walk at a readable zoom instead of fitting it", async () => {
-  show({ path: [PATH[0]] });
+  await show({ path: [PATH[0]] });
 
   await mapLoaded();
 
@@ -149,22 +149,22 @@ it("centres a one-point walk at a readable zoom instead of fitting it", async ()
   expect(camera().fitBounds).not.toHaveBeenCalled();
 });
 
-it("waits for the map before moving the camera", () => {
-  show();
+it("waits for the map before moving the camera", async () => {
+  await show();
 
   expect(camera().fitBounds).not.toHaveBeenCalled();
   expect(camera().jumpTo).not.toHaveBeenCalled();
 });
 
-it("leaves the live position to the fullscreen view", () => {
-  show();
+it("leaves the live position to the fullscreen view", async () => {
+  await show();
 
   expect(screen.queryByTestId("maplibre-UserLocation")).toBeNull();
 });
 
 // The bottom corners hold the overlay's pills, and a card has no safe-area inset to clear.
-it("moves the map's attribution out of the pills' corners", () => {
-  show();
+it("moves the map's attribution out of the pills' corners", async () => {
+  await show();
 
   expect(map().props.attribution).toBe(true);
   expect(screen.getByTestId("maptiler-logo")).toHaveStyle({ top: SCREEN_PADDING, left: SCREEN_PADDING });
@@ -172,8 +172,8 @@ it("moves the map's attribution out of the pills' corners", () => {
 });
 
 // A preview that is a button cannot also be panned: the full-cover Pressable swallows the drag.
-it("stops the map being panned once it is a button", () => {
-  show({ onOpen });
+it("stops the map being panned once it is a button", async () => {
+  await show({ onOpen });
 
   expect(map().props).toMatchObject({
     dragPan: false,
@@ -184,31 +184,31 @@ it("stops the map being panned once it is a button", () => {
   });
 });
 
-it("leaves a preview with nothing to open pannable", () => {
-  show();
+it("leaves a preview with nothing to open pannable", async () => {
+  await show();
 
   expect(map().props.dragPan).toBeUndefined();
   expect(map().props.doubleTapZoom).toBeUndefined();
 });
 
 it("opens the fullscreen view when the preview is pressed", async () => {
-  show({ onOpen });
+  await show({ onOpen });
 
-  fireEvent.press(screen.getByLabelText("Visa kartvy"));
+  await fireEvent.press(screen.getByLabelText("Visa kartvy"));
   await settle();
 
   expect(onOpen).toHaveBeenCalledTimes(1);
 });
 
-it("says on the badge what the press will open", () => {
-  show({ onOpen, label: "Visa turen" });
+it("says on the badge what the press will open", async () => {
+  await show({ onOpen, label: "Visa turen" });
 
   expect(screen.getByText("Visa turen")).toBeTruthy();
   expect(screen.queryByText("Visa kartvy")).toBeNull();
 });
 
-it("shows no badge on a preview that opens nothing", () => {
-  show();
+it("shows no badge on a preview that opens nothing", async () => {
+  await show();
 
   expect(screen.queryByText("Visa kartvy")).toBeNull();
   expect(screen.queryByLabelText("Vägbeskrivning")).toBeNull();
@@ -216,23 +216,23 @@ it("shows no badge on a preview that opens nothing", () => {
 
 // The map swallows touches, so the cover is what lets the whole surface take the tap.
 it("covers a badgeless preview with a button of its own", async () => {
-  show({ onOpen, showBadge: false });
+  await show({ onOpen, showBadge: false });
 
   expect(screen.queryByText("Visa kartvy")).toBeNull();
   const cover = screen.getByTestId("route-preview-cover");
   expect(cover).toHaveStyle({ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 });
   expect(cover.props.accessibilityRole).toBe("button");
 
-  fireEvent.press(cover);
+  await fireEvent.press(cover);
   await settle();
 
   expect(onOpen).toHaveBeenCalledTimes(1);
 });
 
 it("offers directions to the start of the walk", async () => {
-  show({ onOpen });
+  await show({ onOpen });
 
-  fireEvent.press(screen.getByLabelText("Vägbeskrivning"));
+  await fireEvent.press(screen.getByLabelText("Vägbeskrivning"));
   await settle();
 
   expect(shownDialog()).toMatchObject({
@@ -243,37 +243,37 @@ it("offers directions to the start of the walk", async () => {
 
 // Longitude comes first in a GeoJSON position and last in a maps url, so the pair is swapped.
 it("sends the maps app the start point, latitude first", async () => {
-  show({ onOpen });
+  await show({ onOpen });
 
-  fireEvent.press(screen.getByLabelText("Vägbeskrivning"));
+  await fireEvent.press(screen.getByLabelText("Vägbeskrivning"));
   await confirmDirections();
 
   expect(openURL).toHaveBeenCalledWith(expect.stringContaining("57.72,12.94"));
 });
 
 // The home screen's card is too small for a second pill, and directions are not what it is for.
-it("leaves out the directions pill where there is no room for it", () => {
-  show({ onOpen, showDirections: false });
+it("leaves out the directions pill where there is no room for it", async () => {
+  await show({ onOpen, showDirections: false });
 
   expect(screen.queryByLabelText("Vägbeskrivning")).toBeNull();
   expect(screen.getByLabelText("Visa kartvy")).toBeTruthy();
 });
 
 // Without the overlay there is no pill, so the marker carries the tap; with it, the cover would swallow it.
-it("makes the start marker itself tappable only when nothing covers it", () => {
-  show();
+it("makes the start marker itself tappable only when nothing covers it", async () => {
+  await show();
   expect(layer("hike-start-hit")).toBeTruthy();
 
-  screen.unmount();
-  show({ onOpen });
+  await screen.unmount();
+  await show({ onOpen });
 
   expect(layer("hike-start-hit")).toBeFalsy();
 });
 
 it("opens directions to the start from the marker itself when there is no pill", async () => {
-  show();
+  await show();
 
-  fireEvent(source("hike-start")!, "press");
+  await fireEvent(source("hike-start")!, "press");
   await settle();
   expect(shownDialog().title).toBe("Vägbeskrivning");
   await confirmDirections();
@@ -281,8 +281,8 @@ it("opens directions to the start from the marker itself when there is no pill",
   expect(openURL).toHaveBeenCalledWith(expect.stringContaining("57.72,12.94"));
 });
 
-it("lets the map fill the frame the caller gives it", () => {
-  show({ style: { height: 180, borderRadius: 12 } });
+it("lets the map fill the frame the caller gives it", async () => {
+  await show({ style: { height: 180, borderRadius: 12 } });
 
   expect(screen.getByTestId("route-preview")).toHaveStyle({ height: 180, borderRadius: 12 });
   expect(map()).toHaveStyle(StyleSheet.absoluteFill);

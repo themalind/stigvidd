@@ -9,11 +9,13 @@ import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { basemapAtom, saveBasemap } from "@/atoms/basemap-atom";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { APP_THEMES, AppDarkTheme, AppDefaultTheme, type ThemeChoice } from "@/constants/theme";
+import { getAllByType, getByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { focusManager, QueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { act, render, screen } from "@testing-library/react-native";
+import { act, render, screen, waitFor } from "@testing-library/react-native";
 import * as NavigationBar from "expo-navigation-bar";
+import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { getDefaultStore } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
@@ -90,10 +92,11 @@ jest.mock("expo-router", () => {
     Stack,
     router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
     usePathname: () => mockPathname,
+    useNavigationContainerRef: () => ({ getRootState: () => ({ routes: [{ name: "(tabs)" }] }) }),
   };
 });
 
-jest.mock("expo-navigation-bar", () => ({ setButtonStyleAsync: jest.fn() }));
+jest.mock("expo-navigation-bar", () => ({ setStyle: jest.fn() }));
 
 // GestureHandlerRootView needs a native module that Jest has none of; a plain View is the same box.
 jest.mock("react-native-gesture-handler", () => {
@@ -151,7 +154,7 @@ function tap(type: string | undefined, identifier = "notif-1") {
 // tree the gate draws. The flush is part of mounting: the startup effects resolve a tick later,
 // and a late promise sets an atom outside act().
 async function show() {
-  const rendered = render(
+  const rendered = await render(
     <SafeAreaInsetsContext.Provider value={INSETS}>
       <RootLayout />
     </SafeAreaInsetsContext.Provider>,
@@ -245,7 +248,7 @@ it("starts telemetry once for the whole app, not once per render", async () => {
 
   await show();
   await rerender();
-  screen.unmount();
+  await screen.unmount();
   await show();
 
   expect(telemetryCalls()).toBe(1);
@@ -258,7 +261,7 @@ it("dresses the app in the light theme", async () => {
     flex: 1,
     backgroundColor: AppDefaultTheme.colors.background,
   });
-  expect(screen.UNSAFE_getByType(StatusBar).props.style).toBe("dark");
+  expect(getByType(StatusBar).props.style).toBe("dark");
 });
 
 // A dark status bar over a dark app is invisible, so the two have to move together.
@@ -267,7 +270,7 @@ it("dresses the app in the dark theme, status bar and all", async () => {
   await rerender("bivack");
 
   expect(screen.getByTestId("root-container")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
-  expect(screen.UNSAFE_getByType(StatusBar).props.style).toBe("light");
+  expect(getByType(StatusBar).props.style).toBe("light");
 });
 
 // Every theme in the picker has to reach the app, not just the two that "auto" switches between.
@@ -278,7 +281,7 @@ it("dresses the app in a picked theme beyond light and dark", async () => {
   await rerender("norrsken");
 
   expect(screen.getByTestId("root-container")).toHaveStyle({ backgroundColor: norrsken.colors.background });
-  expect(screen.UNSAFE_getByType(StatusBar).props.style).toBe("light");
+  expect(getByType(StatusBar).props.style).toBe("light");
 });
 
 // Android's navigation bar is the one part of the chrome the theme cannot reach through React.
@@ -287,14 +290,14 @@ it("tells Android's navigation bar which theme it is on", async () => {
   await show();
   await rerender("bivack");
 
-  expect(NavigationBar.setButtonStyleAsync).toHaveBeenCalledWith("light");
+  expect(NavigationBar.setStyle).toHaveBeenCalledWith("light");
 });
 
 it("leaves the navigation bar alone on iOS, which has none", async () => {
   await show();
   await rerender("bivack");
 
-  expect(NavigationBar.setButtonStyleAsync).not.toHaveBeenCalled();
+  expect(NavigationBar.setStyle).not.toHaveBeenCalled();
 });
 
 // The choice is stored on the device, so the app has to come back up in it.
@@ -429,7 +432,7 @@ it("refreshes the lists a notification arriving in the foreground is about", asy
   await show();
   await settle();
 
-  act(() => mockReceived?.({ request: { content: { data: { type: "friend_request" } } } }));
+  await act(() => mockReceived?.({ request: { content: { data: { type: "friend_request" } } } }));
 
   expect(QueryClient.prototype.invalidateQueries).toHaveBeenCalledWith({ queryKey: ["friends", "incoming"] });
   expect(mockNavigate).not.toHaveBeenCalled();
@@ -439,8 +442,8 @@ it("ignores a foreground notification of a type it knows nothing about", async (
   await show();
   await settle();
 
-  act(() => mockReceived?.({ request: { content: { data: { type: "kaffepaus" } } } }));
-  act(() => mockReceived?.({ request: { content: {} } }));
+  await act(() => mockReceived?.({ request: { content: { data: { type: "kaffepaus" } } } }));
+  await act(() => mockReceived?.({ request: { content: {} } }));
 
   expect(QueryClient.prototype.invalidateQueries).not.toHaveBeenCalled();
 });
@@ -450,7 +453,7 @@ it("stops listening when the app's root goes away", async () => {
   await show();
   await settle();
 
-  screen.unmount();
+  await screen.unmount();
 
   expect(mockRemoveListener).toHaveBeenCalled();
 });
@@ -474,20 +477,18 @@ function tapBoardPost(identifier: string) {
   };
 }
 
+// The event never lands under this mock, so the board also shows that a stuck navigation does not swallow the tap.
 it("opens a board post with its event beneath the board", async () => {
   tapBoardPost("ev1");
   mockAuth = { user: USER, isLoading: false };
   await show();
   await settle();
-  await act(async () => {
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-  });
 
-  expect(mockNavigate.mock.calls).toEqual([
-    ["/(tabs)/events/event/ev1", ANCHORED],
-    ["/(tabs)/events/board/ev1", ANCHORED],
-  ]);
-});
+  expect(mockNavigate.mock.calls).toEqual([["/(tabs)/events/event/ev1", ANCHORED]]);
+  await waitFor(() => expect(mockNavigate).toHaveBeenCalledTimes(2), { timeout: 8000 });
+
+  expect(mockNavigate.mock.calls[1]).toEqual(["/(tabs)/events/board/ev1", ANCHORED]);
+}, 10000);
 
 it("adds no event above a board that is already open on the post's event", async () => {
   mockPathname = "/events/board/ev1";
@@ -535,7 +536,7 @@ it("does not act again on the tap Android hands back when it relaunches a killed
   mockAuth = { user: USER, isLoading: false };
   const first = await show();
   await settle();
-  first.unmount();
+  await first.unmount();
 
   await show();
   await settle();
@@ -548,12 +549,12 @@ it("does not act again on an older tap Android hands back after a newer one was 
   mockAuth = { user: USER, isLoading: false };
   const first = await show();
   await settle();
-  first.unmount();
+  await first.unmount();
 
   tap("friend_request", "notif-2");
   const second = await show();
   await settle();
-  second.unmount();
+  await second.unmount();
 
   tap("hike_share");
   await show();
@@ -567,7 +568,7 @@ it("still acts on a new tap after a restart", async () => {
   mockAuth = { user: USER, isLoading: false };
   const first = await show();
   await settle();
-  first.unmount();
+  await first.unmount();
 
   tap("friend_request", "notif-2");
   await show();
@@ -641,7 +642,7 @@ it("opens a tap again on the next launch when navigating to it failed", async ()
   mockAuth = { user: USER, isLoading: false };
   const first = await show();
   await settle();
-  first.unmount();
+  await first.unmount();
 
   await show();
   await settle();
@@ -700,7 +701,8 @@ it("stays put for a tap that carries no type, and for one it cannot place", asyn
 it("gives the tab navigator no header of its own", async () => {
   await show();
 
-  expect(screen.UNSAFE_getByProps({ name: "(tabs)" }).props.options).toEqual({ headerShown: false });
+  const tabs = getAllByType(Stack.Screen).find((node) => node.props.name === "(tabs)");
+  expect(tabs?.props.options).toEqual({ headerShown: false });
 });
 
 // Every screen raises the snackbar through an atom, so it is mounted once at the root, above the navigator.
@@ -757,9 +759,9 @@ it("draws the snackbar over a modal that is open on the screen", async () => {
 it("follows the app in and out of the foreground with the query cache", async () => {
   await show();
 
-  act(() => appStateChanged?.("background"));
+  await act(() => appStateChanged?.("background"));
   expect(focusManager.isFocused()).toBe(false);
 
-  act(() => appStateChanged?.("active"));
+  await act(() => appStateChanged?.("active"));
   expect(focusManager.isFocused()).toBe(true);
 });

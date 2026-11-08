@@ -27,32 +27,32 @@ beforeEach(() => {
   mockLogout.mockReset().mockResolvedValue(undefined);
 });
 
-it("offers a way back to the login when the API refuses a signed-in user", () => {
+it("offers a way back to the login when the API refuses a signed-in user", async () => {
   signedIn(true);
-  renderWithProviders(<ErrorView error={new ApiError("expired", 401)} />);
+  await renderWithProviders(<ErrorView error={new ApiError("expired", 401)} />);
 
-  fireEvent.press(screen.getByText(sv.error["401"].relogin));
+  await fireEvent.press(screen.getByText(sv.error["401"].relogin));
 
   expect(mockLogout).toHaveBeenCalledTimes(1);
 });
 
-it("does not offer it to a reader who is already signed out", () => {
+it("does not offer it to a reader who is already signed out", async () => {
   signedIn(false);
-  renderWithProviders(<ErrorView error={new ApiError("expired", 401)} />);
+  await renderWithProviders(<ErrorView error={new ApiError("expired", 401)} />);
 
   expect(screen.queryByText(sv.error["401"].relogin)).toBeNull();
 });
 
-it("does not offer it for other failures", () => {
+it("does not offer it for other failures", async () => {
   signedIn(true);
-  renderWithProviders(<ErrorView error={new ApiError("nope", 404)} />);
+  await renderWithProviders(<ErrorView error={new ApiError("nope", 404)} />);
 
   expect(screen.queryByText(sv.error["401"].relogin)).toBeNull();
 });
 
-it("shows an unreachable Keycloak as a connection problem, not as signed out", () => {
+it("shows an unreachable Keycloak as a connection problem, not as signed out", async () => {
   signedIn(true);
-  renderWithProviders(<ErrorView error={new SessionUnavailableError()} />);
+  await renderWithProviders(<ErrorView error={new SessionUnavailableError()} />);
 
   expect(screen.getByText(sv.error.default.title)).toBeTruthy();
   expect(screen.queryByText(sv.error["401"].title)).toBeNull();
@@ -63,20 +63,20 @@ describe("offline", () => {
     onlineManager.setOnline(true);
   });
 
-  it("names the missing connection instead of a generic failure", () => {
+  it("names the missing connection instead of a generic failure", async () => {
     signedIn(true);
     onlineManager.setOnline(false);
-    renderWithProviders(<ErrorView error={new TypeError("Network request failed")} />);
+    await renderWithProviders(<ErrorView error={new TypeError("Network request failed")} />);
 
     expect(screen.getByText(sv.error.offline.title)).toBeTruthy();
     expect(screen.getByText(sv.error.offline.message)).toBeTruthy();
     expect(screen.queryByText(sv.error.default.title)).toBeNull();
   });
 
-  it("still names a server answer for what it is", () => {
+  it("still names a server answer for what it is", async () => {
     signedIn(true);
     onlineManager.setOnline(false);
-    renderWithProviders(<ErrorView error={new ApiError("nope", 404)} />);
+    await renderWithProviders(<ErrorView error={new ApiError("nope", 404)} />);
 
     expect(screen.getByText(sv.error["404"].title)).toBeTruthy();
   });

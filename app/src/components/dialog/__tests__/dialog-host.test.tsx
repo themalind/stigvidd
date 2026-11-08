@@ -13,8 +13,8 @@ import { act, fireEvent, screen } from "@testing-library/react-native";
 
 const onOpen = jest.fn();
 
-function ask() {
-  act(() => {
+async function ask() {
+  await act(() => {
     showDialog({
       title: "Vägbeskrivning",
       message: "Öppna kartappen?",
@@ -31,20 +31,20 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-afterEach(() => {
-  act(() => hideDialog());
+afterEach(async () => {
+  await act(() => hideDialog());
 });
 
-it("draws nothing until something asks", () => {
-  renderWithProviders(<DialogHost />);
+it("draws nothing until something asks", async () => {
+  await renderWithProviders(<DialogHost />);
 
   expect(screen.queryByTestId("dialog-host")).toBeNull();
 });
 
-it("draws what was asked for", () => {
-  renderWithProviders(<DialogHost />);
+it("draws what was asked for", async () => {
+  await renderWithProviders(<DialogHost />);
 
-  ask();
+  await ask();
 
   expect(screen.getByText("Vägbeskrivning")).toBeTruthy();
   expect(screen.getByText("Öppna kartappen?")).toBeTruthy();
@@ -52,10 +52,10 @@ it("draws what was asked for", () => {
 });
 
 it("closes and runs the action that was pressed", async () => {
-  renderWithProviders(<DialogHost />);
-  ask();
+  await renderWithProviders(<DialogHost />);
+  await ask();
 
-  fireEvent.press(screen.getByText("Öppna"));
+  await fireEvent.press(screen.getByText("Öppna"));
   await settle();
 
   expect(onOpen).toHaveBeenCalledTimes(1);
@@ -64,10 +64,10 @@ it("closes and runs the action that was pressed", async () => {
 });
 
 it("closes on an action that has nothing to run", async () => {
-  renderWithProviders(<DialogHost />);
-  ask();
+  await renderWithProviders(<DialogHost />);
+  await ask();
 
-  fireEvent.press(screen.getByText("Avbryt"));
+  await fireEvent.press(screen.getByText("Avbryt"));
   await settle();
 
   expect(onOpen).not.toHaveBeenCalled();
@@ -75,10 +75,10 @@ it("closes on an action that has nothing to run", async () => {
 });
 
 it("closes on a tap outside", async () => {
-  renderWithProviders(<DialogHost />);
-  ask();
+  await renderWithProviders(<DialogHost />);
+  await ask();
 
-  fireEvent.press(screen.getByTestId("dialog-host-backdrop"));
+  await fireEvent.press(screen.getByTestId("dialog-host-backdrop"));
   await settle();
 
   expect(getDialog()).toBeNull();

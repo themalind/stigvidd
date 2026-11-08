@@ -51,7 +51,12 @@ const PROFILE_SCREENS = [
 function renderApp() {
   return renderRouter(
     {
-      "(tabs)/_layout": () => <Tabs />,
+      "(tabs)/_layout": () => (
+        <Tabs>
+          <Tabs.Screen name="(home)/index" />
+          <Tabs.Screen name="(profile-stack)" />
+        </Tabs>
+      ),
       "(tabs)/(home)/index": page("Start"),
       "(tabs)/(profile-stack)/_layout": { default: ProfileStackLayout, unstable_settings },
       ...Object.fromEntries(PROFILE_SCREENS.map((name) => [`(tabs)/(profile-stack)/${name}`, page(name)])),
@@ -60,132 +65,136 @@ function renderApp() {
   );
 }
 
-function openFromNotification(route: string) {
-  act(() => router.navigate(route as never, { withAnchor: true }));
+async function openFromNotification(route: string) {
+  await act(() => router.navigate(route as never, { withAnchor: true }));
 }
 
 it("puts the profile page beneath a screen a notification opens in an unvisited tab", async () => {
-  const app = renderApp();
+  const app = await renderApp();
 
-  openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
+  await openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
   expect(app.getPathname()).toBe("/user/shared-hikes");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/profile-page");
   expect(screen.getByText("profile-page")).toBeTruthy();
 });
 
 it("puts the profile page beneath the friends list a friend request opens in an unvisited tab", async () => {
-  const app = renderApp();
+  const app = await renderApp();
 
-  openFromNotification("/(tabs)/(profile-stack)/user/friends");
+  await openFromNotification("/(tabs)/(profile-stack)/user/friends");
   expect(app.getPathname()).toBe("/user/friends");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/profile-page");
 });
 
 it("does not stack a second copy of the screen a notification points at when it is already open", async () => {
-  const app = renderApp();
+  const app = await renderApp();
 
-  openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
-  openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
-  act(() => router.back());
+  await openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
+  await openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
+  await act(() => router.back());
 
   expect(app.getPathname()).toBe("/profile-page");
 });
 
-function followAFriendsHikeLive() {
-  act(() => router.navigate("/(tabs)/(profile-stack)/profile-page"));
-  act(() => router.push("/(tabs)/(profile-stack)/user/friends"));
-  act(() => router.push({ pathname: "/(tabs)/(profile-stack)/user/friend/[identifier]", params: { identifier: "x" } }));
-  act(() => router.push({ pathname: "/(tabs)/(profile-stack)/hike-follow/[identifier]", params: { identifier: "y" } }));
+async function followAFriendsHikeLive() {
+  await act(() => router.navigate("/(tabs)/(profile-stack)/profile-page"));
+  await act(() => router.push("/(tabs)/(profile-stack)/user/friends"));
+  await act(() =>
+    router.push({ pathname: "/(tabs)/(profile-stack)/user/friend/[identifier]", params: { identifier: "x" } }),
+  );
+  await act(() =>
+    router.push({ pathname: "/(tabs)/(profile-stack)/hike-follow/[identifier]", params: { identifier: "y" } }),
+  );
 }
 
 it("keeps a live screen the user is on beneath a list a notification opens, though the list is lower down", async () => {
-  const app = renderApp();
-  followAFriendsHikeLive();
+  const app = await renderApp();
+  await followAFriendsHikeLive();
 
-  openFromNotification("/(tabs)/(profile-stack)/user/friends");
+  await openFromNotification("/(tabs)/(profile-stack)/user/friends");
   expect(app.getPathname()).toBe("/user/friends");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/hike-follow/y");
 });
 
 it("opens a screen above the open one when the tab is mounted but the screen is not in it", async () => {
-  const app = renderApp();
-  act(() => router.navigate("/(tabs)/(profile-stack)/profile-page"));
-  act(() => router.push("/(tabs)/(profile-stack)/user/my-hikes"));
+  const app = await renderApp();
+  await act(() => router.navigate("/(tabs)/(profile-stack)/profile-page"));
+  await act(() => router.push("/(tabs)/(profile-stack)/user/my-hikes"));
 
-  openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
+  await openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
   expect(app.getPathname()).toBe("/user/shared-hikes");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/user/my-hikes");
 });
 
 it("reaches the tab from another tab after the profile tab was visited", async () => {
-  const app = renderApp();
-  act(() => router.navigate("/(tabs)/(profile-stack)/profile-page"));
-  act(() => router.navigate("/(tabs)/(home)"));
+  const app = await renderApp();
+  await act(() => router.navigate("/(tabs)/(profile-stack)/profile-page"));
+  await act(() => router.navigate("/(tabs)/(home)"));
 
-  openFromNotification("/(tabs)/(profile-stack)/user/friends");
+  await openFromNotification("/(tabs)/(profile-stack)/user/friends");
   expect(app.getPathname()).toBe("/user/friends");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/profile-page");
 });
 
 it("opens a list from another tab, over the screens the profile tab was left on", async () => {
-  const app = renderApp();
-  followAFriendsHikeLive();
-  act(() => router.navigate("/(tabs)/(home)"));
+  const app = await renderApp();
+  await followAFriendsHikeLive();
+  await act(() => router.navigate("/(tabs)/(home)"));
 
-  openFromNotification("/(tabs)/(profile-stack)/user/friends");
+  await openFromNotification("/(tabs)/(profile-stack)/user/friends");
   expect(app.getPathname()).toBe("/user/friends");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/hike-follow/y");
 });
 
 it("leaves the tab when a signed-out user goes back from login", async () => {
   mockAuthenticated = false;
-  const app = renderApp();
+  const app = await renderApp();
 
-  act(() => router.navigate("/(tabs)/(profile-stack)/login", { withAnchor: true }));
-  act(() => router.back());
+  await act(() => router.navigate("/(tabs)/(profile-stack)/login", { withAnchor: true }));
+  await act(() => router.back());
 
   expect(app.getPathname()).toBe("/");
   expect(screen.getByText("Start")).toBeTruthy();
 });
 
 it("puts the profile page beneath recording opened from the start page", async () => {
-  const app = renderApp();
+  const app = await renderApp();
 
-  act(() => router.navigate("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true }));
-  act(() => router.back());
+  await act(() => router.navigate("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true }));
+  await act(() => router.back());
 
   expect(app.getPathname()).toBe("/profile-page");
 });
 
 it("returns to a running recording opened again from the start page", async () => {
-  const app = renderApp();
-  act(() => router.navigate("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true }));
-  act(() => router.navigate("/(tabs)/(home)"));
+  const app = await renderApp();
+  await act(() => router.navigate("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true }));
+  await act(() => router.navigate("/(tabs)/(home)"));
 
-  act(() => router.navigate("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true }));
+  await act(() => router.navigate("/(tabs)/(profile-stack)/user/create-hike", { withAnchor: true }));
   expect(app.getPathname()).toBe("/user/create-hike");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/profile-page");
 });
 
 it("opens login for a signed-out user, though the anchor is a signed-in screen", async () => {
   mockAuthenticated = false;
-  const app = renderApp();
+  const app = await renderApp();
 
-  act(() => router.navigate("/(tabs)/(profile-stack)/login", { withAnchor: true }));
+  await act(() => router.navigate("/(tabs)/(profile-stack)/login", { withAnchor: true }));
 
   expect(app.getPathname()).toBe("/login");
   expect(screen.getByText("login")).toBeTruthy();

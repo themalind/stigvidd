@@ -77,7 +77,7 @@ function trackingState({
 
 // The map only mounts once a centre is known, which arrives from a promise.
 async function show() {
-  const rendered = renderWithProviders(<HikeRecorder />);
+  const rendered = await renderWithProviders(<HikeRecorder />);
   await flushUntil(() => screen.queryByTestId("maplibre-Map"));
   return rendered;
 }
@@ -114,13 +114,13 @@ it("offers only what the current state allows", async () => {
   expect(screen.queryByText("Spara")).toBeNull();
 
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000)]) });
-  rerender(<HikeRecorder />);
+  await rerender(<HikeRecorder />);
   expect(screen.getByText("Pausa")).toBeTruthy();
   expect(screen.queryByText("Starta vandring")).toBeNull();
   expect(screen.queryByText("Spara")).toBeNull();
 
   mockTracking = trackingState({ segments: [segment([point(0, 1_000), point(1, 2_000)])] });
-  rerender(<HikeRecorder />);
+  await rerender(<HikeRecorder />);
   expect(screen.getByText("Nollställ")).toBeTruthy();
   expect(screen.getByText("Spara")).toBeTruthy();
   expect(screen.getByText("Återuppta")).toBeTruthy();
@@ -130,7 +130,7 @@ it("offers only what the current state allows", async () => {
 it("starts recording straight away once the info has been dismissed for good", async () => {
   await show();
 
-  fireEvent.press(screen.getByText("Starta vandring"));
+  await fireEvent.press(screen.getByText("Starta vandring"));
   await settle();
 
   expect(mockStart).toHaveBeenCalledTimes(1);
@@ -142,7 +142,7 @@ it("gates the first start behind the info dialog", async () => {
   mockShouldShowInfo.mockResolvedValue(true);
   await show();
 
-  fireEvent.press(screen.getByText("Starta vandring"));
+  await fireEvent.press(screen.getByText("Starta vandring"));
   await settle();
 
   expect(mockStart).not.toHaveBeenCalled();
@@ -153,11 +153,11 @@ it("starts from the dialog, and remembers the choice not to see it again", async
   mockShouldShowInfo.mockResolvedValue(true);
   await show();
 
-  fireEvent.press(screen.getByText("Starta vandring"));
+  await fireEvent.press(screen.getByText("Starta vandring"));
   await settle();
-  fireEvent.press(screen.getByText("Visa inte detta igen"));
+  await fireEvent.press(screen.getByText("Visa inte detta igen"));
   // The dialog's own start button, not the one behind it.
-  fireEvent.press(screen.getAllByText("Starta vandring")[1]);
+  await fireEvent.press(screen.getAllByText("Starta vandring")[1]);
   await settle();
 
   expect(mockDismissInfo).toHaveBeenCalledTimes(1);
@@ -168,9 +168,9 @@ it("keeps the info dialog's choice out of it when the box is left unticked", asy
   mockShouldShowInfo.mockResolvedValue(true);
   await show();
 
-  fireEvent.press(screen.getByText("Starta vandring"));
+  await fireEvent.press(screen.getByText("Starta vandring"));
   await settle();
-  fireEvent.press(screen.getAllByText("Starta vandring")[1]);
+  await fireEvent.press(screen.getAllByText("Starta vandring")[1]);
   await settle();
 
   expect(mockDismissInfo).not.toHaveBeenCalled();
@@ -182,15 +182,15 @@ it("throws the recording away only after it has been confirmed", async () => {
   mockTracking = trackingState({ segments: [segment([point(0, 1_000), point(1, 2_000)])] });
   await show();
 
-  fireEvent.press(screen.getByText("Nollställ"));
+  await fireEvent.press(screen.getByText("Nollställ"));
   expect(mockReset).not.toHaveBeenCalled();
   expect(screen.getByText("Vill du verkligen avbryta den pågående promenaden?")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Nej"));
+  await fireEvent.press(screen.getByText("Nej"));
   expect(mockReset).not.toHaveBeenCalled();
 
-  fireEvent.press(screen.getByText("Nollställ"));
-  fireEvent.press(screen.getByText("Ja"));
+  await fireEvent.press(screen.getByText("Nollställ"));
+  await fireEvent.press(screen.getByText("Ja"));
   expect(mockReset).toHaveBeenCalledTimes(1);
 });
 
@@ -228,7 +228,7 @@ it("draws no line until there are two points to join", async () => {
   expect(routeLayer()).toBeFalsy();
 
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000), point(1, 2_000)]) });
-  rerender(<HikeRecorder />);
+  await rerender(<HikeRecorder />);
   expect(routeLayer()).toBeTruthy();
 });
 
@@ -236,20 +236,20 @@ it("draws no line until there are two points to join", async () => {
 it("stops following the route once the user has panned the map", async () => {
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000)]) });
   const { rerender } = await show();
-  fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
+  await fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
 
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000), point(1, 2_000)]) });
-  rerender(<HikeRecorder />);
+  await rerender(<HikeRecorder />);
   expect(camera().easeTo).toHaveBeenCalled();
 
   camera().easeTo.mockClear();
-  fireEvent(screen.getByTestId("maplibre-Map"), "regionDidChange", { nativeEvent: { userInteraction: true } });
+  await fireEvent(screen.getByTestId("maplibre-Map"), "regionDidChange", { nativeEvent: { userInteraction: true } });
 
   mockTracking = trackingState({
     isTracking: true,
     currentSegment: segment([point(0, 1_000), point(1, 2_000), point(2, 3_000)]),
   });
-  rerender(<HikeRecorder />);
+  await rerender(<HikeRecorder />);
   expect(camera().easeTo).not.toHaveBeenCalled();
 });
 
@@ -260,7 +260,7 @@ it("holds a camera move until the map is ready, then makes it", async () => {
 
   expect(camera().easeTo).not.toHaveBeenCalled();
 
-  fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
+  await fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
   expect(camera().easeTo).toHaveBeenCalledTimes(1);
 });
 
@@ -287,14 +287,14 @@ it("centres on Borås when reading the last known position fails", async () => {
 // The precise fix arrives after the map is up, and does not drag the camera off a walk in progress.
 it("refines the centre with a precise fix, unless the walk is already under way", async () => {
   await show();
-  fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
+  await fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
   await settle();
   expect(camera().easeTo).toHaveBeenCalledWith(expect.objectContaining({ center: [12.95, 57.73], zoom: 16 }));
 
   resetMapHandles();
   mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000), point(1, 2_000)]) });
   await show();
-  fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
+  await fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
   await settle();
   expect(camera().easeTo).not.toHaveBeenCalledWith(expect.objectContaining({ zoom: 16 }));
 });
@@ -312,22 +312,22 @@ it("ticks the timer once a second while recording, and stops when it does", asyn
   try {
     mockGetActiveTime.mockReturnValue(0);
     mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000)]) });
-    const rendered = renderWithProviders(<HikeRecorder />);
+    const rendered = await renderWithProviders(<HikeRecorder />);
     await act(async () => {});
     expect(screen.getByText("00:00:00")).toBeTruthy();
 
     mockGetActiveTime.mockReturnValue(1_000);
-    act(() => jest.advanceTimersByTime(1000));
+    await act(() => jest.advanceTimersByTime(1000));
     expect(screen.getByText("00:00:01")).toBeTruthy();
 
     mockTracking = trackingState({ segments: [segment([point(0, 1_000), point(1, 2_000)])] });
     mockGetActiveTime.mockReturnValue(2_000);
-    rendered.rerender(<HikeRecorder />);
+    await rendered.rerender(<HikeRecorder />);
     expect(screen.getByText("00:00:02")).toBeTruthy();
 
     // Paused: the interval is gone, so a later reading changes nothing on screen.
     mockGetActiveTime.mockReturnValue(9_000);
-    act(() => jest.advanceTimersByTime(5000));
+    await act(() => jest.advanceTimersByTime(5000));
     expect(screen.getByText("00:00:02")).toBeTruthy();
   } finally {
     jest.useRealTimers();

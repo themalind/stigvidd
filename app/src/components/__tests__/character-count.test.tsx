@@ -10,21 +10,21 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
 import { screen } from "@testing-library/react-native";
 
-it("shows the length against the limit", () => {
-  renderWithProviders(<CharacterCount testID="count" value="hej" max={40} />);
+it("shows the length against the limit", async () => {
+  await renderWithProviders(<CharacterCount testID="count" value="hej" max={40} />);
 
   expect(screen.getByTestId("count")).toHaveTextContent("3/40");
   expect(screen.getByTestId("count")).toHaveStyle({ color: AppDefaultTheme.colors.onSurfaceVariant });
 });
 
-it("counts an empty field as zero", () => {
-  renderWithProviders(<CharacterCount testID="count" value={undefined} max={300} />);
+it("counts an empty field as zero", async () => {
+  await renderWithProviders(<CharacterCount testID="count" value={undefined} max={300} />);
 
   expect(screen.getByTestId("count")).toHaveTextContent("0/300");
 });
 
-it("turns red once the limit is reached", () => {
-  renderWithProviders(<CharacterCount testID="count" value={"a".repeat(40)} max={40} />);
+it("turns red once the limit is reached", async () => {
+  await renderWithProviders(<CharacterCount testID="count" value={"a".repeat(40)} max={40} />);
 
   expect(screen.getByTestId("count")).toHaveTextContent("40/40");
   expect(screen.getByTestId("count")).toHaveStyle({ color: AppDefaultTheme.colors.error });

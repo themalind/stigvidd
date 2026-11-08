@@ -127,7 +127,7 @@ afterEach(() => {
 });
 
 async function show(theme: AppTheme = AppDefaultTheme) {
-  const rendered = renderWithProviders(<MapScreen />, { theme });
+  const rendered = await renderWithProviders(<MapScreen />, { theme });
   await settle();
   return rendered;
 }
@@ -169,9 +169,9 @@ async function openCluster(identifiers: string[], expansionZoom?: number) {
 }
 
 async function toggleFilter(key: keyof MapMarkerFilter) {
-  fireEvent.press(screen.getByTestId("map-filter-trigger"));
+  await fireEvent.press(screen.getByTestId("map-filter-trigger"));
   await settle();
-  fireEvent.press(screen.getByTestId(`map-filter-row-${key}`));
+  await fireEvent.press(screen.getByTestId(`map-filter-row-${key}`));
   await settle();
 }
 
@@ -763,7 +763,7 @@ describe("MapScreen — the locate button", () => {
     await mapReady();
     mockFlyTo.mockClear();
 
-    fireEvent.press(screen.getByTestId("center-on-user"));
+    await fireEvent.press(screen.getByTestId("center-on-user"));
 
     expect(mockFlyTo).toHaveBeenCalledWith({ center: [HERE.longitude, HERE.latitude], zoom: 14, duration: 800 });
   });

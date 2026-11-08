@@ -8,8 +8,7 @@
 import { NOTIFICATION_HANDLERS, type PushType } from "@/services/notifications";
 import { openPushRoute } from "@/services/open-push-route";
 import { Stack, Tabs, router } from "expo-router";
-import { store } from "expo-router/build/global-state/router-store";
-import { act, renderRouter } from "expo-router/testing-library";
+import { act, renderRouter, type RenderRouterResult } from "expo-router/testing-library";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import EventsStackLayout, * as eventsLayout from "../(tabs)/events/_layout";
@@ -66,11 +65,11 @@ const EVENT_SCREENS = [
 ];
 
 // Like the app's root layout, it draws nothing until startup is done, and a tap is opened after that. keep-comment: reproduces the cold-start order
-function GatedRoot({ onReady }: { onReady?: () => void }) {
+function GatedRoot({ startup, onReady }: { startup: Promise<void>; onReady?: () => void }) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    void Promise.resolve().then(() => setReady(true));
-  }, []);
+    void startup.then(() => setReady(true));
+  }, [startup]);
   useEffect(() => {
     if (ready) void Promise.resolve().then(() => onReady?.());
   }, [ready, onReady]);
@@ -79,10 +78,20 @@ function GatedRoot({ onReady }: { onReady?: () => void }) {
 }
 
 async function renderApp(onReady?: () => void) {
-  const app = renderRouter(
+  let finishStartup = () => {};
+  const startup = new Promise<void>((resolve) => {
+    finishStartup = resolve;
+  });
+  const app = await renderRouter(
     {
-      _layout: () => <GatedRoot onReady={onReady} />,
-      "(tabs)/_layout": () => <Tabs />,
+      _layout: () => <GatedRoot startup={startup} onReady={onReady} />,
+      "(tabs)/_layout": () => (
+        <Tabs>
+          <Tabs.Screen name="(home)" />
+          <Tabs.Screen name="(profile-stack)" />
+          <Tabs.Screen name="events" />
+        </Tabs>
+      ),
       "(tabs)/(home)/_layout": () => <Stack />,
       "(tabs)/(home)/index": page("Start"),
       "(tabs)/(profile-stack)/_layout": { ...profileLayout, default: ProfileStackLayout },
@@ -92,23 +101,35 @@ async function renderApp(onReady?: () => void) {
     },
     { initialUrl: "/" },
   );
+  renderedApp = app;
   // renderRouter turns on fake timers, under which the frame between two navigates never comes. keep-comment: hidden test-kit behaviour
   jest.useRealTimers();
-  await act(async () => {});
+  await act(async () => {
+    finishStartup();
+  });
   await act(async () => {});
   return app;
 }
 
-function pushTo(type: PushType, eventIdentifier: string, currentPath: string) {
-  return openPushRoute(NOTIFICATION_HANDLERS[type], { type, eventIdentifier }, currentPath);
+let renderedApp: RenderRouterResult | undefined;
+
+function pushTo(type: PushType, eventIdentifier: string) {
+  const app = renderedApp;
+  if (!app) throw new Error("expected the app to be rendered");
+  return openPushRoute(
+    NOTIFICATION_HANDLERS[type],
+    { type, eventIdentifier },
+    { currentPath: () => app.getPathname(), rootState: () => app.getRouterState() },
+  );
 }
 
-// Started outside act, which would hold back the render a tab has to mount in between the two navigates. keep-comment: inside act the frame wait proves nothing
-async function tap(type: PushType, eventIdentifier: string, currentPath: string) {
-  const opened = pushTo(type, eventIdentifier, currentPath);
-  await act(async () => {
-    await opened;
-  });
+// React schedules as in the app here: act would hold back the render a tab mounts in until after the frame wait. keep-comment: inside act the frame wait proves nothing
+async function tap(type: PushType, eventIdentifier: string) {
+  const actEnvironment = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+  actEnvironment.IS_REACT_ACT_ENVIRONMENT = false;
+  await pushTo(type, eventIdentifier);
+  actEnvironment.IS_REACT_ACT_ENVIRONMENT = true;
+  await act(async () => {});
 }
 
 type NavigationLevel = {
@@ -116,8 +137,8 @@ type NavigationLevel = {
   routes: { name: string; state?: NavigationLevel; params?: { identifier?: string } }[];
 };
 
-function focusedTabStack(): string[] {
-  let level = store.state as unknown as NavigationLevel | undefined;
+function focusedTabStack(app: RenderRouterResult): string[] {
+  let level = app.getRouterState() as unknown as NavigationLevel | undefined;
   while (level) {
     const focused: NavigationLevel["routes"][number] = level.routes[level.index ?? level.routes.length - 1];
     if (focused.name === "events" || focused.name === "(profile-stack)") {
@@ -152,88 +173,88 @@ describe.each(ROUTES)("%s", (type, path, stack, backTo) => {
   it("opens over the tab's first screen from a running app", async () => {
     const app = await renderApp();
 
-    await tap(type, "ev1", "/");
+    await tap(type, "ev1");
 
     expect(app.getPathname()).toBe(path);
-    expect(focusedTabStack()).toEqual(stack);
-    act(() => router.back());
+    expect(focusedTabStack(app)).toEqual(stack);
+    await act(() => router.back());
     expect(app.getPathname()).toBe(backTo);
   });
 
   it("opens over the tab's first screen on a cold start", async () => {
     let opened: Promise<void> | undefined;
     const app = await renderApp(() => {
-      opened = pushTo(type, "ev1", "/");
+      opened = pushTo(type, "ev1");
     });
     await act(async () => {
       await opened;
     });
 
     expect(app.getPathname()).toBe(path);
-    expect(focusedTabStack()).toEqual(stack);
+    expect(focusedTabStack(app)).toEqual(stack);
   });
 });
 
 it("walks back from a tapped board post through the event and the list, then out of the tab", async () => {
   const app = await renderApp();
 
-  await tap("event_post", "ev1", "/");
-  act(() => router.back());
+  await tap("event_post", "ev1");
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/events/event/ev1");
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/events");
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/");
 });
 
 it("adds nothing when the tapped board is already open", async () => {
   const app = await renderApp();
-  await tap("event_post", "ev1", "/");
+  await tap("event_post", "ev1");
 
-  await tap("event_post", "ev1", app.getPathname());
+  await tap("event_post", "ev1");
 
-  expect(focusedTabStack()).toEqual(BOARD_STACK);
+  expect(focusedTabStack(app)).toEqual(BOARD_STACK);
 });
 
 it("adds only the board when the post's event is already open", async () => {
   const app = await renderApp();
-  await tap("event_invite", "ev1", "/");
+  await tap("event_invite", "ev1");
 
-  await tap("event_post", "ev1", app.getPathname());
+  await tap("event_post", "ev1");
 
-  expect(focusedTabStack()).toEqual(BOARD_STACK);
+  expect(focusedTabStack(app)).toEqual(BOARD_STACK);
 });
 
 it("keeps the board the user was reading beneath a post for another event", async () => {
   const app = await renderApp();
-  await tap("event_post", "A", "/");
+  await tap("event_post", "A");
 
-  await tap("event_post", "B", app.getPathname());
+  await tap("event_post", "B");
 
   expect(app.getPathname()).toBe("/events/board/B");
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/events/event/B");
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/events/board/A");
 });
 
 it("keeps an open event beneath a tap for another event", async () => {
   const app = await renderApp();
-  await tap("event_invite", "A", "/");
+  await tap("event_invite", "A");
 
-  await tap("event_invite", "B", app.getPathname());
+  await tap("event_invite", "B");
 
   expect(app.getPathname()).toBe("/events/event/B");
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/events/event/A");
 });
 
 it("opens over the list when the events tab was visited earlier", async () => {
   const app = await renderApp();
-  act(() => router.navigate("/(tabs)/events"));
-  act(() => router.navigate("/(tabs)/(home)"));
+  await act(() => router.navigate("/(tabs)/events"));
+  await act(() => router.navigate("/(tabs)/(home)"));
 
-  await tap("event_updated", "ev1", app.getPathname());
+  await tap("event_updated", "ev1");
 
-  expect(focusedTabStack()).toEqual(EVENT_DETAIL_STACK);
+  expect(focusedTabStack(app)).toEqual(EVENT_DETAIL_STACK);
 });

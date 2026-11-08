@@ -47,7 +47,7 @@ it("goes on to fetch a position once the user accepts at the dialog", async () =
     query = useUserLocation();
     return null;
   }
-  renderWithProviders(<Probe />);
+  await renderWithProviders(<Probe />);
   await flushUntil(() => query.isSuccess || query.isError);
 
   expect(mockRequestPermissions).toHaveBeenCalledTimes(1);

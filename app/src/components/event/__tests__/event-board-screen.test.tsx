@@ -40,7 +40,7 @@ jest.mock("expo-router", () => ({
   router: { navigate: jest.fn(), back: jest.fn(), canGoBack: () => true },
 }));
 
-jest.mock("@react-navigation/bottom-tabs", () => ({ useBottomTabBarHeight: () => 0 }));
+jest.mock("expo-router/js-tabs", () => ({ useBottomTabBarHeight: () => 0 }));
 
 jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: true, logout: jest.fn() }),
@@ -98,16 +98,16 @@ function board(posts: EventPost[]): EventBoard {
 async function show(posts: EventPost[] = [post()]) {
   mockGetEvent.mockResolvedValue(EVENT);
   mockGetPosts.mockResolvedValue(board(posts));
-  renderWithProviders(<EventBoardScreen />, {
+  await renderWithProviders(<EventBoardScreen />, {
     initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
   });
   await flushUntil(() => screen.queryByTestId("event-board-posts") !== null);
 }
 
 async function startEditing() {
-  fireEvent.press(screen.getByTestId("event-post-menu-p1"));
+  await fireEvent.press(screen.getByTestId("event-post-menu-p1"));
   await flushUntil(() => screen.queryByText("Redigera") !== null);
-  fireEvent.press(screen.getByText("Redigera"));
+  await fireEvent.press(screen.getByText("Redigera"));
   await flushUntil(() => screen.queryByTestId("event-post-editing") !== null);
 }
 
@@ -119,7 +119,7 @@ describe("EventBoardScreen", () => {
   it("keeps the way back on the error screen of a board that failed to load", async () => {
     mockGetEvent.mockResolvedValue(EVENT);
     mockGetPosts.mockRejectedValue(new ApiError("HTTP error: getEventPosts: 500", 500));
-    renderWithProviders(<EventBoardScreen />);
+    await renderWithProviders(<EventBoardScreen />);
 
     await flushUntil(() => screen.queryByText("Försök igen") !== null);
     expect(screen.getByTestId("back-button")).toBeTruthy();
@@ -129,8 +129,8 @@ describe("EventBoardScreen", () => {
     mockCreatePost.mockResolvedValue(post({ identifier: "p2", body: "Hej" }));
     await show([]);
 
-    fireEvent.changeText(screen.getByTestId("event-post-input"), "Hej");
-    fireEvent.press(screen.getByTestId("event-post-send"));
+    await fireEvent.changeText(screen.getByTestId("event-post-input"), "Hej");
+    await fireEvent.press(screen.getByTestId("event-post-send"));
     await flushUntil(() => mockCreatePost.mock.calls.length > 0);
 
     expect(mockCreatePost).toHaveBeenCalledWith("e1", "Hej");
@@ -144,8 +144,8 @@ describe("EventBoardScreen", () => {
     await startEditing();
 
     expect(screen.getByTestId("event-post-input").props.value).toBe("Vi ses vid parkeringen");
-    fireEvent.changeText(screen.getByTestId("event-post-input"), "Vi ses vid stugan");
-    fireEvent.press(screen.getByTestId("event-post-send"));
+    await fireEvent.changeText(screen.getByTestId("event-post-input"), "Vi ses vid stugan");
+    await fireEvent.press(screen.getByTestId("event-post-send"));
     await flushUntil(() => mockUpdatePost.mock.calls.length > 0);
 
     expect(mockUpdatePost).toHaveBeenCalledWith("p1", "Vi ses vid stugan");
@@ -156,10 +156,10 @@ describe("EventBoardScreen", () => {
 
   it("keeps an unsent draft apart from the edit", async () => {
     await show();
-    fireEvent.changeText(screen.getByTestId("event-post-input"), "Halvfärdigt");
+    await fireEvent.changeText(screen.getByTestId("event-post-input"), "Halvfärdigt");
     await startEditing();
 
-    fireEvent.press(screen.getByTestId("event-post-edit-cancel"));
+    await fireEvent.press(screen.getByTestId("event-post-edit-cancel"));
     await flushUntil(() => screen.queryByTestId("event-post-editing") === null);
 
     expect(screen.getByTestId("event-post-input").props.value).toBe("Halvfärdigt");
@@ -170,8 +170,8 @@ describe("EventBoardScreen", () => {
     await show();
     await startEditing();
 
-    fireEvent.changeText(screen.getByTestId("event-post-input"), "Ny text");
-    fireEvent.press(screen.getByTestId("event-post-send"));
+    await fireEvent.changeText(screen.getByTestId("event-post-input"), "Ny text");
+    await fireEvent.press(screen.getByTestId("event-post-send"));
     await flushUntil(() => mockUpdatePost.mock.calls.length > 0);
     await settle();
 
@@ -184,8 +184,8 @@ describe("EventBoardScreen", () => {
     await show();
     await startEditing();
 
-    fireEvent.changeText(screen.getByTestId("event-post-input"), "Ny text");
-    fireEvent.press(screen.getByTestId("event-post-send"));
+    await fireEvent.changeText(screen.getByTestId("event-post-input"), "Ny text");
+    await fireEvent.press(screen.getByTestId("event-post-send"));
 
     await flushUntil(() => screen.queryByTestId("event-post-editing") === null);
     expect(screen.queryByTestId("event-post-editing")).toBeNull();
@@ -201,15 +201,15 @@ describe("EventBoardScreen", () => {
     });
     mockGetEvent.mockResolvedValue(EVENT);
     mockGetPosts.mockResolvedValue({ ...board([pinnedPost, post()]), pinned: [pinnedPost] });
-    renderWithProviders(<EventBoardScreen />, {
+    await renderWithProviders(<EventBoardScreen />, {
       initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
     });
     await flushUntil(() => screen.queryByTestId("event-board-pins-toggle") !== null);
-    fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
+    await fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
     await flushUntil(() => screen.queryByTestId("event-pinned-p2") !== null);
 
     expect(screen.getByTestId("event-board-pinned")).toHaveTextContent(/Fäst/);
-    fireEvent.press(screen.getByTestId("event-pinned-p2"));
+    await fireEvent.press(screen.getByTestId("event-pinned-p2"));
     await flushUntil(() => scrollToIndex.mock.calls.length > 0);
 
     expect(scrollToIndex).toHaveBeenCalledWith({ index: 1, viewPosition: 0.5 });
@@ -220,7 +220,7 @@ describe("EventBoardScreen", () => {
     const pinnedPost = post({ identifier: "p2", body: "Samling 07.45", isPinned: true });
     mockGetEvent.mockResolvedValue(EVENT);
     mockGetPosts.mockResolvedValue({ ...board([pinnedPost, post()]), pinned: [pinnedPost] });
-    renderWithProviders(<EventBoardScreen />, {
+    await renderWithProviders(<EventBoardScreen />, {
       initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
     });
     await flushUntil(() => screen.queryByTestId("event-board-pins-toggle") !== null);
@@ -229,11 +229,11 @@ describe("EventBoardScreen", () => {
     expect(screen.queryByTestId("event-board-pinned")).toBeNull();
     expect(toggle.props.accessibilityLabel).toBe("Visa fästa inlägg (1)");
 
-    fireEvent.press(toggle);
+    await fireEvent.press(toggle);
     await flushUntil(() => screen.queryByTestId("event-board-pinned") !== null);
     expect(screen.getByTestId("event-board-pinned")).toHaveTextContent(/Samling 07.45/);
 
-    fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
+    await fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
     await flushUntil(() => screen.queryByTestId("event-board-pinned") === null);
     expect(screen.queryByTestId("event-board-pinned")).toBeNull();
   });
@@ -251,14 +251,14 @@ describe("EventBoardScreen", () => {
     mockGetPosts
       .mockResolvedValueOnce({ ...board([post()]), pinned: [oldPin], nextCursor: "c1" })
       .mockResolvedValueOnce({ ...board([oldPin]), pinned: [oldPin] });
-    renderWithProviders(<EventBoardScreen />, {
+    await renderWithProviders(<EventBoardScreen />, {
       initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
     });
     await flushUntil(() => screen.queryByTestId("event-board-pins-toggle") !== null);
-    fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
+    await fireEvent.press(screen.getByTestId("event-board-pins-toggle"));
     await flushUntil(() => screen.queryByTestId("event-pinned-old") !== null);
 
-    fireEvent.press(screen.getByTestId("event-pinned-old"));
+    await fireEvent.press(screen.getByTestId("event-pinned-old"));
     await flushUntil(() => scrollToIndex.mock.calls.length > 0);
 
     expect(mockGetPosts).toHaveBeenCalledTimes(2);
@@ -269,7 +269,7 @@ describe("EventBoardScreen", () => {
   it("offers no edit on someone else's post", async () => {
     await show([post({ isMine: false, canEdit: false, canDelete: false, authorIdentifier: "u2" })]);
 
-    fireEvent.press(screen.getByTestId("event-post-menu-p1"));
+    await fireEvent.press(screen.getByTestId("event-post-menu-p1"));
     await flushUntil(() => screen.queryByText("Rapportera") !== null);
 
     expect(screen.queryByText("Redigera")).toBeNull();

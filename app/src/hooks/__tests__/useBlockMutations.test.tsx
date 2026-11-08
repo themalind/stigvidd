@@ -29,7 +29,7 @@ const SEARCH = ["users", "search", "u1", "grima"];
 type Mutations = ReturnType<typeof useBlockMutations>;
 type MutationName = keyof Mutations;
 
-function render() {
+async function render() {
   let hook: Mutations | undefined;
   function Probe() {
     hook = useBlockMutations();
@@ -41,7 +41,7 @@ function render() {
     return hook[name];
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   // The lists are seeded without an observer, and renderWithProviders sets gcTime 0.
   for (const key of [FRIENDS, BLOCKS, REVIEWS, OBSTACLES, SHARED_HIKES, SEARCH]) {
     rendered.queryClient.setQueryDefaults(key, { gcTime: Infinity });
@@ -51,7 +51,7 @@ function render() {
   return {
     ...rendered,
     run: async (name: MutationName, arg: string) => {
-      act(() => mutation(name).mutate(arg));
+      await act(() => mutation(name).mutate(arg));
       await flushUntil(() => mutation(name).isError || mutation(name).isSuccess);
     },
     invalidated: (key: unknown[]) => rendered.queryClient.getQueryState(key)?.isInvalidated === true,
@@ -66,7 +66,7 @@ beforeEach(() => {
 
 describe("blocking", () => {
   it("blocks the person it was given", async () => {
-    const { run } = render();
+    const { run } = await render();
     await run("blockMutation", "them");
 
     expect(mockBlock).toHaveBeenCalledWith("them");
@@ -74,7 +74,7 @@ describe("blocking", () => {
 
   // The block filters seven of the blocker's reads; each one has to be re-read to apply it.
   it("refreshes every list that can carry the blocked person", async () => {
-    const { run, invalidated } = render();
+    const { run, invalidated } = await render();
     await run("blockMutation", "them");
 
     expect(invalidated(FRIENDS)).toBe(true);
@@ -86,7 +86,7 @@ describe("blocking", () => {
   });
 
   it("confirms the block", async () => {
-    const { run, store } = render();
+    const { run, store } = await render();
     await run("blockMutation", "them");
 
     expect(store.get(snackbarAtom)).toMatchObject({
@@ -98,7 +98,7 @@ describe("blocking", () => {
 
   it("says so when the block fails", async () => {
     mockBlock.mockRejectedValue(new Error("nope"));
-    const { run, store } = render();
+    const { run, store } = await render();
     await run("blockMutation", "them");
 
     expect(store.get(snackbarAtom)).toMatchObject({
@@ -110,7 +110,7 @@ describe("blocking", () => {
 
 describe("unblocking", () => {
   it("unblocks the person it was given", async () => {
-    const { run } = render();
+    const { run } = await render();
     await run("unblockMutation", "them");
 
     expect(mockUnblock).toHaveBeenCalledWith("them");
@@ -118,7 +118,7 @@ describe("unblocking", () => {
 
   // Their content comes back, so the same lists go stale again.
   it("refreshes the same lists the block touched", async () => {
-    const { run, invalidated } = render();
+    const { run, invalidated } = await render();
     await run("unblockMutation", "them");
 
     expect(invalidated(BLOCKS)).toBe(true);
@@ -130,7 +130,7 @@ describe("unblocking", () => {
 
   it("says so when the unblock fails", async () => {
     mockUnblock.mockRejectedValue(new Error("nope"));
-    const { run, store } = render();
+    const { run, store } = await render();
     await run("unblockMutation", "them");
 
     expect(store.get(snackbarAtom)).toMatchObject({

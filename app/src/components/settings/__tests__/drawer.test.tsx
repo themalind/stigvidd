@@ -51,7 +51,7 @@ function show({
 }
 
 async function press(label: string) {
-  fireEvent.press(screen.getByText(label));
+  await fireEvent.press(screen.getByText(label));
   await settle();
 }
 
@@ -61,15 +61,15 @@ beforeEach(() => {
   mockLogout.mockResolvedValue(undefined);
 });
 
-it("renders nothing while it is closed", () => {
-  show({ visible: false });
+it("renders nothing while it is closed", async () => {
+  await show({ visible: false });
 
   expect(screen.queryByTestId("drawer-panel")).toBeNull();
   expect(screen.queryByText("Tema")).toBeNull();
 });
 
-it("lists every setting, under the app's name", () => {
-  show();
+it("lists every setting, under the app's name", async () => {
+  await show();
 
   expect(screen.getByText("Stigvidd")).toBeTruthy();
   expect(screen.getByText("Tema")).toBeTruthy();
@@ -79,26 +79,26 @@ it("lists every setting, under the app's name", () => {
 
 // The panel covers most of the screen, so the way out has to be obvious.
 it("closes when the backdrop behind it is tapped", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("drawer-backdrop"));
+  await fireEvent.press(screen.getByTestId("drawer-backdrop"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalled();
 });
 
 it("closes on the close icon", async () => {
-  show();
+  await show();
 
   expect(screen.getByTestId("icon-close")).toBeTruthy();
-  fireEvent.press(screen.getByTestId("drawer-close"));
+  await fireEvent.press(screen.getByTestId("drawer-close"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalled();
 });
 
 it("closes itself on the way to the guide", async () => {
-  show();
+  await show();
 
   await press("Naturguide");
 
@@ -107,7 +107,7 @@ it("closes itself on the way to the guide", async () => {
 });
 
 it("closes itself on the way to the about screen", async () => {
-  show();
+  await show();
 
   await press("Om Stigvidd");
 
@@ -115,8 +115,8 @@ it("closes itself on the way to the about screen", async () => {
   expect(onDismiss).toHaveBeenCalled();
 });
 
-it("offers login, and not logout, to a signed-out user", () => {
-  show();
+it("offers login, and not logout, to a signed-out user", async () => {
+  await show();
 
   expect(screen.getByText("Logga in")).toBeTruthy();
   expect(screen.queryByText("Logga ut")).toBeNull();
@@ -124,7 +124,7 @@ it("offers login, and not logout, to a signed-out user", () => {
 
 // The (settings) stack has nowhere to land after a login, so the profile stack takes it.
 it("sends login into the profile stack", async () => {
-  show();
+  await show();
 
   await press("Logga in");
 
@@ -132,9 +132,9 @@ it("sends login into the profile stack", async () => {
   expect(onDismiss).toHaveBeenCalled();
 });
 
-it("offers logout, and not login, to a signed-in user", () => {
+it("offers logout, and not login, to a signed-in user", async () => {
   mockAuthenticated = true;
-  show();
+  await show();
 
   expect(screen.getByText("Logga ut")).toBeTruthy();
   expect(screen.queryByText("Logga in")).toBeNull();
@@ -143,7 +143,7 @@ it("offers logout, and not login, to a signed-in user", () => {
 // The profile-stack guard swaps the screen when the user atom flips, so navigating here would compete.
 it("logs out without navigating anywhere", async () => {
   mockAuthenticated = true;
-  show();
+  await show();
 
   await press("Logga ut");
 
@@ -157,7 +157,7 @@ it("says so when the logout fails, and still closes", async () => {
   mockAuthenticated = true;
   mockLogout.mockRejectedValue(new Error("keycloak nere"));
   jest.spyOn(console, "log").mockImplementation(() => {});
-  const { store } = show();
+  const { store } = await show();
 
   await press("Logga ut");
 
@@ -165,20 +165,20 @@ it("says so when the logout fails, and still closes", async () => {
   expect(onDismiss).toHaveBeenCalled();
 });
 
-it("names the theme that is on", () => {
-  show({ userTheme: "norrsken", theme: AppDarkTheme });
+it("names the theme that is on", async () => {
+  await show({ userTheme: "norrsken", theme: AppDarkTheme });
 
   expect(screen.getByTestId("drawer-theme-name")).toHaveTextContent("Norrsken");
 });
 
-it("names the system choice when no theme has been picked", () => {
-  show({ userTheme: "auto" });
+it("names the system choice when no theme has been picked", async () => {
+  await show({ userTheme: "auto" });
 
   expect(screen.getByTestId("drawer-theme-name")).toHaveTextContent("Följ systemet");
 });
 
 it("opens the theme picker and closes behind itself", async () => {
-  show();
+  await show();
 
   await press("Tema");
 
@@ -188,7 +188,7 @@ it("opens the theme picker and closes behind itself", async () => {
 });
 
 it("marks the theme row as the active one once it has been used", async () => {
-  show({ userTheme: "auto" });
+  await show({ userTheme: "auto" });
 
   expect(screen.getByTestId("drawer-theme-name")).toHaveStyle({ color: AppDefaultTheme.colors.onSurfaceVariant });
 
@@ -197,8 +197,8 @@ it("marks the theme row as the active one once it has been used", async () => {
   expect(screen.getByTestId("drawer-theme-name")).toHaveStyle({ color: AppDefaultTheme.colors.onSecondaryContainer });
 });
 
-it("hangs the panel off the right edge, over the full height of the screen", () => {
-  show();
+it("hangs the panel off the right edge, over the full height of the screen", async () => {
+  await show();
 
   expect(screen.getByTestId("drawer-panel")).toHaveStyle({
     position: "absolute",
@@ -210,14 +210,14 @@ it("hangs the panel off the right edge, over the full height of the screen", () 
 });
 
 // The panel starts at the top of the screen, so its content has to clear the notch itself.
-it("keeps its content below the status bar", () => {
-  show();
+it("keeps its content below the status bar", async () => {
+  await show();
 
   expect(screen.getByTestId("drawer-panel")).toHaveStyle({ paddingTop: TOP_INSET + 10 });
 });
 
-it("draws the panel on the theme's surface, with an edge against the blurred screen", () => {
-  show();
+it("draws the panel on the theme's surface, with an edge against the blurred screen", async () => {
+  await show();
 
   expect(screen.getByTestId("drawer-panel")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.surface,
@@ -226,8 +226,8 @@ it("draws the panel on the theme's surface, with an edge against the blurred scr
   });
 });
 
-it("draws the panel on the dark theme's surface too", () => {
-  show({ theme: AppDarkTheme });
+it("draws the panel on the dark theme's surface too", async () => {
+  await show({ theme: AppDarkTheme });
 
   expect(screen.getByTestId("drawer-panel")).toHaveStyle({
     backgroundColor: AppDarkTheme.colors.surface,
@@ -236,15 +236,15 @@ it("draws the panel on the dark theme's surface too", () => {
 });
 
 // Everything outside the panel dismisses it, so the backdrop has to be the whole screen.
-it("spreads the backdrop over the screen", () => {
-  show();
+it("spreads the backdrop over the screen", async () => {
+  await show();
 
-  expect(screen.getByTestId("drawer-backdrop")).toHaveStyle(StyleSheet.absoluteFillObject);
+  expect(screen.getByTestId("drawer-backdrop")).toHaveStyle(StyleSheet.absoluteFill);
 });
 
 // Thumb reach: the rows sit at the bottom of a full-height panel, not under the logo.
-it("pins the settings to the bottom of the panel", () => {
-  show();
+it("pins the settings to the bottom of the panel", async () => {
+  await show();
 
   expect(screen.getByTestId("drawer-items")).toHaveStyle({ marginTop: "auto", paddingBottom: 45 });
 });

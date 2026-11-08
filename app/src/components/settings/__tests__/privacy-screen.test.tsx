@@ -28,7 +28,7 @@ afterEach(() => {
 });
 
 it("starts off when nothing has been chosen yet", async () => {
-  renderWithProviders(<PrivacyScreen />);
+  await renderWithProviders(<PrivacyScreen />);
 
   await waitFor(() => expect(screen.getByTestId("privacy-stats-switch")).toBeTruthy());
   expect(screen.getByTestId("privacy-stats-switch").props.value).toBe(false);
@@ -37,26 +37,26 @@ it("starts off when nothing has been chosen yet", async () => {
 it("reflects a stored grant", async () => {
   await AsyncStorage.setItem("@stigvidd_rum_consent", "granted");
 
-  renderWithProviders(<PrivacyScreen />);
+  await renderWithProviders(<PrivacyScreen />);
 
   await waitFor(() => expect(screen.getByTestId("privacy-stats-switch").props.value).toBe(true));
 });
 
 it("persists a grant when switched on", async () => {
-  renderWithProviders(<PrivacyScreen />);
+  await renderWithProviders(<PrivacyScreen />);
 
   await waitFor(() => expect(screen.getByTestId("privacy-stats-switch")).toBeTruthy());
-  fireEvent(screen.getByTestId("privacy-stats-switch"), "valueChange", true);
+  await fireEvent(screen.getByTestId("privacy-stats-switch"), "valueChange", true);
 
   await waitFor(async () => expect(await getConsent()).toBe("granted"));
 });
 
 it("persists a withdrawal when switched off again", async () => {
   await AsyncStorage.setItem("@stigvidd_rum_consent", "granted");
-  renderWithProviders(<PrivacyScreen />);
+  await renderWithProviders(<PrivacyScreen />);
 
   await waitFor(() => expect(screen.getByTestId("privacy-stats-switch").props.value).toBe(true));
-  fireEvent(screen.getByTestId("privacy-stats-switch"), "valueChange", false);
+  await fireEvent(screen.getByTestId("privacy-stats-switch"), "valueChange", false);
 
   // The half that matters legally: withdrawal has to survive the next launch, not just the
   // current render.

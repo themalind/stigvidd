@@ -32,10 +32,10 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn() },
 }));
 
-let measured: ReturnType<typeof stubMeasureInWindow>;
+let measured: Awaited<ReturnType<typeof stubMeasureInWindow>>;
 
-beforeAll(() => {
-  measured = stubMeasureInWindow();
+beforeAll(async () => {
+  measured = await stubMeasureInWindow();
   Platform.OS = "android";
 });
 
@@ -73,14 +73,14 @@ const HIKES = [
 ];
 
 async function show() {
-  const rendered = renderWithProviders(<MyHikesScreen />);
+  const rendered = await renderWithProviders(<MyHikesScreen />);
   await flushUntil(() => screen.queryByText("Kvällspromenad") ?? screen.queryByText("Inga sparade promenader"));
   return rendered;
 }
 
-function search(query: string) {
-  fireEvent.press(screen.getByTestId("icon-search"));
-  fireEvent.changeText(screen.getByPlaceholderText("Sök bland promenader..."), query);
+async function search(query: string) {
+  await fireEvent.press(screen.getByTestId("icon-search"));
+  await fireEvent.changeText(screen.getByPlaceholderText("Sök bland promenader..."), query);
 }
 
 beforeEach(() => {
@@ -108,11 +108,11 @@ it("tells an empty list apart from a search that matched nothing", async () => {
   mockGetHikes.mockResolvedValue([]);
   const { unmount } = await show();
   expect(screen.getByText("Inga sparade promenader")).toBeTruthy();
-  unmount();
+  await unmount();
 
   mockGetHikes.mockResolvedValue(HIKES);
   await show();
-  search("finns inte");
+  await search("finns inte");
 
   expect(screen.getByText("Inga promenader hittades")).toBeTruthy();
   expect(screen.getByText("Prova att ändra dina filter")).toBeTruthy();
@@ -129,7 +129,7 @@ it("hides the search and filter controls while there are no walks", async () => 
 it("searches the walks by name", async () => {
   await show();
 
-  search("morgon");
+  await search("morgon");
 
   expect(screen.getByText("Morgonrunda")).toBeTruthy();
   expect(screen.queryByText("Kvällspromenad")).toBeNull();
@@ -140,7 +140,7 @@ it("searches the walks by name", async () => {
 it("keeps the summary banner off an empty list", async () => {
   const { unmount } = await show();
   expect(screen.getByText("Vandrat totalt")).toBeTruthy();
-  unmount();
+  await unmount();
 
   mockGetHikes.mockResolvedValue([]);
   await show();
@@ -149,10 +149,10 @@ it("keeps the summary banner off an empty list", async () => {
 
 it("loads the walks again when the user retries after a failure", async () => {
   mockGetHikes.mockRejectedValueOnce(new Error("nätverket"));
-  renderWithProviders(<MyHikesScreen />);
+  await renderWithProviders(<MyHikesScreen />);
   await flushUntil(() => screen.queryByText("Försök igen"));
 
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   await flushUntil(() => screen.queryByText("Kvällspromenad"));
 
   expect(screen.getByText("Morgonrunda")).toBeTruthy();
@@ -162,7 +162,7 @@ it("loads the walks again when the user retries after a failure", async () => {
 it("opens the walk that was tapped", async () => {
   await show();
 
-  fireEvent.press(screen.getByText("Morgonrunda"));
+  await fireEvent.press(screen.getByText("Morgonrunda"));
   await settle();
 
   expect(mockNavigate).toHaveBeenCalledWith({

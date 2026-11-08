@@ -37,8 +37,8 @@ beforeEach(() => {
   mockUseLiveUserLocation.mockReturnValue(null);
 });
 
-it("edges the route line in white, underneath it", () => {
-  renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
+it("edges the route line in white, underneath it", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
 
   const ids = screen.queryAllByTestId("maplibre-Layer").map((node) => node.props.id);
   expect(ids.indexOf("hike-route-line-casing")).toBeGreaterThan(-1);
@@ -46,8 +46,8 @@ it("edges the route line in white, underneath it", () => {
   expect(layer("hike-route-line-casing")?.props.paint).toEqual({ "line-color": "rgb(255, 255, 255)", "line-width": 8 });
 });
 
-it("draws the route as a line and marks its start", () => {
-  renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
+it("draws the route as a line and marks its start", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
 
   expect(layer("hike-route-line")).toBeTruthy();
   expect(layer("hike-start-point")).toBeTruthy();
@@ -56,32 +56,32 @@ it("draws the route as a line and marks its start", () => {
 });
 
 // A route still loading has no coordinates, and an empty line would put an empty source on the map.
-it("draws no line and no start marker for an empty route", () => {
-  renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} isLoading />);
+it("draws no line and no start marker for an empty route", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} isLoading />);
 
   expect(layer("hike-route-line")).toBeFalsy();
   expect(layer("hike-start-point")).toBeFalsy();
 });
 
 // One point is a real route — a recording with a single fix — and it has a trailhead but no line.
-it("marks the start of a one-point route without drawing a line", () => {
-  renderWithProviders(<RouteFollowView idPrefix="hike" path={[PATH[0]]} />);
+it("marks the start of a one-point route without drawing a line", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={[PATH[0]]} />);
 
   expect(layer("hike-route-line")).toBeFalsy();
   expect(layer("hike-start-point")).toBeTruthy();
 });
 
-it("goes back when the chip is pressed", () => {
-  renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} title="Kvarnstigen" />);
+it("goes back when the chip is pressed", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} title="Kvarnstigen" />);
 
-  fireEvent.press(screen.getByLabelText("Gå tillbaka"));
+  await fireEvent.press(screen.getByLabelText("Gå tillbaka"));
 
   expect(mockBack).toHaveBeenCalledTimes(1);
 });
 
 // The chip grows with its title over the map's top-left corner, so a long name truncates.
-it("lays the titled chip over the top-left corner and caps its width", () => {
-  renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} title="En ovanligt lång ledtitel" />);
+it("lays the titled chip over the top-left corner and caps its width", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} title="En ovanligt lång ledtitel" />);
 
   expect(screen.getByLabelText("Gå tillbaka")).toHaveStyle({
     position: "absolute",
@@ -95,8 +95,8 @@ it("lays the titled chip over the top-left corner and caps its width", () => {
 });
 
 // Without a title the chip collapses to a square button in the same corner.
-it("collapses to a square button in the same corner when there is no title", () => {
-  renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} />);
+it("collapses to a square button in the same corner when there is no title", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} />);
 
   expect(screen.getByLabelText("Gå tillbaka")).toHaveStyle({
     position: "absolute",
@@ -108,31 +108,33 @@ it("collapses to a square button in the same corner when there is no title", () 
   });
 });
 
-it("shows the spinner while loading, and no error", () => {
-  renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} isLoading errorMessage="Kunde inte hämta rutten" />);
+it("shows the spinner while loading, and no error", async () => {
+  await renderWithProviders(
+    <RouteFollowView idPrefix="hike" path={[]} isLoading errorMessage="Kunde inte hämta rutten" />,
+  );
 
   expect(screen.queryByText("Kunde inte hämta rutten")).toBeNull();
 });
 
-it("shows the error on a surface once loading is over", () => {
-  renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} errorMessage="Kunde inte hämta rutten" />);
+it("shows the error on a surface once loading is over", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} errorMessage="Kunde inte hämta rutten" />);
 
   expect(screen.getByText("Kunde inte hämta rutten")).toBeTruthy();
 });
 
 // The puck sits above the trailhead circle, and names an anchor layer only once it exists.
-it("anchors the puck above the start label, and names no anchor before the route arrives", () => {
+it("anchors the puck above the start label, and names no anchor before the route arrives", async () => {
   mockUseLiveUserLocation.mockReturnValue({ position: [12.94, 57.72], accuracy: 8, heading: null });
 
-  const { rerender } = renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} />);
+  const { rerender } = await renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} />);
   expect(layer("hike-user-halo")?.props.afterId).toBeUndefined();
 
-  rerender(<RouteFollowView idPrefix="hike" path={PATH} />);
+  await rerender(<RouteFollowView idPrefix="hike" path={PATH} />);
   expect(layer("hike-user-halo")?.props.afterId).toBe("hike-start-label");
 });
 
-it("draws no puck until there is a fix", () => {
-  renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
+it("draws no puck until there is a fix", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
 
   expect(layer("hike-user-dot")).toBeFalsy();
 });

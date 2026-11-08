@@ -51,8 +51,8 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it("shows who shared the walk, when, and its figures", () => {
-  show();
+it("shows who shared the walk, when, and its figures", async () => {
+  await show();
 
   expect(screen.getByText("Kvällspromenad")).toBeTruthy();
   expect(screen.getByText("bertil")).toBeTruthy();
@@ -61,25 +61,25 @@ it("shows who shared the walk, when, and its figures", () => {
   expect(screen.getByText("01:30:00")).toBeTruthy();
 });
 
-it("names a sharer who deleted their account as a deleted user", () => {
-  show({ sharedHike: sharedHike({ sharedByName: null, sharedByIdentifier: null }) });
+it("names a sharer who deleted their account as a deleted user", async () => {
+  await show({ sharedHike: sharedHike({ sharedByName: null, sharedByIdentifier: null }) });
 
   expect(screen.getByText("Borttagen användare")).toBeTruthy();
 });
 
-it("shows the info rows the walk carries", () => {
-  show({ sharedHike: sharedHike({ gettingThere: "Buss 100 till vändplan" }) });
+it("shows the info rows the walk carries", async () => {
+  await show({ sharedHike: sharedHike({ gettingThere: "Buss 100 till vändplan" }) });
 
   expect(screen.getByText("Hitta hit")).toBeTruthy();
   expect(screen.getByText("Buss 100 till vändplan")).toBeTruthy();
   expect(screen.queryByText("Parkering")).toBeNull();
 });
 
-it("waits with the spinner until the walk arrives, and says so when it cannot", () => {
-  const { rerender } = show({ sharedHike: null, isLoading: true });
+it("waits with the spinner until the walk arrives, and says so when it cannot", async () => {
+  const { rerender } = await show({ sharedHike: null, isLoading: true });
   expect(screen.queryByText("Kunde inte hämta promenaden, försök igen.")).toBeNull();
 
-  rerender(
+  await rerender(
     <IncomingSharedHikeModal
       visible
       sharedHike={null}
@@ -92,8 +92,8 @@ it("waits with the spinner until the walk arrives, and says so when it cannot", 
   expect(screen.getByText("Kunde inte hämta promenaden, försök igen.")).toBeTruthy();
 });
 
-it("offers a decision, and nothing else", () => {
-  show();
+it("offers a decision, and nothing else", async () => {
+  await show();
 
   expect(screen.getByText("Acceptera")).toBeTruthy();
   expect(screen.getByText("Avvisa")).toBeTruthy();
@@ -101,28 +101,28 @@ it("offers a decision, and nothing else", () => {
   expect(screen.queryByText("Ta bort")).toBeNull();
 });
 
-it("passes the decision on", () => {
-  show();
+it("passes the decision on", async () => {
+  await show();
 
-  fireEvent.press(screen.getByText("Acceptera"));
-  fireEvent.press(screen.getByText("Avvisa"));
+  await fireEvent.press(screen.getByText("Acceptera"));
+  await fireEvent.press(screen.getByText("Avvisa"));
 
   expect(onAccept).toHaveBeenCalledTimes(1);
   expect(onReject).toHaveBeenCalledTimes(1);
 });
 
-it("takes no second decision while the first is in flight", () => {
-  show({ isPending: true });
+it("takes no second decision while the first is in flight", async () => {
+  await show({ isPending: true });
 
-  fireEvent.press(screen.getByText("Acceptera"));
-  fireEvent.press(screen.getByText("Avvisa"));
+  await fireEvent.press(screen.getByText("Acceptera"));
+  await fireEvent.press(screen.getByText("Avvisa"));
 
   expect(onAccept).not.toHaveBeenCalled();
   expect(onReject).not.toHaveBeenCalled();
 });
 
-it("draws the route without offering the follow screen before it is accepted", () => {
-  show();
+it("draws the route without offering the follow screen before it is accepted", async () => {
+  await show();
 
   expect(screen.queryByLabelText("Visa kartvy")).toBeNull();
   const layerIds = screen.queryAllByTestId("maplibre-Layer").map((node) => node.props.id);

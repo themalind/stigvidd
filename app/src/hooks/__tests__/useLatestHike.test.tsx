@@ -38,14 +38,14 @@ function hike(identifier: string, createdAt: string): Hike {
   return { identifier, name: `Promenad ${identifier}`, createdAt } as Hike;
 }
 
-function render() {
+async function render() {
   let state!: LatestHikeState;
   function Probe() {
     state = useLatestHike();
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   return {
     ...rendered,
     settled: () => flushUntil(() => state.kind !== "loading"),
@@ -69,30 +69,30 @@ afterEach(() => {
 
 describe("useLatestHike", () => {
   // Signed out is decided before the query, so the get-started card renders on the first pass.
-  it("reports signed out without waiting for a query", () => {
+  it("reports signed out without waiting for a query", async () => {
     mockIsAuthenticated = false;
-    const harness = render();
+    const harness = await render();
 
     expect(harness.state()).toEqual({ kind: "signedOut" });
     expect(mockGetAllHikesByUserId).not.toHaveBeenCalled();
   });
 
-  it("reports signed out even before the user has loaded", () => {
+  it("reports signed out even before the user has loaded", async () => {
     mockIsAuthenticated = false;
     mockUser = undefined;
-    const harness = render();
+    const harness = await render();
 
     expect(harness.state()).toEqual({ kind: "signedOut" });
   });
 
-  it("is loading while the hikes are on their way", () => {
-    const harness = render();
+  it("is loading while the hikes are on their way", async () => {
+    const harness = await render();
     expect(harness.state()).toEqual({ kind: "loading" });
   });
 
   it("stays loading until the user is known", async () => {
     mockUser = undefined;
-    const harness = render();
+    const harness = await render();
     await flushUntil(() => mockGetAllHikesByUserId.mock.calls.length > 0);
 
     expect(harness.state()).toEqual({ kind: "loading" });
@@ -103,7 +103,7 @@ describe("useLatestHike", () => {
   it("reports offline instead of loading when there is no connection", async () => {
     onlineManager.setOnline(false);
     mockGetAllHikesByUserId.mockRejectedValue(new TypeError("Network request failed"));
-    const harness = render();
+    const harness = await render();
     await flushUntil(() => mockGetAllHikesByUserId.mock.calls.length > 0);
 
     expect(harness.state()).toEqual({ kind: "offline" });
@@ -111,7 +111,7 @@ describe("useLatestHike", () => {
 
   it("keeps showing the cached walk offline", async () => {
     mockGetAllHikesByUserId.mockResolvedValue([hike("cached", "2026-09-01T10:00:00Z")]);
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     await act(async () => onlineManager.setOnline(false));
@@ -119,31 +119,31 @@ describe("useLatestHike", () => {
     expect(harness.state()).toMatchObject({ kind: "hike", hike: { identifier: "cached" } });
   });
 
-  it("reports offline while the user is still unknown, too", () => {
+  it("reports offline while the user is still unknown, too", async () => {
     onlineManager.setOnline(false);
     mockUser = undefined;
-    const harness = render();
+    const harness = await render();
 
     expect(harness.state()).toEqual({ kind: "offline" });
   });
 
-  it("still reports signed out offline", () => {
+  it("still reports signed out offline", async () => {
     onlineManager.setOnline(false);
     mockIsAuthenticated = false;
-    const harness = render();
+    const harness = await render();
 
     expect(harness.state()).toEqual({ kind: "signedOut" });
   });
 
   it("asks for the signed-in user's hikes", async () => {
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(mockGetAllHikesByUserId).toHaveBeenCalledWith("me");
   });
 
   it("reports empty when the user has walked nothing", async () => {
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(harness.state()).toEqual({ kind: "empty" });
@@ -155,7 +155,7 @@ describe("useLatestHike", () => {
       hike("newest", "2026-09-01T10:00:00Z"),
       hike("middle", "2026-08-20T10:00:00Z"),
     ]);
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(harness.state()).toMatchObject({ kind: "hike", hike: { identifier: "newest" } });
@@ -163,7 +163,7 @@ describe("useLatestHike", () => {
 
   // The My hikes screen reads the same key, function and staleTime, so both share one entry.
   it("caches under the key the My hikes screen uses", async () => {
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     expect(harness.queryClient.getQueryData(["hikes", "me"])).toHaveLength(0);
@@ -172,7 +172,7 @@ describe("useLatestHike", () => {
 
   it("reports an error the user can retry when the request fails", async () => {
     mockGetAllHikesByUserId.mockRejectedValueOnce(new Error("500"));
-    const harness = render();
+    const harness = await render();
     await harness.settled();
 
     const state = harness.state();
@@ -185,10 +185,10 @@ describe("useLatestHike", () => {
   });
 
   // The hikes query waits for the profile, so a failed profile would hold "loading" forever.
-  it("reports an error when the profile itself fails", () => {
+  it("reports an error when the profile itself fails", async () => {
     mockUser = undefined;
     mockUserError = true;
-    const harness = render();
+    const harness = await render();
 
     const state = harness.state();
     if (state.kind !== "error") throw new Error("expected an error");

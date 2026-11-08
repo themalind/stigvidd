@@ -120,7 +120,7 @@ function sharedHike(hikeName: string, sharedByIdentifier: string, sharedAt: stri
 }
 
 async function show() {
-  renderWithProviders(<FriendProfileScreen />);
+  await renderWithProviders(<FriendProfileScreen />);
   await flushUntil(() => screen.queryByText("anna") ?? screen.queryByText(/inte bland dina vänner/));
 }
 
@@ -169,7 +169,7 @@ it("counts both directions in the tabs and lists what you sent on the second", a
   expect(screen.getByText("Från dig · 2")).toBeTruthy();
   expect(screen.queryByText("Öresjö runt")).toBeNull();
 
-  fireEvent.press(screen.getByTestId("share-direction-to"));
+  await fireEvent.press(screen.getByTestId("share-direction-to"));
 
   const names = screen.getAllByText(/Öresjö runt|Ramnaparken/).map((n) => n.props.children);
   expect(names).toEqual(["Ramnaparken", "Öresjö runt"]);
@@ -183,10 +183,10 @@ it("opens your own hike from the sent list, and a reshared one as a shared hike"
     sentHike("Vidaredelad", false, ["id-anna", "2026-10-02T10:00:00Z"]),
   ];
   await show();
-  fireEvent.press(screen.getByTestId("share-direction-to"));
+  await fireEvent.press(screen.getByTestId("share-direction-to"));
 
-  fireEvent.press(screen.getByText("Egen"));
-  fireEvent.press(screen.getByText("Vidaredelad"));
+  await fireEvent.press(screen.getByText("Egen"));
+  await fireEvent.press(screen.getByText("Vidaredelad"));
 
   expect(mockNavigate.mock.calls.map(([arg]) => arg.pathname)).toEqual([
     "/(tabs)/(profile-stack)/hike/[identifier]",
@@ -196,7 +196,7 @@ it("opens your own hike from the sent list, and a reshared one as a shared hike"
 
 it("says so when nothing has been sent to the friend", async () => {
   await show();
-  fireEvent.press(screen.getByTestId("share-direction-to"));
+  await fireEvent.press(screen.getByTestId("share-direction-to"));
 
   expect(screen.getByText("Du har inte delat någon tur med anna än.")).toBeTruthy();
 });
@@ -234,7 +234,7 @@ it("shows a hike's first image instead of its route, in both directions", async 
   expect(received.map((img) => [img.props.source].flat())).toEqual([[{ uri: "https://media/first.jpg" }]]);
   expect(screen.getByText("Utan bild")).toBeTruthy();
 
-  fireEvent.press(screen.getByTestId("share-direction-to"));
+  await fireEvent.press(screen.getByTestId("share-direction-to"));
   expect([screen.getByTestId("hike-row-image").props.source].flat()).toEqual([{ uri: "https://media/sent.jpg" }]);
 });
 
@@ -298,13 +298,13 @@ it("lists the friend's published trails and reviews, each opening the trail", as
   expect(screen.getByText("Recensioner av anna · 1")).toBeTruthy();
   expect(screen.getByText("Fin utsikt")).toBeTruthy();
 
-  fireEvent.press(screen.getByTestId("published-trail-row"));
+  await fireEvent.press(screen.getByTestId("published-trail-row"));
   expect(mockNavigate).toHaveBeenLastCalledWith({
     pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
     params: { identifier: "trail-hal" },
   });
 
-  fireEvent.press(screen.getByTestId("friend-review-row"));
+  await fireEvent.press(screen.getByTestId("friend-review-row"));
   expect(mockNavigate).toHaveBeenLastCalledWith({
     pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
     params: { identifier: "trail-rya" },
@@ -334,7 +334,7 @@ it("lists the events the friend arranges and opens one in the profile tab's own 
 
   expect(mockOrganizerRequestedFor).toHaveBeenCalledWith("id-anna");
   expect(screen.getByText("anna arrangerar")).toBeTruthy();
-  fireEvent.press(screen.getByTestId("event-card-ev-rya"));
+  await fireEvent.press(screen.getByTestId("event-card-ev-rya"));
   expect(mockNavigate).toHaveBeenLastCalledWith({
     pathname: "/(tabs)/(profile-stack)/event/[identifier]",
     params: { identifier: "ev-rya" },
@@ -361,12 +361,12 @@ it("picks one of your hikes and opens it ready to share with the friend", async 
   ];
   await show();
 
-  fireEvent.press(screen.getByTestId("share-hike-with"));
+  await fireEvent.press(screen.getByTestId("share-hike-with"));
   await flushUntil(() => screen.queryByTestId("pick-hike-h-new"));
   const names = screen.getAllByText(/Gammal tur|Ny tur/).map((n) => n.props.children);
   expect(names).toEqual(["Ny tur", "Gammal tur"]);
 
-  fireEvent.press(screen.getByTestId("pick-hike-h-new"));
+  await fireEvent.press(screen.getByTestId("pick-hike-h-new"));
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(profile-stack)/hike/[identifier]",
     params: { identifier: "h-new", shareWith: "anna" },
@@ -376,13 +376,13 @@ it("picks one of your hikes and opens it ready to share with the friend", async 
 it("removes the friend only after confirming, then leaves the profile", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("remove-friend"));
+  await fireEvent.press(screen.getByTestId("remove-friend"));
   expect(screen.getByText(/avsluta din vänskap med anna/)).toBeTruthy();
   expect(mockRemoveFriend).not.toHaveBeenCalled();
 
   const confirm = screen.getAllByText("Ta bort").at(-1);
   if (!confirm) throw new Error("expected a confirm button");
-  fireEvent.press(confirm);
+  await fireEvent.press(confirm);
 
   expect(mockRemoveFriend).toHaveBeenCalledWith("id-anna", expect.anything());
   const options = mockRemoveFriend.mock.calls[0][1];
@@ -393,13 +393,13 @@ it("removes the friend only after confirming, then leaves the profile", async ()
 it("blocks the friend only after confirming", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("block-friend"));
+  await fireEvent.press(screen.getByTestId("block-friend"));
   expect(screen.getByText("Blockera anna?")).toBeTruthy();
   expect(mockBlock).not.toHaveBeenCalled();
 
   const confirm = screen.getAllByText("Blockera").at(-1);
   if (!confirm) throw new Error("expected a confirm button");
-  fireEvent.press(confirm);
+  await fireEvent.press(confirm);
 
   expect(mockBlock).toHaveBeenCalledWith("id-anna", expect.anything());
 });
@@ -408,9 +408,9 @@ it("offers to add a note when the friend has none", async () => {
   await show();
 
   expect(screen.queryByTestId("friend-note")).toBeNull();
-  fireEvent.press(screen.getByTestId("add-note"));
-  fireEvent.changeText(screen.getByTestId("note-input"), "  Från jobbet  ");
-  fireEvent.press(screen.getByTestId("note-save"));
+  await fireEvent.press(screen.getByTestId("add-note"));
+  await fireEvent.changeText(screen.getByTestId("note-input"), "  Från jobbet  ");
+  await fireEvent.press(screen.getByTestId("note-save"));
 
   expect(mockSetNote).toHaveBeenCalledWith({ identifier: "id-anna", note: "Från jobbet" });
 });
@@ -425,8 +425,8 @@ it("shows the note and lets it be removed", async () => {
 
   expect(screen.getByText("Från jobbet")).toBeTruthy();
   expect(screen.queryByTestId("add-note")).toBeNull();
-  fireEvent.press(screen.getByTestId("edit-note"));
-  fireEvent.press(screen.getByTestId("note-remove"));
+  await fireEvent.press(screen.getByTestId("edit-note"));
+  await fireEvent.press(screen.getByTestId("note-remove"));
 
   expect(mockSetNote).toHaveBeenCalledWith({ identifier: "id-anna", note: null });
 });
@@ -438,7 +438,7 @@ it("offers a retry for the trails and reviews when the profile fails, and still 
 
   expect(screen.getAllByText("Kunde inte hämta profilen")).toHaveLength(2);
   expect(screen.getByTestId("share-hike-with")).toBeTruthy();
-  fireEvent.press(within(screen.getByTestId("friend-reviews")).getByText("Försök igen"));
+  await fireEvent.press(within(screen.getByTestId("friend-reviews")).getByText("Försök igen"));
   expect(mockRefetchProfile).toHaveBeenCalledTimes(1);
 });
 
@@ -457,7 +457,7 @@ it("offers a retry when the friend's hikes fail to load", async () => {
 
   const section = screen.getByTestId("friend-shares");
   expect(within(section).getByText("Kunde inte hämta delade turer")).toBeTruthy();
-  fireEvent.press(within(section).getByText("Försök igen"));
+  await fireEvent.press(within(section).getByText("Försök igen"));
   expect(mockRefetchShares).toHaveBeenCalledTimes(1);
 });
 
@@ -466,16 +466,16 @@ it("offers a retry when what you sent fails to load", async () => {
   mockOutgoingFailed = true;
   await show();
 
-  fireEvent.press(screen.getByText("Från dig"));
+  await fireEvent.press(screen.getByText("Från dig"));
   const section = screen.getByTestId("sent-shares");
   expect(within(section).getByText("Kunde inte hämta delade turer")).toBeTruthy();
-  fireEvent.press(within(section).getByText("Försök igen"));
+  await fireEvent.press(within(section).getByText("Försök igen"));
   expect(mockRefetchOutgoing).toHaveBeenCalledTimes(1);
 });
 
-it("shows no profile while the friend list is still loading", () => {
+it("shows no profile while the friend list is still loading", async () => {
   mockFriends = { data: undefined, isPending: true, isError: false };
-  renderWithProviders(<FriendProfileScreen />);
+  await renderWithProviders(<FriendProfileScreen />);
 
   expect(screen.queryByText(/inte bland dina vänner/)).toBeNull();
   expect(screen.queryByTestId("remove-friend")).toBeNull();

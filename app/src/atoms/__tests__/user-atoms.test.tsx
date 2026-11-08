@@ -42,14 +42,14 @@ type Mutation = { mutate: (id: string) => void; isPending: boolean; isError: boo
 
 // A mutation atom only runs once something is subscribed to it, so a mounted probe drives it.
 // Each of the four atoms has its own result type; only the shared surface above is used here.
-function renderMutation(mutationAtom: Atom<unknown>, cache: [unknown[], unknown][] = []) {
+async function renderMutation(mutationAtom: Atom<unknown>, cache: [unknown[], unknown][] = []) {
   let mutation!: Mutation;
   function Probe() {
     [mutation] = useAtom(mutationAtom as never) as unknown as [Mutation];
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />, { initialAtoms: [[userAtom, USER]] });
+  const rendered = await renderWithProviders(<Probe />, { initialAtoms: [[userAtom, USER]] });
   // renderWithProviders sets gcTime 0, which collects a query the moment it has no observer —
   // and nothing here observes the lists, only the mutations that write to them.
   rendered.queryClient.setQueryDefaults(["userFavorites"], { gcTime: Infinity });
@@ -98,8 +98,8 @@ beforeEach(() => {
 
 describe("addToFavoritesAtom", () => {
   it("calls the endpoint with the trail identifier", async () => {
-    const { run } = renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list()]]);
-    run(TRAIL);
+    const { run } = await renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list()]]);
+    await run(TRAIL);
     await settle();
 
     expect(mockAddFavorite).toHaveBeenCalledWith(TRAIL);
@@ -108,9 +108,9 @@ describe("addToFavoritesAtom", () => {
   it("shows the trail as a favourite before the request finishes", async () => {
     const inFlight = pending();
     mockAddFavorite.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list(OTHER)]]);
+    const { run, queryClient } = await renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list(OTHER)]]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(favorites(queryClient)).toEqual(list(OTHER, TRAIL));
@@ -120,9 +120,9 @@ describe("addToFavoritesAtom", () => {
   it("does not list the same trail twice", async () => {
     const inFlight = pending();
     mockAddFavorite.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list(TRAIL)]]);
+    const { run, queryClient } = await renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list(TRAIL)]]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(favorites(queryClient)).toEqual(list(TRAIL));
@@ -133,9 +133,9 @@ describe("addToFavoritesAtom", () => {
   it("leaves an unfetched list alone", async () => {
     const inFlight = pending();
     mockAddFavorite.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(addToFavoritesAtom);
+    const { run, queryClient } = await renderMutation(addToFavoritesAtom);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(favorites(queryClient)).toBeUndefined();
@@ -144,19 +144,21 @@ describe("addToFavoritesAtom", () => {
 
   it("puts the old list back when the request fails", async () => {
     mockAddFavorite.mockRejectedValue(new Error("500"));
-    const { run, queryClient, settled } = renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list(OTHER)]]);
+    const { run, queryClient, settled } = await renderMutation(addToFavoritesAtom, [
+      [["userFavorites", "u1"], list(OTHER)],
+    ]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settled();
 
     expect(favorites(queryClient)).toEqual(list(OTHER));
   });
 
   it("refetches the list once the request settles", async () => {
-    const { run, queryClient } = renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list()]]);
+    const { run, queryClient } = await renderMutation(addToFavoritesAtom, [[["userFavorites", "u1"], list()]]);
     const invalidate = jest.spyOn(queryClient, "invalidateQueries");
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["userFavorites", "u1"] });
@@ -165,12 +167,12 @@ describe("addToFavoritesAtom", () => {
   it("touches only the signed-in user's list", async () => {
     const inFlight = pending();
     mockAddFavorite.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(addToFavoritesAtom, [
+    const { run, queryClient } = await renderMutation(addToFavoritesAtom, [
       [["userFavorites", "u1"], list()],
       [["userFavorites", "u2"], list(OTHER)],
     ]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(favorites(queryClient, "u2")).toEqual(list(OTHER));
@@ -180,8 +182,8 @@ describe("addToFavoritesAtom", () => {
 
 describe("addToWishlistAtom", () => {
   it("calls the endpoint with the trail identifier", async () => {
-    const { run } = renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list()]]);
-    run(TRAIL);
+    const { run } = await renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list()]]);
+    await run(TRAIL);
     await settle();
 
     expect(mockAddWishlist).toHaveBeenCalledWith(TRAIL);
@@ -190,9 +192,9 @@ describe("addToWishlistAtom", () => {
   it("shows the trail on the list before the request finishes", async () => {
     const inFlight = pending();
     mockAddWishlist.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list(OTHER)]]);
+    const { run, queryClient } = await renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list(OTHER)]]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(wishlist(queryClient)).toEqual(list(OTHER, TRAIL));
@@ -202,9 +204,9 @@ describe("addToWishlistAtom", () => {
   it("does not list the same trail twice", async () => {
     const inFlight = pending();
     mockAddWishlist.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list(TRAIL)]]);
+    const { run, queryClient } = await renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list(TRAIL)]]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(wishlist(queryClient)).toEqual(list(TRAIL));
@@ -214,9 +216,9 @@ describe("addToWishlistAtom", () => {
   it("leaves an unfetched list alone", async () => {
     const inFlight = pending();
     mockAddWishlist.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(addToWishlistAtom);
+    const { run, queryClient } = await renderMutation(addToWishlistAtom);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(wishlist(queryClient)).toBeUndefined();
@@ -225,19 +227,21 @@ describe("addToWishlistAtom", () => {
 
   it("puts the old list back when the request fails", async () => {
     mockAddWishlist.mockRejectedValue(new Error("500"));
-    const { run, queryClient, settled } = renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list(OTHER)]]);
+    const { run, queryClient, settled } = await renderMutation(addToWishlistAtom, [
+      [["userWishlist", "u1"], list(OTHER)],
+    ]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settled();
 
     expect(wishlist(queryClient)).toEqual(list(OTHER));
   });
 
   it("refetches the list once the request settles", async () => {
-    const { run, queryClient } = renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list()]]);
+    const { run, queryClient } = await renderMutation(addToWishlistAtom, [[["userWishlist", "u1"], list()]]);
     const invalidate = jest.spyOn(queryClient, "invalidateQueries");
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["userWishlist", "u1"] });
@@ -246,8 +250,8 @@ describe("addToWishlistAtom", () => {
 
 describe("removeFromFavoritesAtom", () => {
   it("calls the endpoint with the trail identifier", async () => {
-    const { run } = renderMutation(removeFromFavoritesAtom, [[["userFavorites", "u1"], list(TRAIL)]]);
-    run(TRAIL);
+    const { run } = await renderMutation(removeFromFavoritesAtom, [[["userFavorites", "u1"], list(TRAIL)]]);
+    await run(TRAIL);
     await settle();
 
     expect(mockRemoveFavorite).toHaveBeenCalledWith(TRAIL);
@@ -256,11 +260,11 @@ describe("removeFromFavoritesAtom", () => {
   it("drops the trail before the request finishes", async () => {
     const inFlight = pending();
     mockRemoveFavorite.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(removeFromFavoritesAtom, [
+    const { run, queryClient } = await renderMutation(removeFromFavoritesAtom, [
       [["userFavorites", "u1"], list(OTHER, TRAIL)],
     ]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(favorites(queryClient)).toEqual(list(OTHER));
@@ -270,11 +274,11 @@ describe("removeFromFavoritesAtom", () => {
   it("leaves the other trails on the list", async () => {
     const inFlight = pending();
     mockRemoveFavorite.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(removeFromFavoritesAtom, [
+    const { run, queryClient } = await renderMutation(removeFromFavoritesAtom, [
       [["userFavorites", "u1"], list(OTHER, TRAIL)],
     ]);
 
-    run(OTHER);
+    await run(OTHER);
     await settle();
 
     expect(favorites(queryClient)).toEqual(list(TRAIL));
@@ -283,21 +287,23 @@ describe("removeFromFavoritesAtom", () => {
 
   it("puts the removed trail back when the request fails", async () => {
     mockRemoveFavorite.mockRejectedValue(new Error("500"));
-    const { run, queryClient, settled } = renderMutation(removeFromFavoritesAtom, [
+    const { run, queryClient, settled } = await renderMutation(removeFromFavoritesAtom, [
       [["userFavorites", "u1"], list(OTHER, TRAIL)],
     ]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settled();
 
     expect(favorites(queryClient)).toEqual(list(OTHER, TRAIL));
   });
 
   it("refetches the list once the request settles", async () => {
-    const { run, queryClient } = renderMutation(removeFromFavoritesAtom, [[["userFavorites", "u1"], list(TRAIL)]]);
+    const { run, queryClient } = await renderMutation(removeFromFavoritesAtom, [
+      [["userFavorites", "u1"], list(TRAIL)],
+    ]);
     const invalidate = jest.spyOn(queryClient, "invalidateQueries");
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["userFavorites", "u1"] });
@@ -306,8 +312,8 @@ describe("removeFromFavoritesAtom", () => {
 
 describe("removeFromWishlistAtom", () => {
   it("calls the endpoint with the trail identifier", async () => {
-    const { run } = renderMutation(removeFromWishlistAtom, [[["userWishlist", "u1"], list(TRAIL)]]);
-    run(TRAIL);
+    const { run } = await renderMutation(removeFromWishlistAtom, [[["userWishlist", "u1"], list(TRAIL)]]);
+    await run(TRAIL);
     await settle();
 
     expect(mockRemoveWishlist).toHaveBeenCalledWith(TRAIL);
@@ -316,9 +322,11 @@ describe("removeFromWishlistAtom", () => {
   it("drops the trail before the request finishes", async () => {
     const inFlight = pending();
     mockRemoveWishlist.mockReturnValue(inFlight.promise);
-    const { run, queryClient } = renderMutation(removeFromWishlistAtom, [[["userWishlist", "u1"], list(OTHER, TRAIL)]]);
+    const { run, queryClient } = await renderMutation(removeFromWishlistAtom, [
+      [["userWishlist", "u1"], list(OTHER, TRAIL)],
+    ]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(wishlist(queryClient)).toEqual(list(OTHER));
@@ -327,21 +335,21 @@ describe("removeFromWishlistAtom", () => {
 
   it("puts the removed trail back when the request fails", async () => {
     mockRemoveWishlist.mockRejectedValue(new Error("500"));
-    const { run, queryClient, settled } = renderMutation(removeFromWishlistAtom, [
+    const { run, queryClient, settled } = await renderMutation(removeFromWishlistAtom, [
       [["userWishlist", "u1"], list(OTHER, TRAIL)],
     ]);
 
-    run(TRAIL);
+    await run(TRAIL);
     await settled();
 
     expect(wishlist(queryClient)).toEqual(list(OTHER, TRAIL));
   });
 
   it("refetches the list once the request settles", async () => {
-    const { run, queryClient } = renderMutation(removeFromWishlistAtom, [[["userWishlist", "u1"], list(TRAIL)]]);
+    const { run, queryClient } = await renderMutation(removeFromWishlistAtom, [[["userWishlist", "u1"], list(TRAIL)]]);
     const invalidate = jest.spyOn(queryClient, "invalidateQueries");
 
-    run(TRAIL);
+    await run(TRAIL);
     await settle();
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["userWishlist", "u1"] });

@@ -43,14 +43,14 @@ const { InvalidCredentialsError, AccountNotVerifiedError } = require("@/services
 
 const WIDTH = Dimensions.get("screen").width;
 
-function fillForm({ email = "vandrare@example.com", password = "hemligt123" } = {}) {
-  fireEvent.changeText(screen.getByTestId("login-email"), email);
-  fireEvent.changeText(screen.getByTestId("login-password"), password);
+async function fillForm({ email = "vandrare@example.com", password = "hemligt123" } = {}) {
+  await fireEvent.changeText(screen.getByTestId("login-email"), email);
+  await fireEvent.changeText(screen.getByTestId("login-password"), password);
 }
 
 // Validation and the login call both resolve on microtasks, so they are flushed rather than waited for.
 async function submit() {
-  fireEvent.press(screen.getByTestId("login-submit"));
+  await fireEvent.press(screen.getByTestId("login-submit"));
   await act(async () => {});
 }
 
@@ -60,19 +60,19 @@ beforeEach(() => {
 });
 
 it("logs in with what was typed", async () => {
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm();
+  await fillForm();
   await submit();
 
   expect(mockLogin).toHaveBeenCalledWith("vandrare@example.com", "hemligt123");
 });
 
 it("logs in without the space the keyboard left after the address, and suggests no words there", async () => {
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
   expect(screen.getByTestId("login-email")).toHaveProp("autoCorrect", false);
-  fillForm({ email: "vandrare@example.com " });
+  await fillForm({ email: "vandrare@example.com " });
   await submit();
 
   expect(mockLogin).toHaveBeenCalledWith("vandrare@example.com", "hemligt123");
@@ -80,7 +80,7 @@ it("logs in without the space the keyboard left after the address, and suggests 
 
 // Each message lands under its own field, not merely somewhere on screen.
 it("names the field each validation message belongs to", async () => {
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
   await submit();
 
@@ -90,9 +90,9 @@ it("names the field each validation message belongs to", async () => {
 });
 
 it("rejects an address that is not one", async () => {
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm({ email: "vandrare-utan-snabel" });
+  await fillForm({ email: "vandrare-utan-snabel" });
   await submit();
 
   expect(screen.getByTestId("login-email-error")).toHaveTextContent("Ange en giltig e-post");
@@ -100,9 +100,9 @@ it("rejects an address that is not one", async () => {
 });
 
 it("rejects a password shorter than eight characters", async () => {
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm({ password: "kort" });
+  await fillForm({ password: "kort" });
   await submit();
 
   expect(screen.getByTestId("login-password-error")).toHaveTextContent("Lösenordet måste vara minst 8 tecken");
@@ -112,9 +112,9 @@ it("rejects a password shorter than eight characters", async () => {
 // Wrong credentials and a broken identity provider are different problems, and the message tells them apart.
 it("tells a wrong password apart from a failing login service", async () => {
   mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm();
+  await fillForm();
   await submit();
   expect(screen.getByTestId("login-error")).toHaveTextContent("Fel e-post eller lösenord.");
 
@@ -128,9 +128,9 @@ it("tells a wrong password apart from a failing login service", async () => {
 // them with no way forward, so they are sent to the verification step instead.
 it("sends a user whose address is not yet verified to the verification screen", async () => {
   mockLogin.mockRejectedValueOnce(new AccountNotVerifiedError());
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm();
+  await fillForm();
   await submit();
 
   expect(mockPush).toHaveBeenCalledWith({
@@ -144,9 +144,9 @@ it("sends a user whose address is not yet verified to the verification screen", 
 // still stop at the message and not navigate anywhere.
 it("does not send an ordinary wrong password to the verification screen", async () => {
   mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm();
+  await fillForm();
   await submit();
 
   expect(screen.getByTestId("login-error")).toHaveTextContent("Fel e-post eller lösenord.");
@@ -155,9 +155,9 @@ it("does not send an ordinary wrong password to the verification screen", async 
 
 it("clears the previous failure when the form is submitted again", async () => {
   mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm();
+  await fillForm();
   await submit();
   expect(screen.getByTestId("login-error")).toBeTruthy();
 
@@ -166,17 +166,17 @@ it("clears the previous failure when the form is submitted again", async () => {
   expect(screen.queryByTestId("login-error")).toBeNull();
 });
 
-it("offers a back button only where the caller asked for one", () => {
-  const { rerender } = renderWithProviders(<LoginScreen />);
+it("offers a back button only where the caller asked for one", async () => {
+  const { rerender } = await renderWithProviders(<LoginScreen />);
   expect(screen.queryByTestId("icon-chevron-left")).toBeNull();
 
-  rerender(<LoginScreen showBackButton />);
+  await rerender(<LoginScreen showBackButton />);
   expect(screen.getByTestId("icon-chevron-left")).toBeTruthy();
 });
 
 // The column is pinned to the field width, so a validation message wraps inside it.
 it("keeps the error message inside the field column", async () => {
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
   await submit();
   const message = screen.getByTestId("login-email-error");
@@ -188,8 +188,8 @@ it("keeps the error message inside the field column", async () => {
   });
 });
 
-it("sizes the card and its button against the screen width", () => {
-  renderWithProviders(<LoginScreen />);
+it("sizes the card and its button against the screen width", async () => {
+  await renderWithProviders(<LoginScreen />);
 
   expect(screen.getByTestId("login-field-column")).toHaveStyle({ width: WIDTH * 0.65 });
   // Paper's Surface splits the style: layout on the outer layer, colour and radius on the inner.
@@ -198,11 +198,11 @@ it("sizes the card and its button against the screen width", () => {
 });
 
 it("returns to the screen whose sign-in prompt led here, once", async () => {
-  const { store } = renderWithProviders(<LoginScreen />, {
+  const { store } = await renderWithProviders(<LoginScreen />, {
     initialAtoms: [[loginReturnPathAtom, "/events/event/ev1"]],
   });
 
-  fillForm();
+  await fillForm();
   await submit();
 
   expect(mockNavigate).toHaveBeenCalledWith("/events/event/ev1");
@@ -211,11 +211,11 @@ it("returns to the screen whose sign-in prompt led here, once", async () => {
 
 it("keeps the return for the next try when the login fails", async () => {
   mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
-  const { store } = renderWithProviders(<LoginScreen />, {
+  const { store } = await renderWithProviders(<LoginScreen />, {
     initialAtoms: [[loginReturnPathAtom, "/events/event/ev1"]],
   });
 
-  fillForm();
+  await fillForm();
   await submit();
 
   expect(mockNavigate).not.toHaveBeenCalled();
@@ -223,9 +223,9 @@ it("keeps the return for the next try when the login fails", async () => {
 });
 
 it("stays put after a login that no prompt asked to return from", async () => {
-  renderWithProviders(<LoginScreen />);
+  await renderWithProviders(<LoginScreen />);
 
-  fillForm();
+  await fillForm();
   await submit();
 
   expect(mockNavigate).not.toHaveBeenCalled();

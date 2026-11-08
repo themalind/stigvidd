@@ -9,7 +9,6 @@ import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import TrailObstacleUpdateForm from "@/components/trail/obstacle/trail-obstacle-update-form";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { strayText } from "@/test/tree";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Platform } from "react-native";
 
@@ -28,7 +27,7 @@ const DESCRIPTION = "Ett träd ligger över spången vid bäcken";
 const onDismiss = jest.fn();
 
 async function show(props: { visible?: boolean; initialDescription?: string; initialIssueType?: string } = {}) {
-  const rendered = renderWithProviders(
+  const rendered = await renderWithProviders(
     <TrailObstacleUpdateForm
       obstacleIdentifier={OBSTACLE_ID}
       trailIdentifier={TRAIL_ID}
@@ -44,12 +43,12 @@ async function show(props: { visible?: boolean; initialDescription?: string; ini
 }
 
 async function write(text: string) {
-  fireEvent.changeText(screen.getByTestId("obstacle-update-description"), text);
+  await fireEvent.changeText(screen.getByTestId("obstacle-update-description"), text);
   await settle();
 }
 
 async function save() {
-  fireEvent.press(screen.getByTestId("obstacle-update-submit"));
+  await fireEvent.press(screen.getByTestId("obstacle-update-submit"));
   await settle();
 }
 
@@ -59,9 +58,9 @@ async function pickCategory(label: string) {
   const original = Platform.OS;
   Platform.OS = "android";
   try {
-    fireEvent.press(screen.getByText("Nedfallet träd"));
+    await fireEvent.press(screen.getByText("Nedfallet träd"));
     await settle();
-    fireEvent.press(screen.getByText(label));
+    await fireEvent.press(screen.getByText(label));
     await settle();
   } finally {
     Platform.OS = original;
@@ -91,7 +90,7 @@ it("stays out of the way until it is opened", async () => {
 it("closes without saving when the close icon is pressed", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("icon-close"));
+  await fireEvent.press(screen.getByTestId("icon-close"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalled();
@@ -199,11 +198,11 @@ it("shows no category picker before the categories have arrived", async () => {
 });
 
 // issueTypes?.length puts the number 0 in the tree, and a raw string under a View is a red box
-// on a device that no query can see.
+// on a device; the test renderer throws on it the same way.
 it("renders no stray zero when the category list comes back empty", async () => {
   mockIssueTypes.mockResolvedValue([]);
-  const rendered = await show();
+  await show();
   await settle();
 
-  expect(strayText(rendered.toJSON())).toEqual([]);
+  expect(screen.getByTestId("obstacle-update-submit")).toBeTruthy();
 });

@@ -98,9 +98,9 @@ function incomingRequest(nickName: string, createdAt = "2026-09-18T09:00:00Z") {
   return { requesterIdentifier: `id-${nickName}`, requesterNickName: nickName, createdAt };
 }
 
-function openBlockFromMenu() {
-  fireEvent.press(screen.getByTestId("block-requester-menu"));
-  fireEvent.press(screen.getByText("Blockera"));
+async function openBlockFromMenu() {
+  await fireEvent.press(screen.getByTestId("block-requester-menu"));
+  await fireEvent.press(screen.getByText("Blockera"));
 }
 
 function sharedHike(hikeName: string, sharedByIdentifier: string, sharedAt: string) {
@@ -116,14 +116,14 @@ function outgoingRequest(nickName: string) {
 }
 
 async function show() {
-  const rendered = renderWithProviders(<FriendsScreen />);
+  const rendered = await renderWithProviders(<FriendsScreen />);
   // Not the title: the failed list carries "Vänner" too, and queryByText throws on two matches.
   await flushUntil(() => screen.queryByPlaceholderText("Sök användare"));
   return rendered;
 }
 
-function searchFor(query: string) {
-  fireEvent.changeText(screen.getByPlaceholderText("Sök användare"), query);
+async function searchFor(query: string) {
+  await fireEvent.changeText(screen.getByPlaceholderText("Sök användare"), query);
 }
 
 // An absent section gives nothing to wait for, so the ticks are drained instead.
@@ -177,11 +177,11 @@ it("says so when there are none", async () => {
 it("shows results from two characters", async () => {
   await show();
 
-  searchFor("b");
+  await searchFor("b");
   expect(screen.queryByText("Sökresultat")).toBeNull();
 
   mockSearch = { data: [friend("bo")], isPending: false, isError: false };
-  searchFor("bo");
+  await searchFor("bo");
 
   expect(screen.getByText("Sökresultat")).toBeTruthy();
   expect(screen.getByText("bo")).toBeTruthy();
@@ -190,9 +190,9 @@ it("shows results from two characters", async () => {
 it("sends a request to the user that was picked", async () => {
   mockSearch = { data: [friend("bengt")], isPending: false, isError: false };
   await show();
-  searchFor("ber");
+  await searchFor("ber");
 
-  fireEvent.press(actionButton("Skicka vänförfrågan"));
+  await fireEvent.press(actionButton("Skicka vänförfrågan"));
 
   expect(mockSendRequest).toHaveBeenCalledWith("bengt");
 });
@@ -202,7 +202,7 @@ it("offers no second request to someone already asked or already a friend", asyn
   mockSearch = { data: [friend("bertil"), friend("dora")], isPending: false, isError: false };
   mockGetOutgoing.mockResolvedValue([outgoingRequest("dora")]);
   await show();
-  searchFor("bertil");
+  await searchFor("bertil");
 
   // The two states that replace the button are plain icons, with no action to name.
   expect(screen.getByTestId("icon-account-check", { includeHiddenElements: true })).toBeTruthy();
@@ -214,10 +214,10 @@ it("answers an incoming request with the requester's own identifier", async () =
   mockIncoming = { data: [incomingRequest("erik"), incomingRequest("frida")], isPending: false, isError: false };
   await show();
 
-  fireEvent.press(actionButton("Acceptera vänförfrågan", 1));
+  await fireEvent.press(actionButton("Acceptera vänförfrågan", 1));
   expect(mockAccept).toHaveBeenCalledWith("id-frida");
 
-  fireEvent.press(actionButton("Avvisa vänförfrågan", 0));
+  await fireEvent.press(actionButton("Avvisa vänförfrågan", 0));
   expect(mockReject).toHaveBeenCalledWith("id-erik");
 });
 
@@ -249,9 +249,9 @@ describe("a banned account", () => {
     mockWriteBlocked = "banned";
     mockSearch = { data: [friend("bengt")], isPending: false, isError: false };
     await show();
-    searchFor("ber");
+    await searchFor("ber");
 
-    fireEvent.press(actionButton("Skicka vänförfrågan"));
+    await fireEvent.press(actionButton("Skicka vänförfrågan"));
 
     expect(mockSendRequest).not.toHaveBeenCalled();
     expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
@@ -262,11 +262,11 @@ describe("a banned account", () => {
     mockIncoming = { data: [incomingRequest("erik")], isPending: false, isError: false };
     await show();
 
-    fireEvent.press(actionButton("Acceptera vänförfrågan"));
+    await fireEvent.press(actionButton("Acceptera vänförfrågan"));
     expect(mockAccept).not.toHaveBeenCalled();
     expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
 
-    fireEvent.press(actionButton("Avvisa vänförfrågan"));
+    await fireEvent.press(actionButton("Avvisa vänförfrågan"));
     expect(mockReject).toHaveBeenCalledWith("id-erik");
   });
 });
@@ -275,7 +275,7 @@ describe("a friend row", () => {
   it("opens that friend's profile", async () => {
     await show();
 
-    fireEvent.press(screen.getByLabelText("cissi"));
+    await fireEvent.press(screen.getByLabelText("cissi"));
 
     expect(mockNavigate).toHaveBeenCalledWith({
       pathname: "/(tabs)/(profile-stack)/user/friend/[identifier]",
@@ -317,10 +317,10 @@ it("caps each list at five rows and expands on request", async () => {
   expect(screen.getByText("vän-4")).toBeTruthy();
   expect(screen.queryByText("vän-5")).toBeNull();
 
-  fireEvent.press(screen.getByText("Visa alla (7)"));
+  await fireEvent.press(screen.getByText("Visa alla (7)"));
   expect(screen.getByText("vän-6")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Visa färre"));
+  await fireEvent.press(screen.getByText("Visa färre"));
   expect(screen.queryByText("vän-5")).toBeNull();
 });
 
@@ -333,7 +333,7 @@ it("keeps a failed list to itself, and offers it a retry", async () => {
   expect(screen.getByText(/Kunde inte hämta/)).toBeTruthy();
   expect(screen.getByText("erik")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   expect(mockRefetchFriends).toHaveBeenCalledTimes(1);
 });
 
@@ -344,17 +344,17 @@ it("shows the sent requests with a way to take them back", async () => {
 
   expect(screen.getByText("Skickade (1)")).toBeTruthy();
 
-  fireEvent.press(actionButton("Ångra skickad förfrågan"));
+  await fireEvent.press(actionButton("Ångra skickad förfrågan"));
   expect(screen.getByText(/dra tillbaka din vänförfrågan till dora/)).toBeTruthy();
   expect(mockWithdraw).not.toHaveBeenCalled();
 
-  fireEvent.press(screen.getByText("Avbryt"));
+  await fireEvent.press(screen.getByText("Avbryt"));
   expect(mockWithdraw).not.toHaveBeenCalled();
 
-  fireEvent.press(actionButton("Ångra skickad förfrågan"));
+  await fireEvent.press(actionButton("Ångra skickad förfrågan"));
   const confirm = screen.getAllByText("Dra tillbaka").at(-1);
   if (!confirm) throw new Error("expected a confirm button");
-  fireEvent.press(confirm);
+  await fireEvent.press(confirm);
 
   expect(mockWithdraw).toHaveBeenCalledWith("id-dora");
   expect(mockRemoveFriend).not.toHaveBeenCalled();
@@ -367,7 +367,7 @@ describe("blocking a requester", () => {
     await show();
 
     expect(screen.queryByText("Blockera")).toBeNull();
-    openBlockFromMenu();
+    await openBlockFromMenu();
 
     expect(screen.getByText("Blockera Grima?")).toBeTruthy();
     expect(mockBlock).not.toHaveBeenCalled();
@@ -377,8 +377,8 @@ describe("blocking a requester", () => {
     mockIncoming = { data: [incomingRequest("Grima")], isPending: false, isError: false };
     await show();
 
-    openBlockFromMenu();
-    fireEvent.press(screen.getByTestId("alert-dialog-confirm"));
+    await openBlockFromMenu();
+    await fireEvent.press(screen.getByTestId("alert-dialog-confirm"));
 
     expect(mockBlock).toHaveBeenCalledWith("id-Grima");
   });
@@ -388,7 +388,7 @@ describe("the blocked section", () => {
   async function openBlocked(label: string) {
     await show();
     await flushUntil(() => screen.queryByText(label));
-    fireEvent.press(screen.getByText(label));
+    await fireEvent.press(screen.getByText(label));
   }
 
   it("stays away entirely when nobody is blocked", async () => {
@@ -421,7 +421,7 @@ describe("the blocked section", () => {
     mockGetBlocked.mockResolvedValue([blockedUser("Grima"), blockedUser("Bill")]);
     await openBlocked("Blockerade (2)");
 
-    fireEvent.press(screen.getAllByTestId("unblock-user")[1]);
+    await fireEvent.press(screen.getAllByTestId("unblock-user")[1]);
 
     expect(mockUnblock).toHaveBeenCalledWith("id-Bill");
   });

@@ -42,32 +42,32 @@ beforeEach(() => {
   mockRemovePending = false;
 });
 
-function press() {
-  fireEvent.press(screen.getByText("Vill gå"));
+async function press() {
+  await fireEvent.press(screen.getByText("Vill gå"));
 }
 
 describe("AddToUserWishlist", () => {
-  it("shows a plus when the trail is not on the list", () => {
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+  it("shows a plus when the trail is not on the list", async () => {
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
     expect(screen.getByTestId("icon-add")).toBeTruthy();
   });
 
-  it("shows a check when the trail is on the list", () => {
+  it("shows a check when the trail is on the list", async () => {
     mockWishlist = [{ identifier: TRAIL_ID }];
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
     expect(screen.getByTestId("icon-check")).toBeTruthy();
   });
 
-  it("ignores an entry belonging to another trail", () => {
+  it("ignores an entry belonging to another trail", async () => {
     mockWishlist = [{ identifier: "another-trail" }];
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
     expect(screen.getByTestId("icon-add")).toBeTruthy();
   });
 
   it("asks a signed-out user to sign in instead of mutating", async () => {
     mockIsAuthenticated = false;
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
-    press();
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+    await press();
     await settle();
 
     expect(screen.getByText("Du behöver vara inloggad för att spara promenader.")).toBeTruthy();
@@ -76,8 +76,8 @@ describe("AddToUserWishlist", () => {
   });
 
   it("adds the trail when it is not listed yet", async () => {
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
-    press();
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+    await press();
     await settle();
 
     expect(mockAdd).toHaveBeenCalledWith(TRAIL_ID, expect.objectContaining({ onError: expect.any(Function) }));
@@ -87,8 +87,8 @@ describe("AddToUserWishlist", () => {
   // The removal carries no onError handler, so a failed removal is silent.
   it("removes the trail with no error handling when it is listed", async () => {
     mockWishlist = [{ identifier: TRAIL_ID }];
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
-    press();
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+    await press();
     await settle();
 
     expect(mockRemove).toHaveBeenCalledWith(TRAIL_ID);
@@ -97,8 +97,8 @@ describe("AddToUserWishlist", () => {
 
   it("is disabled while an add is in flight", async () => {
     mockAddPending = true;
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
-    press();
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+    await press();
     await settle();
 
     expect(mockAdd).not.toHaveBeenCalled();
@@ -107,8 +107,8 @@ describe("AddToUserWishlist", () => {
   it("is disabled while a removal is in flight", async () => {
     mockRemovePending = true;
     mockWishlist = [{ identifier: TRAIL_ID }];
-    renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
-    press();
+    await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+    await press();
     await settle();
 
     expect(mockRemove).not.toHaveBeenCalled();
@@ -116,8 +116,8 @@ describe("AddToUserWishlist", () => {
 
   describe("when the add fails", () => {
     async function failWith(error: unknown) {
-      const { store } = renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
-      press();
+      const { store } = await renderWithProviders(<AddToUserWishlist trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       const { onError } = mockAdd.mock.calls[0][1] as { onError: (e: unknown) => void };

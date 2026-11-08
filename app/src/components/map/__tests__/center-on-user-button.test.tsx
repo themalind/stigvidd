@@ -59,7 +59,7 @@ afterEach(() => {
 });
 
 async function mount() {
-  const rendered = renderWithProviders(<CenterOnUserButton cameraRef={cameraRef} />);
+  const rendered = await renderWithProviders(<CenterOnUserButton cameraRef={cameraRef} />);
   await waitFor(() => expect(screen.getByTestId("center-on-user")).toBeOnTheScreen());
   await flushUntil(() => rendered.queryClient.getQueryData(USER_LOCATION_KEY) !== undefined);
   return rendered;
@@ -76,7 +76,7 @@ it("asks for the permission instead of flying, while the phone still allows aski
   mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
   mockRequestPermissions.mockResolvedValue({ granted: false, canAskAgain: false });
 
-  fireEvent.press(screen.getByTestId("center-on-user"));
+  await fireEvent.press(screen.getByTestId("center-on-user"));
 
   await waitFor(() => expect(mockRequestPermissions).toHaveBeenCalledTimes(1));
   expect(mockFlyTo).not.toHaveBeenCalled();
@@ -89,7 +89,7 @@ it("refetches the position once the permission is granted", async () => {
   mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
   mockRequestPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
-  fireEvent.press(screen.getByTestId("center-on-user"));
+  await fireEvent.press(screen.getByTestId("center-on-user"));
 
   await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: USER_LOCATION_KEY }));
 });
@@ -98,7 +98,7 @@ it("refetches the position once the permission is granted", async () => {
 it("sends a refusal the app cannot reverse to the phone's settings, and says why", async () => {
   const { store } = await mount();
 
-  fireEvent.press(screen.getByTestId("center-on-user"));
+  await fireEvent.press(screen.getByTestId("center-on-user"));
 
   await waitFor(() => expect(Linking.openSettings).toHaveBeenCalled());
   expect(mockRequestPermissions).not.toHaveBeenCalled();
@@ -114,7 +114,7 @@ it("only refetches when the permission is already there", async () => {
   const invalidate = jest.spyOn(queryClient, "invalidateQueries");
   mockGetPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
 
-  fireEvent.press(screen.getByTestId("center-on-user"));
+  await fireEvent.press(screen.getByTestId("center-on-user"));
 
   await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: USER_LOCATION_KEY }));
   expect(mockRequestPermissions).not.toHaveBeenCalled();
@@ -133,7 +133,7 @@ it("flies to the user, and asks for nothing, once there is a position", async ()
     }),
   );
 
-  fireEvent.press(screen.getByTestId("center-on-user"));
+  await fireEvent.press(screen.getByTestId("center-on-user"));
 
   expect(mockFlyTo).toHaveBeenCalledWith({ center: [12.5, 57.5], zoom: 14, duration: 800 });
   expect(mockRequestPermissions).not.toHaveBeenCalled();

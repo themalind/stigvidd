@@ -25,7 +25,7 @@ afterEach(() => {
 });
 
 async function showDialog() {
-  const rendered = renderWithProviders(<ConsentDialog />);
+  const rendered = await renderWithProviders(<ConsentDialog />);
   await loadConsent();
   await waitFor(() => expect(screen.getByTestId("consent-dialog")).toBeOnTheScreen());
   return rendered;
@@ -53,7 +53,7 @@ it("offers exactly the two statistics answers and no third button", async () => 
 it("records a refusal as the answer that it is", async () => {
   await showDialog();
 
-  fireEvent.press(screen.getByTestId("consent-decline"));
+  await fireEvent.press(screen.getByTestId("consent-decline"));
 
   await waitFor(async () => expect(await getConsent()).toBe("denied"));
   expect(screen.queryByTestId("consent-dialog")).toBeNull();

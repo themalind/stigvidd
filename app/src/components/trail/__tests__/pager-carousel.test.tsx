@@ -10,11 +10,12 @@ import PagerCarousel from "@/components/trail/pager-carousel";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDefaultTheme } from "@/constants/theme";
 import { TrailOverview } from "@/data/types";
+import { getAllByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { Image as ExpoImage } from "expo-image";
 import { fireEvent, screen } from "@testing-library/react-native";
-import { Dimensions, FlatList, StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 const mockNavigate = jest.fn();
 
@@ -50,8 +51,9 @@ function show(data: TrailOverview[] = THREE, onItemPress?: (item: TrailOverview)
 }
 
 // The pager reads its page from the scroll offset; this is the event the platform sends when a swipe settles.
-function swipeTo(index: number) {
-  fireEvent(screen.UNSAFE_getByType(FlatList), "momentumScrollEnd", {
+async function swipeTo(index: number) {
+  const [scroller] = screen.container.queryAll((node) => node.type === "RCTScrollView");
+  await fireEvent(scroller, "momentumScrollEnd", {
     nativeEvent: { contentOffset: { x: PAGE * index }, contentSize: { width: PAGE * 3 } },
   });
 }
@@ -70,8 +72,8 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("shows each trail with its length", () => {
-  show();
+it("shows each trail with its length", async () => {
+  await show();
 
   expect(screen.getByText("Skogsleden")).toBeTruthy();
   expect(screen.getByText("4.2 km")).toBeTruthy();
@@ -80,8 +82,8 @@ it("shows each trail with its length", () => {
 });
 
 // The dots are the only thing that says how many trails there are to swipe through.
-it("gives every trail a dot, and marks the one on screen", () => {
-  show();
+it("gives every trail a dot, and marks the one on screen", async () => {
+  await show();
 
   expect(screen.getAllByTestId(/carousel-dot-/)).toHaveLength(3);
   expect(dotColour(0)).toBe(AppDefaultTheme.colors.primary);
@@ -89,9 +91,9 @@ it("gives every trail a dot, and marks the one on screen", () => {
 });
 
 it("follows a swipe with the dots", async () => {
-  show();
+  await show();
 
-  swipeTo(2);
+  await swipeTo(2);
   await settle();
 
   expect(dotColour(2)).toBe(AppDefaultTheme.colors.primary);
@@ -99,24 +101,24 @@ it("follows a swipe with the dots", async () => {
 });
 
 // There is nothing to the left of the first page, so the arrow would be a lie.
-it("hides the back arrow on the first page", () => {
-  show();
+it("hides the back arrow on the first page", async () => {
+  await show();
 
   expect(screen.queryByTestId("carousel-prev")).toBeNull();
   expect(screen.getByTestId("carousel-next").props.accessibilityState).toMatchObject({ disabled: false });
 });
 
 it("shows the back arrow once there is something to go back to", async () => {
-  show();
+  await show();
 
-  swipeTo(1);
+  await swipeTo(1);
   await settle();
 
   expect(screen.getByTestId("carousel-prev")).toBeTruthy();
 });
 
-it("offers no arrows at all for a single trail", () => {
-  show([trail()]);
+it("offers no arrows at all for a single trail", async () => {
+  await show([trail()]);
 
   expect(screen.queryByTestId("carousel-next")).toBeNull();
   expect(screen.queryByTestId("carousel-prev")).toBeNull();
@@ -124,20 +126,20 @@ it("offers no arrows at all for a single trail", () => {
 });
 
 it("steps forward on the arrow", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("carousel-next"));
+  await fireEvent.press(screen.getByTestId("carousel-next"));
   await settle();
 
   expect(dotColour(1)).toBe(AppDefaultTheme.colors.primary);
 });
 
 it("steps back again", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("carousel-next"));
+  await fireEvent.press(screen.getByTestId("carousel-next"));
   await settle();
-  fireEvent.press(screen.getByTestId("carousel-prev"));
+  await fireEvent.press(screen.getByTestId("carousel-prev"));
   await settle();
 
   expect(dotColour(0)).toBe(AppDefaultTheme.colors.primary);
@@ -145,25 +147,25 @@ it("steps back again", async () => {
 
 // Past the last trail the arrow dims rather than disappearing, which would shift the layout under the thumb.
 it("dims the forward arrow on the last page and stops there", async () => {
-  show();
+  await show();
 
-  swipeTo(2);
+  await swipeTo(2);
   await settle();
 
   const next = screen.getByTestId("carousel-next");
   expect(next).toHaveStyle({ opacity: 0.4, backgroundColor: "rgba(0,0,0,0.15)" });
   // goTo clamps as well, and a screen reader is told the arrow is disabled rather than left to announce it.
   expect(next.props.accessibilityState).toMatchObject({ disabled: true });
-  fireEvent.press(next);
+  await fireEvent.press(next);
   await settle();
 
   expect(dotColour(2)).toBe(AppDefaultTheme.colors.primary);
 });
 
-it("opens the trail that was pressed", () => {
-  show();
+it("opens the trail that was pressed", async () => {
+  await show();
 
-  fireEvent.press(screen.getByText("Sjöleden"));
+  await fireEvent.press(screen.getByText("Sjöleden"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(home)/trail/[identifier]",
@@ -172,64 +174,65 @@ it("opens the trail that was pressed", () => {
 });
 
 // A host that passes its own handler puts the carousel somewhere the home route is wrong.
-it("leaves the press to its host when it was given one", () => {
+it("leaves the press to its host when it was given one", async () => {
   const onItemPress = jest.fn();
-  show(THREE, onItemPress);
+  await show(THREE, onItemPress);
 
-  fireEvent.press(screen.getByText("Skogsleden"));
+  await fireEvent.press(screen.getByText("Skogsleden"));
 
   expect(onItemPress).toHaveBeenCalledWith(expect.objectContaining({ identifier: "trail-1" }));
   expect(mockNavigate).not.toHaveBeenCalled();
 });
 
-it("shows the trail's own first image", () => {
-  show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/a.jpg" }] })]);
+it("shows the trail's own first image", async () => {
+  await show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/a.jpg" }] })]);
 
-  expect(screen.UNSAFE_getAllByType(ExpoImage)[0].props.source).toBe("https://stigvidd.se/a.jpg");
+  expect(getAllByType(ExpoImage)[0].props.source).toBe("https://stigvidd.se/a.jpg");
 });
 
 // A trail with no photographs still has to fill the page, so a bundled placeholder stands in.
-it("falls back to the bundled placeholder when a trail has no images", () => {
-  show([trail({ trailImagesResponse: [] })]);
+it("falls back to the bundled placeholder when a trail has no images", async () => {
+  await show([trail({ trailImagesResponse: [] })]);
 
   // A require() is an asset handle rather than a URL; anything but a string is the local one.
-  expect(typeof screen.UNSAFE_getAllByType(ExpoImage)[0].props.source).not.toBe("string");
+  expect(typeof getAllByType(ExpoImage)[0].props.source).not.toBe("string");
 });
 
-it("hands the overlay the same image it is drawn over", () => {
-  show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/mock/a.jpg" }] })]);
+it("hands the overlay the same image it is drawn over", async () => {
+  await show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/mock/a.jpg" }] })]);
 
-  expect(screen.UNSAFE_getAllByType(ExampleImageOverlay)[0].props.source).toBe("https://stigvidd.se/mock/a.jpg");
+  expect(getAllByType(ExampleImageOverlay)[0].props.source).toBe("https://stigvidd.se/mock/a.jpg");
 });
 
 // The placeholder art is ours, so it must not be labelled as a stand-in for a photograph.
-it("labels a mock photograph, and leaves a real one alone", () => {
-  show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/mock/a.jpg" }] })]);
-  fireEvent(screen.UNSAFE_getAllByProps({ pointerEvents: "none" })[0], "layout", {
+it("labels a mock photograph, and leaves a real one alone", async () => {
+  await show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/mock/a.jpg" }] })]);
+  const [overlay] = screen.container.queryAll((node) => node.props.pointerEvents === "none");
+  await fireEvent(overlay, "layout", {
     nativeEvent: { layout: { width: 300, height: 180 } },
   });
 
   expect(screen.getByText("Exempelbild")).toBeTruthy();
 
-  screen.unmount();
-  show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/riktig.jpg" }] })]);
+  await screen.unmount();
+  await show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/riktig.jpg" }] })]);
 
   expect(screen.queryByText("Exempelbild")).toBeNull();
 });
 
-it("sizes each page to the window, and the picture to the page", () => {
-  show();
+it("sizes each page to the window, and the picture to the page", async () => {
+  await show();
 
-  expect(screen.UNSAFE_getAllByType(ExpoImage)[0].props.style).toEqual(
+  expect(getAllByType(ExpoImage)[0].props.style).toEqual(
     expect.objectContaining({ width: PAGE, height: Math.round(PAGE * 0.6), borderRadius: BORDER_RADIUS }),
   );
 });
 
 // The arrows float over the picture, centred on its height rather than the page's.
-it("centres the arrows over the picture, one at each edge", () => {
-  show();
+it("centres the arrows over the picture, one at each edge", async () => {
+  await show();
 
-  swipeTo(1);
+  await swipeTo(1);
 
   expect(screen.getByTestId("carousel-prev")).toHaveStyle({
     position: "absolute",
@@ -243,8 +246,8 @@ it("centres the arrows over the picture, one at each edge", () => {
   expect(screen.getByTestId("carousel-next")).toHaveStyle({ position: "absolute", right: 8 });
 });
 
-it("lays the dots out in a centred row under the picture", () => {
-  show();
+it("lays the dots out in a centred row under the picture", async () => {
+  await show();
 
   expect(screen.getByTestId("carousel-dots")).toHaveStyle({
     flexDirection: "row",

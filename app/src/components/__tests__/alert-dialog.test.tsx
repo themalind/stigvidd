@@ -28,54 +28,54 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it("renders the title and every line of the body", () => {
-  renderWithProviders(<AlertDialog {...props()} />);
+it("renders the title and every line of the body", async () => {
+  await renderWithProviders(<AlertDialog {...props()} />);
 
   expect(screen.getByText("Ta bort vandringen?")).toBeTruthy();
   expect(screen.getByText("Det här går inte att ångra.")).toBeTruthy();
   expect(screen.getByText("Rutten försvinner också.")).toBeTruthy();
 });
 
-it("renders nothing while it is dismissed", () => {
-  renderWithProviders(<AlertDialog {...props({ visible: false })} />);
+it("renders nothing while it is dismissed", async () => {
+  await renderWithProviders(<AlertDialog {...props({ visible: false })} />);
 
   expect(screen.queryByText("Ta bort vandringen?")).toBeNull();
 });
 
-it("labels the dismiss button Ok unless the caller names it", () => {
-  const { rerender } = renderWithProviders(<AlertDialog {...props()} />);
+it("labels the dismiss button Ok unless the caller names it", async () => {
+  const { rerender } = await renderWithProviders(<AlertDialog {...props()} />);
   expect(screen.getByText("Ok")).toBeTruthy();
 
-  rerender(<AlertDialog {...props({ cancelText: "Avbryt" })} />);
+  await rerender(<AlertDialog {...props({ cancelText: "Avbryt" })} />);
   expect(screen.getByText("Avbryt")).toBeTruthy();
   expect(screen.queryByText("Ok")).toBeNull();
 });
 
 // A confirm button needs both a label and a handler, or it does nothing and no one can reach it.
-it("offers confirmation only when it has both a label and a handler", () => {
-  const { rerender } = renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort" })} />);
+it("offers confirmation only when it has both a label and a handler", async () => {
+  const { rerender } = await renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort" })} />);
   expect(screen.queryByText("Ta bort")).toBeNull();
 
-  rerender(<AlertDialog {...props({ onConfirm })} />);
+  await rerender(<AlertDialog {...props({ onConfirm })} />);
   expect(screen.queryByText("Ta bort")).toBeNull();
 
-  rerender(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
+  await rerender(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
   expect(screen.getByText("Ta bort")).toBeTruthy();
 });
 
-it("calls back the button that was pressed", () => {
-  renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
+it("calls back the button that was pressed", async () => {
+  await renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
 
-  fireEvent.press(screen.getByText("Ta bort"));
+  await fireEvent.press(screen.getByText("Ta bort"));
   expect(onConfirm).toHaveBeenCalledTimes(1);
   expect(onDismiss).not.toHaveBeenCalled();
 
-  fireEvent.press(screen.getByText("Ok"));
+  await fireEvent.press(screen.getByText("Ok"));
   expect(onDismiss).toHaveBeenCalledTimes(1);
 });
 
-it("fills the confirm button, and the lone button when there is nothing to confirm", () => {
-  const { rerender } = renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
+it("fills the confirm button, and the lone button when there is nothing to confirm", async () => {
+  const { rerender } = await renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm })} />);
   expect(screen.getByTestId("alert-dialog-confirm-container")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.primary,
   });
@@ -83,35 +83,35 @@ it("fills the confirm button, and the lone button when there is nothing to confi
     backgroundColor: AppDefaultTheme.colors.primary,
   });
 
-  rerender(<AlertDialog {...props()} />);
+  await rerender(<AlertDialog {...props()} />);
   expect(screen.getByTestId("alert-dialog-cancel-container")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.primary,
   });
 });
 
-it("makes a danger dialog's confirm button red", () => {
-  renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm, tone: "danger" })} />);
+it("makes a danger dialog's confirm button red", async () => {
+  await renderWithProviders(<AlertDialog {...props({ confirmText: "Ta bort", onConfirm, tone: "danger" })} />);
 
   expect(screen.getByTestId("alert-dialog-confirm-container")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.error,
   });
 });
 
-it("warns in a card of its own when the action cannot be undone", () => {
-  const { rerender } = renderWithProviders(<AlertDialog {...props()} />);
+it("warns in a card of its own when the action cannot be undone", async () => {
+  const { rerender } = await renderWithProviders(<AlertDialog {...props()} />);
   expect(screen.queryByTestId("alert-dialog-warning")).toBeNull();
 
-  rerender(<AlertDialog {...props({ irreversible: true })} />);
+  await rerender(<AlertDialog {...props({ irreversible: true })} />);
   expect(within(screen.getByTestId("alert-dialog-warning")).getByText("Går inte att ångra")).toBeTruthy();
 
-  rerender(<AlertDialog {...props({ warning: "Promenaderna raderas för alltid." })} />);
+  await rerender(<AlertDialog {...props({ warning: "Promenaderna raderas för alltid." })} />);
   const warning = screen.getByTestId("alert-dialog-warning");
   expect(within(warning).getByText("Går inte att ångra")).toBeTruthy();
   expect(within(warning).getByText("Promenaderna raderas för alltid.")).toBeTruthy();
 });
 
-it("shows the caller's own content with the text", () => {
-  renderWithProviders(
+it("shows the caller's own content with the text", async () => {
+  await renderWithProviders(
     <AlertDialog {...props()}>
       <Text>Kontakta oss på hej@stigvidd.se</Text>
     </AlertDialog>,

@@ -18,8 +18,8 @@ function content() {
   return node;
 }
 
-test("draws its content at the slim height", () => {
-  renderWithProviders(
+test("draws its content at the slim height", async () => {
+  await renderWithProviders(
     <SlimButton testID="slim" mode="contained">
       Gå med
     </SlimButton>,
@@ -29,8 +29,8 @@ test("draws its content at the slim height", () => {
   expect(content()).toHaveStyle({ height: SLIM_BUTTON_HEIGHT });
 });
 
-test("keeps a caller's own content style on top", () => {
-  renderWithProviders(
+test("keeps a caller's own content style on top", async () => {
+  await renderWithProviders(
     <SlimButton testID="slim" contentStyle={{ flexDirection: "row-reverse" }}>
       Skapa
     </SlimButton>,

@@ -49,7 +49,7 @@ beforeEach(() => {
 it("says the map data could not be loaded when the route request fails", async () => {
   mockGetCoordinates.mockRejectedValue(new Error("nätverket"));
 
-  renderWithProviders(<TrailFollowScreen />);
+  await renderWithProviders(<TrailFollowScreen />);
   await flushUntil(() => view().startsWith("0|idle"));
 
   expect(view()).toBe("0|idle|Kunde inte ladda kartdata");
@@ -58,7 +58,7 @@ it("says the map data could not be loaded when the route request fails", async (
 it("says the map data could not be loaded when the route has nothing to draw", async () => {
   mockGetCoordinates.mockResolvedValue({ coordinates: "[]" });
 
-  renderWithProviders(<TrailFollowScreen />);
+  await renderWithProviders(<TrailFollowScreen />);
   await flushUntil(() => view().startsWith("0|idle"));
 
   expect(view()).toBe("0|idle|Kunde inte ladda kartdata");
@@ -72,7 +72,7 @@ it("draws the route without a message when it loads", async () => {
     ]),
   });
 
-  renderWithProviders(<TrailFollowScreen />);
+  await renderWithProviders(<TrailFollowScreen />);
   await flushUntil(() => view().includes("idle"));
 
   expect(view()).toBe("2|idle|");
@@ -85,7 +85,7 @@ it("keeps the route without a message when a later refetch fails", async () => {
       { latitude: 57.71, longitude: 12.91 },
     ]),
   });
-  const { queryClient } = renderWithProviders(<TrailFollowScreen />);
+  const { queryClient } = await renderWithProviders(<TrailFollowScreen />);
   await flushUntil(() => view() === "2|idle|");
   mockGetCoordinates.mockRejectedValue(new TypeError("Network request failed"));
   await act(async () => {

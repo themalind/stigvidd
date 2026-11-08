@@ -82,7 +82,7 @@ const COORDINATES = JSON.stringify([
 ]);
 
 async function show() {
-  const rendered = renderWithProviders(
+  const rendered = await renderWithProviders(
     <TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" guideRoute="/(tabs)/(map)/guide" />,
   );
   await flushUntil(() => screen.queryByText("Kvarnstigen"));
@@ -104,9 +104,9 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("waits for the trail before drawing anything else", () => {
+it("waits for the trail before drawing anything else", async () => {
   mockGetTrail.mockReturnValue(new Promise(() => {}));
-  renderWithProviders(
+  await renderWithProviders(
     <TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" guideRoute="/(tabs)/(map)/guide" />,
   );
 
@@ -116,7 +116,7 @@ it("waits for the trail before drawing anything else", () => {
 
 it("offers a retry instead of a half-empty page when the trail cannot be fetched", async () => {
   mockGetTrail.mockRejectedValue(new Error("500"));
-  renderWithProviders(
+  await renderWithProviders(
     <TrailDetailsScreen followRoute="/(tabs)/(map)/follow/[identifier]" guideRoute="/(tabs)/(map)/guide" />,
   );
   await flushUntil(() => screen.queryByText("Försök igen"));
@@ -126,7 +126,7 @@ it("offers a retry instead of a half-empty page when the trail cannot be fetched
   expect(retry).toBeTruthy();
 
   mockGetTrail.mockResolvedValue(trail());
-  fireEvent.press(retry);
+  await fireEvent.press(retry);
   await flushUntil(() => screen.queryByText("Kvarnstigen"));
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
 });
@@ -144,18 +144,16 @@ it("puts who shared a walk from a user below the images and above the trail info
   );
   await show();
 
-  const root = screen.UNSAFE_root;
-  const order = root
-    .findAll((node: typeof root) => ["ImageGallery", "TrailContributionBar", "TrailInfo"].includes(String(node.type)))
-    .map((node: typeof root) => node.type);
+  const order = screen.container
+    .queryAll((node) => ["ImageGallery", "TrailContributionBar", "TrailInfo"].includes(node.type))
+    .map((node) => node.type);
   expect(order).toEqual(["ImageGallery", "TrailContributionBar", "TrailInfo"]);
 });
 
 it("leaves the byline out for a curated trail", async () => {
   await show();
 
-  const root = screen.UNSAFE_root;
-  expect(root.findAll((node: typeof root) => node.type === "TrailContributionBar")).toHaveLength(0);
+  expect(screen.container.queryAll((node) => node.type === "TrailContributionBar")).toHaveLength(0);
 });
 
 // The map waits for the geometry and the end of the screen transition; a MapView built during
@@ -173,7 +171,7 @@ it("draws the map once the route is in, and opens the follow view in this stack"
   await show();
   await flushUntil(() => screen.queryByText("trail-map"));
 
-  fireEvent.press(screen.getByText("trail-map"));
+  await fireEvent.press(screen.getByText("trail-map"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(map)/follow/[identifier]",
@@ -184,8 +182,7 @@ it("draws the map once the route is in, and opens the follow view in this stack"
 it("opens the nature guide in this stack", async () => {
   await show();
 
-  const root = screen.UNSAFE_root;
-  const misc = root.find((node: typeof root) => node.type === "TrailMiscInfo");
+  const [misc] = screen.container.queryAll((node) => node.type === "TrailMiscInfo");
   misc.props.onOpenGuide();
 
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(map)/guide");
@@ -195,7 +192,7 @@ it("opens the nature guide in this stack", async () => {
 it("warns about obstacles only when there are some, and opens them", async () => {
   const { unmount } = await show();
   expect(screen.queryByText(/hinder/i)).toBeNull();
-  unmount();
+  await unmount();
 
   mockGetObstacles.mockResolvedValue([{ identifier: "o1", issueType: "FallenTree", description: "Träd över stigen" }]);
   await show();
@@ -209,7 +206,7 @@ it("shows the rating row only once reviews have been counted", async () => {
   await show();
   expect(screen.queryByText("Läs recensioner")).toBeNull();
 
-  fireEvent.press(screen.getByText("reviews-loaded"));
+  await fireEvent.press(screen.getByText("reviews-loaded"));
 
   expect(screen.getByText("Läs recensioner")).toBeTruthy();
   // The count is a sibling string inside the same Text as the label.

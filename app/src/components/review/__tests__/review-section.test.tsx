@@ -8,6 +8,7 @@
 import ReviewSection from "@/components/review/review-section";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { Review } from "@/data/types";
+import { getAllByType } from "@/test/composites";
 import { flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen, within } from "@testing-library/react-native";
@@ -84,7 +85,7 @@ function show(reviews: Review[], theme: typeof AppDefaultTheme | typeof AppDarkT
 
 // Each review is collapsed until its row is pressed.
 async function expand(title: string) {
-  fireEvent.press(screen.getByText(title));
+  await fireEvent.press(screen.getByText(title));
   await settle();
 }
 
@@ -94,32 +95,32 @@ beforeEach(() => {
   mockIsAuthenticated = true;
 });
 
-it("lists one row per review, under the name of whoever wrote it", () => {
-  show([review({ identifier: "r1", userName: "Alva" }), review({ identifier: "r2", userName: "Bo" })]);
+it("lists one row per review, under the name of whoever wrote it", async () => {
+  await show([review({ identifier: "r1", userName: "Alva" }), review({ identifier: "r2", userName: "Bo" })]);
 
   expect(screen.getByText("Alva")).toBeTruthy();
   expect(screen.getByText("Bo")).toBeTruthy();
 });
 
 // userName is null once the author has deleted their account.
-it("keeps a review whose author is gone, under a placeholder name", () => {
-  show([review({ userName: null, userIdentifier: null })]);
+it("keeps a review whose author is gone, under a placeholder name", async () => {
+  await show([review({ userName: null, userIdentifier: null })]);
 
   expect(screen.getByText("Borttagen användare")).toBeTruthy();
 });
 
-it("shows each review's own rating without opening it", () => {
-  show([
+it("shows each review's own rating without opening it", async () => {
+  await show([
     review({ identifier: "r1", userName: "Alva", rating: 4 }),
     review({ identifier: "r2", userName: "Bo", rating: 2 }),
   ]);
 
-  const stars = screen.UNSAFE_getAllByType(StarRatingDisplay as never);
+  const stars = getAllByType(StarRatingDisplay);
   expect(stars.map((s) => s.props.rating)).toEqual([4, 2]);
 });
 
 it("keeps the review text folded away until the row is opened", async () => {
-  show([review()]);
+  await show([review()]);
 
   expect(screen.queryByText("Fin stig, lite blöt i mitten.")).toBeNull();
 
@@ -130,7 +131,7 @@ it("keeps the review text folded away until the row is opened", async () => {
 });
 
 it("opens one review without opening the others", async () => {
-  show([
+  await show([
     review({ identifier: "r1", userName: "Alva", trailReview: "Alvas text" }),
     review({ identifier: "r2", userName: "Bo", trailReview: "Bos text" }),
   ]);
@@ -142,7 +143,7 @@ it("opens one review without opening the others", async () => {
 });
 
 it("shows the images belonging to the review", async () => {
-  show([review({ reviewImages: [{ identifier: "i1", imageUrl: "https://media/1.jpg" }] })]);
+  await show([review({ reviewImages: [{ identifier: "i1", imageUrl: "https://media/1.jpg" }] })]);
 
   await expand("Alva");
 
@@ -150,7 +151,7 @@ it("shows the images belonging to the review", async () => {
 });
 
 it("draws no image grid for a review without pictures", async () => {
-  show([review({ reviewImages: undefined })]);
+  await show([review({ reviewImages: undefined })]);
 
   await expand("Alva");
 
@@ -158,7 +159,7 @@ it("draws no image grid for a review without pictures", async () => {
 });
 
 it("offers to report someone else's review, but not to delete it", async () => {
-  show([review({ userIdentifier: "someone-else" })]);
+  await show([review({ userIdentifier: "someone-else" })]);
 
   await expand("Alva");
 
@@ -167,7 +168,7 @@ it("offers to report someone else's review, but not to delete it", async () => {
 });
 
 it("offers to delete your own review, but not to report it", async () => {
-  show([review({ userIdentifier: "me" })]);
+  await show([review({ userIdentifier: "me" })]);
 
   await expand("Alva");
 
@@ -177,7 +178,7 @@ it("offers to delete your own review, but not to report it", async () => {
 
 // Neither action has anyone to act on once the author's account is gone.
 it("offers neither action on a review whose author no longer exists", async () => {
-  show([review({ userName: null, userIdentifier: null })]);
+  await show([review({ userName: null, userIdentifier: null })]);
 
   await expand("Borttagen användare");
 
@@ -186,10 +187,10 @@ it("offers neither action on a review whose author no longer exists", async () =
 });
 
 it("opens the report form on the review that was flagged", async () => {
-  show([review({ identifier: "r1", userName: "Alva" }), review({ identifier: "r2", userName: "Bo" })]);
+  await show([review({ identifier: "r1", userName: "Alva" }), review({ identifier: "r2", userName: "Bo" })]);
 
   await expand("Bo");
-  fireEvent.press(screen.getByTestId("report-review-button"));
+  await fireEvent.press(screen.getByTestId("report-review-button"));
   await settle();
 
   expect(screen.getByTestId("report-form")).toHaveTextContent("Review:r2");
@@ -199,10 +200,10 @@ it("opens the report form on the review that was flagged", async () => {
 // somewhere useful rather than opening a form that cannot be submitted.
 it("asks a signed-out visitor to sign in instead of opening the form", async () => {
   mockIsAuthenticated = false;
-  show([review({ userIdentifier: "someone-else" })]);
+  await show([review({ userIdentifier: "someone-else" })]);
 
   await expand("Alva");
-  fireEvent.press(screen.getByTestId("report-review-button"));
+  await fireEvent.press(screen.getByTestId("report-review-button"));
   await settle();
 
   expect(screen.queryByTestId("report-form")).toBeNull();
@@ -211,12 +212,12 @@ it("asks a signed-out visitor to sign in instead of opening the form", async () 
 
 async function askToDelete() {
   await expand("Alva");
-  fireEvent.press(screen.getByTestId("icon-trash-can-outline", { includeHiddenElements: true }));
+  await fireEvent.press(screen.getByTestId("icon-trash-can-outline", { includeHiddenElements: true }));
   await settle();
 }
 
 it("asks before deleting, and deletes nothing until the answer comes back", async () => {
-  show([review({ userIdentifier: "me" })]);
+  await show([review({ userIdentifier: "me" })]);
 
   await askToDelete();
 
@@ -228,19 +229,19 @@ it("asks before deleting, and deletes nothing until the answer comes back", asyn
 });
 
 it("deletes this review from this trail once confirmed", async () => {
-  show([review({ identifier: "r9", userIdentifier: "me" })]);
+  await show([review({ identifier: "r9", userIdentifier: "me" })]);
 
   await askToDelete();
-  fireEvent.press(screen.getByTestId("review-delete-dialog-confirm"));
+  await fireEvent.press(screen.getByTestId("review-delete-dialog-confirm"));
 
   expect(mockDelete).toHaveBeenCalledWith({ reviewIdentifier: "r9", trailIdentifier: TRAIL_ID });
 });
 
 it("deletes nothing when the confirmation is cancelled", async () => {
-  show([review({ userIdentifier: "me" })]);
+  await show([review({ userIdentifier: "me" })]);
 
   await askToDelete();
-  fireEvent.press(screen.getByTestId("review-delete-dialog-cancel"));
+  await fireEvent.press(screen.getByTestId("review-delete-dialog-cancel"));
   await flushUntilGone(() => screen.queryByTestId("review-delete-dialog"));
 
   expect(screen.queryByTestId("review-delete-dialog")).toBeNull();
@@ -250,25 +251,25 @@ it("deletes nothing when the confirmation is cancelled", async () => {
 // A second press while the first delete is in flight would send it twice.
 it("greys the delete out while the delete is in flight", async () => {
   mockIsDeleting = true;
-  show([review({ userIdentifier: "me" })]);
+  await show([review({ userIdentifier: "me" })]);
 
   await expand("Alva");
   const icon = screen.getByTestId("icon-trash-can-outline", { includeHiddenElements: true });
-  fireEvent.press(icon);
+  await fireEvent.press(icon);
   await settle();
 
   expect(icon.props.color).toBe(AppDefaultTheme.colors.surfaceDisabled);
   expect(screen.queryByTestId("review-delete-dialog")).toBeNull();
 });
 
-it("draws every row on the theme's surface colour", () => {
-  show([review()]);
+it("draws every row on the theme's surface colour", async () => {
+  await show([review()]);
 
   expect(screen.getByText("Alva")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.surface });
 });
 
-it("draws the rows on the dark theme's surface colour too", () => {
-  show([review()], AppDarkTheme);
+it("draws the rows on the dark theme's surface colour too", async () => {
+  await show([review()], AppDarkTheme);
 
   expect(screen.getByText("Alva")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surface });
 });

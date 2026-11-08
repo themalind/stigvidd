@@ -32,28 +32,28 @@ beforeEach(() => {
 });
 
 describe("useCanWrite", () => {
-  it("lets an ordinary signed-in user write", () => {
-    renderWithProviders(<Probe />);
+  it("lets an ordinary signed-in user write", async () => {
+    await renderWithProviders(<Probe />);
     expect(screen.getByTestId("probe")).toHaveTextContent("true:null");
   });
 
-  it("names the ban, so the screen can explain rather than just refuse", () => {
+  it("names the ban, so the screen can explain rather than just refuse", async () => {
     mockUser = { bannedAt: "2026-03-04T10:00:00Z" };
-    renderWithProviders(<Probe />);
+    await renderWithProviders(<Probe />);
     expect(screen.getByTestId("probe")).toHaveTextContent("false:banned");
   });
 
-  it("puts signing out first, since a signed-out user has no ban to report", () => {
+  it("puts signing out first, since a signed-out user has no ban to report", async () => {
     mockIsAuthenticated = false;
     mockUser = { bannedAt: "2026-03-04T10:00:00Z" };
-    renderWithProviders(<Probe />);
+    await renderWithProviders(<Probe />);
     expect(screen.getByTestId("probe")).toHaveTextContent("false:unauthenticated");
   });
 
   // The profile arrives after the first render, and the buttons stay live across that gap.
-  it("allows the write while the profile is still loading", () => {
+  it("allows the write while the profile is still loading", async () => {
     mockUser = undefined;
-    renderWithProviders(<Probe />);
+    await renderWithProviders(<Probe />);
     expect(screen.getByTestId("probe")).toHaveTextContent("true:null");
   });
 });

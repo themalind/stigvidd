@@ -33,40 +33,40 @@ afterEach(() => {
   Platform.OS = originalOS;
 });
 
-function emit(event: string) {
+async function emit(event: string) {
   const handler = handlers[event];
   if (!handler) throw new Error(`expected a ${event} listener`);
-  act(() => handler({ endCoordinates: { height: KEYBOARD } } as KeyboardEvent));
+  await act(() => handler({ endCoordinates: { height: KEYBOARD } } as KeyboardEvent));
 }
 
 describe("useModalKeyboardLift", () => {
-  it("rests at the height fraction with no lift while the keyboard is hidden", () => {
-    const { result } = renderHook(() => useModalKeyboardLift(0.6));
+  it("rests at the height fraction with no lift while the keyboard is hidden", async () => {
+    const { result } = await renderHook(() => useModalKeyboardLift(0.6));
 
     expect(result.current.modalStyle).toBeUndefined();
     expect(result.current.maxHeight).toBe(WINDOW * 0.6);
   });
 
-  it("lifts above the keyboard on iOS and drops back when it hides", () => {
+  it("lifts above the keyboard on iOS and drops back when it hides", async () => {
     Platform.OS = "ios";
-    const { result } = renderHook(() => useModalKeyboardLift(0.6));
+    const { result } = await renderHook(() => useModalKeyboardLift(0.6));
 
-    emit("keyboardWillShow");
+    await emit("keyboardWillShow");
     expect(result.current.modalStyle).toEqual({ marginBottom: KEYBOARD + 10 });
 
-    emit("keyboardWillHide");
+    await emit("keyboardWillHide");
     expect(result.current.modalStyle).toBeUndefined();
   });
 
-  it("lifts on Android too, adding the navigation bar its keyboard height leaves out", () => {
+  it("lifts on Android too, adding the navigation bar its keyboard height leaves out", async () => {
     Platform.OS = "android";
-    const { result } = renderHook(() => useModalKeyboardLift(0.6));
+    const { result } = await renderHook(() => useModalKeyboardLift(0.6));
 
-    emit("keyboardDidShow");
+    await emit("keyboardDidShow");
     expect(result.current.modalStyle).toEqual({ marginBottom: KEYBOARD + 34 + 10 });
     expect(result.current.maxHeight).toBe(Math.min(WINDOW * 0.6, WINDOW - (KEYBOARD + 34 + 10) - 47 - 10));
 
-    emit("keyboardDidHide");
+    await emit("keyboardDidHide");
     expect(result.current.modalStyle).toBeUndefined();
   });
 });

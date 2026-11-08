@@ -94,8 +94,8 @@ function icon(name: string, focused: boolean): ReactElement<Record<string, any>>
   return tab(name).tabBarIcon({ focused }) as ReactElement<Record<string, any>>;
 }
 
-it("carries the five tabs a walker navigates by, in order", () => {
-  show();
+it("carries the five tabs a walker navigates by, in order", async () => {
+  await show();
 
   expect(Object.keys(router.__screens)).toEqual([
     "(home)",
@@ -112,8 +112,8 @@ it("carries the five tabs a walker navigates by, in order", () => {
   expect(tab("(profile-stack)").title).toBe("Profil");
 });
 
-it("counts pending event invitations on the events tab, not the profile tab", () => {
-  renderWithProviders(<TabsLayout />, {
+it("counts pending event invitations on the events tab, not the profile tab", async () => {
+  await renderWithProviders(<TabsLayout />, {
     initialAtoms: [[pendingEventInvitationsCountAtom, 2] as [typeof pendingEventInvitationsCountAtom, unknown]],
   });
 
@@ -121,24 +121,24 @@ it("counts pending event invitations on the events tab, not the profile tab", ()
   expect(tab("(profile-stack)").tabBarBadge).toBeUndefined();
 });
 
-it("shows no events badge without invitations", () => {
-  show();
+it("shows no events badge without invitations", async () => {
+  await show();
 
   expect(tab("events").tabBarBadge).toBeUndefined();
 });
 
 // Settings is reached from the drawer, so it is registered without a tab of its own.
-it("keeps settings off the tab bar", () => {
-  show();
+it("keeps settings off the tab bar", async () => {
+  await show();
 
   expect(tab("(settings)").href).toBeNull();
   expect(tab("(settings)").tabBarIcon).toBeUndefined();
 });
 
-it("puts the offline banner under the header", () => {
+it("puts the offline banner under the header", async () => {
   onlineManager.setOnline(false);
   try {
-    show();
+    await show();
 
     expect(screen.getByTestId("offline-banner")).toHaveStyle({ paddingTop: 4 });
   } finally {
@@ -146,12 +146,12 @@ it("puts the offline banner under the header", () => {
   }
 });
 
-it("lets the offline banner clear the status bar where there is no header", () => {
+it("lets the offline banner clear the status bar where there is no header", async () => {
   mockPathname.mockReturnValue("/settings/login");
   mockSegments.mockReturnValue(["(tabs)", "(settings)"]);
   onlineManager.setOnline(false);
   try {
-    show();
+    await show();
 
     expect(screen.getByTestId("offline-banner")).toHaveStyle({ paddingTop: 47 + 4 });
   } finally {
@@ -159,76 +159,76 @@ it("lets the offline banner clear the status bar where there is no header", () =
   }
 });
 
-it("shows the app header above the tabs", () => {
-  show();
+it("shows the app header above the tabs", async () => {
+  await show();
 
   expect(screen.getByTestId("app-header")).toBeTruthy();
   expect(screen.getByTestId("tabs")).toBeTruthy();
 });
 
 // Login and register are full-screen views, so they carry no header.
-it.each(["/settings/login", "/register", "/user/login"])("hides the header on %s", (path) => {
+it.each(["/settings/login", "/register", "/user/login"])("hides the header on %s", async (path) => {
   mockPathname.mockReturnValue(path);
   mockSegments.mockReturnValue(["(tabs)", "(settings)"]);
-  show();
+  await show();
 
   expect(screen.queryByTestId("app-header")).toBeNull();
 });
 
-it("keeps the header on every other screen", () => {
+it("keeps the header on every other screen", async () => {
   mockPathname.mockReturnValue("/trail/kvarnstigen");
   mockSegments.mockReturnValue(["(tabs)", "trails"]);
-  show();
+  await show();
 
   expect(screen.getByTestId("app-header")).toBeTruthy();
 });
 
 // On the profile tab the pathname lags the Stack.Protected swap, so the header follows who is signed in.
-it("hides the header on the profile tab while nobody is signed in", () => {
+it("hides the header on the profile tab while nobody is signed in", async () => {
   mockSegments.mockReturnValue(["(tabs)", "(profile-stack)"]);
   mockPathname.mockReturnValue("/user");
   mockIsAuthenticated.mockReturnValue(false);
-  show();
+  await show();
 
   expect(screen.queryByTestId("app-header")).toBeNull();
 });
 
-it("shows the header on the profile tab as soon as someone is", () => {
+it("shows the header on the profile tab as soon as someone is", async () => {
   mockSegments.mockReturnValue(["(tabs)", "(profile-stack)"]);
   mockPathname.mockReturnValue("/user/login");
   mockIsAuthenticated.mockReturnValue(true);
-  show();
+  await show();
 
   expect(screen.getByTestId("app-header")).toBeTruthy();
 });
 
 // The other tabs keep the pathname check: the settings login is a screen of its own.
-it("leaves the other tabs' header to the path, not to who is signed in", () => {
+it("leaves the other tabs' header to the path, not to who is signed in", async () => {
   mockSegments.mockReturnValue(["(tabs)", "(home)"]);
   mockPathname.mockReturnValue("/");
   mockIsAuthenticated.mockReturnValue(false);
-  show();
+  await show();
 
   expect(screen.getByTestId("app-header")).toBeTruthy();
 });
 
-it("draws its own header instead of the navigator's", () => {
-  show();
+it("draws its own header instead of the navigator's", async () => {
+  await show();
 
   expect(options().headerShown).toBe(false);
 });
 
 // The glyphs are labelled by the title above them, so the bar carries no captions.
-it("lets the icons speak for themselves", () => {
-  show();
+it("lets the icons speak for themselves", async () => {
+  await show();
 
   expect(options().tabBarShowLabel).toBe(false);
   expect(options().tabBarIconStyle).toEqual({ marginTop: 8 });
 });
 
 // Black and white, not the theme's surface: the bar sits against the system navigation bar.
-it("paints the tab bar white in the light theme", () => {
-  show();
+it("paints the tab bar white in the light theme", async () => {
+  await show();
 
   expect(options().tabBarStyle).toEqual({
     backgroundColor: "#ffffff",
@@ -236,8 +236,8 @@ it("paints the tab bar white in the light theme", () => {
   });
 });
 
-it("paints the tab bar black in the dark theme", () => {
-  show(AppDarkTheme);
+it("paints the tab bar black in the dark theme", async () => {
+  await show(AppDarkTheme);
 
   expect(options().tabBarStyle).toEqual({
     backgroundColor: "#000000",
@@ -246,22 +246,22 @@ it("paints the tab bar black in the dark theme", () => {
 });
 
 // The bar paints its own background behind itself, so the screen never shows through.
-it("backs the bar with the same colour it is painted", () => {
-  show();
+it("backs the bar with the same colour it is painted", async () => {
+  await show();
   const background = options().tabBarBackground() as ReactElement<Record<string, any>>;
 
   expect(background.props.style).toEqual({ flex: 1, backgroundColor: "#ffffff" });
 });
 
-it("backs the bar in black in the dark theme too", () => {
-  show(AppDarkTheme);
+it("backs the bar in black in the dark theme too", async () => {
+  await show(AppDarkTheme);
   const background = options().tabBarBackground() as ReactElement<Record<string, any>>;
 
   expect(background.props.style).toEqual({ flex: 1, backgroundColor: "#000000" });
 });
 
-it("marks the tab being looked at, and leaves the rest plain", () => {
-  show();
+it("marks the tab being looked at, and leaves the rest plain", async () => {
+  await show();
 
   expect(options().tabBarActiveTintColor).toBe(AppDefaultTheme.colors.onTertiaryContainer);
   expect(options().tabBarInactiveTintColor).toBe(AppDefaultTheme.colors.onBackground);
@@ -273,37 +273,37 @@ it.each([
   ["(map)", "map", "map-o"],
   ["trails", "trail-sign-sharp", "trail-sign-outline"],
   ["(profile-stack)", "account-box", "account-box-outline"],
-])("fills in %s's glyph when it is the open tab", (name, filled, outline) => {
-  show();
+])("fills in %s's glyph when it is the open tab", async (name, filled, outline) => {
+  await show();
 
   expect(icon(name, true).props.name).toBe(filled);
   expect(icon(name, false).props.name).toBe(outline);
 });
 
-it.each(["(home)", "(map)", "trails", "(profile-stack)"])("colours %s by whether it is open", (name) => {
-  show();
+it.each(["(home)", "(map)", "trails", "(profile-stack)"])("colours %s by whether it is open", async (name) => {
+  await show();
 
   expect(icon(name, true).props.color).toBe(AppDefaultTheme.colors.onTertiaryContainer);
   expect(icon(name, false).props.color).toBe(AppDefaultTheme.colors.onBackground);
 });
 
-it.each(["(home)", "trails", "(profile-stack)"])("draws %s's glyph at the same size either way", (name) => {
-  show();
+it.each(["(home)", "trails", "(profile-stack)"])("draws %s's glyph at the same size either way", async (name) => {
+  await show();
 
   expect(icon(name, true).props.size).toBe(30);
   expect(icon(name, false).props.size).toBe(30);
 });
 
 // The map outline sits optically larger than the filled glyph, so it is drawn a few points smaller.
-it("draws the map's outline smaller than its filled glyph", () => {
-  show();
+it("draws the map's outline smaller than its filled glyph", async () => {
+  await show();
 
   expect(icon("(map)", true).props.size).toBe(28);
   expect(icon("(map)", false).props.size).toBe(25);
 });
 
-it("counts waiting friend requests and shared walks on the profile tab", () => {
-  show(AppDefaultTheme, 3);
+it("counts waiting friend requests and shared walks on the profile tab", async () => {
+  await show(AppDefaultTheme, 3);
 
   expect(tab("(profile-stack)").tabBarBadge).toBe(3);
   expect(tab("(profile-stack)").tabBarBadgeStyle).toMatchObject({
@@ -312,8 +312,8 @@ it("counts waiting friend requests and shared walks on the profile tab", () => {
   });
 });
 
-it("draws the tab bar badges at the same size as the badge on the events list's tabs", () => {
-  show(AppDefaultTheme, 3);
+it("draws the tab bar badges at the same size as the badge on the events list's tabs", async () => {
+  await show(AppDefaultTheme, 3);
 
   for (const name of ["events", "(profile-stack)"]) {
     expect(tab(name).tabBarBadgeStyle).toMatchObject({
@@ -326,28 +326,28 @@ it("draws the tab bar badges at the same size as the badge on the events list's 
 });
 
 // A badge reading zero is worse than no badge: it draws the eye to nothing.
-it("shows no badge when nothing is waiting", () => {
-  show(AppDefaultTheme, 0);
+it("shows no badge when nothing is waiting", async () => {
+  await show(AppDefaultTheme, 0);
 
   expect(tab("(profile-stack)").tabBarBadge).toBeUndefined();
 });
 
-it("badges a single waiting request as readily as several", () => {
-  show(AppDefaultTheme, 1);
+it("badges a single waiting request as readily as several", async () => {
+  await show(AppDefaultTheme, 1);
 
   expect(tab("(profile-stack)").tabBarBadge).toBe(1);
 });
 
-it("puts the badge on no tab but the profile", () => {
-  show(AppDefaultTheme, 2);
+it("puts the badge on no tab but the profile", async () => {
+  await show(AppDefaultTheme, 2);
 
   expect(tab("(home)").tabBarBadge).toBeUndefined();
   expect(tab("(map)").tabBarBadge).toBeUndefined();
   expect(tab("trails").tabBarBadge).toBeUndefined();
 });
 
-it("carries the dark theme through to the glyphs and the badge", () => {
-  show(AppDarkTheme, 1);
+it("carries the dark theme through to the glyphs and the badge", async () => {
+  await show(AppDarkTheme, 1);
 
   expect(icon("(home)", true).props.color).toBe(AppDarkTheme.colors.onTertiaryContainer);
   expect(icon("(home)", false).props.color).toBe(AppDarkTheme.colors.onBackground);

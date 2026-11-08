@@ -22,40 +22,38 @@ release build. The full OFL text ships with the package at
 
 ## Nothing in the npm tree is copyleft-blocking
 
-Of 1282 packages in `package-lock.json`, counting every platform's binaries, there is **no** GPL-only, AGPL, SSPL, BUSL, CC-BY-NC, "UNLICENSED"
+Of 1396 packages in `package-lock.json`, counting every platform's binaries, there is **no** GPL-only, AGPL, SSPL, BUSL, CC-BY-NC, "UNLICENSED"
 or proprietary-EULA package. The entries that are not plainly permissive:
 
-| Package                               | Licence                             | Disposition                                                                                                         |
-| ------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `lightningcss` + 11 platform binaries | MPL-2.0                             | Same licence as this app. Build-time only (the Metro/Expo web CSS pipeline), not linked into the native binary.     |
-| `node-forge`                          | `BSD-3-Clause OR GPL-2.0`           | **The BSD-3-Clause arm is elected.** Dev tooling (the Expo dev server's TLS), not shipped.                          |
-| `rc`                                  | `BSD-2-Clause OR MIT OR Apache-2.0` | MIT arm elected.                                                                                                    |
-| `type-fest`                           | `MIT OR CC0-1.0`                    | MIT arm elected. Types only.                                                                                        |
-| `caniuse-lite`                        | CC-BY-4.0                           | Data, build-time only.                                                                                              |
-| `qrcode-terminal`                     | "Apache 2.0"                        | A non-SPDX spelling of Apache-2.0, in the old `licenses` field. Dev tooling.                                        |
-| `exit`, `requireg`                    | MIT                                 | Declared in the old `licenses` field, so `package-lock.json` records no licence for them. Both ship a licence file. |
+| Package                               | Licence                   | Disposition                                                                                                     |
+| ------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `lightningcss` + 11 platform binaries | MPL-2.0                   | Same licence as this app. Build-time only (the Metro/Expo web CSS pipeline), not linked into the native binary. |
+| `node-forge`                          | `BSD-3-Clause OR GPL-2.0` | **The BSD-3-Clause arm is elected.** Dev tooling (the Expo dev server's TLS), not shipped.                      |
+| `fb-dotslash`                         | `MIT OR Apache-2.0`       | MIT arm elected.                                                                                                |
+| `type-fest`                           | `MIT OR CC0-1.0`          | MIT arm elected. Types only.                                                                                    |
+| `caniuse-lite`                        | CC-BY-4.0                 | Data, build-time only.                                                                                          |
 
-## Licence spread across all 1282 packages in the lockfile
+## Licence spread across all 1396 packages in the lockfile
 
-| Licence                             | Count |
-| ----------------------------------- | ----- |
-| MIT                                 | 1090  |
-| ISC                                 | 76    |
-| Apache-2.0                          | 30    |
-| BSD-3-Clause                        | 27    |
-| BSD-2-Clause                        | 25    |
-| MPL-2.0                             | 12    |
-| BlueOak-1.0.0                       | 9     |
-| Unlicense                           | 2     |
-| 0BSD                                | 2     |
-| (MIT OR CC0-1.0)                    | 2     |
-| MIT AND OFL-1.1                     | 1     |
-| Python-2.0                          | 1     |
-| CC-BY-4.0                           | 1     |
-| CC0-1.0                             | 1     |
-| (BSD-3-Clause OR GPL-2.0)           | 1     |
-| Apache 2.0                          | 1     |
-| (BSD-2-Clause OR MIT OR Apache-2.0) | 1     |
+| Licence                   | Count |
+| ------------------------- | ----- |
+| MIT                       | 1225  |
+| ISC                       | 66    |
+| BSD-3-Clause              | 26    |
+| Apache-2.0                | 25    |
+| BSD-2-Clause              | 20    |
+| MPL-2.0                   | 12    |
+| BlueOak-1.0.0             | 9     |
+| Unlicense                 | 2     |
+| 0BSD                      | 2     |
+| (MIT OR CC0-1.0)          | 2     |
+| MIT-0                     | 1     |
+| MIT AND OFL-1.1           | 1     |
+| Python-2.0                | 1     |
+| CC-BY-4.0                 | 1     |
+| (MIT OR Apache-2.0)       | 1     |
+| CC0-1.0                   | 1     |
+| (BSD-3-Clause OR GPL-2.0) | 1     |
 
 ## Proprietary platform components
 
@@ -86,73 +84,72 @@ optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map
 | ----------------------------------------- | ---------- | --------------- |
 | @expo-google-fonts/inter                  | ^0.4.2     | MIT AND OFL-1.1 |
 | @expo/vector-icons                        | ^15.0.3    | MIT             |
-| @hookform/resolvers                       | ^5.9.2     | MIT             |
+| @hookform/resolvers                       | ^7.0.3     | MIT             |
 | @likashefqet/react-native-image-zoom      | ^4.3.0     | MIT             |
-| @maplibre/maplibre-react-native           | 11.3.4     | MIT             |
+| @maplibre/maplibre-react-native           | 11.5.1     | MIT             |
 | @miblanchard/react-native-slider          | ^2.6.0     | MIT             |
 | @react-native-async-storage/async-storage | ^2.2.0     | MIT             |
-| @react-native-community/netinfo           | 11.4.1     | MIT             |
+| @react-native-community/netinfo           | 12.0.1     | MIT             |
 | @react-native-picker/picker               | 2.11.4     | MIT             |
-| @react-navigation/bottom-tabs             | ^7.4.0     | MIT             |
-| @react-navigation/elements                | ^2.6.3     | MIT             |
-| @react-navigation/native                  | ^7.1.8     | MIT             |
+| @react-native/jest-preset                 | ^0.88.1    | MIT             |
 | @tanstack/eslint-plugin-query             | ^5.91.2    | MIT             |
 | @tanstack/react-query                     | ^5.90.11   | MIT             |
 | @testing-library/jest-native              | ^5.4.3     | MIT             |
-| @testing-library/react-native             | ^13.3.3    | MIT             |
+| @testing-library/react-native             | ^14.1.0    | MIT             |
 | @types/geojson                            | ^7946.0.16 | MIT             |
-| @types/jest                               | ~29.5.14   | MIT             |
-| @types/react                              | ~19.1.0    | MIT             |
+| @types/jest                               | 30.0.0     | MIT             |
+| @types/react                              | ~19.3.0    | MIT             |
 | axios                                     | 1.21.0     | MIT             |
 | eslint                                    | ^9.25.0    | MIT             |
-| eslint-config-expo                        | ~10.0.0    | MIT             |
-| expo                                      | ~54.0.37   | MIT             |
-| expo-blur                                 | ~15.0.8    | MIT             |
-| expo-build-properties                     | ~1.0.10    | MIT             |
-| expo-constants                            | ~18.0.14   | MIT             |
-| expo-dev-client                           | ~6.0.21    | MIT             |
-| expo-device                               | ~8.0.10    | MIT             |
-| expo-font                                 | ~14.0.12   | MIT             |
-| expo-image                                | ~3.0.11    | MIT             |
-| expo-image-manipulator                    | ~14.0.8    | MIT             |
-| expo-image-picker                         | ~17.0.11   | MIT             |
-| expo-linear-gradient                      | ~15.0.8    | MIT             |
-| expo-linking                              | ~8.0.12    | MIT             |
-| expo-location                             | ~19.0.8    | MIT             |
-| expo-navigation-bar                       | ~5.0.10    | MIT             |
-| expo-notifications                        | ~0.32.17   | MIT             |
-| expo-router                               | ~6.0.24    | MIT             |
-| expo-secure-store                         | ~15.0.8    | MIT             |
-| expo-splash-screen                        | ~31.0.13   | MIT             |
-| expo-status-bar                           | ~3.0.9     | MIT             |
-| expo-system-ui                            | ~6.0.9     | MIT             |
-| expo-task-manager                         | ~14.0.9    | MIT             |
-| expo-updates                              | ~29.0.20   | MIT             |
-| geolib                                    | ^3.3.4     | MIT             |
-| i18next                                   | ^26.2.0    | MIT             |
-| jest                                      | ^29.7.0    | MIT             |
-| jest-expo                                 | ~54.0.18   | MIT             |
-| jotai                                     | ^2.15.1    | MIT             |
+| eslint-config-expo                        | ~58.0.4    | MIT             |
+| expo                                      | ^58.0.0    | MIT             |
+| expo-blur                                 | ~58.0.5    | MIT             |
+| expo-build-properties                     | ~58.0.12   | MIT             |
+| expo-constants                            | ~58.0.15   | MIT             |
+| expo-dev-client                           | ~58.0.18   | MIT             |
+| expo-device                               | ~58.0.5    | MIT             |
+| expo-font                                 | ~58.0.11   | MIT             |
+| expo-image                                | ~58.0.18   | MIT             |
+| expo-image-manipulator                    | ~58.0.16   | MIT             |
+| expo-image-picker                         | ~58.0.10   | MIT             |
+| expo-linear-gradient                      | ~58.0.3    | MIT             |
+| expo-linking                              | ~58.0.16   | MIT             |
+| expo-location                             | ~58.0.20   | MIT             |
+| expo-navigation-bar                       | ~58.0.4    | MIT             |
+| expo-notifications                        | ~58.1.8    | MIT             |
+| expo-router                               | ~58.0.30   | MIT             |
+| expo-secure-store                         | ~58.0.2    | MIT             |
+| expo-splash-screen                        | ~58.0.13   | MIT             |
+| expo-status-bar                           | ~58.0.4    | MIT             |
+| expo-system-ui                            | ~58.0.7    | MIT             |
+| expo-task-manager                         | ~58.0.13   | MIT             |
+| expo-updates                              | ~58.0.21   | MIT             |
+| geolib                                    | ^4.0.2     | MIT             |
+| i18next                                   | ^27.0.1    | MIT             |
+| jest                                      | ~30.5.2    | MIT             |
+| jest-expo                                 | ~58.0.14   | MIT             |
+| jotai                                     | ^3.0.1     | MIT             |
 | jotai-tanstack-query                      | ^0.11.0    | MIT             |
 | jwt-decode                                | ^4.0.0     | MIT             |
 | prettier                                  | 3.9.10     | MIT             |
-| react                                     | 19.1.0     | MIT             |
-| react-dom                                 | 19.1.0     | MIT             |
+| react                                     | 19.3.0     | MIT             |
+| react-dom                                 | 19.3.0     | MIT             |
 | react-hook-form                           | ^7.66.0    | MIT             |
-| react-i18next                             | ^17.0.8    | MIT             |
-| react-native                              | 0.81.5     | MIT             |
-| react-native-gesture-handler              | ~2.28.0    | MIT             |
+| react-i18next                             | ^18.0.0    | MIT             |
+| react-native                              | 0.88.1     | MIT             |
+| react-native-gesture-handler              | ~3.3.0     | MIT             |
 | react-native-keyboard-aware-scroll-view   | 0.9.5      | MIT             |
 | react-native-paper                        | ^5.14.5    | MIT             |
 | react-native-paper-dates                  | 0.24.1     | MIT             |
-| react-native-reanimated                   | 4.1.3      | MIT             |
+| react-native-reanimated                   | 4.7.1      | MIT             |
 | react-native-reanimated-carousel          | ^4.0.3     | MIT             |
-| react-native-safe-area-context            | ~5.6.0     | MIT             |
-| react-native-screens                      | ~4.16.0    | MIT             |
+| react-native-safe-area-context            | ~5.11.1    | MIT             |
+| react-native-screens                      | ~4.30.1    | MIT             |
 | react-native-star-rating-widget           | ^1.10.0    | MIT             |
-| react-native-svg                          | 15.12.1    | MIT             |
+| react-native-svg                          | 15.16.0    | MIT             |
 | react-native-uuid                         | ^2.0.3     | MIT             |
 | react-native-web                          | ~0.21.0    | MIT             |
-| react-native-worklets                     | 0.5.1      | MIT             |
-| typescript                                | ~5.9.2     | Apache-2.0      |
+| react-native-worklets                     | 0.13.0     | MIT             |
+| test-renderer                             | ^1.3.0     | MIT             |
+| typescript                                | ~6.0.3     | Apache-2.0      |
 | zod                                       | ^4.6.7     | MIT             |

@@ -25,14 +25,14 @@ const REVIEW_EXISTS_QUERY = ["review-exists", TRAIL, "me"];
 
 type Mutation = ReturnType<typeof useDeleteReview>;
 
-function render() {
+async function render() {
   let hook!: Mutation;
   function Probe() {
     hook = useDeleteReview();
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   for (const key of [TRAIL_QUERY, REVIEWS_QUERY, REVIEW_EXISTS_QUERY]) {
     rendered.queryClient.setQueryDefaults(key, { gcTime: Infinity });
     rendered.queryClient.setQueryData(key, []);
@@ -41,7 +41,7 @@ function render() {
   return {
     ...rendered,
     run: async () => {
-      act(() => hook.mutate({ reviewIdentifier: REVIEW, trailIdentifier: TRAIL }));
+      await act(() => hook.mutate({ reviewIdentifier: REVIEW, trailIdentifier: TRAIL }));
       await flushUntil(() => hook.isError || hook.isSuccess);
     },
     invalidated: (key: unknown[]) => rendered.queryClient.getQueryState(key)?.isInvalidated === true,
@@ -56,7 +56,7 @@ beforeEach(() => {
 describe("useDeleteReview", () => {
   // The trail identifier is only there to say which caches to refresh.
   it("deletes by review identifier alone", async () => {
-    const { run } = render();
+    const { run } = await render();
     await run();
 
     expect(mockDeleteReview).toHaveBeenCalledWith(REVIEW);
@@ -64,7 +64,7 @@ describe("useDeleteReview", () => {
 
   describe("when the review is deleted", () => {
     it("refreshes the trail, its reviews and the has-reviewed answer", async () => {
-      const { run, invalidated } = render();
+      const { run, invalidated } = await render();
       await run();
 
       expect(invalidated(TRAIL_QUERY)).toBe(true);
@@ -73,7 +73,7 @@ describe("useDeleteReview", () => {
     });
 
     it("confirms the removal", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run();
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -90,7 +90,7 @@ describe("useDeleteReview", () => {
     });
 
     it("reports the failure", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run();
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -101,7 +101,7 @@ describe("useDeleteReview", () => {
     });
 
     it("leaves the caches alone", async () => {
-      const { run, invalidated } = render();
+      const { run, invalidated } = await render();
       await run();
 
       expect(invalidated(REVIEWS_QUERY)).toBe(false);
@@ -114,7 +114,7 @@ describe("useDeleteReview", () => {
     });
 
     it("reports the failure", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run();
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -125,7 +125,7 @@ describe("useDeleteReview", () => {
     });
 
     it("leaves the caches alone", async () => {
-      const { run, invalidated } = render();
+      const { run, invalidated } = await render();
       await run();
 
       expect(invalidated(REVIEWS_QUERY)).toBe(false);

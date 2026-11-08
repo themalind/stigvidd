@@ -35,13 +35,13 @@ const FIX = { coords: { latitude: 57.5, longitude: 12.5, accuracy: 12 }, timesta
 
 type Result = ReturnType<typeof useUserLocation>;
 
-function renderHook() {
+async function renderHook() {
   let query!: Result;
   function Probe() {
     query = useUserLocation();
     return null;
   }
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   return {
     ...rendered,
     query: () => query,
@@ -70,7 +70,7 @@ describe("while the startup consent dialog is still up", () => {
   it("does not ask, and reports the fallback meanwhile", async () => {
     await loadConsent();
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(mockRequestPermissions).not.toHaveBeenCalled();
@@ -81,7 +81,7 @@ describe("while the startup consent dialog is still up", () => {
   it("still reports a position that is already permitted", async () => {
     await loadConsent();
     mockGetPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(harness.query().data).toEqual({ latitude: 57.5, longitude: 12.5, isFallback: false });
@@ -93,7 +93,7 @@ describe("before the dialog has ever been shown", () => {
   // refused permanently.
   it("does not ask when the system says it cannot ask again", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: false });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(mockRequestPermissions).not.toHaveBeenCalled();
@@ -105,7 +105,7 @@ describe("the first time the app has to ask", () => {
   it("shows the dialog and takes the answer the user gives", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
     mockRequestPermissions.mockResolvedValue({ granted: false, canAskAgain: false });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(mockRequestPermissions).toHaveBeenCalledTimes(1);
@@ -120,7 +120,7 @@ describe("every later refetch in the same launch", () => {
   // the dialog would loop until the user force-quits.
   it("never shows the dialog a second time", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(mockRequestPermissions).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe("every later refetch in the same launch", () => {
 
   it("still refetches rather than staying on the fallback", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     // Granted in Settings while the app was away: the status check picks it up.

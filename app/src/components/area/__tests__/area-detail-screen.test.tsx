@@ -9,6 +9,7 @@ import AreaDetailScreen from "@/components/area/area-detail-screen";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { CityArea, CityAreaTrail, Facility, FacilityType } from "@/data/types";
+import { getByType, queryAllByType } from "@/test/composites";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen, within } from "@testing-library/react-native";
@@ -69,7 +70,7 @@ async function show(
   theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme,
 ) {
   mockGetArea.mockResolvedValue(area(overrides));
-  const rendered = renderWithProviders(<AreaDetailScreen />, { theme });
+  const rendered = await renderWithProviders(<AreaDetailScreen />, { theme });
   await flushUntil(() => screen.queryByTestId("area-hero"));
   return rendered;
 }
@@ -82,7 +83,7 @@ function paperIcon(name: string) {
 // A block with no content renders nothing at all: the column has gap: 20, so an empty <Text> is
 // 20 px of blank space no text query can see.
 function emptyTextNodes() {
-  return screen.UNSAFE_queryAllByType(Text).filter((node) => {
+  return queryAllByType(Text).filter((node) => {
     const children = node.props.children;
     return children === undefined || children === null || children === "";
   });
@@ -111,24 +112,24 @@ it("asks for the area named in the route", async () => {
 });
 
 // A half-built hero over a missing name is worse than nothing to look at.
-it("draws nothing but a spinner until the area is in", () => {
+it("draws nothing but a spinner until the area is in", async () => {
   mockGetArea.mockReturnValue(new Promise(() => {}));
-  renderWithProviders(<AreaDetailScreen />);
+  await renderWithProviders(<AreaDetailScreen />);
 
   expect(screen.queryByTestId("area-hero")).toBeNull();
   expect(screen.queryByText("Kransmossen")).toBeNull();
-  expect(screen.UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
+  expect(getByType(ActivityIndicator)).toBeTruthy();
 });
 
 it("offers a retry instead of a blank page when the area cannot be fetched", async () => {
   mockGetArea.mockRejectedValue(new Error("network"));
-  renderWithProviders(<AreaDetailScreen />);
+  await renderWithProviders(<AreaDetailScreen />);
   await flushUntil(() => screen.queryByText("Försök igen"));
 
   expect(screen.queryByTestId("area-hero")).toBeNull();
 
   mockGetArea.mockResolvedValue(area());
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   await flushUntil(() => screen.queryByTestId("area-hero"));
 
   expect(screen.getByText("Kransmossen")).toBeTruthy();
@@ -137,7 +138,7 @@ it("offers a retry instead of a blank page when the area cannot be fetched", asy
 // react-query refuses an undefined result, so a 200 with no body reaches the screen as a failed query.
 it("treats an empty response as an error rather than reading through it", async () => {
   mockGetArea.mockResolvedValue(undefined);
-  renderWithProviders(<AreaDetailScreen />);
+  await renderWithProviders(<AreaDetailScreen />);
   await flushUntil(() => screen.queryByText("Något gick fel"));
 
   expect(screen.getByText("Något gick fel")).toBeTruthy();
@@ -201,7 +202,7 @@ it("puts a back button over the hero on iOS only", async () => {
 it("goes back when the hero's back button is pressed", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("area-back"));
+  await fireEvent.press(screen.getByTestId("area-back"));
 
   expect(mockBack).toHaveBeenCalled();
 });
@@ -284,7 +285,7 @@ it("says a trail has no reviews rather than showing it zero stars", async () => 
 it("opens the trail that was pressed", async () => {
   await show({ trails: [trail({ identifier: "t-9" })] });
 
-  fireEvent.press(screen.getByTestId("area-trail-t-9"));
+  await fireEvent.press(screen.getByTestId("area-trail-t-9"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(home)/trail/[identifier]",

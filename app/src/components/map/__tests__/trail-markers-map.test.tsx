@@ -86,7 +86,7 @@ function source(id: string) {
 
 async function show(filter: Partial<MapMarkerFilter> = {}, props: Record<string, unknown> = {}) {
   const cameraRef = createRef<CameraRef>();
-  const rendered = renderWithProviders(
+  const rendered = await renderWithProviders(
     <TrailMarkersMap
       filter={{ ...ALL_OFF, trails: true, ...filter }}
       cameraRef={cameraRef}
@@ -117,7 +117,7 @@ it("mounts a source only for the kinds the filter asks for", async () => {
   expect(source("trails")).toBeTruthy();
   expect(source("firepits")).toBeFalsy();
   expect(source("shelters")).toBeFalsy();
-  unmount();
+  await unmount();
 
   await show({ trails: false, firePits: true, shelters: true });
   expect(source("trails")).toBeFalsy();
@@ -135,13 +135,13 @@ it("puts curated trails and user walks in separate sources", async () => {
   await flushUntil(() => source("contributions")?.props.data.features.length);
   expect(identifiers("trails")).toEqual(["t1"]);
   expect(identifiers("contributions")).toEqual(["u1"]);
-  first.unmount();
+  await first.unmount();
 
   const second = await show({ trails: false, contributions: true });
   await flushUntil(() => source("contributions")?.props.data.features.length);
   expect(source("trails")).toBeFalsy();
   expect(identifiers("contributions")).toEqual(["u1"]);
-  second.unmount();
+  await second.unmount();
 
   await show({ trails: true, contributions: false });
   expect(source("contributions")).toBeFalsy();
@@ -176,7 +176,7 @@ it("opens a user-walk cluster from its own source", async () => {
   const contributions = source("contributions");
   if (!contributions) throw new Error("expected the contributions source");
 
-  fireEvent(contributions, "press", clusterFeature(2));
+  await fireEvent(contributions, "press", clusterFeature(2));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalledWith(["u1", "u2"], { coordinate: [12.94, 57.72], radius: 16 }, 12);
@@ -190,7 +190,7 @@ it("drops what is not accessible from every source when that filter is on", asyn
   await flushUntil(() => source("trails")?.props.data.features.length);
   expect(source("trails")?.props.data.features).toHaveLength(2);
   expect(source("shelters")?.props.data.features).toHaveLength(1);
-  unmount();
+  await unmount();
 
   await show({ trails: true, firePits: true, shelters: true, accessibility: true });
   await flushUntil(() => source("trails")?.props.data.features.length);
@@ -208,13 +208,13 @@ it("opens a small cluster as a carousel and zooms a large one", async () => {
     { properties: { identifier: "t2" } },
   ]);
 
-  fireEvent(source("trails")!, "press", clusterFeature(3));
+  await fireEvent(source("trails")!, "press", clusterFeature(3));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalledWith(["t1", "t2"], { coordinate: [12.94, 57.72], radius: 16 }, 12);
 
   onClusterOpen.mockClear();
-  fireEvent(source("trails")!, "press", clusterFeature(40));
+  await fireEvent(source("trails")!, "press", clusterFeature(40));
   await settle();
 
   expect(onClusterOpen).not.toHaveBeenCalled();
@@ -230,7 +230,7 @@ it("opens a large cluster that cannot be zoomed apart", async () => {
   sourceHandle("trails").getClusterExpansionZoom.mockResolvedValue(18);
   sourceHandle("trails").getClusterLeaves.mockResolvedValue([{ properties: { identifier: "t1" } }]);
 
-  fireEvent(source("trails")!, "press", clusterFeature(40));
+  await fireEvent(source("trails")!, "press", clusterFeature(40));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalledWith(["t1"], { coordinate: [12.94, 57.72], radius: 20 }, 18);
@@ -239,7 +239,7 @@ it("opens a large cluster that cannot be zoomed apart", async () => {
 it("opens a single trail straight into its own carousel", async () => {
   await show();
 
-  fireEvent(source("trails")!, "press", pointFeature({ identifier: "t1" }));
+  await fireEvent(source("trails")!, "press", pointFeature({ identifier: "t1" }));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalledWith(["t1"], { coordinate: [12.94, 57.72], radius: 9 });
@@ -250,12 +250,12 @@ it("zooms a facility cluster and names a single facility", async () => {
   await show({ firePits: true });
   sourceHandle("firepits").getClusterExpansionZoom.mockResolvedValue(14);
 
-  fireEvent(source("firepits")!, "press", clusterFeature(4));
+  await fireEvent(source("firepits")!, "press", clusterFeature(4));
   await settle();
   expect(cameraHandles().at(-1)!.flyTo).toHaveBeenCalledWith(expect.objectContaining({ zoom: 14 }));
   expect(onClusterOpen).not.toHaveBeenCalled();
 
-  fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
   await settle();
   expect(screen.getByText("Grillplatsen")).toBeTruthy();
 });
@@ -264,11 +264,11 @@ it("zooms a facility cluster and names a single facility", async () => {
 it("takes the name bubble down with the pin it belongs to", async () => {
   const { rerender } = await show({ firePits: true });
 
-  fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
   await settle();
   expect(screen.getByText("Grillplatsen")).toBeTruthy();
 
-  rerender(
+  await rerender(
     <TrailMarkersMap
       filter={{ ...ALL_OFF, trails: true, firePits: false }}
       cameraRef={createRef<CameraRef>()}
@@ -283,9 +283,9 @@ it("takes the name bubble down with the pin it belongs to", async () => {
 it("clears the bubble when the map itself is pressed", async () => {
   await show({ firePits: true });
 
-  fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
   await settle();
-  fireEvent(screen.getByTestId("maplibre-Map"), "press");
+  await fireEvent(screen.getByTestId("maplibre-Map"), "press");
 
   expect(screen.queryByText("Grillplatsen")).toBeNull();
   expect(onMapPress).toHaveBeenCalled();

@@ -10,6 +10,7 @@ import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import SaveHikeForm from "@/components/hike/recorder/save-hike-form";
 import { ActiveHike, Segment } from "@/data/types";
 import { handleUnauthorized } from "@/services/keycloak-auth";
+import { getByType, queryByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { Slider } from "@miblanchard/react-native-slider";
@@ -59,11 +60,11 @@ function nameField() {
 
 // The trim control has no testID, so it is reached by type; the library's loose defaultProps need the cast.
 function trimSlider() {
-  return screen.UNSAFE_getByType(Slider as never);
+  return getByType(Slider);
 }
 
 async function save() {
-  fireEvent.press(screen.getByText("Spara"));
+  await fireEvent.press(screen.getByText("Spara"));
   await settle();
 }
 
@@ -73,9 +74,9 @@ beforeEach(() => {
 });
 
 it("saves the walk under the name it was given", async () => {
-  show();
+  await show();
 
-  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
 
   expect(mockCreateHike).toHaveBeenCalledWith(
@@ -85,13 +86,13 @@ it("saves the walk under the name it was given", async () => {
 
 // The field defaults to "" rather than undefined, so an untouched form is "too short", never "missing".
 it("refuses a name shorter than three characters, empty included", async () => {
-  show();
+  await show();
 
   await save();
   expect(screen.getByText("Namnet är för kort. Minst 3 tecken")).toBeTruthy();
   expect(mockCreateHike).not.toHaveBeenCalled();
 
-  fireEvent.changeText(nameField(), "Ab");
+  await fireEvent.changeText(nameField(), "Ab");
   await settle();
   await save();
   expect(screen.getByText("Namnet är för kort. Minst 3 tecken")).toBeTruthy();
@@ -99,9 +100,9 @@ it("refuses a name shorter than three characters, empty included", async () => {
 });
 
 it("goes to the saved walks once the save lands", async () => {
-  show();
+  await show();
 
-  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
 
   expect(onSaveSuccess).toHaveBeenCalled();
@@ -111,9 +112,9 @@ it("goes to the saved walks once the save lands", async () => {
 
 it("keeps the form open and says so when the save fails", async () => {
   mockCreateHike.mockRejectedValue(new Error("500"));
-  const { store } = show();
+  const { store } = await show();
 
-  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
 
   expect(store.get(snackbarAtom)).toMatchObject({
@@ -127,9 +128,9 @@ it("keeps the form open and says so when the save fails", async () => {
 it("saves on a second try when the first is refused with 401 and the token refreshes", async () => {
   mockCreateHike.mockRejectedValueOnce(new ApiError("expired", 401)).mockResolvedValue(undefined);
   mockHandleUnauthorized.mockResolvedValue("refreshed");
-  show();
+  await show();
 
-  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
 
   expect(mockCreateHike).toHaveBeenCalledTimes(2);
@@ -139,9 +140,9 @@ it("saves on a second try when the first is refused with 401 and the token refre
 it("keeps the recording and asks for a new login when the 401 cannot be refreshed away", async () => {
   mockCreateHike.mockRejectedValue(new ApiError("expired", 401));
   mockHandleUnauthorized.mockResolvedValue("expired");
-  const { store } = show();
+  const { store } = await show();
 
-  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
 
   expect(store.get(snackbarAtom)).toMatchObject({
@@ -153,60 +154,60 @@ it("keeps the recording and asks for a new login when the 401 cannot be refreshe
 
 // The figures shown are the trimmed ones, and they are what is saved.
 it("recomputes the figures from the kept window and saves those", async () => {
-  show(hike([segment(6)]));
+  await show(hike([segment(6)]));
 
   const full = screen.getByText(/km|m$/).props.children;
 
-  act(() => trimSlider().props.onValueChange([0, 2]));
+  await act(() => trimSlider().props.onValueChange([0, 2]));
   const trimmed = screen.getByText(/km|m$/).props.children;
   expect(trimmed).not.toEqual(full);
   // Two minutes of the six-minute recording are left.
   expect(screen.getByText("00:02:00")).toBeTruthy();
 
-  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
 
   expect(mockCreateHike).toHaveBeenCalledWith(expect.objectContaining({ duration: 120_000 }));
   expect(mockCreateHike.mock.calls[0][0].coordinates).toHaveLength(3);
 });
 
-it("takes the ends in either order, so a dragged-past thumb still trims", () => {
-  show(hike([segment(6)]));
+it("takes the ends in either order, so a dragged-past thumb still trims", async () => {
+  await show(hike([segment(6)]));
 
-  act(() => trimSlider().props.onValueChange([4, 1]));
+  await act(() => trimSlider().props.onValueChange([4, 1]));
 
   expect(screen.getByText("00:03:00")).toBeTruthy();
 });
 
 // The backend rejects a hike with no distance or duration, so it is caught here with a clear instruction.
 it("blocks the save while the trim leaves nothing to save", async () => {
-  show(hike([segment(6)]));
+  await show(hike([segment(6)]));
 
-  act(() => trimSlider().props.onValueChange([2, 2]));
+  await act(() => trimSlider().props.onValueChange([2, 2]));
 
   expect(screen.getByText("Den valda rutten är för kort för att sparas. Justera trimningen.")).toBeTruthy();
-  fireEvent.changeText(nameField(), "Kvällspromenad");
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
   await save();
   expect(mockCreateHike).not.toHaveBeenCalled();
 });
 
 // Two points cannot be trimmed to anything that is still a walk.
-it("offers no trim control for a route too short to trim", () => {
-  show(hike([segment(2)]));
+it("offers no trim control for a route too short to trim", async () => {
+  await show(hike([segment(2)]));
 
   expect(screen.queryByText("Trimma rutt")).toBeNull();
-  expect(screen.UNSAFE_queryByType(Slider as never)).toBeNull();
+  expect(queryByType(Slider)).toBeNull();
 });
 
 // The trimmed-away part stays on the map, faded, so you can see what you are cutting.
-it("draws the kept route on top of the full one", () => {
-  show(hike([segment(6)]));
+it("draws the kept route on top of the full one", async () => {
+  await show(hike([segment(6)]));
 
   const layers = screen.queryAllByTestId("maplibre-Layer").map((node) => node.props.id);
   expect(layers).toContain("save-hike-route-full-line");
   expect(layers).toContain("save-hike-route-kept-line");
 
-  act(() => trimSlider().props.onValueChange([2, 2]));
+  await act(() => trimSlider().props.onValueChange([2, 2]));
 
   const afterTrim = screen.queryAllByTestId("maplibre-Layer").map((node) => node.props.id);
   expect(afterTrim).toContain("save-hike-route-full-line");

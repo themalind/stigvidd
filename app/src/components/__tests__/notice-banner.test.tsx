@@ -11,8 +11,8 @@ import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
 describe("NoticeBanner", () => {
-  it("is plain text with no chevron when there is nothing to open", () => {
-    renderWithProviders(<NoticeBanner testID="notice" icon="history" title="Evenemanget har redan varit." />);
+  it("is plain text with no chevron when there is nothing to open", async () => {
+    await renderWithProviders(<NoticeBanner testID="notice" icon="history" title="Evenemanget har redan varit." />);
 
     expect(screen.queryByRole("button")).toBeNull();
     expect(screen.queryByTestId("icon-chevron-right")).toBeNull();
@@ -22,13 +22,13 @@ describe("NoticeBanner", () => {
     });
   });
 
-  it("opens on press and shows a chevron when it leads somewhere", () => {
+  it("opens on press and shows a chevron when it leads somewhere", async () => {
     const onPress = jest.fn();
-    renderWithProviders(
+    await renderWithProviders(
       <NoticeBanner testID="notice" tone="error" icon="warning-amber" title="Hinder på leden" onPress={onPress} />,
     );
 
-    fireEvent.press(screen.getByRole("button"));
+    await fireEvent.press(screen.getByRole("button"));
 
     expect(onPress).toHaveBeenCalled();
     expect(screen.getByTestId("icon-chevron-right")).toBeTruthy();

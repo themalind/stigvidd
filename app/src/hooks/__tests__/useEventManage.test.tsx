@@ -17,7 +17,7 @@ jest.mock("@/api/events", () => ({
   deleteEvent: (...args: unknown[]) => mockDeleteEvent(...args),
 }));
 
-function renderManage(identifier: string) {
+async function renderManage(identifier: string) {
   const fetchDetail = jest.fn().mockResolvedValue({ identifier });
   const fetchParticipants = jest.fn().mockResolvedValue({ participants: [] });
   const fetchFeed = jest.fn().mockResolvedValue({ items: [] });
@@ -31,7 +31,7 @@ function renderManage(identifier: string) {
     return null;
   }
 
-  renderWithProviders(<Probe />);
+  await renderWithProviders(<Probe />);
   return {
     fetchDetail,
     fetchParticipants,
@@ -50,7 +50,7 @@ beforeEach(() => {
 describe("deleting an event", () => {
   it("refreshes the lists without refetching the deleted event", async () => {
     mockDeleteEvent.mockResolvedValue(undefined);
-    const harness = renderManage("ev-1");
+    const harness = await renderManage("ev-1");
     await flushUntil(() => harness.fetchFeed.mock.calls.length === 1 && harness.fetchDetail.mock.calls.length === 1);
 
     await harness.manage().deleteMutation.mutateAsync();

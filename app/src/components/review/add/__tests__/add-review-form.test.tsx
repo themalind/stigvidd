@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AddReviewForm from "@/components/review/add/add-review-form";
+import { getByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
@@ -43,22 +44,22 @@ function show() {
 // react-hook-form's field.onChange returns a Promise, so a synchronous act() drops the update;
 // see docs/notes/app-component-testing-what-layout-can-be-asserted.md.
 async function setRating(stars: number) {
-  const widget = screen.UNSAFE_getByType(StarRating as never);
+  const widget = getByType(StarRating);
   await act(async () => {
     widget.props.onChange(stars);
   });
 }
 
 function currentRating() {
-  return screen.UNSAFE_getByType(StarRating as never).props.rating;
+  return getByType(StarRating).props.rating;
 }
 
-function writeReview(text: string) {
-  fireEvent.changeText(screen.getByTestId("review-text"), text);
+async function writeReview(text: string) {
+  await fireEvent.changeText(screen.getByTestId("review-text"), text);
 }
 
 async function submit() {
-  fireEvent.press(screen.getByText("Spara"));
+  await fireEvent.press(screen.getByText("Spara"));
   await settle();
 }
 
@@ -68,10 +69,10 @@ beforeEach(() => {
 });
 
 it("sends the review, its rating and the trail it belongs to", async () => {
-  show();
+  await show();
 
   await setRating(4);
-  writeReview("Fin stig, lite blöt i mitten.");
+  await writeReview("Fin stig, lite blöt i mitten.");
   await submit();
 
   expect(mockMutate).toHaveBeenCalledWith({
@@ -84,7 +85,7 @@ it("sends the review, its rating and the trail it belongs to", async () => {
 
 // The text is optional: a rating on its own is a review.
 it("sends an empty review rather than nothing at all", async () => {
-  show();
+  await show();
 
   await setRating(5);
   await submit();
@@ -93,9 +94,9 @@ it("sends an empty review rather than nothing at all", async () => {
 });
 
 it("carries the images the picker handed back", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByText("pick-images"));
+  await fireEvent.press(screen.getByText("pick-images"));
   await setRating(3);
   await submit();
 
@@ -106,10 +107,10 @@ it("carries the images the picker handed back", async () => {
 
 // The field caps typing at 500; the rule is what stops pasted text or a changed cap reaching the API.
 it("refuses a review longer than the column it is stored in", async () => {
-  show();
+  await show();
 
   await setRating(3);
-  writeReview("x".repeat(501));
+  await writeReview("x".repeat(501));
   await submit();
 
   expect(screen.getByText("Recensionen är för lång. Max 500 tecken")).toBeTruthy();
@@ -118,10 +119,10 @@ it("refuses a review longer than the column it is stored in", async () => {
 
 it("says it is working, and takes no second submit while it is", async () => {
   mockIsPending = true;
-  show();
+  await show();
 
   expect(screen.getByText("Sparar...")).toBeTruthy();
-  fireEvent.press(screen.getByText("Sparar..."));
+  await fireEvent.press(screen.getByText("Sparar..."));
   await settle();
 
   expect(mockMutate).not.toHaveBeenCalled();
@@ -129,7 +130,7 @@ it("says it is working, and takes no second submit while it is", async () => {
 
 // Three separate help dialogs share one screen; opening one must not open the others.
 it("opens each help dialog on its own", async () => {
-  show();
+  await show();
 
   const helpButtons = [
     screen.getByLabelText("Sätt ett betyg ⭐️⭐️"),
@@ -138,23 +139,23 @@ it("opens each help dialog on its own", async () => {
   ];
   expect(helpButtons).toHaveLength(3);
 
-  fireEvent.press(helpButtons[0]);
+  await fireEvent.press(helpButtons[0]);
   expect(screen.getByText("Sätt ett betyg ⭐️⭐️")).toBeTruthy();
   expect(screen.queryByText("Lägg till bilder")).toBeNull();
   expect(screen.queryByText("Skriv något")).toBeNull();
 });
 
 // The form opens on no stars, so the required-rating rule is reachable and nothing is sent as a 1 by default.
-it("opens with no stars filled in", () => {
-  show();
+it("opens with no stars filled in", async () => {
+  await show();
 
   expect(currentRating()).toBe(0);
 });
 
 it("refuses a review with no rating, and sends nothing", async () => {
-  show();
+  await show();
 
-  writeReview("Fin stig, lite blöt i mitten.");
+  await writeReview("Fin stig, lite blöt i mitten.");
   await submit();
 
   expect(screen.getByText("Sätt ett betyg")).toBeTruthy();
@@ -162,9 +163,9 @@ it("refuses a review with no rating, and sends nothing", async () => {
 });
 
 it("sends the review once a rating has been picked", async () => {
-  show();
+  await show();
 
-  writeReview("Fin stig, lite blöt i mitten.");
+  await writeReview("Fin stig, lite blöt i mitten.");
   await submit();
   await setRating(2);
   await submit();
@@ -175,14 +176,14 @@ it("sends the review once a rating has been picked", async () => {
 });
 
 // The widget rates in half stars, and CreateReviewRequestValidator requires rating >= 1.
-it("only lets whole stars be picked, which is what the API accepts", () => {
-  show();
+it("only lets whole stars be picked, which is what the API accepts", async () => {
+  await show();
 
-  expect(screen.UNSAFE_getByType(StarRating as never).props.step).toBe("full");
+  expect(getByType(StarRating).props.step).toBe("full");
 });
 
 it("sends five stars when the drag overshoots the last star", async () => {
-  show();
+  await show();
 
   await setRating(7);
   await submit();
@@ -192,7 +193,7 @@ it("sends five stars when the drag overshoots the last star", async () => {
 });
 
 it("refuses a rating below one star", async () => {
-  show();
+  await show();
 
   await setRating(0.5);
   await submit();

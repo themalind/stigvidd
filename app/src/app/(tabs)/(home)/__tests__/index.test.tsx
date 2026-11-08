@@ -10,6 +10,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { Hike, TrailOverview } from "@/data/types";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
 import { LatestHikeState } from "@/hooks/hike/useLatestHike";
+import { queryByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
@@ -100,7 +101,7 @@ function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTh
 }
 
 async function showLoaded() {
-  show();
+  await show();
   await flushUntil(() => screen.queryByText("Skogsleden"));
 }
 
@@ -127,7 +128,7 @@ it("ranks the popular trails around the user's position", async () => {
 
 it("hands the shared walks the same rounded position", async () => {
   mockLocation = { data: { latitude: 57.6512, longitude: 13.0211, isFallback: false }, isPending: false };
-  show();
+  await show();
   await settle();
 
   expect(mockContributionProps).toHaveBeenLastCalledWith({ latitude: 57.65, longitude: 13.02, enabled: true });
@@ -135,7 +136,7 @@ it("hands the shared walks the same rounded position", async () => {
 
 it("never hands the shared walks the Borås fallback", async () => {
   mockLocation = { data: FALLBACK, isPending: false };
-  show();
+  await show();
   await settle();
 
   expect(mockContributionProps).toHaveBeenLastCalledWith({ latitude: undefined, longitude: undefined, enabled: true });
@@ -143,7 +144,7 @@ it("never hands the shared walks the Borås fallback", async () => {
 
 it("holds the shared walks back while the position is resolving", async () => {
   mockLocation = { data: undefined, isPending: true };
-  show();
+  await show();
   await settle();
 
   expect(mockContributionProps).toHaveBeenLastCalledWith({ latitude: undefined, longitude: undefined, enabled: false });
@@ -151,11 +152,11 @@ it("holds the shared walks back while the position is resolving", async () => {
 
 it("asks once for a position that only drifts a few metres", async () => {
   mockLocation = { data: { latitude: 57.6512, longitude: 13.0211, isFallback: false }, isPending: false };
-  const { rerender } = show();
+  const { rerender } = await show();
   await flushUntil(() => screen.queryByText("Skogsleden"));
 
   mockLocation = { data: { latitude: 57.6538, longitude: 13.0189, isFallback: false }, isPending: false };
-  rerender(<HomeScreen />);
+  await rerender(<HomeScreen />);
   await settle();
 
   expect(mockGetPopularTrails).toHaveBeenCalledTimes(1);
@@ -175,7 +176,7 @@ it("never sends the Borås fallback to the API", async () => {
 // Asking before the position lands would fetch twice and rank the first answer by nothing.
 it("waits for the position before it asks", async () => {
   mockLocation = { isPending: true };
-  show();
+  await show();
   await settle();
 
   expect(mockGetPopularTrails).not.toHaveBeenCalled();
@@ -184,36 +185,36 @@ it("waits for the position before it asks", async () => {
 it("holds the carousel's place until the trails arrive", async () => {
   let release: (trails: TrailOverview[]) => void = () => {};
   mockGetPopularTrails.mockReturnValue(new Promise<TrailOverview[]>((resolve) => (release = resolve)));
-  show();
+  await show();
   await settle();
 
   expect(screen.queryByText("Skogsleden")).toBeNull();
   // The placeholder is what keeps the cards below from jumping when the trails land.
-  expect(screen.UNSAFE_queryByType(PagerCarouselSkeleton)).toBeTruthy();
+  expect(queryByType(PagerCarouselSkeleton)).toBeTruthy();
 
   release(TRAILS);
   await flushUntil(() => screen.queryByText("Skogsleden"));
 
   expect(screen.getByText("Skogsleden")).toBeTruthy();
   expect(screen.getByText("Sjöleden")).toBeTruthy();
-  expect(screen.UNSAFE_queryByType(PagerCarouselSkeleton)).toBeNull();
+  expect(queryByType(PagerCarouselSkeleton)).toBeNull();
 });
 
 it("says the trails could not be loaded instead of holding the skeleton", async () => {
   mockGetPopularTrails.mockRejectedValue(new Error("nätverket"));
-  show();
+  await show();
   await flushUntil(() => screen.queryByTestId("home-popular-error"));
 
   expect(screen.getByText("Kunde inte hämta promenaderna just nu.")).toBeTruthy();
-  expect(screen.UNSAFE_queryByType(PagerCarouselSkeleton)).toBeNull();
+  expect(queryByType(PagerCarouselSkeleton)).toBeNull();
 });
 
 it("loads the trails again when the user retries", async () => {
   mockGetPopularTrails.mockRejectedValueOnce(new Error("nätverket"));
-  show();
+  await show();
   await flushUntil(() => screen.queryByTestId("home-popular-error"));
 
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   await flushUntil(() => screen.queryByText("Skogsleden"));
 
   expect(screen.queryByTestId("home-popular-error")).toBeNull();
@@ -224,11 +225,11 @@ it("loads the trails again when the user retries", async () => {
 it("leaves the popular walks out while offline with nothing cached", async () => {
   onlineManager.setOnline(false);
   mockGetPopularTrails.mockRejectedValue(new TypeError("Network request failed"));
-  show();
+  await show();
   await settle();
 
   expect(screen.queryByTestId("home-popular")).toBeNull();
-  expect(screen.UNSAFE_queryByType(PagerCarouselSkeleton)).toBeNull();
+  expect(queryByType(PagerCarouselSkeleton)).toBeNull();
   expect(screen.queryByTestId("home-popular-error")).toBeNull();
 });
 
@@ -243,7 +244,7 @@ it("keeps the cached popular walks while offline", async () => {
 it("loads the trails on its own once the connection is back", async () => {
   onlineManager.setOnline(false);
   mockGetPopularTrails.mockRejectedValueOnce(new TypeError("Network request failed"));
-  show();
+  await show();
   await settle();
 
   await act(async () => onlineManager.setOnline(true));
@@ -255,7 +256,7 @@ it("loads the trails on its own once the connection is back", async () => {
 // A retry offline would fail again; the reconnect refetches the failed query by itself.
 it("drops the retry once the connection is gone", async () => {
   mockGetPopularTrails.mockRejectedValueOnce(new Error("nätverket"));
-  show();
+  await show();
   await flushUntil(() => screen.queryByTestId("home-popular-error"));
 
   await act(async () => onlineManager.setOnline(false));
@@ -315,7 +316,7 @@ it("offers a retry when the walk could not be loaded", async () => {
 
   expect(screen.getByTestId("home-latest-error")).toBeTruthy();
   expect(screen.getByText("Kunde inte hämta din senaste promenad just nu.")).toBeTruthy();
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   expect(retry).toHaveBeenCalledTimes(1);
 });
 
@@ -329,7 +330,7 @@ it("leaves the nature guide to the drawer", async () => {
 it("opens the area list", async () => {
   await showLoaded();
 
-  fireEvent.press(screen.getByTestId("home-areas-card"));
+  await fireEvent.press(screen.getByTestId("home-areas-card"));
 
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(home)/area/area-list-screen");
 });
@@ -352,7 +353,7 @@ it("fills the screen with the theme's background", async () => {
 });
 
 it("fills the screen with the dark theme's background too", async () => {
-  show(AppDarkTheme);
+  await show(AppDarkTheme);
   await flushUntil(() => screen.queryByText("Skogsleden"));
 
   expect(StyleSheet.flatten(screen.getByTestId("home-scroll").props.contentContainerStyle)).toMatchObject({
@@ -375,9 +376,7 @@ it("puts the area card between the popular trails and the shared walks, and the 
 
   // keep-comment: the rendered tree, not the JSX children: the cards are given no testID props, so theirs exist only once they render
   const scroll = screen.getByTestId("home-scroll");
-  const order = scroll
-    .findAll((node: typeof scroll) => typeof node.props?.testID === "string")
-    .map((node: typeof scroll) => node.props.testID);
+  const order = scroll.queryAll((node) => typeof node.props.testID === "string").map((node) => node.props.testID);
 
   const areas = order.indexOf("home-areas-card");
   expect(areas).toBeGreaterThan(order.indexOf("home-popular"));

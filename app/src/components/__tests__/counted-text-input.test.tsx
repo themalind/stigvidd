@@ -9,17 +9,17 @@ import CountedTextInput from "@/components/counted-text-input";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
-it("counts the value against maxLength under the input's testID", () => {
-  renderWithProviders(<CountedTextInput testID="note" value="hej" maxLength={300} />);
+it("counts the value against maxLength under the input's testID", async () => {
+  await renderWithProviders(<CountedTextInput testID="note" value="hej" maxLength={300} />);
 
   expect(screen.getByTestId("note-count")).toHaveTextContent("3/300");
 });
 
-it("passes props through to the input", () => {
+it("passes props through to the input", async () => {
   const onChangeText = jest.fn();
-  renderWithProviders(<CountedTextInput testID="note" value="" maxLength={300} onChangeText={onChangeText} />);
+  await renderWithProviders(<CountedTextInput testID="note" value="" maxLength={300} onChangeText={onChangeText} />);
 
-  fireEvent.changeText(screen.getByTestId("note"), "ny text");
+  await fireEvent.changeText(screen.getByTestId("note"), "ny text");
 
   expect(onChangeText).toHaveBeenCalledWith("ny text");
   expect(screen.getByTestId("note")).toHaveProp("maxLength", 300);

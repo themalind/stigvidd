@@ -19,22 +19,22 @@ afterEach(() => {
   onlineManager.setOnline(true);
 });
 
-it("stays out of the way while online", () => {
-  show();
+it("stays out of the way while online", async () => {
+  await show();
 
   expect(screen.queryByTestId("offline-banner")).toBeNull();
 });
 
-it("says there is no connection while offline", () => {
+it("says there is no connection while offline", async () => {
   onlineManager.setOnline(false);
-  show();
+  await show();
 
   expect(screen.getByTestId("offline-banner")).toBeTruthy();
   expect(screen.getByText("Ingen anslutning")).toBeTruthy();
 });
 
 it("comes up when the connection drops and goes when it returns", async () => {
-  show();
+  await show();
 
   await act(async () => onlineManager.setOnline(false));
   expect(screen.getByTestId("offline-banner")).toBeTruthy();
@@ -43,32 +43,32 @@ it("comes up when the connection drops and goes when it returns", async () => {
   expect(screen.queryByTestId("offline-banner")).toBeNull();
 });
 
-it("announces itself to screen readers", () => {
+it("announces itself to screen readers", async () => {
   onlineManager.setOnline(false);
-  show();
+  await show();
 
   expect(screen.getByTestId("offline-banner")).toHaveProp("accessibilityLiveRegion", "polite");
   expect(screen.getByTestId("offline-banner")).toHaveProp("accessibilityRole", "alert");
 });
 
-it("uses the theme's inverse colours, in dark mode too", () => {
+it("uses the theme's inverse colours, in dark mode too", async () => {
   onlineManager.setOnline(false);
-  show(false, AppDarkTheme);
+  await show(false, AppDarkTheme);
 
   expect(screen.getByTestId("offline-banner")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.inverseSurface });
   expect(screen.getByText("Ingen anslutning")).toHaveStyle({ color: AppDarkTheme.colors.inverseOnSurface });
 });
 
-it("sits flush under the header", () => {
+it("sits flush under the header", async () => {
   onlineManager.setOnline(false);
-  show(false);
+  await show(false);
 
   expect(screen.getByTestId("offline-banner")).toHaveStyle({ paddingTop: 4 });
 });
 
-it("clears the status bar itself when there is no header above it", () => {
+it("clears the status bar itself when there is no header above it", async () => {
   onlineManager.setOnline(false);
-  show(true);
+  await show(true);
 
   // renderWithProviders gives a 47 pt top inset. keep-comment: fixture value
   expect(screen.getByTestId("offline-banner")).toHaveStyle({ paddingTop: 47 + 4 });

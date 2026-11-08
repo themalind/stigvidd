@@ -46,7 +46,7 @@ afterEach(() => {
 
 it("renders nothing while there are no published walks", async () => {
   mockGetPopular.mockResolvedValue([]);
-  renderWithProviders(<PopularContributions />);
+  await renderWithProviders(<PopularContributions />);
   await settle();
 
   expect(screen.queryByTestId("home-popular-contributions")).toBeNull();
@@ -54,7 +54,7 @@ it("renders nothing while there are no published walks", async () => {
 
 it("lists the walks in the order the server ranked them, with likes and credit", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen"), card("b", "Viskan", 12, null)]);
-  renderWithProviders(<PopularContributions />);
+  await renderWithProviders(<PopularContributions />);
   await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
 
   const names = screen.getAllByText(/Ljungåsen runt|Viskan/).map((n) => n.props.children);
@@ -66,7 +66,7 @@ it("lists the walks in the order the server ranked them, with likes and credit",
 
 it("asks for the walks around the user's position and says they are nearby", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
-  renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
+  await renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
   await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
 
   expect(mockGetPopular).toHaveBeenCalledWith(57.71, 11.97);
@@ -75,7 +75,7 @@ it("asks for the walks around the user's position and says they are nearby", asy
 
 it("asks for the walks from the whole country without a position", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
-  renderWithProviders(<PopularContributions />);
+  await renderWithProviders(<PopularContributions />);
   await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
 
   expect(mockGetPopular.mock.calls).toEqual([[]]);
@@ -86,7 +86,7 @@ it("falls back to the whole country when no walk is nearby", async () => {
   mockGetPopular.mockImplementation((latitude?: number) =>
     Promise.resolve(latitude === undefined ? [card("k", "Kirunaslingan", 3, null)] : []),
   );
-  renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
+  await renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
   await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
 
   expect(mockGetPopular.mock.calls).toEqual([[57.71, 11.97], []]);
@@ -96,7 +96,7 @@ it("falls back to the whole country when no walk is nearby", async () => {
 
 it("asks only once when walks are nearby", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
-  renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
+  await renderWithProviders(<PopularContributions latitude={57.71} longitude={11.97} />);
   await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
   await settle();
 
@@ -105,7 +105,7 @@ it("asks only once when walks are nearby", async () => {
 
 it("waits while the position is still resolving", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
-  renderWithProviders(<PopularContributions enabled={false} />);
+  await renderWithProviders(<PopularContributions enabled={false} />);
   await settle();
 
   expect(mockGetPopular).not.toHaveBeenCalled();
@@ -113,10 +113,10 @@ it("waits while the position is still resolving", async () => {
 
 it("explains what a user walk is from the info button by the title", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 234, "Vandrarvennen")]);
-  renderWithProviders(<PopularContributions />);
+  await renderWithProviders(<PopularContributions />);
   await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
 
-  fireEvent.press(screen.getByTestId("home-contribution-info-button"));
+  await fireEvent.press(screen.getByTestId("home-contribution-info-button"));
   await settle();
 
   expect(screen.getByText("Om användarpromenader")).toBeTruthy();
@@ -125,7 +125,7 @@ it("explains what a user walk is from the info button by the title", async () =>
 
 it("shows at most five walks, so the home screen keeps its height", async () => {
   mockGetPopular.mockResolvedValue(Array.from({ length: 8 }, (_, i) => card(`w${i}`, `Promenad ${i}`, 8 - i, null)));
-  renderWithProviders(<PopularContributions />);
+  await renderWithProviders(<PopularContributions />);
   await flushUntil(() => screen.queryByTestId("home-popular-contributions"));
 
   expect(screen.getAllByTestId(/^home-contribution-w/)).toHaveLength(HOME_CONTRIBUTION_LIMIT);
@@ -134,10 +134,10 @@ it("shows at most five walks, so the home screen keeps its height", async () => 
 
 it("opens the trail list on the walks from show all", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 3, null)]);
-  const { store } = renderWithProviders(<PopularContributions />);
+  const { store } = await renderWithProviders(<PopularContributions />);
   await flushUntil(() => screen.queryByTestId("home-contributions-see-all"));
 
-  fireEvent.press(screen.getByTestId("home-contributions-see-all"));
+  await fireEvent.press(screen.getByTestId("home-contributions-see-all"));
 
   expect(store.get(trailListSourceAtom)).toBe("contributions");
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/trails");
@@ -145,10 +145,10 @@ it("opens the trail list on the walks from show all", async () => {
 
 it("opens the trail in the home stack", async () => {
   mockGetPopular.mockResolvedValue([card("a", "Ljungåsen runt", 3, "Vandrarvennen")]);
-  renderWithProviders(<PopularContributions />);
+  await renderWithProviders(<PopularContributions />);
   await flushUntil(() => screen.queryByTestId("home-contribution-a"));
 
-  fireEvent.press(screen.getByTestId("home-contribution-a"));
+  await fireEvent.press(screen.getByTestId("home-contribution-a"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(home)/trail/[identifier]",

@@ -8,6 +8,7 @@
 import SymbolInfoModal from "@/components/trail/symbol-info-modal";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { getByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -36,17 +37,17 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it("shows the symbol the trail is marked with, whole", () => {
-  show();
+it("shows the symbol the trail is marked with, whole", async () => {
+  await show();
 
-  const image = screen.UNSAFE_getByType(Image);
+  const image = getByType(Image);
   expect(image.props.source).toBe(SYMBOL_URL);
   expect(image.props.contentFit).toBe("contain");
   expect(StyleSheet.flatten(image.props.style)).toMatchObject({ height: HEIGHT * 0.3, width: WIDTH * 0.55 });
 });
 
-it("names the symbol and explains what it is for", () => {
-  show();
+it("names the symbol and explains what it is for", async () => {
+  await show();
 
   expect(screen.getByText(TITLE)).toBeTruthy();
   expect(screen.getByText("Blå trekant")).toBeTruthy();
@@ -54,58 +55,58 @@ it("names the symbol and explains what it is for", () => {
 });
 
 // A trail can carry a symbol image without a name for it.
-it("leaves out the caption when the trail has no symbol text", () => {
-  show({ symbol: "" });
+it("leaves out the caption when the trail has no symbol text", async () => {
+  await show({ symbol: "" });
 
   expect(screen.queryByTestId("symbol-info-caption")).toBeNull();
   expect(screen.getByTestId("symbol-info-image-frame")).toBeTruthy();
 });
 
-it("stays out of sight until it is opened", () => {
-  show({ visible: false });
+it("stays out of sight until it is opened", async () => {
+  await show({ visible: false });
 
   expect(screen.queryByText(TITLE)).toBeNull();
 });
 
 it("closes from the cross", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("symbol-info-close"));
+  await fireEvent.press(screen.getByTestId("symbol-info-close"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalled();
 });
 
 // The seeded symbols are stand-ins and have to say so.
-it("badges a mock symbol as an example image", () => {
-  show({ imageUrl: "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png" });
+it("badges a mock symbol as an example image", async () => {
+  await show({ imageUrl: "https://inkaben.se/stigvidd/mock/mock-trail-symbol.png" });
 
   expect(screen.getByTestId("example-image-overlay")).toBeTruthy();
 });
 
-it("leaves a real symbol unbadged", () => {
-  show();
+it("leaves a real symbol unbadged", async () => {
+  await show();
 
   expect(screen.queryByTestId("example-image-overlay")).toBeNull();
 });
 
-it("marks the dialog itself with a signpost", () => {
-  show();
+it("marks the dialog itself with a signpost", async () => {
+  await show();
 
   expect(screen.getByTestId("icon-sign-direction", { includeHiddenElements: true })).toBeTruthy();
 });
 
 // The symbol is a flat graphic, often on white, so it needs a panel of its own.
-it("sets the symbol on a panel of its own, in both themes", () => {
-  const { unmount } = show();
+it("sets the symbol on a panel of its own, in both themes", async () => {
+  const { unmount } = await show();
   expect(screen.getByTestId("symbol-info-image-frame")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.secondaryContainer,
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
   });
 
-  unmount();
-  show({ theme: AppDarkTheme });
+  await unmount();
+  await show({ theme: AppDarkTheme });
   expect(screen.getByTestId("symbol-info-image-frame")).toHaveStyle({
     backgroundColor: AppDarkTheme.colors.secondaryContainer,
   });

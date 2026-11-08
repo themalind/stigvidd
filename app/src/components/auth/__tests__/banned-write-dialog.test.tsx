@@ -32,14 +32,14 @@ function FailingWrite({ error }: { error: Error }) {
 }
 
 async function show(error: Error, signedIn = true) {
-  renderWithProviders(
+  await renderWithProviders(
     <>
       <FailingWrite error={error} />
       <BannedWriteDialog />
     </>,
     { initialAtoms: signedIn ? [[userAtom, SIGNED_IN]] : [] },
   );
-  fireEvent.press(screen.getByTestId("write"));
+  await fireEvent.press(screen.getByTestId("write"));
   await flushUntil(() => screen.queryByText("failed"));
 }
 
@@ -62,12 +62,12 @@ it("names the ban when a write is refused and the profile now says banned", asyn
 });
 
 it("opens a mail to the contact address from the dialog", async () => {
-  const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+  const openURL = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
   mockGetUser.mockResolvedValue(profile("2026-09-25T10:00:00Z"));
 
   await show(new ApiError("refused", 403));
   await flushUntil(() => screen.queryByText(sv.about.contactEmail));
-  fireEvent.press(screen.getByText(sv.about.contactEmail));
+  await fireEvent.press(screen.getByText(sv.about.contactEmail));
 
   expect(openURL).toHaveBeenCalledWith("mailto:info@stigvidd.se");
   openURL.mockRestore();

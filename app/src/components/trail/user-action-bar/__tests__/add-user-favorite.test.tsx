@@ -45,25 +45,25 @@ beforeEach(() => {
 });
 
 // The button's press target is the label; the icon next to it carries the state.
-function press() {
-  fireEvent.press(screen.getByText("Favorit"));
+async function press() {
+  await fireEvent.press(screen.getByText("Favorit"));
 }
 
 describe("AddToUserFavorite", () => {
-  it("shows an outlined heart when the trail is not a favourite", () => {
-    renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+  it("shows an outlined heart when the trail is not a favourite", async () => {
+    await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
     expect(screen.getByTestId("icon-favorite-border")).toBeTruthy();
   });
 
-  it("shows a filled heart when the trail is already a favourite", () => {
+  it("shows a filled heart when the trail is already a favourite", async () => {
     mockFavorites = [{ identifier: TRAIL_ID }];
-    renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+    await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
     expect(screen.getByTestId("icon-favorite")).toBeTruthy();
   });
 
-  it("ignores a favourite belonging to another trail", () => {
+  it("ignores a favourite belonging to another trail", async () => {
     mockFavorites = [{ identifier: "another-trail" }];
-    renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+    await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
     expect(screen.getByTestId("icon-favorite-border")).toBeTruthy();
   });
 
@@ -73,8 +73,8 @@ describe("AddToUserFavorite", () => {
     });
 
     it("asks the user to sign in instead of mutating", async () => {
-      renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
-      press();
+      await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       expect(screen.getByText("Du behöver vara inloggad för att lägga till i favoriter.")).toBeTruthy();
@@ -82,16 +82,16 @@ describe("AddToUserFavorite", () => {
       expect(mockRemove).not.toHaveBeenCalled();
     });
 
-    it("shows no dialog until the button is pressed", () => {
-      renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+    it("shows no dialog until the button is pressed", async () => {
+      await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
       expect(screen.queryByText("Du behöver vara inloggad för att lägga till i favoriter.")).toBeNull();
     });
   });
 
   describe("when signed in", () => {
     it("adds the trail when it is not a favourite yet", async () => {
-      renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
-      press();
+      await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       expect(mockAdd).toHaveBeenCalledWith(TRAIL_ID, expect.objectContaining({ onError: expect.any(Function) }));
@@ -100,8 +100,8 @@ describe("AddToUserFavorite", () => {
 
     it("removes the trail when it already is one", async () => {
       mockFavorites = [{ identifier: TRAIL_ID }];
-      renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
-      press();
+      await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       expect(mockRemove).toHaveBeenCalledWith(TRAIL_ID, expect.objectContaining({ onError: expect.any(Function) }));
@@ -109,8 +109,8 @@ describe("AddToUserFavorite", () => {
     });
 
     it("does not open the sign-in dialog", async () => {
-      renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
-      press();
+      await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       expect(screen.queryByText("Du behöver vara inloggad för att lägga till i favoriter.")).toBeNull();
@@ -120,8 +120,8 @@ describe("AddToUserFavorite", () => {
   describe("while a mutation is in flight", () => {
     it("is disabled during an add", async () => {
       mockAddPending = true;
-      renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
-      press();
+      await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       expect(mockAdd).not.toHaveBeenCalled();
@@ -130,8 +130,8 @@ describe("AddToUserFavorite", () => {
     it("is disabled during a remove", async () => {
       mockRemovePending = true;
       mockFavorites = [{ identifier: TRAIL_ID }];
-      renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
-      press();
+      await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       expect(mockRemove).not.toHaveBeenCalled();
@@ -140,8 +140,8 @@ describe("AddToUserFavorite", () => {
 
   describe("when the mutation fails", () => {
     async function failWith(error: unknown) {
-      const { store } = renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
-      press();
+      const { store } = await renderWithProviders(<AddToUserFavorite trailIdentifier={TRAIL_ID} />);
+      await press();
       await settle();
 
       const { onError } = mockAdd.mock.calls[0][1] as { onError: (e: unknown) => void };

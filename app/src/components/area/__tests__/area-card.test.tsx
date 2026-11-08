@@ -55,8 +55,8 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("names the area, where it is, and what it holds", () => {
-  show();
+it("names the area, where it is, and what it holds", async () => {
+  await show();
 
   expect(screen.getByText("Kransmossen")).toBeTruthy();
   expect(screen.getByText("Borås")).toBeTruthy();
@@ -65,16 +65,16 @@ it("names the area, where it is, and what it holds", () => {
 });
 
 // Lengths are summed and rounded, not listed: 2.4 + 9.1 is 12 km on the card.
-it("sums the trail lengths to a whole number of kilometres", () => {
-  show();
+it("sums the trail lengths to a whole number of kilometres", async () => {
+  await show();
 
   expect(screen.getByText("12 km")).toBeTruthy();
 });
 
-it("opens the area that was tapped", () => {
-  show();
+it("opens the area that was tapped", async () => {
+  await show();
 
-  fireEvent.press(screen.getByText("Kransmossen"));
+  await fireEvent.press(screen.getByText("Kransmossen"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(home)/area/[identifier]",
@@ -83,16 +83,16 @@ it("opens the area that was tapped", () => {
 });
 
 // FacilityType is a [Flags] enum, so membership is bitwise; equality would drop the combined values.
-it("reads a combined facility as both of its kinds", () => {
-  show({ facilities: [facility(FacilityType.FirePit | FacilityType.Shelter)] });
+it("reads a combined facility as both of its kinds", async () => {
+  await show({ facilities: [facility(FacilityType.FirePit | FacilityType.Shelter)] });
 
   expect(screen.getByLabelText("Grillplatser")).toBeTruthy();
   expect(screen.getByLabelText("Vindskydd")).toBeTruthy();
   expect(screen.queryByLabelText("Fiske")).toBeNull();
 });
 
-it("shows one chip per kind, however many facilities carry it", () => {
-  show({
+it("shows one chip per kind, however many facilities carry it", async () => {
+  await show({
     facilities: [facility(FacilityType.FirePit), facility(FacilityType.FirePit), facility(FacilityType.SwimmingArea)],
   });
 
@@ -101,16 +101,16 @@ it("shows one chip per kind, however many facilities carry it", () => {
 });
 
 // An area without trails is a real place, so the card shows neither "0 leder" nor "0 km".
-it("leaves out the counts an empty area would show as zero", () => {
-  show({ facilities: [facility(FacilityType.NatureReserve)], trails: [] });
+it("leaves out the counts an empty area would show as zero", async () => {
+  await show({ facilities: [facility(FacilityType.NatureReserve)], trails: [] });
 
   expect(screen.queryByText(/leder/)).toBeNull();
   expect(screen.queryByText(/km/)).toBeNull();
   expect(screen.getByLabelText("Naturreservat")).toBeTruthy();
 });
 
-it("drops the rows it has nothing to put in", () => {
-  show({ location: "", description: undefined });
+it("drops the rows it has nothing to put in", async () => {
+  await show({ location: "", description: undefined });
 
   expect(screen.getByText("Kransmossen")).toBeTruthy();
   expect(screen.queryByText("Borås")).toBeNull();
@@ -118,21 +118,21 @@ it("drops the rows it has nothing to put in", () => {
 });
 
 // The card is one fixed tile in a list, so neither the name over the photo nor the description grows it.
-it("clamps the name to a line and the description to two", () => {
-  show();
+it("clamps the name to a line and the description to two", async () => {
+  await show();
 
   expect(screen.getByText("Kransmossen").props.numberOfLines).toBe(1);
   expect(screen.getByText("Ett friluftsområde med spår året runt.").props.numberOfLines).toBe(2);
 });
 
 // In dark mode the card lifts onto an elevation and the accent switches to the colour that reads there.
-it("lifts the card and switches its accent in the dark theme", () => {
-  const { unmount } = show();
+it("lifts the card and switches its accent in the dark theme", async () => {
+  const { unmount } = await show();
   expect(screen.getByTestId("area-card")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.surface });
   expect(screen.getByTestId("area-card-accent")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.tertiary });
-  unmount();
+  await unmount();
 
-  show({}, AppDarkTheme);
+  await show({}, AppDarkTheme);
   expect(screen.getByTestId("area-card")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.elevation.level2 });
   expect(screen.getByTestId("area-card-accent")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.primary });
 });

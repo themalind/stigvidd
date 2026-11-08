@@ -7,6 +7,7 @@
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { getByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -97,49 +98,49 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("waits for the user rather than showing an empty profile", () => {
+it("waits for the user rather than showing an empty profile", async () => {
   mockUserQuery = { isLoading: true, isError: false };
-  show();
+  await show();
 
-  expect(screen.UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
+  expect(getByType(ActivityIndicator)).toBeTruthy();
   expect(screen.queryByText("Mitt Stigvidd")).toBeNull();
 });
 
-it("shows the error instead of the menu when the user cannot be loaded", () => {
+it("shows the error instead of the menu when the user cannot be loaded", async () => {
   mockUserQuery = { isLoading: false, isError: true, error: new Error("nätverket") };
-  show();
+  await show();
 
   expect(screen.getByText("Något gick fel")).toBeTruthy();
   expect(screen.queryByText("Mina vänner")).toBeNull();
 });
 
-it("lets the user retry loading the profile after a failure", () => {
+it("lets the user retry loading the profile after a failure", async () => {
   const refetch = jest.fn();
   mockUserQuery = { isLoading: false, isError: true, error: new Error("nätverket"), refetch };
-  show();
+  await show();
 
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
 
   expect(refetch).toHaveBeenCalledTimes(1);
 });
 
-it("names the signed-in user", () => {
-  show();
+it("names the signed-in user", async () => {
+  await show();
 
   expect(screen.getByText("Mitt Stigvidd")).toBeTruthy();
   expect(screen.getByText("stigfinnaren")).toBeTruthy();
   expect(screen.getByText("stig@example.com")).toBeTruthy();
 });
 
-it("says nothing about a ban on an ordinary account", () => {
-  show();
+it("says nothing about a ban on an ordinary account", async () => {
+  await show();
 
   expect(screen.queryByTestId("account-banned-notice")).toBeNull();
 });
 
-it("says the account is banned, since when, and how to get in touch", () => {
+it("says the account is banned, since when, and how to get in touch", async () => {
   mockUserQuery = { data: { ...USER, bannedAt: "2026-09-26T10:56:20Z" }, isLoading: false, isError: false };
-  show();
+  await show();
 
   expect(screen.getByTestId("account-banned-notice")).toBeTruthy();
   expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
@@ -148,8 +149,8 @@ it("says the account is banned, since when, and how to get in touch", () => {
   for (const item of MENU) expect(screen.getByText(item)).toBeTruthy();
 });
 
-it("lists every part of the profile", () => {
-  show();
+it("lists every part of the profile", async () => {
+  await show();
 
   for (const item of MENU) {
     expect(screen.getByText(item)).toBeTruthy();
@@ -157,47 +158,47 @@ it("lists every part of the profile", () => {
 });
 
 // The badge is the only thing on this screen that says someone is waiting for an answer.
-it("counts the friend requests waiting", () => {
+it("counts the friend requests waiting", async () => {
   mockIncomingRequests = [{ id: "a" }, { id: "b" }, { id: "c" }];
-  show();
+  await show();
 
   expect(screen.getByText("3")).toBeTruthy();
 });
 
-it("counts the hikes shared with the user", () => {
+it("counts the hikes shared with the user", async () => {
   mockIncomingSharedHikes = [{ id: "h1" }, { id: "h2" }];
-  show();
+  await show();
 
   expect(screen.getByText("2")).toBeTruthy();
 });
 
-it("shows no badge at all when nothing is waiting", () => {
-  show();
+it("shows no badge at all when nothing is waiting", async () => {
+  await show();
 
   expect(screen.queryByText("0")).toBeNull();
 });
 
-it("navigates into the part of the profile that was pressed", () => {
-  show();
+it("navigates into the part of the profile that was pressed", async () => {
+  await show();
 
-  fireEvent.press(screen.getByText("Mina vänner"));
+  await fireEvent.press(screen.getByText("Mina vänner"));
 
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/friends");
 });
 
-it("sends the about row to the about screen", () => {
-  show();
+it("sends the about row to the about screen", async () => {
+  await show();
 
-  fireEvent.press(screen.getByText("Om Stigvidd"));
+  await fireEvent.press(screen.getByText("Om Stigvidd"));
 
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/about");
 });
 
 // The profile-stack guard swaps in the login screen when the user atom flips; the screen navigates nowhere.
 it("logs out without navigating", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByText("Logga ut"));
+  await fireEvent.press(screen.getByText("Logga ut"));
   await settle();
 
   expect(mockLogout).toHaveBeenCalledTimes(1);
@@ -208,9 +209,9 @@ it("logs out without navigating", async () => {
 it("says so when the logout fails", async () => {
   mockLogout.mockRejectedValue(new Error("keycloak nere"));
   jest.spyOn(console, "log").mockImplementation(() => {});
-  const { store } = show();
+  const { store } = await show();
 
-  fireEvent.press(screen.getByText("Logga ut"));
+  await fireEvent.press(screen.getByText("Logga ut"));
   await settle();
 
   expect(store.get(snackbarAtom)).toMatchObject({ visible: true, type: "error", message: "Kunde inte logga ut." });
@@ -218,10 +219,10 @@ it("says so when the logout fails", async () => {
 
 // Deleting the account is irreversible, so the row only opens the modal that asks.
 it("asks for the password before deleting the account", async () => {
-  show();
+  await show();
 
   expect(screen.queryByText("Skriv in ditt lösenord")).toBeNull();
-  fireEvent.press(screen.getByText("Radera konto"));
+  await fireEvent.press(screen.getByText("Radera konto"));
   await flushUntil(() => screen.queryByText("Skriv in ditt lösenord"));
 
   expect(screen.getByText("Skriv in ditt lösenord")).toBeTruthy();
@@ -229,36 +230,36 @@ it("asks for the password before deleting the account", async () => {
 });
 
 it("closes the delete modal again without deleting anything", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByText("Radera konto"));
+  await fireEvent.press(screen.getByText("Radera konto"));
   await flushUntil(() => screen.queryByTestId("delete-account-close"));
-  fireEvent.press(screen.getByTestId("delete-account-close"));
+  await fireEvent.press(screen.getByTestId("delete-account-close"));
   await settle();
 
   expect(mockDeleteAccount).not.toHaveBeenCalled();
 });
 
 // The picker lives in the settings drawer now.
-it("has no theme toggle of its own", () => {
-  show();
+it("has no theme toggle of its own", async () => {
+  await show();
 
   expect(screen.queryByTestId("profile-theme-toggle")).toBeNull();
 });
 
 // The avatar is drawn for a light background; on the dark theme it is a different file.
-it("uses the wizard that matches the theme on screen", () => {
-  show();
+it("uses the wizard that matches the theme on screen", async () => {
+  await show();
   const light = screen.getByTestId("profile-avatar").props.source;
 
-  screen.unmount();
-  show({ theme: AppDarkTheme });
+  await screen.unmount();
+  await show({ theme: AppDarkTheme });
 
   expect(screen.getByTestId("profile-avatar").props.source).not.toEqual(light);
 });
 
-it("fills the screen with the theme's background", () => {
-  show();
+it("fills the screen with the theme's background", async () => {
+  await show();
 
   expect(StyleSheet.flatten(screen.getByTestId("profile-scroll").props.contentContainerStyle)).toMatchObject({
     flexGrow: 1,
@@ -268,16 +269,16 @@ it("fills the screen with the theme's background", () => {
   });
 });
 
-it("fills the screen with the dark theme's background too", () => {
-  show({ theme: AppDarkTheme });
+it("fills the screen with the dark theme's background too", async () => {
+  await show({ theme: AppDarkTheme });
 
   expect(StyleSheet.flatten(screen.getByTestId("profile-scroll").props.contentContainerStyle)).toMatchObject({
     backgroundColor: AppDarkTheme.colors.background,
   });
 });
 
-it("draws the avatar as a bordered circle", () => {
-  show();
+it("draws the avatar as a bordered circle", async () => {
+  await show();
 
   expect(screen.getByTestId("profile-avatar")).toHaveStyle({
     height: 80,
@@ -289,17 +290,17 @@ it("draws the avatar as a bordered circle", () => {
 });
 
 // Logging out and deleting the account sit below the menu, not among it.
-it("keeps the account actions apart, and underlined", () => {
-  show();
+it("keeps the account actions apart, and underlined", async () => {
+  await show();
 
   expect(screen.getByTestId("profile-account-actions")).toHaveStyle({ alignItems: "center", paddingTop: 30, gap: 20 });
   expect(screen.getByText("Logga ut")).toHaveStyle({ textDecorationLine: "underline" });
   expect(screen.getByText("Radera konto")).toHaveStyle({ textDecorationLine: "underline" });
 });
 
-it("keeps the profile on screen when a later refetch fails", () => {
+it("keeps the profile on screen when a later refetch fails", async () => {
   mockUserQuery = { data: USER, isLoading: false, isError: true, error: new Error("nätverket") };
-  show();
+  await show();
 
   expect(screen.getByText("Mina vänner")).toBeTruthy();
   expect(screen.queryByText("Något gick fel")).toBeNull();

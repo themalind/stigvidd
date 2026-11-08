@@ -19,35 +19,35 @@ function logo() {
   return screen.getByTestId("maptiler-logo");
 }
 
-it("shows the MapTiler logo in the bottom-left corner by default", () => {
-  render(<Map />);
+it("shows the MapTiler logo in the bottom-left corner by default", async () => {
+  await render(<Map />);
 
   expect(logo()).toHaveStyle({ bottom: SCREEN_PADDING, left: SCREEN_PADDING, width: 67, height: 20 });
 });
 
-it("keeps the attribution button on, beside the logo", () => {
-  render(<Map />);
+it("keeps the attribution button on, beside the logo", async () => {
+  await render(<Map />);
 
   expect(map().props.attribution).toBe(true);
   expect(map().props.attributionPosition).toEqual({ bottom: SCREEN_PADDING, left: SCREEN_PADDING + 67 + 4 });
 });
 
-it("follows the caller's attribution position", () => {
-  render(<Map attributionPosition={{ top: 30, left: 12 }} />);
+it("follows the caller's attribution position", async () => {
+  await render(<Map attributionPosition={{ top: 30, left: 12 }} />);
 
   expect(logo()).toHaveStyle({ top: 30, left: 12 });
   expect(map().props.attributionPosition).toEqual({ top: 30, left: 12 + 67 + 4 });
 });
 
-it("moves a right-anchored attribution button inwards, away from the logo", () => {
-  render(<Map attributionPosition={{ bottom: 8, right: 8 }} />);
+it("moves a right-anchored attribution button inwards, away from the logo", async () => {
+  await render(<Map attributionPosition={{ bottom: 8, right: 8 }} />);
 
   expect(logo()).toHaveStyle({ bottom: 8, right: 8 });
   expect(map().props.attributionPosition).toEqual({ bottom: 8, right: 8 + 67 + 4 });
 });
 
-it("gives the caller's style to the frame and fills it with the map", () => {
-  const { toJSON } = render(<Map style={{ height: 180 }} />);
+it("gives the caller's style to the frame and fills it with the map", async () => {
+  const { toJSON } = await render(<Map style={{ height: 180 }} />);
 
   expect(toJSON()).toHaveStyle({ height: 180 });
   expect(map()).toHaveStyle(StyleSheet.absoluteFill);

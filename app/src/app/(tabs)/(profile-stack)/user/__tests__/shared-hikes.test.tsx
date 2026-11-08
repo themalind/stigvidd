@@ -57,11 +57,11 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn() },
 }));
 
-let measured: ReturnType<typeof stubMeasureInWindow>;
+let measured: Awaited<ReturnType<typeof stubMeasureInWindow>>;
 
 // The header's sort menu and its selects have their own suites.
-beforeAll(() => {
-  measured = stubMeasureInWindow();
+beforeAll(async () => {
+  measured = await stubMeasureInWindow();
   Platform.OS = "android";
 });
 
@@ -97,7 +97,7 @@ function incoming(count: number) {
 }
 
 async function show() {
-  const rendered = renderWithProviders(<SharedHikesScreen />);
+  const rendered = await renderWithProviders(<SharedHikesScreen />);
   await flushUntil(() => screen.queryByText("Delade promenader"));
   return rendered;
 }
@@ -110,9 +110,9 @@ beforeEach(() => {
   mockGetIncoming.mockResolvedValue(sharedHike({ hikeIdentifier: "in-0", hikeName: "Förfrågan 0" }));
 });
 
-it("waits for both lists before drawing the page", () => {
+it("waits for both lists before drawing the page", async () => {
   mockIncoming = { data: undefined, isPending: true, isError: false };
-  renderWithProviders(<SharedHikesScreen />);
+  await renderWithProviders(<SharedHikesScreen />);
 
   expect(screen.queryByText("Delade promenader")).toBeNull();
 });
@@ -159,8 +159,8 @@ it("hides the search and filter controls while nothing is received", async () =>
 it("tells an empty shelf apart from a search that matched nothing", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("icon-search"));
-  fireEvent.changeText(screen.getByPlaceholderText("Sök bland promenader..."), "finns inte");
+  await fireEvent.press(screen.getByTestId("icon-search"));
+  await fireEvent.changeText(screen.getByPlaceholderText("Sök bland promenader..."), "finns inte");
 
   expect(screen.getByText("Inga promenader hittades")).toBeTruthy();
   expect(screen.queryByText("Inga delade promenader här än")).toBeNull();
@@ -169,7 +169,7 @@ it("tells an empty shelf apart from a search that matched nothing", async () => 
 it("keeps the invitations out of the way until there are some", async () => {
   const { unmount } = await show();
   expect(screen.queryByText(/Inkommande/)).toBeNull();
-  unmount();
+  await unmount();
 
   mockIncoming = { data: incoming(2), isPending: false, isError: false };
   await show();
@@ -187,10 +187,10 @@ it("caps the invitation preview and expands on request", async () => {
   expect(screen.getByText("Förfrågan 4")).toBeTruthy();
   expect(screen.queryByText("Förfrågan 5")).toBeNull();
 
-  fireEvent.press(screen.getByText("Visa alla (7)"));
+  await fireEvent.press(screen.getByText("Visa alla (7)"));
   expect(screen.getByText("Förfrågan 6")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Visa färre"));
+  await fireEvent.press(screen.getByText("Visa färre"));
   expect(screen.queryByText("Förfrågan 5")).toBeNull();
 });
 
@@ -198,10 +198,10 @@ it("accepts and rejects the invitation the button belongs to", async () => {
   mockIncoming = { data: incoming(2), isPending: false, isError: false };
   await show();
 
-  fireEvent.press(screen.getAllByLabelText("Acceptera")[1]);
+  await fireEvent.press(screen.getAllByLabelText("Acceptera")[1]);
   expect(mockAccept).toHaveBeenCalledWith("in-1");
 
-  fireEvent.press(screen.getAllByLabelText("Avvisa")[0]);
+  await fireEvent.press(screen.getAllByLabelText("Avvisa")[0]);
   expect(mockReject).toHaveBeenCalledWith("in-0");
 });
 
@@ -211,8 +211,8 @@ it("takes no second answer while one is in flight", async () => {
   mockMutationsPending = true;
   await show();
 
-  fireEvent.press(screen.getAllByLabelText("Acceptera")[0]);
-  fireEvent.press(screen.getAllByLabelText("Avvisa")[0]);
+  await fireEvent.press(screen.getAllByLabelText("Acceptera")[0]);
+  await fireEvent.press(screen.getAllByLabelText("Avvisa")[0]);
 
   expect(mockAccept).not.toHaveBeenCalled();
   expect(mockReject).not.toHaveBeenCalled();
@@ -223,13 +223,13 @@ it("opens an invitation for inspection, and answers from inside it", async () =>
   mockIncoming = { data: incoming(2), isPending: false, isError: false };
   await show();
 
-  fireEvent.press(screen.getByText("Förfrågan 1"));
+  await fireEvent.press(screen.getByText("Förfrågan 1"));
   await flushUntil(() => screen.queryByText("Acceptera"));
 
   expect(screen.getByText("Acceptera")).toBeTruthy();
   expect(mockGetIncoming).toHaveBeenCalledWith("in-1");
 
-  fireEvent.press(screen.getByText("Acceptera"));
+  await fireEvent.press(screen.getByText("Acceptera"));
   expect(mockAccept).toHaveBeenCalledWith("in-1");
   expect(screen.queryByText("Avvisa")).toBeNull();
 });
@@ -237,7 +237,7 @@ it("opens an invitation for inspection, and answers from inside it", async () =>
 it("opens a received walk as its own screen, without asking for a decision", async () => {
   await show();
 
-  fireEvent.press(screen.getByText("Kvällspromenad"));
+  await fireEvent.press(screen.getByText("Kvällspromenad"));
   await settle();
 
   expect(mockNavigate).toHaveBeenCalledWith({
@@ -249,10 +249,10 @@ it("opens a received walk as its own screen, without asking for a decision", asy
 
 it("loads the shared walks again when the user retries after a failure", async () => {
   mockGetSharedHikes.mockRejectedValueOnce(new Error("nätverket"));
-  renderWithProviders(<SharedHikesScreen />);
+  await renderWithProviders(<SharedHikesScreen />);
   await flushUntil(() => screen.queryByText("Försök igen"));
 
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   await flushUntil(() => screen.queryByText("Kvällspromenad"));
 
   expect(mockGetSharedHikes).toHaveBeenCalledTimes(2);
@@ -261,7 +261,7 @@ it("loads the shared walks again when the user retries after a failure", async (
 it("keeps the way back on the error screen on iOS, the platform that draws one", async () => {
   Platform.OS = "ios";
   mockGetSharedHikes.mockRejectedValueOnce(new Error("nätverket"));
-  renderWithProviders(<SharedHikesScreen />);
+  await renderWithProviders(<SharedHikesScreen />);
   await flushUntil(() => screen.queryByText("Försök igen"));
 
   expect(screen.getByTestId("back-button")).toBeTruthy();
@@ -273,7 +273,7 @@ it("offers a retry when the invitations could not be fetched", async () => {
   await show();
 
   expect(screen.getByText("Kunde inte hämta förfrågningar")).toBeTruthy();
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
 
   expect(mockRefetchIncoming).toHaveBeenCalledTimes(1);
 });

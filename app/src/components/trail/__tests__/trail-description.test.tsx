@@ -20,31 +20,31 @@ function show(description: string | null = DESCRIPTION, theme: Theme = AppDefaul
   return renderWithProviders(<TrailDescription trail={{ identifier: "t1", description } as Trail} />, { theme });
 }
 
-it("heads the section and prints the trail's own description", () => {
-  show();
+it("heads the section and prints the trail's own description", async () => {
+  await show();
 
   expect(screen.getByText("Beskrivning")).toBeTruthy();
   expect(screen.getByText(DESCRIPTION)).toBeTruthy();
 });
 
 // A trail imported without one must leave an empty section rather than crash the screen.
-it("renders the heading alone when the trail has no description", () => {
-  show(null);
+it("renders the heading alone when the trail has no description", async () => {
+  await show(null);
 
   expect(screen.getByText("Beskrivning")).toBeTruthy();
   expect(screen.queryByText(DESCRIPTION)).toBeNull();
 });
 
-it("sets the heading apart from the body text", () => {
-  show();
+it("sets the heading apart from the body text", async () => {
+  await show();
 
   expect(screen.getByText("Beskrivning")).toHaveStyle({ fontWeight: "700", fontSize: 15 });
   // Loose leading, because the description is the longest read on the screen.
   expect(screen.getByText(DESCRIPTION)).toHaveStyle({ fontSize: 15, lineHeight: 25 });
 });
 
-it("sits on the theme's surface as a rounded card", () => {
-  show();
+it("sits on the theme's surface as a rounded card", async () => {
+  await show();
 
   expect(screen.getByTestId("trail-description")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.surface,
@@ -53,8 +53,8 @@ it("sits on the theme's surface as a rounded card", () => {
   });
 });
 
-it("follows the dark theme too", () => {
-  show(DESCRIPTION, AppDarkTheme);
+it("follows the dark theme too", async () => {
+  await show(DESCRIPTION, AppDarkTheme);
 
   expect(screen.getByTestId("trail-description")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surface });
   expect(screen.getByText(DESCRIPTION)).toHaveStyle({ color: AppDarkTheme.colors.onSurface });

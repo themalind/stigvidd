@@ -38,8 +38,8 @@ function Save({ error }: { error: Error }) {
   );
 }
 
-function renderProfile(load: () => Promise<string>, signedIn = true) {
-  renderWithProviders(
+async function renderProfile(load: () => Promise<string>, signedIn = true) {
+  await renderWithProviders(
     <>
       <Profile load={load} />
       <SessionRecovery />
@@ -56,7 +56,7 @@ it("refetches after a 401 once the forced refresh succeeds", async () => {
   mockHandleUnauthorized.mockResolvedValue("refreshed");
   const load = jest.fn().mockRejectedValueOnce(new ApiError("expired", 401)).mockResolvedValue("Alice");
 
-  renderProfile(load);
+  await renderProfile(load);
   await flushUntil(() => screen.queryByText("Alice"));
 
   expect(mockHandleUnauthorized).toHaveBeenCalledTimes(1);
@@ -67,7 +67,7 @@ it("leaves the failed query alone when Keycloak cannot be reached", async () => 
   mockHandleUnauthorized.mockResolvedValue("unavailable");
   const load = jest.fn().mockRejectedValue(new ApiError("expired", 401));
 
-  renderProfile(load);
+  await renderProfile(load);
   await flushUntil(() => screen.queryByText("failed"));
   await settle();
 
@@ -77,7 +77,7 @@ it("leaves the failed query alone when Keycloak cannot be reached", async () => 
 });
 
 it("ignores failures that are not a 401", async () => {
-  renderProfile(jest.fn().mockRejectedValue(new ApiError("server error", 500)));
+  await renderProfile(jest.fn().mockRejectedValue(new ApiError("server error", 500)));
   await flushUntil(() => screen.queryByText("failed"));
   await settle();
 
@@ -85,7 +85,7 @@ it("ignores failures that are not a 401", async () => {
 });
 
 it("does nothing for a signed-out reader", async () => {
-  renderProfile(jest.fn().mockRejectedValue(new ApiError("expired", 401)), false);
+  await renderProfile(jest.fn().mockRejectedValue(new ApiError("expired", 401)), false);
   await flushUntil(() => screen.queryByText("failed"));
   await settle();
 
@@ -94,7 +94,7 @@ it("does nothing for a signed-out reader", async () => {
 
 it("reacts to a 401 from a mutation as well", async () => {
   mockHandleUnauthorized.mockResolvedValue("unavailable");
-  renderWithProviders(
+  await renderWithProviders(
     <>
       <Save error={new ApiError("expired", 401)} />
       <SessionRecovery />
@@ -102,7 +102,7 @@ it("reacts to a 401 from a mutation as well", async () => {
     { initialAtoms: [[userAtom, SIGNED_IN]] },
   );
 
-  fireEvent.press(screen.getByTestId("save"));
+  await fireEvent.press(screen.getByTestId("save"));
   await flushUntil(() => mockHandleUnauthorized.mock.calls.length > 0);
 
   expect(mockHandleUnauthorized).toHaveBeenCalledTimes(1);

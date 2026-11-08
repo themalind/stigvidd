@@ -120,7 +120,7 @@ async function show(event: HikingEvent | Error, participants: EventParticipants 
   if (event instanceof Error) mockGetEvent.mockRejectedValue(event);
   else mockGetEvent.mockResolvedValue(event);
   mockGetParticipants.mockResolvedValue(participants);
-  const rendered = renderWithProviders(<EventDetailsScreen routes={EVENTS_TAB_ROUTES} />, {
+  const rendered = await renderWithProviders(<EventDetailsScreen routes={EVENTS_TAB_ROUTES} />, {
     initialAtoms: mockSignedIn ? [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]] : [],
   });
   await flushUntil(() => mockGetEvent.mock.calls.length > 0 && !screen.queryByTestId("loading-indicator"));
@@ -161,7 +161,7 @@ describe("EventDetailsScreen", () => {
     await show(hikingEvent({ permissions: { ...NO_PERMISSIONS, canJoin: true, canMarkInterested: true } }));
     await flushUntil(() => screen.queryByText("Gå med") !== null);
 
-    fireEvent.press(screen.getByText("Gå med"));
+    await fireEvent.press(screen.getByText("Gå med"));
     await flushUntil(() => mockJoin.mock.calls.length > 0);
 
     expect(mockJoin).toHaveBeenCalledWith("e1");
@@ -177,9 +177,9 @@ describe("EventDetailsScreen", () => {
     expect(screen.getByText("Kvällsvandring Rya åsar")).toBeTruthy();
     expect(mockGetParticipants).not.toHaveBeenCalled();
 
-    fireEvent.press(screen.getByText("Gå med"));
+    await fireEvent.press(screen.getByText("Gå med"));
     expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
-    fireEvent.press(screen.getByText("Logga in"));
+    await fireEvent.press(screen.getByText("Logga in"));
 
     expect(mockJoin).not.toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
@@ -191,7 +191,7 @@ describe("EventDetailsScreen", () => {
     await show(hikingEvent({ permissions: { ...NO_PERMISSIONS, canJoin: true, canMarkInterested: true } }));
     await flushUntil(() => screen.queryByText("Intresserad") !== null);
 
-    fireEvent.press(screen.getByText("Intresserad"));
+    await fireEvent.press(screen.getByText("Intresserad"));
 
     expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
   });
@@ -204,7 +204,7 @@ describe("EventDetailsScreen", () => {
     expect(screen.getByLabelText("Intresserad")).toBeTruthy();
     expect(screen.queryByText("Inte intresserad")).toBeNull();
     expect(screen.queryByTestId("event-interested-on")).toBeNull();
-    fireEvent.press(screen.getByTestId("event-interested"));
+    await fireEvent.press(screen.getByTestId("event-interested"));
     await flushUntil(() => mockMarkInterested.mock.calls.length > 0);
     expect(mockMarkInterested).toHaveBeenCalledWith("e1");
     expect(mockUnmarkInterested).not.toHaveBeenCalled();
@@ -218,7 +218,7 @@ describe("EventDetailsScreen", () => {
     expect(screen.getByText("Intresserad")).toBeTruthy();
     expect(screen.getByLabelText("Intresserad, vald. Tryck för att ta bort.")).toBeTruthy();
     expect(screen.getByTestId("event-interested-on")).toBeTruthy();
-    fireEvent.press(screen.getByTestId("event-interested"));
+    await fireEvent.press(screen.getByTestId("event-interested"));
     await flushUntil(() => mockUnmarkInterested.mock.calls.length > 0);
     expect(mockUnmarkInterested).toHaveBeenCalledWith("e1");
     expect(mockMarkInterested).not.toHaveBeenCalled();
@@ -231,7 +231,7 @@ describe("EventDetailsScreen", () => {
     await flushUntil(() => screen.queryByTestId("event-invite-banner") !== null);
 
     expect(screen.queryByTestId("event-action-bar")).toBeNull();
-    fireEvent.press(screen.getByText("Tacka ja"));
+    await fireEvent.press(screen.getByText("Tacka ja"));
     await flushUntil(() => mockAccept.mock.calls.length > 0);
     expect(mockAccept).toHaveBeenCalledWith("e1");
   });
@@ -263,7 +263,7 @@ describe("EventDetailsScreen", () => {
     await show(hikingEvent({ myStatus: "Joined" }));
     await flushUntil(() => screen.queryByText("Lämna") !== null);
 
-    fireEvent.press(screen.getByText("Lämna"));
+    await fireEvent.press(screen.getByText("Lämna"));
     await flushUntil(() => mockLeave.mock.calls.length > 0);
 
     expect(screen.queryByTestId("event-leave-dialog")).toBeNull();
@@ -274,15 +274,15 @@ describe("EventDetailsScreen", () => {
     await show(hikingEvent({ visibility: "Private", myStatus: "Joined" }));
     await flushUntil(() => screen.queryByText("Lämna") !== null);
 
-    fireEvent.press(screen.getByText("Lämna"));
+    await fireEvent.press(screen.getByText("Lämna"));
 
     expect(screen.getByTestId("event-leave-dialog")).toBeTruthy();
     expect(screen.getByText(/behöver en ny inbjudan/)).toBeTruthy();
-    fireEvent.press(screen.getByTestId("event-leave-dialog-cancel"));
+    await fireEvent.press(screen.getByTestId("event-leave-dialog-cancel"));
     expect(mockLeave).not.toHaveBeenCalled();
 
-    fireEvent.press(screen.getAllByText("Lämna")[0]);
-    fireEvent.press(screen.getByTestId("event-leave-dialog-confirm"));
+    await fireEvent.press(screen.getAllByText("Lämna")[0]);
+    await fireEvent.press(screen.getByTestId("event-leave-dialog-confirm"));
     await flushUntil(() => mockBack.mock.calls.length > 0);
 
     expect(mockLeave).toHaveBeenCalledWith("e1");
@@ -293,7 +293,7 @@ describe("EventDetailsScreen", () => {
     await show(hikingEvent({ myStatus: "Joined" }));
     await flushUntil(() => screen.queryByText("Lämna") !== null);
 
-    fireEvent.press(screen.getByText("Lämna"));
+    await fireEvent.press(screen.getByText("Lämna"));
     await flushUntil(() => mockLeave.mock.calls.length > 0);
     await settle();
 
@@ -369,7 +369,7 @@ describe("EventDetailsScreen", () => {
     await flushUntil(() => screen.queryByTestId("event-board-link") !== null);
 
     expect(screen.getByText("Gå med för att läsa och skriva")).toBeTruthy();
-    fireEvent.press(screen.getByTestId("event-board-link"));
+    await fireEvent.press(screen.getByTestId("event-board-link"));
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
@@ -378,7 +378,7 @@ describe("EventDetailsScreen", () => {
     await flushUntil(() => screen.queryByTestId("route-preview") !== null);
 
     expect(mockTrailCoordinates).toHaveBeenCalledWith("t1");
-    fireEvent.press(screen.getByLabelText("Visa kartvy"));
+    await fireEvent.press(screen.getByLabelText("Visa kartvy"));
     expect(mockNavigate).toHaveBeenCalledWith({
       pathname: "/(tabs)/events/follow/[identifier]",
       params: { identifier: "t1" },
@@ -395,7 +395,7 @@ describe("EventDetailsScreen", () => {
     );
     await flushUntil(() => screen.queryByTestId("route-preview") !== null);
 
-    fireEvent.press(screen.getByLabelText("Visa kartvy"));
+    await fireEvent.press(screen.getByLabelText("Visa kartvy"));
     expect(mockTrailCoordinates).not.toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith({
       pathname: "/(tabs)/events/route/[identifier]",
@@ -433,9 +433,9 @@ describe("EventDetailsScreen", () => {
     await show(hikingEvent({ myRole: "CoHost", permissions: { ...NO_PERMISSIONS, canEdit: true } }));
     await flushUntil(() => screen.queryByTestId("event-manage-menu") !== null);
 
-    fireEvent.press(screen.getByTestId("event-manage-menu"));
+    await fireEvent.press(screen.getByTestId("event-manage-menu"));
     await flushUntil(() => screen.queryByText("Redigera") !== null);
-    fireEvent.press(screen.getByText("Redigera"));
+    await fireEvent.press(screen.getByText("Redigera"));
 
     expect(mockNavigate).toHaveBeenCalledWith({
       pathname: "/(tabs)/events/edit/[identifier]",
@@ -463,13 +463,13 @@ describe("EventDetailsScreen", () => {
     await flushUntil(() => screen.queryByTestId("event-participant-bertil") !== null);
 
     expect(screen.queryByTestId("event-participant-menu-jag")).toBeNull();
-    fireEvent.press(screen.getByTestId("event-participant-menu-bertil"));
+    await fireEvent.press(screen.getByTestId("event-participant-menu-bertil"));
     await flushUntil(() => screen.queryByText("Ta bort från evenemanget") !== null);
-    fireEvent.press(screen.getByText("Ta bort från evenemanget"));
+    await fireEvent.press(screen.getByText("Ta bort från evenemanget"));
     await flushUntil(() => screen.queryByTestId("event-remove-participant-dialog") !== null);
     expect(mockRemove).not.toHaveBeenCalled();
 
-    fireEvent.press(screen.getByTestId("event-remove-participant-dialog-confirm"));
+    await fireEvent.press(screen.getByTestId("event-remove-participant-dialog-confirm"));
     await flushUntil(() => mockRemove.mock.calls.length > 0);
     expect(mockRemove).toHaveBeenCalledWith("e1", "u2");
   });

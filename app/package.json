@@ -23,12 +23,16 @@
       "<rootDir>/jest.setup.js"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@maplibre/maplibre-react-native|jotai|@miblanchard/react-native-slider)"
+      "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg|@maplibre/maplibre-react-native|jotai|standard-navigation|@miblanchard/react-native-slider)"
     ],
     "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/src/$1",
       "^@expo/vector-icons/(.*)$": "<rootDir>/__mocks__/@expo/vector-icons-subpath.js"
     },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "<rootDir>/scripts/"
+    ],
     "setupFilesAfterEnv": [
       "<rootDir>/jest.after-env.js"
     ]

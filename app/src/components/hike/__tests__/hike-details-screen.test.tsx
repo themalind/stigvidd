@@ -100,15 +100,15 @@ function hike(overrides: Partial<Hike> = {}): Hike {
 
 async function show(overrides: Partial<Hike> = {}, hikeFollowRoute: HikeFollowRoute = PROFILE_FOLLOW) {
   mockGetHikes.mockResolvedValue([hike({ identifier: "other", name: "Annan runda" }), hike(overrides)]);
-  const rendered = renderWithProviders(<HikeDetailsScreen hikeFollowRoute={hikeFollowRoute} />);
+  const rendered = await renderWithProviders(<HikeDetailsScreen hikeFollowRoute={hikeFollowRoute} />);
   await flushUntil(() => screen.queryByTestId("hike-share") ?? screen.queryByText("Hittades inte"));
   return rendered;
 }
 
-function confirmDelete() {
-  fireEvent.press(screen.getByTestId("hike-delete"));
+async function confirmDelete() {
+  await fireEvent.press(screen.getByTestId("hike-delete"));
   // The dialog repeats the label of the button that opened it; the confirm is the second.
-  fireEvent.press(screen.getAllByText("Ta bort")[1]);
+  await fireEvent.press(screen.getAllByText("Ta bort")[1]);
 }
 
 beforeEach(() => {
@@ -159,9 +159,9 @@ it("asks for a sign-in instead of crashing once signed out", async () => {
   expect(mockGetHikes).not.toHaveBeenCalled();
 });
 
-it("waits with a spinner while the list is on its way", () => {
+it("waits with a spinner while the list is on its way", async () => {
   mockGetHikes.mockReturnValue(new Promise(() => {}));
-  renderWithProviders(<HikeDetailsScreen hikeFollowRoute={PROFILE_FOLLOW} />);
+  await renderWithProviders(<HikeDetailsScreen hikeFollowRoute={PROFILE_FOLLOW} />);
 
   expect(screen.queryByText("Hittades inte")).toBeNull();
   expect(screen.queryByTestId("hike-share")).toBeNull();
@@ -169,11 +169,11 @@ it("waits with a spinner while the list is on its way", () => {
 
 it("offers a retry when the list could not be fetched", async () => {
   mockGetHikes.mockRejectedValueOnce(new Error("500"));
-  renderWithProviders(<HikeDetailsScreen hikeFollowRoute={PROFILE_FOLLOW} />);
+  await renderWithProviders(<HikeDetailsScreen hikeFollowRoute={PROFILE_FOLLOW} />);
   await flushUntil(() => screen.queryByText("Försök igen"));
 
   mockGetHikes.mockResolvedValue([hike()]);
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   await flushUntil(() => screen.queryByTestId("hike-share"));
 
   expect(screen.getByText("Kvällspromenad")).toBeTruthy();
@@ -201,11 +201,11 @@ it("shows no info rows at all for a walk without any", async () => {
 it("deletes only after confirming, then leaves the screen", async () => {
   const { store } = await show();
 
-  fireEvent.press(screen.getByTestId("hike-delete"));
+  await fireEvent.press(screen.getByTestId("hike-delete"));
   expect(mockDeleteHike).not.toHaveBeenCalled();
   expect(screen.getByText("Vill du ta bort promenaden?")).toBeTruthy();
 
-  fireEvent.press(screen.getAllByText("Ta bort")[1]);
+  await fireEvent.press(screen.getAllByText("Ta bort")[1]);
   await settle();
 
   expect(mockDeleteHike).toHaveBeenCalledWith("hike-1");
@@ -217,7 +217,7 @@ it("keeps drawing the deleted walk while the screen pops", async () => {
   await show();
 
   mockGetHikes.mockResolvedValue([hike({ identifier: "other", name: "Annan runda" })]);
-  confirmDelete();
+  await confirmDelete();
   await flushUntil(() => mockGetHikes.mock.calls.length > 1);
   await settle();
 
@@ -229,7 +229,7 @@ it("stays on the walk when the delete fails", async () => {
   mockDeleteHike.mockRejectedValue(new Error("boom"));
   const { store } = await show();
 
-  confirmDelete();
+  await confirmDelete();
   await settle();
 
   expect(mockBack).not.toHaveBeenCalled();
@@ -239,8 +239,8 @@ it("stays on the walk when the delete fails", async () => {
 it("keeps the walk when the confirmation is dismissed", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("hike-delete"));
-  fireEvent.press(screen.getByText("Avbryt"));
+  await fireEvent.press(screen.getByTestId("hike-delete"));
+  await fireEvent.press(screen.getByText("Avbryt"));
 
   expect(mockDeleteHike).not.toHaveBeenCalled();
 });
@@ -249,14 +249,14 @@ it("renames the walk on the screen and in the cached list", async () => {
   mockUpdateHike.mockImplementation(async (request) => hike({ name: request.name, parkingInfo: request.parkingInfo }));
   const { queryClient } = await show({ parkingInfo: "Grusplan" });
 
-  fireEvent.press(screen.getByTestId("hike-edit"));
+  await fireEvent.press(screen.getByTestId("hike-edit"));
   expect(screen.getByTestId("edit-name").props.value).toBe("Kvällspromenad");
   expect(screen.getByTestId("edit-parkingInfo").props.value).toBe("Grusplan");
 
   // keep-comment: a refetch that never lands, so the list shows only the patched cache
   mockGetHikes.mockReturnValue(new Promise(() => {}));
-  fireEvent.changeText(screen.getByTestId("edit-name"), "Morgonrundan");
-  fireEvent.press(screen.getByTestId("edit-hike-save"));
+  await fireEvent.changeText(screen.getByTestId("edit-name"), "Morgonrundan");
+  await fireEvent.press(screen.getByTestId("edit-hike-save"));
   await flushUntil(() => !screen.queryByTestId("edit-name"));
 
   expect(mockUpdateHike).toHaveBeenCalledWith({
@@ -274,9 +274,9 @@ it("renames the walk on the screen and in the cached list", async () => {
 it("does not save a name shorter than three characters", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("hike-edit"));
-  fireEvent.changeText(screen.getByTestId("edit-name"), "Ab");
-  fireEvent.press(screen.getByTestId("edit-hike-save"));
+  await fireEvent.press(screen.getByTestId("hike-edit"));
+  await fireEvent.changeText(screen.getByTestId("edit-name"), "Ab");
+  await fireEvent.press(screen.getByTestId("edit-hike-save"));
 
   expect(await screen.findByText("Namnet är för kort. Minst 3 tecken")).toBeTruthy();
   expect(mockUpdateHike).not.toHaveBeenCalled();
@@ -286,9 +286,9 @@ it("keeps the edit form open when the update fails", async () => {
   mockUpdateHike.mockRejectedValue(new Error("boom"));
   await show();
 
-  fireEvent.press(screen.getByTestId("hike-edit"));
-  fireEvent.changeText(screen.getByTestId("edit-name"), "Morgonrundan");
-  fireEvent.press(screen.getByTestId("edit-hike-save"));
+  await fireEvent.press(screen.getByTestId("hike-edit"));
+  await fireEvent.changeText(screen.getByTestId("edit-name"), "Morgonrundan");
+  await fireEvent.press(screen.getByTestId("edit-hike-save"));
   await settle();
 
   expect(mockUpdateHike).toHaveBeenCalled();
@@ -299,7 +299,7 @@ it("keeps the edit form open when the update fails", async () => {
 it("opens the share form for an account that may write", async () => {
   await show();
 
-  fireEvent.press(screen.getByTestId("hike-share"));
+  await fireEvent.press(screen.getByTestId("hike-share"));
 
   expect(screen.getByText("Dela med en vän")).toBeTruthy();
   expect(screen.queryByText("Du har blivit avstängd")).toBeNull();
@@ -309,7 +309,7 @@ it.each(["hike-share", "hike-edit"])("explains the ban instead of opening %s", a
   mockWriteBlocked = "banned";
   await show();
 
-  fireEvent.press(screen.getByTestId(testID));
+  await fireEvent.press(screen.getByTestId(testID));
 
   expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
   expect(screen.queryByText("Dela med en vän")).toBeNull();
@@ -322,10 +322,15 @@ it.each<HikeFollowRoute>([
 ])("seeds the route and opens %s from the map", async (route) => {
   const { queryClient } = await show({}, route);
 
-  fireEvent.press(screen.getByLabelText("Visa kartvy"));
+  // Read as the screen opens: at gcTime 0 an entry with no observer is collected next tick.
+  let seeded: unknown;
+  mockNavigate.mockImplementationOnce(() => {
+    seeded = queryClient.getQueryData(["hike-route", "hike-1"]);
+  });
 
-  // Read the seeded route before yielding: at gcTime 0 an entry with no observer is collected next tick.
-  expect(queryClient.getQueryData(["hike-route", "hike-1"])).toBe(hike().coordinates);
+  await fireEvent.press(screen.getByLabelText("Visa kartvy"));
+
+  expect(seeded).toBe(hike().coordinates);
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: route,
     params: { identifier: "hike-1", name: "Kvällspromenad" },
@@ -390,7 +395,7 @@ describe("images", () => {
     mockUploadImage.mockResolvedValue(photo(9));
     await show({ images: [photo(1), photo(2), photo(3)] });
 
-    fireEvent.press(screen.getByTestId("hike-images-add"));
+    await fireEvent.press(screen.getByTestId("hike-images-add"));
     await flushUntil(() => mockUploadImage.mock.calls.length > 0);
 
     expect(mockPickImages).toHaveBeenCalledWith({ limit: 7 });
@@ -401,7 +406,7 @@ describe("images", () => {
     mockPickImages.mockResolvedValue(null);
     await show();
 
-    fireEvent.press(screen.getByTestId("hike-images-empty"));
+    await fireEvent.press(screen.getByTestId("hike-images-empty"));
     await settle();
 
     expect(mockUploadImage).not.toHaveBeenCalled();
@@ -411,7 +416,7 @@ describe("images", () => {
     mockWriteBlocked = "banned";
     await show();
 
-    fireEvent.press(screen.getByTestId("hike-images-empty"));
+    await fireEvent.press(screen.getByTestId("hike-images-empty"));
     await settle();
 
     expect(mockPickImages).not.toHaveBeenCalled();
@@ -420,13 +425,13 @@ describe("images", () => {
   it("opens the viewer on the tapped image, and the owner can delete it there", async () => {
     await show({ images: [photo(1), photo(2)] });
 
-    fireEvent.press(screen.getAllByTestId("hike-image-thumb")[1]);
+    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[1]);
     await settle();
     expect(screen.getByTestId("review-image-list").props.initialScrollIndex).toBe(1);
 
-    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
     await settle();
-    fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
+    await fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
     await flushUntil(() => mockDeleteImage.mock.calls.length > 0);
 
     expect(mockDeleteImage).toHaveBeenCalledWith("hike-1", "img-2");
@@ -439,11 +444,11 @@ describe("sharing", () => {
     mockUpdateHike.mockResolvedValue(hike());
     const rendered = await show();
 
-    fireEvent.press(screen.getByTestId("hike-share"));
-    fireEvent.press(screen.getByText("Nästa"));
+    await fireEvent.press(screen.getByTestId("hike-share"));
+    await fireEvent.press(screen.getByText("Nästa"));
     await settle();
-    for (const nickName of nickNames) fireEvent.press(await screen.findByText(nickName));
-    fireEvent.press(
+    for (const nickName of nickNames) await fireEvent.press(await screen.findByText(nickName));
+    await fireEvent.press(
       screen.getByText(nickNames.length === 1 ? "Dela med 1 vän" : `Dela med ${nickNames.length} vänner`),
     );
     await flushUntil(() => mockTrack.mock.calls.length > 0);
@@ -460,10 +465,10 @@ describe("sharing", () => {
     await show();
 
     expect(screen.getByText("Dela med en vän")).toBeTruthy();
-    fireEvent.press(screen.getByText("Nästa"));
+    await fireEvent.press(screen.getByText("Nästa"));
     await settle();
     await screen.findByText("bo");
-    fireEvent.press(screen.getByText("Dela med 1 vän"));
+    await fireEvent.press(screen.getByText("Dela med 1 vän"));
     await flushUntil(() => mockTrack.mock.calls.length > 0);
 
     expect(mockShareHike).toHaveBeenCalledWith({
@@ -531,7 +536,7 @@ describe("sharing", () => {
     await flushUntil(() => screen.queryByTestId("share-recipients-row"));
 
     expect(screen.getByText("Delad med 2")).toBeTruthy();
-    fireEvent.press(screen.getByTestId("share-recipients-row"));
+    await fireEvent.press(screen.getByTestId("share-recipients-row"));
 
     const rows = screen.getAllByTestId("share-recipient");
     expect(rows).toHaveLength(2);
@@ -545,8 +550,8 @@ describe("sharing", () => {
     await show();
     await flushUntil(() => screen.queryByTestId("share-recipients-row"));
 
-    fireEvent.press(screen.getByTestId("share-recipients-row"));
-    fireEvent.press(screen.getByTestId("share-more"));
+    await fireEvent.press(screen.getByTestId("share-recipients-row"));
+    await fireEvent.press(screen.getByTestId("share-more"));
 
     expect(screen.getByText("Dela med en vän")).toBeTruthy();
   });
@@ -566,8 +571,8 @@ describe("sharing", () => {
     await show();
     await flushUntil(() => screen.queryByTestId("share-recipients-row"));
 
-    fireEvent.press(screen.getByTestId("share-recipients-row"));
-    fireEvent.press(screen.getByTestId("share-more"));
+    await fireEvent.press(screen.getByTestId("share-recipients-row"));
+    await fireEvent.press(screen.getByTestId("share-more"));
 
     expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
     expect(screen.queryByText("Dela med en vän")).toBeNull();
@@ -584,7 +589,7 @@ describe("sharing", () => {
     await show();
     await flushUntil(() => mockGetOutgoing.mock.calls.length > 0);
 
-    confirmDelete();
+    await confirmDelete();
     await flushUntil(() => mockBack.mock.calls.length > 0);
 
     expect(mockGetOutgoing.mock.calls.length).toBeGreaterThan(1);
@@ -611,7 +616,7 @@ describe("sharing", () => {
 
 describe("publishing", () => {
   const expandPublish = async () => {
-    fireEvent.press(screen.getByTestId("publish-hike-accordion"));
+    await fireEvent.press(screen.getByTestId("publish-hike-accordion"));
     await settle();
   };
 
@@ -711,8 +716,8 @@ describe("publishing", () => {
     await flushUntil(() => screen.queryByTestId("publish-hike-limit"));
 
     mockGetSubmissions.mockResolvedValue([]);
-    rerender(<View />);
-    rerender(<HikeDetailsScreen hikeFollowRoute={PROFILE_FOLLOW} />);
+    await rerender(<View />);
+    await rerender(<HikeDetailsScreen hikeFollowRoute={PROFILE_FOLLOW} />);
     await flushUntil(() => screen.queryByTestId("publish-hike-accordion"));
 
     expect(screen.getByTestId("publish-hike-accordion")).toBeTruthy();
@@ -785,7 +790,7 @@ describe("publishing", () => {
     await settle();
     await expandPublish();
 
-    fireEvent.press(screen.getByTestId("hike-publish"));
+    await fireEvent.press(screen.getByTestId("hike-publish"));
     await flushUntil(() => screen.queryByTestId("publish-submit"));
 
     expect(screen.getByTestId("publish-submit")).toBeTruthy();
@@ -797,7 +802,7 @@ describe("publishing", () => {
     await settle();
     await expandPublish();
 
-    fireEvent.press(screen.getByTestId("hike-publish"));
+    await fireEvent.press(screen.getByTestId("hike-publish"));
     await settle();
 
     expect(screen.queryByTestId("publish-submit")).toBeNull();
@@ -819,7 +824,7 @@ describe("publishing", () => {
     await show();
     await settle();
 
-    fireEvent.press(screen.getByTestId("hike-delete"));
+    await fireEvent.press(screen.getByTestId("hike-delete"));
 
     expect(screen.getByText(submissionNote)).toBeTruthy();
   });
@@ -829,7 +834,7 @@ describe("publishing", () => {
     await show();
     await settle();
 
-    fireEvent.press(screen.getByTestId("hike-delete"));
+    await fireEvent.press(screen.getByTestId("hike-delete"));
 
     expect(screen.queryByText(submissionNote)).toBeNull();
   });
@@ -839,9 +844,9 @@ describe("publishing", () => {
     await show({ images: [{ identifier: "img-1", imageUrl: "https://media.stigvidd.se/hikes/1.jpg" }] });
     await settle();
 
-    fireEvent.press(screen.getAllByTestId("hike-image-thumb")[0]);
+    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[0]);
     await settle();
-    fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
     await settle();
 
     expect(screen.getByText(/ligger kopian kvar där/)).toBeTruthy();

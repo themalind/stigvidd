@@ -17,44 +17,44 @@ afterEach(() => {
 });
 
 describe("useDebouncedValue", () => {
-  it("starts with the first value", () => {
-    const { result } = renderHook(() => useDebouncedValue("kype", 300));
+  it("starts with the first value", async () => {
+    const { result } = await renderHook(() => useDebouncedValue("kype", 300));
     expect(result.current).toBe("kype");
   });
 
-  it("keeps the old value until the new one has held still for the delay", () => {
-    const { result, rerender } = renderHook(({ value }: { value: string }) => useDebouncedValue(value, 300), {
+  it("keeps the old value until the new one has held still for the delay", async () => {
+    const { result, rerender } = await renderHook(({ value }: { value: string }) => useDebouncedValue(value, 300), {
       initialProps: { value: "" },
     });
 
-    rerender({ value: "k" });
-    act(() => {
+    await rerender({ value: "k" });
+    await act(() => {
       jest.advanceTimersByTime(299);
     });
     expect(result.current).toBe("");
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(1);
     });
     expect(result.current).toBe("k");
   });
 
-  it("restarts the wait on every change and settles on the last value", () => {
-    const { result, rerender } = renderHook(({ value }: { value: string }) => useDebouncedValue(value, 300), {
+  it("restarts the wait on every change and settles on the last value", async () => {
+    const { result, rerender } = await renderHook(({ value }: { value: string }) => useDebouncedValue(value, 300), {
       initialProps: { value: "" },
     });
 
-    rerender({ value: "k" });
-    act(() => {
+    await rerender({ value: "k" });
+    await act(() => {
       jest.advanceTimersByTime(200);
     });
-    rerender({ value: "ky" });
-    act(() => {
+    await rerender({ value: "ky" });
+    await act(() => {
       jest.advanceTimersByTime(200);
     });
     expect(result.current).toBe("");
 
-    act(() => {
+    await act(() => {
       jest.advanceTimersByTime(100);
     });
     expect(result.current).toBe("ky");

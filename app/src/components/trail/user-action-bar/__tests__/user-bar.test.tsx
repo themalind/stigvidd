@@ -38,41 +38,41 @@ function trail(): Trail {
 }
 
 describe("UserBar", () => {
-  it("mounts every action", () => {
-    renderWithProviders(<UserBar trail={trail()} />);
+  it("mounts every action", async () => {
+    await renderWithProviders(<UserBar trail={trail()} />);
 
     for (const name of ["wishlist", "share", "rating", "report", "favorite"]) {
       expect(screen.getByTestId(`action-${name}`)).toBeTruthy();
     }
   });
 
-  it("keeps the actions in a stable order", () => {
-    renderWithProviders(<UserBar trail={trail()} />);
+  it("keeps the actions in a stable order", async () => {
+    await renderWithProviders(<UserBar trail={trail()} />);
 
     const order = screen.getAllByTestId(/^action-/).map((node) => node.props.testID);
     expect(order).toEqual(["action-wishlist", "action-share", "action-rating", "action-report", "action-favorite"]);
   });
 
-  it("passes the trail identifier to every action that needs one", () => {
-    renderWithProviders(<UserBar trail={trail()} />);
+  it("passes the trail identifier to every action that needs one", async () => {
+    await renderWithProviders(<UserBar trail={trail()} />);
 
     expect(screen.getByTestId("action-wishlist")).toHaveTextContent(`wishlist:${TRAIL_ID}`);
     expect(screen.getByTestId("action-report")).toHaveTextContent(`report:${TRAIL_ID}`);
     expect(screen.getByTestId("action-favorite")).toHaveTextContent(`favorite:${TRAIL_ID}`);
   });
 
-  it("passes the whole trail to the rating, which needs its name and length", () => {
-    renderWithProviders(<UserBar trail={trail()} />);
+  it("passes the whole trail to the rating, which needs its name and length", async () => {
+    await renderWithProviders(<UserBar trail={trail()} />);
     expect(screen.getByTestId("action-rating")).toHaveTextContent(`rating:${TRAIL_ID}`);
   });
 
-  it("passes the whole trail to sharing, which needs its name", () => {
-    renderWithProviders(<UserBar trail={trail()} />);
+  it("passes the whole trail to sharing, which needs its name", async () => {
+    await renderWithProviders(<UserBar trail={trail()} />);
     expect(screen.getByTestId("action-share")).toHaveTextContent(`share:${TRAIL_ID}`);
   });
 
-  it("spreads the actions across a rounded bar", () => {
-    renderWithProviders(<UserBar trail={trail()} />);
+  it("spreads the actions across a rounded bar", async () => {
+    await renderWithProviders(<UserBar trail={trail()} />);
 
     expect(screen.getByTestId("user-bar")).toHaveStyle({
       flexDirection: "row",
@@ -82,11 +82,11 @@ describe("UserBar", () => {
     });
   });
 
-  it("takes its background from the theme", () => {
-    renderWithProviders(<UserBar trail={trail()} />, { theme: AppDarkTheme });
+  it("takes its background from the theme", async () => {
+    await renderWithProviders(<UserBar trail={trail()} />, { theme: AppDarkTheme });
     expect(screen.getByTestId("user-bar")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.outlineVariant });
 
-    renderWithProviders(<UserBar trail={trail()} />, { theme: AppDefaultTheme });
+    await renderWithProviders(<UserBar trail={trail()} />, { theme: AppDefaultTheme });
     expect(screen.getAllByTestId("user-bar").at(-1)!).toHaveStyle({
       backgroundColor: AppDefaultTheme.colors.outlineVariant,
     });

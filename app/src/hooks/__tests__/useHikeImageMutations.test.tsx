@@ -49,14 +49,14 @@ function hike(identifier: string, images: HikeImage[] = []): Hike {
 
 type Mutations = ReturnType<typeof useHikeImageMutations>;
 
-function render(hikes: Hike[] = [hike("h1"), hike("h2")]) {
+async function render(hikes: Hike[] = [hike("h1"), hike("h2")]) {
   const hook: { current?: Mutations } = {};
   function Probe() {
     hook.current = useHikeImageMutations("h1");
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   rendered.queryClient.setQueryDefaults(LIST, { gcTime: Infinity });
   rendered.queryClient.setQueryData(LIST, hikes);
 
@@ -68,7 +68,7 @@ function render(hikes: Hike[] = [hike("h1"), hike("h2")]) {
     rendered.queryClient.getQueryData<Hike[]>(LIST)?.find((h) => h.identifier === identifier)?.images;
 
   const uploadAll = async (uris: string[]) => {
-    act(() => current().upload(uris));
+    await act(() => current().upload(uris));
     await flushUntil(() => current().isUploading);
     await flushUntil(() => !current().isUploading);
   };
@@ -91,9 +91,9 @@ describe("uploading", () => {
   it("uploads the picked images one at a time, in order", async () => {
     const first = deferred<HikeImage>();
     mockUpload.mockReturnValueOnce(first.promise).mockResolvedValueOnce(image(2));
-    const { current } = render();
+    const { current } = await render();
 
-    act(() => current().upload(["file:///1.jpg", "file:///2.jpg"]));
+    await act(() => current().upload(["file:///1.jpg", "file:///2.jpg"]));
     await settle();
 
     expect(mockUpload).toHaveBeenCalledTimes(1);
@@ -109,9 +109,9 @@ describe("uploading", () => {
   it("shows each image on the hike as soon as it is stored, before the rest are done", async () => {
     const second = deferred<HikeImage>();
     mockUpload.mockResolvedValueOnce(image(1)).mockReturnValueOnce(second.promise);
-    const { current, imagesOf } = render();
+    const { current, imagesOf } = await render();
 
-    act(() => current().upload(["file:///1.jpg", "file:///2.jpg"]));
+    await act(() => current().upload(["file:///1.jpg", "file:///2.jpg"]));
     await flushUntil(() => imagesOf("h1")?.length === 1);
 
     expect(imagesOf("h1")).toEqual([image(1)]);
@@ -126,7 +126,7 @@ describe("uploading", () => {
 
   it("leaves the other hikes in the list alone", async () => {
     mockUpload.mockResolvedValue(image(1));
-    const { uploadAll, imagesOf } = render([hike("h1"), hike("h2", [image(9)])]);
+    const { uploadAll, imagesOf } = await render([hike("h1"), hike("h2", [image(9)])]);
 
     await uploadAll(["file:///1.jpg"]);
 
@@ -135,7 +135,7 @@ describe("uploading", () => {
 
   it("refreshes the list afterwards", async () => {
     mockUpload.mockResolvedValue(image(1));
-    const { uploadAll, queryClient } = render();
+    const { uploadAll, queryClient } = await render();
 
     await uploadAll(["file:///1.jpg"]);
 
@@ -144,7 +144,7 @@ describe("uploading", () => {
 
   it("keeps what was stored and reports the failure when a later upload fails", async () => {
     mockUpload.mockResolvedValueOnce(image(1)).mockRejectedValueOnce(new ApiError("500", 500));
-    const { current, uploadAll, imagesOf, store } = render();
+    const { current, uploadAll, imagesOf, store } = await render();
 
     await uploadAll(["file:///1.jpg", "file:///2.jpg", "file:///3.jpg"]);
 
@@ -161,7 +161,7 @@ describe("uploading", () => {
 
   it("counts a batch that went through whole as one event", async () => {
     mockUpload.mockResolvedValueOnce(image(1)).mockResolvedValueOnce(image(2));
-    const { uploadAll } = render();
+    const { uploadAll } = await render();
 
     await uploadAll(["file:///1.jpg", "file:///2.jpg"]);
 
@@ -171,7 +171,7 @@ describe("uploading", () => {
 
   it("says the hike is full when the server refuses one more", async () => {
     mockUpload.mockRejectedValue(new ApiError("409", 409));
-    const { uploadAll, store } = render();
+    const { uploadAll, store } = await render();
 
     await uploadAll(["file:///1.jpg"]);
 
@@ -184,7 +184,7 @@ describe("uploading", () => {
 
 describe("deleting", () => {
   it("removes the image from the hike once the server confirms", async () => {
-    const { current, imagesOf } = render([hike("h1", [image(1), image(2)])]);
+    const { current, imagesOf } = await render([hike("h1", [image(1), image(2)])]);
 
     await act(async () => {
       await current().deleteImage("img-1");
@@ -197,7 +197,7 @@ describe("deleting", () => {
 
   it("keeps the image and reports the failure when the server refuses", async () => {
     mockDelete.mockRejectedValue(new ApiError("500", 500));
-    const { current, imagesOf, store } = render([hike("h1", [image(1)])]);
+    const { current, imagesOf, store } = await render([hike("h1", [image(1)])]);
 
     await act(async () => {
       await current()

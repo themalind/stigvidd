@@ -30,14 +30,14 @@ const PROFILE = { reviews: [], publishedTrails: [] };
 
 type Result = ReturnType<typeof useFriendProfile>;
 
-function render(friendIdentifier: string | undefined) {
+async function render(friendIdentifier: string | undefined) {
   let hook: Result | undefined;
   function Probe() {
     hook = useFriendProfile(friendIdentifier);
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   const current = () => {
     if (!hook) throw new Error("expected the hook to have rendered");
     return hook;
@@ -53,7 +53,7 @@ beforeEach(() => {
 });
 
 it("fetches the friend's profile", async () => {
-  const { hook } = render("id-anna");
+  const { hook } = await render("id-anna");
   await flushUntil(() => hook().isSuccess);
 
   expect(mockGetFriendProfile).toHaveBeenCalledWith("id-anna");
@@ -61,7 +61,7 @@ it("fetches the friend's profile", async () => {
 });
 
 it("keys the profile by viewer and friend, so two accounts on one device never share it", async () => {
-  const { hook, queryClient } = render("id-anna");
+  const { hook, queryClient } = await render("id-anna");
   await flushUntil(() => hook().isSuccess);
 
   expect(queryClient.getQueryData(["friends", "profile", "me", "id-anna"])).toEqual(PROFILE);
@@ -73,7 +73,7 @@ it.each([
   ["there is no friend to ask about", () => undefined, undefined],
 ])("asks nothing while %s", async (_, arrange, friend) => {
   arrange();
-  render(friend);
+  await render(friend);
   await settle();
 
   expect(mockGetFriendProfile).not.toHaveBeenCalled();

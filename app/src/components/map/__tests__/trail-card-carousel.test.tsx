@@ -61,8 +61,8 @@ beforeEach(() => {
 });
 
 // initialNumToRender is 2, so a three-trail cluster mounts two cards and builds the third on scroll.
-it("shows a card per trail in the cluster, up to what the list has mounted", () => {
-  show(["a", "b", "c"]);
+it("shows a card per trail in the cluster, up to what the list has mounted", async () => {
+  await show(["a", "b", "c"]);
 
   expect(screen.getByText("Led a")).toBeTruthy();
   expect(screen.getByText("Led b")).toBeTruthy();
@@ -70,36 +70,36 @@ it("shows a card per trail in the cluster, up to what the list has mounted", () 
   expect(screen.getAllByText("3.5 km")).toHaveLength(2);
 });
 
-it("marks a user-contributed walk, and only that one", () => {
+it("marks a user-contributed walk, and only that one", async () => {
   mockUseTrailCards.mockReturnValue(
     state([card("a", { contribution: { publishedAt: "2026-10-01", likeCount: 0 } }), card("b")]),
   );
-  show(["a", "b"]);
+  await show(["a", "b"]);
 
   expect(screen.getAllByTestId("carousel-contribution")).toHaveLength(1);
   expect(screen.getByTestId("carousel-card-a")).toContainElement(screen.getByTestId("carousel-contribution"));
 });
 
 // A card narrower than the screen shows a sliver of the next one, which is what reads as scrollable.
-it("leaves the next card peeking when there is more than one", () => {
-  show(["a", "b", "c"]);
+it("leaves the next card peeking when there is more than one", async () => {
+  await show(["a", "b", "c"]);
 
   expect(screen.getByTestId("carousel-card-a")).toHaveStyle({ width: CARD_WIDTH });
   expect(CARD_WIDTH).toBeLessThan(SINGLE_CARD_WIDTH);
 });
 
 // A lone card has nothing to peek at, so it takes the full width.
-it("lets a lone card fill the width", () => {
+it("lets a lone card fill the width", async () => {
   mockUseTrailCards.mockReturnValue(state([card("a")]));
-  show(["a"]);
+  await show(["a"]);
 
   expect(screen.getByTestId("carousel-card-a")).toHaveStyle({ width: SINGLE_CARD_WIDTH });
 });
 
 // Snapping lands on a card boundary only while the snap interval, the gap and getItemLayout's
 // offsets agree — three expressions over the same two constants.
-it("snaps by exactly one card plus the gap between cards", () => {
-  show(["a", "b", "c"]);
+it("snaps by exactly one card plus the gap between cards", async () => {
+  await show(["a", "b", "c"]);
   const list = screen.getByTestId("carousel-list");
 
   expect(list.props.snapToInterval).toBe(CARD_WIDTH + SCREEN_PADDING);
@@ -111,12 +111,12 @@ it("snaps by exactly one card plus the gap between cards", () => {
   });
 });
 
-it("marks which card is showing, and moves the mark when the list settles on another", () => {
-  show(["a", "b", "c"]);
+it("marks which card is showing, and moves the mark when the list settles on another", async () => {
+  await show(["a", "b", "c"]);
 
   expect(screen.getByText("1/3")).toBeTruthy();
 
-  fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
+  await fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
     nativeEvent: { contentOffset: { x: CARD_WIDTH + SCREEN_PADDING }, contentSize: {}, layoutMeasurement: {} },
   });
 
@@ -127,54 +127,54 @@ it("marks which card is showing, and moves the mark when the list settles on ano
 });
 
 // A single card is the whole carousel, so dots would be one dot: noise.
-it("draws dots only for a cluster, with the active one widened", () => {
-  const { unmount } = show(["a", "b", "c"]);
+it("draws dots only for a cluster, with the active one widened", async () => {
+  const { unmount } = await show(["a", "b", "c"]);
 
   const active = screen.getAllByTestId("carousel-dot");
   expect(active).toHaveLength(3);
   expect(active[0]).toHaveStyle({ width: 18, backgroundColor: AppDefaultTheme.colors.primary });
   expect(active[1]).toHaveStyle({ width: 6, backgroundColor: AppDefaultTheme.colors.outlineVariant });
 
-  unmount();
+  await unmount();
   mockUseTrailCards.mockReturnValue(state([card("a")]));
-  show(["a"]);
+  await show(["a"]);
   expect(screen.queryAllByTestId("carousel-dot")).toHaveLength(0);
 });
 
 // The map lifts its attribution clear of the carousel, so the height includes the gap below it.
-it("reports its height plus the gap below it", () => {
+it("reports its height plus the gap below it", async () => {
   const onMeasure = jest.fn();
-  show(["a", "b", "c"], { onMeasure });
+  await show(["a", "b", "c"], { onMeasure });
 
-  fireEvent(screen.getByTestId("carousel"), "layout", { nativeEvent: { layout: { height: 150 } } });
+  await fireEvent(screen.getByTestId("carousel"), "layout", { nativeEvent: { layout: { height: 150 } } });
 
   expect(onMeasure).toHaveBeenCalledWith(166);
 });
 
-it("offers a retry only when there is something to retry", () => {
+it("offers a retry only when there is something to retry", async () => {
   const refetch = jest.fn();
   mockUseTrailCards.mockReturnValue(state([], { isError: true, refetch }));
-  const { unmount } = show(["a"]);
+  const { unmount } = await show(["a"]);
 
   expect(screen.getByText("Kunde inte ladda den här leden")).toBeTruthy();
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   expect(refetch).toHaveBeenCalledTimes(1);
 
-  unmount();
+  await unmount();
   mockUseTrailCards.mockReturnValue(state([], { notFound: new Set(["a"]) }));
-  show(["a"]);
+  await show(["a"]);
 
   expect(screen.getByText("Den här leden är inte längre tillgänglig")).toBeTruthy();
   expect(screen.queryByText("Försök igen")).toBeNull();
 });
 
-it("hands the pressed card's identifier to the caller", () => {
+it("hands the pressed card's identifier to the caller", async () => {
   const onReadMore = jest.fn();
   const onShowOnMap = jest.fn();
-  show(["a", "b", "c"], { onReadMore, onShowOnMap });
+  await show(["a", "b", "c"], { onReadMore, onShowOnMap });
 
-  fireEvent.press(screen.getAllByText("Läs mer")[0]);
-  fireEvent.press(screen.getAllByText("Se på karta")[0]);
+  await fireEvent.press(screen.getAllByText("Läs mer")[0]);
+  await fireEvent.press(screen.getAllByText("Se på karta")[0]);
 
   expect(onReadMore).toHaveBeenCalledWith("a");
   expect(onShowOnMap).toHaveBeenCalledWith("a");

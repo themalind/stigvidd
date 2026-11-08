@@ -50,7 +50,7 @@ beforeEach(() => {
 });
 
 it("credits the submitter by nickname and shows the count", async () => {
-  renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await settle();
 
   expect(screen.getByText("Delad av Vandrarvennen")).toBeTruthy();
@@ -58,7 +58,7 @@ it("credits the submitter by nickname and shows the count", async () => {
 });
 
 it("leaves out the credit when the submitter is not named", async () => {
-  renderWithProviders(
+  await renderWithProviders(
     <TrailContributionBar trailIdentifier="t1" contribution={{ ...contribution, submitterNickName: null }} />,
   );
   await settle();
@@ -68,10 +68,10 @@ it("leaves out the credit when the submitter is not named", async () => {
 });
 
 it("explains what a user walk is from the info button", async () => {
-  renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await settle();
 
-  fireEvent.press(screen.getByTestId("trail-contribution-info-button"));
+  await fireEvent.press(screen.getByTestId("trail-contribution-info-button"));
   await settle();
 
   expect(screen.getByText("Om användarpromenader")).toBeTruthy();
@@ -79,16 +79,16 @@ it("explains what a user walk is from the info button", async () => {
 });
 
 it("likes and then unlikes", async () => {
-  renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await flushUntil(pressable);
 
-  fireEvent.press(screen.getByTestId("trail-like"));
+  await fireEvent.press(screen.getByTestId("trail-like"));
   await flushUntil(() => mockLike.mock.calls.length > 0 && count() === 235);
 
   expect(mockLike).toHaveBeenCalledWith("t1");
   expect(count()).toBe(235);
 
-  fireEvent.press(screen.getByTestId("trail-like"));
+  await fireEvent.press(screen.getByTestId("trail-like"));
   await flushUntil(() => mockUnlike.mock.calls.length > 0 && count() === 234);
 
   expect(mockUnlike).toHaveBeenCalledWith("t1");
@@ -97,10 +97,10 @@ it("likes and then unlikes", async () => {
 
 it("cannot be pressed before the user's own like has loaded", async () => {
   mockGetLike.mockReturnValue(new Promise(() => {}));
-  renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await settle();
 
-  fireEvent.press(screen.getByTestId("trail-like"));
+  await fireEvent.press(screen.getByTestId("trail-like"));
   await settle();
 
   expect(mockLike).not.toHaveBeenCalled();
@@ -109,10 +109,10 @@ it("cannot be pressed before the user's own like has loaded", async () => {
 
 it("unlikes a trail the user had already liked", async () => {
   mockGetLike.mockResolvedValue({ likeCount: 235, likedByMe: true });
-  renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await flushUntil(pressable);
 
-  fireEvent.press(screen.getByTestId("trail-like"));
+  await fireEvent.press(screen.getByTestId("trail-like"));
   await flushUntil(() => mockUnlike.mock.calls.length > 0);
 
   expect(mockUnlike).toHaveBeenCalledWith("t1");
@@ -121,7 +121,7 @@ it("unlikes a trail the user had already liked", async () => {
 
 describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
   it("sits on the theme's surface with a primary edge, like the obstacle warning", async () => {
-    renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />, { theme });
+    await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />, { theme });
     await settle();
 
     expect(screen.getByTestId("trail-contribution")).toHaveStyle({
@@ -132,14 +132,14 @@ describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
   });
 
   it("draws the like without a frame in the theme's primary colour, unfilled once liked", async () => {
-    renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />, { theme });
+    await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />, { theme });
     await flushUntil(pressable);
 
     const ink = theme.colors.primary;
     expect(screen.getByTestId("trail-like")).not.toHaveStyle({ borderWidth: 1 });
     expect(screen.getByTestId("trail-like-count")).toHaveStyle({ color: ink });
 
-    fireEvent.press(screen.getByTestId("trail-like"));
+    await fireEvent.press(screen.getByTestId("trail-like"));
     await flushUntil(() => count() === 235);
 
     expect(screen.getByTestId("trail-like").props.accessibilityState).toMatchObject({ selected: true });
@@ -150,12 +150,14 @@ describe.each(APP_THEMES)("in the $id theme", ({ theme }) => {
 
 it("asks again for another user rather than showing the previous user's like", async () => {
   mockGetLike.mockResolvedValue({ likeCount: 235, likedByMe: true });
-  const { rerender } = renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  const { rerender } = await renderWithProviders(
+    <TrailContributionBar trailIdentifier="t1" contribution={contribution} />,
+  );
   await flushUntil(() => screen.getByTestId("trail-like").props.accessibilityState?.selected === true);
 
   mockUserId = "user-b";
   mockGetLike.mockResolvedValue({ likeCount: 235, likedByMe: false });
-  rerender(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await rerender(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await flushUntil(() => mockGetLike.mock.calls.length > 1);
   await settle();
 
@@ -164,10 +166,12 @@ it("asks again for another user rather than showing the previous user's like", a
 
 it("rolls back and reports when the like fails", async () => {
   mockLike.mockRejectedValue(new Error("500"));
-  const { store } = renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  const { store } = await renderWithProviders(
+    <TrailContributionBar trailIdentifier="t1" contribution={contribution} />,
+  );
   await flushUntil(pressable);
 
-  fireEvent.press(screen.getByTestId("trail-like"));
+  await fireEvent.press(screen.getByTestId("trail-like"));
   await flushUntil(() => store.get(snackbarAtom).visible);
 
   expect(count()).toBe(234);
@@ -176,10 +180,10 @@ it("rolls back and reports when the like fails", async () => {
 
 it("asks a signed-out user to sign in instead of liking", async () => {
   mockIsAuthenticated = false;
-  renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
+  await renderWithProviders(<TrailContributionBar trailIdentifier="t1" contribution={contribution} />);
   await settle();
 
-  fireEvent.press(screen.getByTestId("trail-like"));
+  await fireEvent.press(screen.getByTestId("trail-like"));
   await settle();
 
   expect(screen.getByText("Du behöver vara inloggad för att gilla en promenad.")).toBeTruthy();

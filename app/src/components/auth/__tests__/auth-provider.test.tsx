@@ -15,6 +15,7 @@ import { logoutKeycloak, passwordGrant, restoreSession, setSessionExpiredHandler
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
 import { renderWithProviders } from "@/test/render";
 import { act, screen } from "@testing-library/react-native";
+import { useEffect } from "react";
 
 jest.mock("@/api/auth", () => ({ registerAccount: jest.fn() }));
 jest.mock("@/api/users", () => ({ deleteStigViddUser: jest.fn() }));
@@ -49,7 +50,10 @@ const FORM: RegisterData = {
 let auth: ReturnType<typeof useAuth>;
 
 function AuthProbe() {
-  auth = useAuth();
+  const current = useAuth();
+  useEffect(() => {
+    auth = current;
+  });
   return null;
 }
 
@@ -85,28 +89,28 @@ async function attempt(action: () => Promise<void>) {
   return thrown;
 }
 
-it("starts signed out, and says so", () => {
-  show();
+it("starts signed out, and says so", async () => {
+  await show();
 
   expect(auth.user).toBeNull();
   expect(auth.isAuthenticated).toBe(false);
 });
 
-it("reports the signed-in user to every screen that asks", () => {
-  show(true);
+it("reports the signed-in user to every screen that asks", async () => {
+  await show(true);
 
   expect(auth.user).toEqual(USER);
   expect(auth.isAuthenticated).toBe(true);
 });
 
-it("holds the first paint until the stored session has been looked at", () => {
-  show();
+it("holds the first paint until the stored session has been looked at", async () => {
+  await show();
 
   expect(auth.isLoading).toBe(true);
 });
 
 it("signs the user in with the credentials they typed", async () => {
-  const { store } = show();
+  const { store } = await show();
 
   await attempt(() => auth.login("vandrare@stigvidd.se", "Hemligt123!"));
 
@@ -115,7 +119,7 @@ it("signs the user in with the credentials they typed", async () => {
 });
 
 it("leaves the user signed out when the credentials are wrong", async () => {
-  const { store } = show();
+  const { store } = await show();
   const rejected = new Error("invalid-credentials");
   grant.mockRejectedValueOnce(rejected);
 
@@ -129,7 +133,7 @@ it("leaves the user signed out when the credentials are wrong", async () => {
 // session to establish here — attempting one would only fail. The screen routes to the
 // verification step instead.
 it("creates the account and leaves the user signed out, pending verification", async () => {
-  const { store } = show();
+  const { store } = await show();
 
   await attempt(() => auth.register(FORM));
 
@@ -140,7 +144,7 @@ it("creates the account and leaves the user signed out, pending verification", a
 
 // A registration that never reached the backend is not recoverable by logging in.
 it("passes a failed registration on as it came", async () => {
-  show();
+  await show();
   const rejected = new Error("e-post upptagen");
   register.mockRejectedValueOnce(rejected);
 
@@ -151,7 +155,7 @@ it("passes a failed registration on as it came", async () => {
 });
 
 it("signs out of Keycloak, drops the push registration and forgets the user", async () => {
-  const { store, queryClient } = show(true);
+  const { store, queryClient } = await show(true);
   const clear = jest.spyOn(queryClient, "clear");
 
   await attempt(() => auth.logout());
@@ -164,7 +168,7 @@ it("signs out of Keycloak, drops the push registration and forgets the user", as
 
 // A push registration that cannot be dropped must not leave the user stuck signed in.
 it("signs out even when the push registration cannot be dropped", async () => {
-  const { store } = show(true);
+  const { store } = await show(true);
   unregisterPush.mockRejectedValueOnce(new Error("no network"));
 
   await attempt(() => auth.logout());
@@ -174,7 +178,7 @@ it("signs out even when the push registration cannot be dropped", async () => {
 });
 
 it("refuses to delete an account when nobody is signed in", async () => {
-  show();
+  await show();
 
   const thrown = await attempt(() => auth.deleteAccount("Hemligt123!"));
 
@@ -185,7 +189,7 @@ it("refuses to delete an account when nobody is signed in", async () => {
 
 // Deleting is irreversible, so the password is checked against the signed-in account first.
 it("re-checks the password against the signed-in account before deleting", async () => {
-  show(true);
+  await show(true);
 
   await attempt(() => auth.deleteAccount("Hemligt123!"));
 
@@ -194,7 +198,7 @@ it("re-checks the password against the signed-in account before deleting", async
 });
 
 it("deletes nothing when the password is wrong, and stays signed in", async () => {
-  const { store } = show(true);
+  const { store } = await show(true);
   const rejected = new Error("invalid-credentials");
   grant.mockRejectedValueOnce(rejected);
 
@@ -206,7 +210,7 @@ it("deletes nothing when the password is wrong, and stays signed in", async () =
 });
 
 it("signs the user out once the account is gone", async () => {
-  const { store, queryClient } = show(true);
+  const { store, queryClient } = await show(true);
   const clear = jest.spyOn(queryClient, "clear");
 
   await attempt(() => auth.deleteAccount("Hemligt123!"));
@@ -218,7 +222,7 @@ it("signs the user out once the account is gone", async () => {
 
 // A deletion that failed on the server leaves the session alone.
 it("keeps the session when the account could not be deleted", async () => {
-  const { store } = show(true);
+  const { store } = await show(true);
   deleteUser.mockRejectedValueOnce(new Error("500"));
 
   await attempt(() => auth.deleteAccount("Hemligt123!"));
@@ -230,7 +234,7 @@ it("keeps the session when the account could not be deleted", async () => {
 it("brings back the session stored on the device at start-up", async () => {
   restore.mockResolvedValue(USER);
 
-  const { store } = renderWithProviders(<InitProbe />);
+  const { store } = await renderWithProviders(<InitProbe />);
   await act(async () => {});
 
   expect(store.get(userAtom)).toEqual(USER);
@@ -238,7 +242,7 @@ it("brings back the session stored on the device at start-up", async () => {
 });
 
 it("lets the first paint through when there is no session to restore", async () => {
-  const { store } = renderWithProviders(<InitProbe />);
+  const { store } = await renderWithProviders(<InitProbe />);
   await act(async () => {});
 
   expect(store.get(userAtom)).toBeNull();
@@ -249,7 +253,7 @@ it("lets the first paint through when there is no session to restore", async () 
 it("lets the first paint through, signed out, when restoring the session throws", async () => {
   restore.mockRejectedValue(new Error("session-unavailable"));
 
-  const { store } = renderWithProviders(<InitProbe />);
+  const { store } = await renderWithProviders(<InitProbe />);
   await act(async () => {});
 
   expect(store.get(userAtom)).toBeNull();
@@ -260,23 +264,23 @@ it("lets the first paint through, signed out, when restoring the session throws"
 // A failed refresh drops back to the signed-out state, or the guards leave the user where every call 401s.
 it("signs the user out when the session expires while the app is open", async () => {
   restore.mockResolvedValue(USER);
-  const { store, queryClient } = renderWithProviders(<InitProbe />);
+  const { store, queryClient } = await renderWithProviders(<InitProbe />);
   await act(async () => {});
   expect(store.get(userAtom)).toEqual(USER);
   const clear = jest.spyOn(queryClient, "clear");
 
   const onExpired = setExpiredHandler.mock.calls[0][0];
-  act(() => onExpired());
+  await act(() => onExpired());
 
   expect(store.get(userAtom)).toBeNull();
   expect(clear).toHaveBeenCalled();
 });
 
 it("takes the expiry handler back down with the tree", async () => {
-  renderWithProviders(<InitProbe />);
+  await renderWithProviders(<InitProbe />);
   await act(async () => {});
 
-  screen.unmount();
+  await screen.unmount();
 
   expect(setExpiredHandler).toHaveBeenLastCalledWith(null);
 });
@@ -289,9 +293,9 @@ it("drops a session that finishes restoring after the tree is gone", async () =>
       finish = resolve;
     }),
   );
-  const { store } = renderWithProviders(<InitProbe />);
+  const { store } = await renderWithProviders(<InitProbe />);
 
-  screen.unmount();
+  await screen.unmount();
   await act(async () => {
     finish(USER);
   });

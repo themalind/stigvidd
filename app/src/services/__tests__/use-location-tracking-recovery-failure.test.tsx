@@ -67,7 +67,7 @@ async function mount(seed: StoredHikeState) {
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   await settle();
   await settle();
 

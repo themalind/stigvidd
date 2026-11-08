@@ -8,10 +8,11 @@
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { PagedReviewResponse, Review, Trail } from "@/data/types";
-import { flushUntil, settle } from "@/test/flush";
+import { queryByType } from "@/test/composites";
+import { flushUntil, pressWhileHeld, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
-import { createRef } from "react";
+import { ComponentRef, createRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 const mockGetReviews = jest.fn();
@@ -97,10 +98,10 @@ function page(overrides: Partial<PagedReviewResponse> = {}): PagedReviewResponse
 const onReviewsLoaded = jest.fn();
 
 async function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme) {
-  const rendered = renderWithProviders(
+  const rendered = await renderWithProviders(
     <TrailReviewsContainer
       trail={trail()}
-      surfaceToScrollToRef={createRef<View>()}
+      surfaceToScrollToRef={createRef<ComponentRef<typeof View>>()}
       onReviewsLoaded={onReviewsLoaded}
     />,
     { theme },
@@ -126,15 +127,17 @@ it("shows a spinner rather than an empty review list while the first page is in 
   let release: (value: PagedReviewResponse) => void = () => {};
   mockGetReviews.mockReturnValue(new Promise<PagedReviewResponse>((resolve) => (release = resolve)));
 
-  renderWithProviders(<TrailReviewsContainer trail={trail()} surfaceToScrollToRef={createRef<View>()} />);
+  await renderWithProviders(
+    <TrailReviewsContainer trail={trail()} surfaceToScrollToRef={createRef<ComponentRef<typeof View>>()} />,
+  );
   await settle();
 
-  expect(screen.UNSAFE_queryByType(ActivityIndicator)).not.toBeNull();
+  expect(queryByType(ActivityIndicator)).not.toBeNull();
   expect(screen.queryByText("Det finns inga recensioner här ännu.")).toBeNull();
 
   release(page());
   await flushUntil(() => screen.queryByText("Recensioner"));
-  expect(screen.UNSAFE_queryByType(ActivityIndicator)).toBeNull();
+  expect(queryByType(ActivityIndicator)).toBeNull();
 });
 
 // The count is the server's total, not the number of pages fetched so far.
@@ -179,7 +182,7 @@ it("appends the next page below the ones already shown", async () => {
   mockGetReviews.mockResolvedValueOnce(page({ reviews: [review("r2")], hasMore: false, page: 1, total: 2 }));
 
   await show();
-  fireEvent.press(screen.getByText("Ladda fler"));
+  await fireEvent.press(screen.getByText("Ladda fler"));
   await flushUntil(() => screen.getByTestId("review-section").props.children === "r1,r2");
 
   expect(mockGetReviews).toHaveBeenLastCalledWith(TRAIL_ID, 1, 5);
@@ -194,11 +197,11 @@ it("disables the load-more button while the next page is loading", async () => {
   mockGetReviews.mockReturnValueOnce(new Promise<PagedReviewResponse>((resolve) => (release = resolve)));
 
   await show();
-  fireEvent.press(screen.getByText("Ladda fler"));
+  await pressWhileHeld(screen.getByText("Ladda fler"));
   await flushUntil(() => screen.queryByText("Laddar fler..."));
 
   expect(screen.getByText("Laddar fler...")).toBeTruthy();
-  fireEvent.press(screen.getByText("Laddar fler..."));
+  await fireEvent.press(screen.getByText("Laddar fler..."));
   expect(mockGetReviews).toHaveBeenCalledTimes(2);
 
   release(page({ reviews: [review("r2")], hasMore: false, page: 1, total: 2 }));
@@ -218,7 +221,7 @@ it("loads the reviews again when the user retries after a failure", async () => 
   mockGetReviews.mockRejectedValueOnce(new Error("nätverket"));
 
   await show();
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
   await flushUntil(() => screen.queryByText("Recensioner"));
 
   expect(screen.getByTestId("review-section").props.children).toBe("r1");
@@ -236,7 +239,7 @@ it("asks an anonymous visitor to log in instead of opening the form", async () =
   mockIsAuthenticated = false;
 
   await show();
-  fireEvent.press(screen.getByTestId("icon-create-outline"));
+  await fireEvent.press(screen.getByTestId("icon-create-outline"));
   await settle();
 
   expect(screen.getByText("Du behöver vara inloggad för att skriva en recension.")).toBeTruthy();
@@ -245,7 +248,7 @@ it("asks an anonymous visitor to log in instead of opening the form", async () =
 
 it("opens the form on the trail being viewed", async () => {
   await show();
-  fireEvent.press(screen.getByTestId("icon-create-outline"));
+  await fireEvent.press(screen.getByTestId("icon-create-outline"));
   await settle();
 
   expect(screen.getByTestId("add-review-modal")).toHaveTextContent(`${TRAIL_ID}|Kvarnstigen|4.2`);

@@ -24,7 +24,7 @@ const REVIEW_EXISTS_QUERY = ["review-exists", TRAIL, "me"];
 
 type Mutation = ReturnType<typeof useCreateReview>;
 
-function render() {
+async function render() {
   const onSuccess = jest.fn();
   let hook!: Mutation;
   function Probe() {
@@ -32,7 +32,7 @@ function render() {
     return null;
   }
 
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   for (const key of [TRAIL_QUERY, REVIEWS_QUERY, REVIEW_EXISTS_QUERY]) {
     rendered.queryClient.setQueryDefaults(key, { gcTime: Infinity });
     rendered.queryClient.setQueryData(key, []);
@@ -42,7 +42,7 @@ function render() {
     ...rendered,
     onSuccess,
     run: async (variables = { trailIdentifier: TRAIL, review: "Fin led", rating: 4, imageUris: [] as string[] }) => {
-      act(() => hook.mutate(variables));
+      await act(() => hook.mutate(variables));
       await flushUntil(() => hook.isError || hook.isSuccess);
     },
     invalidated: (key: unknown[]) => rendered.queryClient.getQueryState(key)?.isInvalidated === true,
@@ -63,7 +63,7 @@ afterEach(() => {
 
 describe("useCreateReview", () => {
   it("posts the review it was given", async () => {
-    const { run } = render();
+    const { run } = await render();
     await run({ trailIdentifier: TRAIL, review: "Fin led", rating: 4, imageUris: ["file://a"] });
 
     expect(mockCreateReview).toHaveBeenCalledWith({
@@ -78,7 +78,7 @@ describe("useCreateReview", () => {
     // The trail carries the rating average, the list carries the review, and review-exists
     // decides whether the rate button is still offered.
     it("refreshes the trail, its reviews and the has-reviewed answer", async () => {
-      const { run, invalidated } = render();
+      const { run, invalidated } = await render();
       await run();
 
       expect(invalidated(TRAIL_QUERY)).toBe(true);
@@ -87,7 +87,7 @@ describe("useCreateReview", () => {
     });
 
     it("confirms the review was added", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run();
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -98,7 +98,7 @@ describe("useCreateReview", () => {
     });
 
     it("tells the caller to close the form", async () => {
-      const { run, onSuccess } = render();
+      const { run, onSuccess } = await render();
       await run();
 
       expect(onSuccess).toHaveBeenCalledTimes(1);
@@ -111,7 +111,7 @@ describe("useCreateReview", () => {
     });
 
     it("reports the failure", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run();
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -122,7 +122,7 @@ describe("useCreateReview", () => {
     });
 
     it("leaves the form open and the caches alone", async () => {
-      const { run, onSuccess, invalidated } = render();
+      const { run, onSuccess, invalidated } = await render();
       await run();
 
       expect(onSuccess).not.toHaveBeenCalled();
@@ -136,7 +136,7 @@ describe("useCreateReview", () => {
     });
 
     it("reports the failure", async () => {
-      const { run, store } = render();
+      const { run, store } = await render();
       await run();
 
       expect(store.get(snackbarAtom)).toMatchObject({
@@ -147,7 +147,7 @@ describe("useCreateReview", () => {
     });
 
     it("leaves the form open", async () => {
-      const { run, onSuccess } = render();
+      const { run, onSuccess } = await render();
       await run();
 
       expect(onSuccess).not.toHaveBeenCalled();

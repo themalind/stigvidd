@@ -97,27 +97,27 @@ jest.mock("@/atoms/user-atoms", () => {
 const TOMORROW = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
 
 async function render() {
-  renderWithProviders(<EventFormScreen />, {
+  await renderWithProviders(<EventFormScreen />, {
     initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
   });
   await flushUntil(() => screen.queryByTestId("event-form-submit") !== null);
 }
 
 async function pickStart() {
-  fireEvent.press(screen.getByTestId("event-form-starts"));
+  await fireEvent.press(screen.getByTestId("event-form-starts"));
   await settle();
   const date = mockDateProps;
   if (!date) throw new Error("expected the date picker");
-  act(() => date.onConfirm({ date: TOMORROW }));
+  await act(() => date.onConfirm({ date: TOMORROW }));
   await settle();
   const time = mockTimeProps;
   if (!time) throw new Error("expected the time picker");
-  act(() => time.onConfirm({ hours: 18, minutes: 30 }));
+  await act(() => time.onConfirm({ hours: 18, minutes: 30 }));
   await settle();
 }
 
-function tapMap(lon: number, lat: number) {
-  fireEvent(screen.getByTestId("maplibre-Map"), "press", { nativeEvent: { lngLat: [lon, lat] } });
+async function tapMap(lon: number, lat: number) {
+  await fireEvent(screen.getByTestId("maplibre-Map"), "press", { nativeEvent: { lngLat: [lon, lat] } });
 }
 
 function created(overrides: Partial<HikingEvent> = {}): HikingEvent {
@@ -166,7 +166,7 @@ describe("EventFormScreen", () => {
   it("shows what is missing and sends nothing", async () => {
     await render();
 
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await settle();
 
     expect(screen.getByText("Ge evenemanget en titel.")).toBeTruthy();
@@ -178,13 +178,13 @@ describe("EventFormScreen", () => {
   it("creates an open event at a tapped meeting point and opens it in place of the form", async () => {
     await render();
 
-    fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
+    await fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
     await pickStart();
-    tapMap(12.94, 57.72);
+    await tapMap(12.94, 57.72);
     await settle();
-    fireEvent.changeText(screen.getByTestId("event-form-meeting-name"), "Parkeringen");
-    fireEvent.changeText(screen.getByTestId("event-form-max"), "8");
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.changeText(screen.getByTestId("event-form-meeting-name"), "Parkeringen");
+    await fireEvent.changeText(screen.getByTestId("event-form-max"), "8");
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await flushUntil(() => mockReplace.mock.calls.length > 0);
 
     const request = mockCreate.mock.calls[0][0];
@@ -206,14 +206,14 @@ describe("EventFormScreen", () => {
 
   it("follows a trail picked from the route picker", async () => {
     await render();
-    fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
+    await fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
     await pickStart();
 
-    fireEvent.press(screen.getByTestId("event-form-choose-route"));
+    await fireEvent.press(screen.getByTestId("event-form-choose-route"));
     await flushUntil(() => screen.queryByTestId("event-route-trail-t1") !== null);
-    fireEvent.press(screen.getByTestId("event-route-trail-t1"));
+    await fireEvent.press(screen.getByTestId("event-route-trail-t1"));
     await flushUntil(() => screen.queryByTestId("event-form-route") !== null);
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await flushUntil(() => mockCreate.mock.calls.length > 0);
 
     expect(mockCreate.mock.calls[0][0]).toMatchObject({ trailIdentifier: "t1", hikeIdentifier: null });
@@ -221,20 +221,20 @@ describe("EventFormScreen", () => {
 
   it("invites the chosen people once a private event exists", async () => {
     await render();
-    fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
+    await fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
     await pickStart();
-    tapMap(12.94, 57.72);
-    fireEvent.press(screen.getByTestId("event-form-private"));
+    await tapMap(12.94, 57.72);
+    await fireEvent.press(screen.getByTestId("event-form-private"));
     await settle();
 
-    fireEvent.press(screen.getByTestId("event-form-choose-invitees"));
+    await fireEvent.press(screen.getByTestId("event-form-choose-invitees"));
     await flushUntil(() => screen.queryByTestId("user-picker-row-maja") !== null);
-    fireEvent.press(screen.getByTestId("user-picker-row-maja"));
-    fireEvent.press(screen.getByText("Bjud in (1)"));
+    await fireEvent.press(screen.getByTestId("user-picker-row-maja"));
+    await fireEvent.press(screen.getByText("Bjud in (1)"));
     await flushUntil(() => screen.queryByTestId("event-form-invitee-maja") !== null);
 
     expect(screen.getByText("Skapa och bjud in 1")).toBeTruthy();
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await flushUntil(() => mockInvite.mock.calls.length > 0);
 
     expect(mockCreate.mock.calls[0][0]).toMatchObject({ visibility: "Private" });
@@ -255,8 +255,8 @@ describe("EventFormScreen", () => {
     await flushUntil(() => screen.queryByTestId("event-form-route") !== null);
 
     expect(screen.queryByTestId("event-form-private")).toBeNull();
-    fireEvent.press(screen.getByTestId("event-form-route-clear"));
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.press(screen.getByTestId("event-form-route-clear"));
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await flushUntil(() => mockBack.mock.calls.length > 0);
 
     expect(mockUpdate).toHaveBeenCalledWith("e1", expect.objectContaining({ removeRoute: true }));
@@ -266,13 +266,13 @@ describe("EventFormScreen", () => {
   it("uploads a picked cover with the framing the user dragged it to", async () => {
     mockSetImage.mockResolvedValue({ identifier: "img-1", imageUrl: "https://media/new.jpg" });
     await render();
-    fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
+    await fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
     await pickStart();
-    tapMap(12.94, 57.72);
-    fireEvent.press(screen.getByTestId("event-form-cover-add"));
+    await tapMap(12.94, 57.72);
+    await fireEvent.press(screen.getByTestId("event-form-cover-add"));
     await flushUntil(() => screen.queryByTestId("event-form-cover-image") !== null);
-    act(() => {
-      fireEvent(screen.getByTestId("event-form-cover"), "layout", {
+    await act(async () => {
+      await fireEvent(screen.getByTestId("event-form-cover"), "layout", {
         nativeEvent: { layout: { width: 300, height: 150 } },
       });
       screen
@@ -280,11 +280,11 @@ describe("EventFormScreen", () => {
         .props.onLoad({ nativeEvent: { source: { width: 1000, height: 1000 } } });
     });
     const frame = screen.getByTestId("event-form-cover-frame");
-    fireEvent(frame, "responderGrant", { nativeEvent: { pageY: 100 } });
-    fireEvent(frame, "responderMove", { nativeEvent: { pageY: 160 } });
-    fireEvent(frame, "responderRelease");
+    await fireEvent(frame, "responderGrant", { nativeEvent: { pageY: 100 } });
+    await fireEvent(frame, "responderMove", { nativeEvent: { pageY: 160 } });
+    await fireEvent(frame, "responderRelease");
 
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await flushUntil(() => mockSetImage.mock.calls.length > 0);
 
     const [identifier, uri, focusY] = mockSetImage.mock.calls[0];
@@ -295,17 +295,17 @@ describe("EventFormScreen", () => {
 
   it("drops an unsaved cover without asking the server to delete one", async () => {
     await render();
-    fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
+    await fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
     await pickStart();
-    tapMap(12.94, 57.72);
-    fireEvent.press(screen.getByTestId("event-form-cover-add"));
+    await tapMap(12.94, 57.72);
+    await fireEvent.press(screen.getByTestId("event-form-cover-add"));
     await flushUntil(() => screen.queryByTestId("event-form-cover-remove") !== null);
     expect(mockPickImages).toHaveBeenCalledWith({ limit: 1 });
-    fireEvent.press(screen.getByTestId("event-form-cover-remove"));
+    await fireEvent.press(screen.getByTestId("event-form-cover-remove"));
     await settle();
 
     expect(screen.getByTestId("event-form-cover-add")).toBeTruthy();
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await flushUntil(() => mockCreate.mock.calls.length > 0);
     await settle();
 
@@ -326,8 +326,8 @@ describe("EventFormScreen", () => {
     await render();
     await flushUntil(() => screen.queryByTestId("event-form-cover-remove") !== null);
 
-    fireEvent.press(screen.getByTestId("event-form-cover-remove"));
-    fireEvent.press(screen.getByTestId("event-form-submit"));
+    await fireEvent.press(screen.getByTestId("event-form-cover-remove"));
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
     await flushUntil(() => mockDeleteImage.mock.calls.length > 0);
 
     expect(mockDeleteImage).toHaveBeenCalledWith("new-1");

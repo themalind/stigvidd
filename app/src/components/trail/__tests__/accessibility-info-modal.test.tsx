@@ -9,7 +9,7 @@ import AccessibilityInfoModal from "@/components/trail/accessibility-info-modal"
 import { AppDefaultTheme } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen, within } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { Text } from "react-native-paper";
 
 const TITLE = "Tillgänglighet";
@@ -31,8 +31,8 @@ beforeEach(() => {
 });
 
 // The modal explains what the wheelchair symbol promises, so "not adapted" belongs in it too.
-it("explains both what an adapted place is and what an unadapted one is", () => {
-  show();
+it("explains both what an adapted place is and what an unadapted one is", async () => {
+  await show();
 
   expect(screen.getByText(TITLE)).toBeTruthy();
   expect(screen.getByText(ADAPTED)).toBeTruthy();
@@ -40,24 +40,24 @@ it("explains both what an adapted place is and what an unadapted one is", () => 
   expect(screen.getAllByTestId("accessibility-info-card")).toHaveLength(2);
 });
 
-it("stays out of sight until it is opened", () => {
-  show(false);
+it("stays out of sight until it is opened", async () => {
+  await show(false);
 
   expect(screen.queryByText(TITLE)).toBeNull();
 });
 
 it("closes from the cross", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("accessibility-info-close"));
+  await fireEvent.press(screen.getByTestId("accessibility-info-close"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalled();
 });
 
 // The descriptions are one string with blank lines, which unsplit read as a gap inside a paragraph.
-it("sets each description as separate paragraphs rather than one block", () => {
-  show();
+it("sets each description as separate paragraphs rather than one block", async () => {
+  await show();
 
   expect(screen.getByText(/^Platser som är anpassade är tillgängliga för alla/)).toBeTruthy();
   expect(screen.getByText(/^Vad som finns på plats varierar/)).toBeTruthy();
@@ -65,12 +65,12 @@ it("sets each description as separate paragraphs rather than one block", () => {
   expect(screen.getByText(/^I appen hittar du information om varje enskilt besöksmål/)).toBeTruthy();
 });
 
-it("leaves no blank line, and no empty paragraph, inside a card", () => {
-  show();
+it("leaves no blank line, and no empty paragraph, inside a card", async () => {
+  await show();
 
   for (const card of screen.getAllByTestId("accessibility-info-card")) {
     // A label and two paragraphs: unsplit it would be one Text, with the blank line an empty third.
-    const lines = within(card).UNSAFE_getAllByType(Text);
+    const lines = card.queryAll((node) => node.type === "Text");
     expect(lines).toHaveLength(3);
     for (const line of lines) {
       expect(String(line.props.children).trim()).not.toBe("");
@@ -79,22 +79,22 @@ it("leaves no blank line, and no empty paragraph, inside a card", () => {
   }
 });
 
-it("spaces the paragraphs apart without indenting the first one", () => {
-  show();
+it("spaces the paragraphs apart without indenting the first one", async () => {
+  await show();
 
   expect(screen.getByText(/^Platser som är anpassade/)).not.toHaveStyle({ marginTop: 8 });
   expect(screen.getByText(/^Vad som finns på plats varierar/)).toHaveStyle({ marginTop: 8 });
 });
 
-it("gives each kind of place the icon that stands for it", () => {
-  show();
+it("gives each kind of place the icon that stands for it", async () => {
+  await show();
 
   expect(icon("wheelchair-accessibility").props.color).toBe(AppDefaultTheme.colors.primary);
   expect(icon("hiking")).toBeTruthy();
 });
 
-it("marks the dialog itself with the accessibility symbol", () => {
-  show();
+it("marks the dialog itself with the accessibility symbol", async () => {
+  await show();
 
   expect(icon("human-handsup")).toBeTruthy();
 });

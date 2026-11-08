@@ -5,9 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getActionFromState } from "expo-router/react-navigation";
 import { Stack, Tabs, router } from "expo-router";
-import { store } from "expo-router/build/global-state/router-store";
 import { act, renderRouter, screen } from "expo-router/testing-library";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
@@ -30,12 +28,26 @@ function GatedRoot() {
   return <Stack screenOptions={{ headerShown: false }} />;
 }
 
+let urlListener: ((url: string) => void) | undefined;
+
 async function renderApp(initialUrl: string) {
-  const app = renderRouter(
+  const app = await renderRouter(
     {
       _layout: GatedRoot,
-      "+native-intent": nativeIntent,
-      "(tabs)/_layout": () => <Tabs />,
+      "+native-intent": {
+        ...nativeIntent,
+        legacy_subscribe: (listener: (url: string) => void) => {
+          urlListener = listener;
+          return () => {};
+        },
+      },
+      "(tabs)/_layout": () => (
+        <Tabs>
+          <Tabs.Screen name="(home)" />
+          <Tabs.Screen name="(map)" />
+          <Tabs.Screen name="trails" />
+        </Tabs>
+      ),
       "(tabs)/(home)/_layout": () => <Stack />,
       "(tabs)/(home)/index": page("Start"),
       "(tabs)/(map)/_layout": () => <Stack />,
@@ -56,17 +68,13 @@ function linkTo(identifier: string) {
   return `https://link.stigvidd.se/trail/${identifier}`;
 }
 
-// What the linking listener does with a link that arrives while the app runs (expo-router's fork/useLinking.native.js). keep-comment: the test kit stubs the url event out
+// Hands a link to expo-router's own listener, as the url event would. keep-comment: the test kit stubs the url event out
 async function openLinkWhileRunning(url: string) {
-  const linking = store.linking;
-  if (!linking) throw new Error("expected linking");
-  const path = nativeIntent.redirectSystemPath({ path: url, initial: false });
-  const state = linking.getStateFromPath(path, linking.config);
-  if (!state) throw new Error("expected a state for " + path);
-  const action = getActionFromState(state as never, linking.config as never);
-  if (!action) throw new Error("expected an action for " + path);
+  const listener = urlListener;
+  if (!listener) throw new Error("expected the router to listen for links");
   await act(async () => {
-    store.navigationRef.dispatch(action);
+    const path = nativeIntent.redirectSystemPath({ path: url, initial: false });
+    if (path) listener(path);
   });
 }
 
@@ -81,7 +89,7 @@ it("puts the trail list beneath a trail a shared link opens the app on", async (
   const app = await renderApp(linkTo("abc123"));
   expect(app.getPathname()).toBe("/trails/trail/abc123");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/trails");
   expect(screen.getByText("trail list")).toBeTruthy();
 });
@@ -92,7 +100,7 @@ it("puts the trail list beneath a trail a shared link opens while the app is run
   await openLinkWhileRunning(linkTo("abc123"));
   expect(app.getPathname()).toBe("/trails/trail/abc123");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/trails");
 });
 
@@ -102,14 +110,14 @@ it("goes back from a second shared link to the list", async () => {
   await openLinkWhileRunning(linkTo("second"));
   expect(app.getPathname()).toBe("/trails/trail/second");
 
-  act(() => router.back());
+  await act(() => router.back());
   expect(app.getPathname()).toBe("/trails");
 });
 
 it("opens the trail list from another tab", async () => {
   const app = await renderApp("/");
 
-  act(() => router.navigate("/(tabs)/trails"));
+  await act(() => router.navigate("/(tabs)/trails"));
   expect(app.getPathname()).toBe("/trails");
   expect(screen.getByText("trail list")).toBeTruthy();
 });

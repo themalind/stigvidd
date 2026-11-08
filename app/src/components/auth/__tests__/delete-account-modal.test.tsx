@@ -8,7 +8,7 @@
 import DeleteAccountModal from "@/components/auth/delete-account-modal";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
-import { flushUntil, flushUntilGone, settle } from "@/test/flush";
+import { flushUntil, flushUntilGone, pressWhileHeld, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Dimensions } from "react-native";
@@ -43,24 +43,29 @@ function show(visible = true, theme: typeof AppDefaultTheme | typeof AppDarkThem
   return renderWithProviders(<DeleteAccountModal visible={visible} onDismiss={onDismiss} />, { theme });
 }
 
-function type(password: string) {
-  fireEvent.changeText(screen.getByTestId("delete-account-password"), password);
+async function type(password: string) {
+  await fireEvent.changeText(screen.getByTestId("delete-account-password"), password);
 }
 
 async function send() {
-  fireEvent.press(screen.getByText("Skicka"));
+  await fireEvent.press(screen.getByText("Skicka"));
   await settle();
 }
 
 // "Radera konto" is the modal title, the dialog title and the confirm button; the button is the last.
 async function confirmDeletion() {
   const labels = screen.getAllByText("Radera konto");
-  fireEvent.press(labels[labels.length - 1]);
+  await fireEvent.press(labels[labels.length - 1]);
   await settle();
 }
 
+async function confirmHeldDeletion() {
+  const labels = screen.getAllByText("Radera konto");
+  await pressWhileHeld(labels[labels.length - 1]);
+}
+
 async function reachConfirmation(password = PASSWORD) {
-  type(password);
+  await type(password);
   await send();
   await flushUntil(() => screen.queryByText(CONFIRM_QUESTION));
 }
@@ -70,24 +75,24 @@ beforeEach(() => {
   mockDeleteAccount.mockResolvedValue(undefined);
 });
 
-it("asks for the password before it will delete anything", () => {
-  show();
+it("asks for the password before it will delete anything", async () => {
+  await show();
 
   expect(screen.getByText("Skriv in ditt lösenord")).toBeTruthy();
   expect(screen.getByTestId("delete-account-password")).toBeTruthy();
   expect(screen.getByText("Skicka")).toBeTruthy();
 });
 
-it("stays out of the way until it is opened", () => {
-  show(false);
+it("stays out of the way until it is opened", async () => {
+  await show(false);
 
   expect(screen.queryByText("Skriv in ditt lösenord")).toBeNull();
 });
 
 it("closes without deleting when the close icon is pressed", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("delete-account-close"));
+  await fireEvent.press(screen.getByTestId("delete-account-close"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalled();
@@ -95,7 +100,7 @@ it("closes without deleting when the close icon is pressed", async () => {
 });
 
 it("refuses an empty password, and asks nothing further", async () => {
-  show();
+  await show();
 
   await send();
 
@@ -105,9 +110,9 @@ it("refuses an empty password, and asks nothing further", async () => {
 });
 
 it("refuses a password shorter than the eight characters Keycloak requires", async () => {
-  show();
+  await show();
 
-  type("kort");
+  await type("kort");
   await send();
 
   expect(screen.getByText("Lösenordet måste vara minst 8 tecken")).toBeTruthy();
@@ -116,7 +121,7 @@ it("refuses a password shorter than the eight characters Keycloak requires", asy
 
 // The password is right, but the account is not gone until the question is answered.
 it("asks for confirmation before deleting, and deletes nothing while it asks", async () => {
-  show();
+  await show();
 
   await reachConfirmation();
 
@@ -126,7 +131,7 @@ it("asks for confirmation before deleting, and deletes nothing while it asks", a
 
 // Deleting an account is irreversible, so the dialog has to say what actually happens.
 it("spells out what deleting the account does to the data", async () => {
-  show();
+  await show();
 
   await reachConfirmation();
 
@@ -148,10 +153,10 @@ it("spells out what deleting the account does to the data", async () => {
 });
 
 it("keeps the account when the confirmation is cancelled", async () => {
-  show();
+  await show();
 
   await reachConfirmation();
-  fireEvent.press(screen.getByText("Avbryt"));
+  await fireEvent.press(screen.getByText("Avbryt"));
   await flushUntilGone(() => screen.queryByText(CONFIRM_QUESTION));
 
   expect(mockDeleteAccount).not.toHaveBeenCalled();
@@ -160,7 +165,7 @@ it("keeps the account when the confirmation is cancelled", async () => {
 });
 
 it("deletes the account with the password that was typed", async () => {
-  show();
+  await show();
 
   await reachConfirmation("annat-lösenord");
   await confirmDeletion();
@@ -169,7 +174,7 @@ it("deletes the account with the password that was typed", async () => {
 });
 
 it("closes and sends the user to login once the account is gone", async () => {
-  show();
+  await show();
 
   await reachConfirmation();
   await confirmDeletion();
@@ -182,7 +187,7 @@ it("closes and sends the user to login once the account is gone", async () => {
 // A wrong password is the user's mistake to correct, so the modal has to stay put.
 it("says the password was wrong, and keeps the form open", async () => {
   mockDeleteAccount.mockRejectedValue(new InvalidCredentialsError());
-  show();
+  await show();
 
   await reachConfirmation();
   await confirmDeletion();
@@ -195,7 +200,7 @@ it("says the password was wrong, and keeps the form open", async () => {
 
 it("tells a failing server apart from a wrong password", async () => {
   mockDeleteAccount.mockRejectedValue(new Error("500"));
-  show();
+  await show();
 
   await reachConfirmation();
   await confirmDeletion();
@@ -207,7 +212,7 @@ it("tells a failing server apart from a wrong password", async () => {
 
 it("clears the previous failure when the form is submitted again", async () => {
   mockDeleteAccount.mockRejectedValue(new Error("500"));
-  show();
+  await show();
 
   await reachConfirmation();
   await confirmDeletion();
@@ -222,16 +227,16 @@ it("clears the previous failure when the form is submitted again", async () => {
 it("says it is working, and takes no second press, while the account is being deleted", async () => {
   let release: () => void = () => {};
   mockDeleteAccount.mockReturnValue(new Promise<void>((resolve) => (release = resolve)));
-  show();
+  await show();
 
   await reachConfirmation();
-  await confirmDeletion();
+  await confirmHeldDeletion();
   await flushUntil(() => screen.queryByText("Raderar..."));
   // The confirmation is on its way out; wait for it, or "it did not come back" is meaningless.
   await flushUntilGone(() => screen.queryByText(CONFIRM_QUESTION));
 
   expect(screen.getByText("Raderar...")).toBeTruthy();
-  fireEvent.press(screen.getByText("Raderar..."));
+  await fireEvent.press(screen.getByText("Raderar..."));
   await settle();
 
   // A second press must not reopen the confirmation, which is the way back to a second delete.
@@ -248,13 +253,13 @@ it("says it is working, and takes no second press, while the account is being de
 it("cannot be dismissed by tapping outside while the delete is in flight", async () => {
   let release: () => void = () => {};
   mockDeleteAccount.mockReturnValue(new Promise<void>((resolve) => (release = resolve)));
-  show();
+  await show();
 
   await reachConfirmation();
-  await confirmDeletion();
+  await confirmHeldDeletion();
   await flushUntil(() => screen.queryByText("Raderar..."));
 
-  fireEvent.press(screen.getByTestId("modal-backdrop"));
+  await fireEvent.press(screen.getByTestId("modal-backdrop"));
   await settle();
 
   expect(onDismiss).not.toHaveBeenCalled();
@@ -263,8 +268,8 @@ it("cannot be dismissed by tapping outside while the delete is in flight", async
   await settle();
 });
 
-it("keeps the modal a fixed share of the screen, on the theme's surface", () => {
-  show();
+it("keeps the modal a fixed share of the screen, on the theme's surface", async () => {
+  await show();
 
   expect(screen.getByTestId("modal-surface-outer-layer")).toHaveStyle({ width: WIDTH * 0.8, alignSelf: "center" });
   expect(screen.getByTestId("modal-surface")).toHaveStyle({
@@ -273,17 +278,17 @@ it("keeps the modal a fixed share of the screen, on the theme's surface", () => 
   });
 });
 
-it("draws the modal on the dark theme's surface too", () => {
-  show(true, AppDarkTheme);
+it("draws the modal on the dark theme's surface too", async () => {
+  await show(true, AppDarkTheme);
 
   expect(screen.getByTestId("modal-surface")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surface });
 });
 
 // A long validation message has to wrap inside the modal rather than widen it.
 it("pins the validation message to the width of the field above it", async () => {
-  show();
+  await show();
 
-  type("kort");
+  await type("kort");
   await send();
 
   const error = screen.getByTestId("delete-account-password-error");

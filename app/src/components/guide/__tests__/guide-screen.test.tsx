@@ -12,15 +12,15 @@ import { Linking } from "react-native";
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+  jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 });
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("opens on the section that matters most, with the rest folded away", () => {
-  renderWithProviders(<GuideScreen />);
+it("opens on the section that matters most, with the rest folded away", async () => {
+  await renderWithProviders(<GuideScreen />);
 
   expect(screen.getByText("Naturguide")).toBeTruthy();
   // Allemansrätten is the one section that starts open, so its body is on screen.
@@ -30,50 +30,50 @@ it("opens on the section that matters most, with the rest folded away", () => {
 });
 
 // A folded section shows its one-line summary; an open one shows its body instead.
-it("swaps a section's summary for its body", () => {
-  renderWithProviders(<GuideScreen />);
+it("swaps a section's summary for its body", async () => {
+  await renderWithProviders(<GuideScreen />);
 
   // Allemansrätten starts open: body, no summary.
   expect(screen.getByText(/Allemansrätten är en unik svensk lag/)).toBeTruthy();
   expect(screen.queryByText("Rätten att röra sig fritt i naturen")).toBeNull();
 
-  fireEvent.press(screen.getByText("Allemansrätten"));
+  await fireEvent.press(screen.getByText("Allemansrätten"));
 
   expect(screen.queryByText(/Allemansrätten är en unik svensk lag/)).toBeNull();
   expect(screen.getByText("Rätten att röra sig fritt i naturen")).toBeTruthy();
 });
 
-it("folds and unfolds a section", () => {
-  renderWithProviders(<GuideScreen />);
+it("folds and unfolds a section", async () => {
+  await renderWithProviders(<GuideScreen />);
 
   // Closed: the summary is the only thing under the title.
   expect(screen.getByText("Läs mer")).toBeTruthy();
   expect(screen.queryByText("SMHI — väderprognos")).toBeNull();
 
-  fireEvent.press(screen.getByText("Läs mer"));
+  await fireEvent.press(screen.getByText("Läs mer"));
   expect(screen.getByText("SMHI — väderprognos")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Läs mer"));
+  await fireEvent.press(screen.getByText("Läs mer"));
   expect(screen.queryByText("SMHI — väderprognos")).toBeNull();
 });
 
-it("turns the chevron over with the section", () => {
-  renderWithProviders(<GuideScreen />);
+it("turns the chevron over with the section", async () => {
+  await renderWithProviders(<GuideScreen />);
 
   // One section starts open, so one chevron already points up.
   expect(screen.getAllByTestId("icon-chevron-up")).toHaveLength(1);
   const folded = screen.getAllByTestId("icon-chevron-down").length;
 
-  fireEvent.press(screen.getByText("Läs mer"));
+  await fireEvent.press(screen.getByText("Läs mer"));
 
   expect(screen.getAllByTestId("icon-chevron-up")).toHaveLength(2);
   expect(screen.getAllByTestId("icon-chevron-down")).toHaveLength(folded - 1);
 });
 
 // A summary that wrapped would push the chevron out of the header row.
-it("holds each summary to one line", () => {
-  renderWithProviders(<GuideScreen />);
-  fireEvent.press(screen.getByText("Allemansrätten"));
+it("holds each summary to one line", async () => {
+  await renderWithProviders(<GuideScreen />);
+  await fireEvent.press(screen.getByText("Allemansrätten"));
 
   const summary = screen.getByText("Rätten att röra sig fritt i naturen");
   expect(summary.props.numberOfLines).toBe(1);
@@ -81,20 +81,20 @@ it("holds each summary to one line", () => {
 });
 
 // The links come from the translation file as objects, so without returnObjects they render "[object Object]".
-it("lists the reading links and opens the one that is pressed", () => {
-  renderWithProviders(<GuideScreen />);
+it("lists the reading links and opens the one that is pressed", async () => {
+  await renderWithProviders(<GuideScreen />);
 
-  fireEvent.press(screen.getByText("Läs mer"));
+  await fireEvent.press(screen.getByText("Läs mer"));
   expect(screen.getByText("Allemansrätten — Naturvårdsverket")).toBeTruthy();
   expect(screen.queryByText("[object Object]")).toBeNull();
 
-  fireEvent.press(screen.getByText("SMHI — väderprognos"));
+  await fireEvent.press(screen.getByText("SMHI — väderprognos"));
 
   expect(Linking.openURL).toHaveBeenCalledWith("https://www.smhi.se/");
 });
 
-it("names its sources at the foot of the page", () => {
-  renderWithProviders(<GuideScreen />);
+it("names its sources at the foot of the page", async () => {
+  await renderWithProviders(<GuideScreen />);
 
   expect(screen.getByText(/Källa: Naturvårdsverket/)).toBeTruthy();
 });

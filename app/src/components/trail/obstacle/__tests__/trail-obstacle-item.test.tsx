@@ -117,7 +117,7 @@ function show(o: TrailObstacle = obstacle(), theme: typeof AppDefaultTheme | typ
 }
 
 async function press(testID: string) {
-  fireEvent.press(screen.getByTestId(testID));
+  await fireEvent.press(screen.getByTestId(testID));
   await settle();
 }
 
@@ -130,8 +130,8 @@ beforeEach(() => {
   mockDeleteObstacle.mockResolvedValue({ success: true });
 });
 
-it("shows the category, the description and the day it was reported", () => {
-  show();
+it("shows the category, the description and the day it was reported", async () => {
+  await show();
 
   expect(screen.getByText("Nedfallet träd")).toBeTruthy();
   expect(screen.getByText("Ett träd ligger över spången.")).toBeTruthy();
@@ -139,20 +139,20 @@ it("shows the category, the description and the day it was reported", () => {
 });
 
 // The description is cleared rather than the report deleted when it is moderated away.
-it("says the description is gone rather than leaving the field blank", () => {
-  show(obstacle({ description: "" }));
+it("says the description is gone rather than leaving the field blank", async () => {
+  await show(obstacle({ description: "" }));
 
   expect(screen.getByText("Beskrivningen är borttagen")).toBeTruthy();
 });
 
-it("falls back to the catch-all category for a type the app does not know", () => {
-  show(obstacle({ issueType: "Meteorstrike" }));
+it("falls back to the catch-all category for a type the app does not know", async () => {
+  await show(obstacle({ issueType: "Meteorstrike" }));
 
   expect(screen.getByText("Annat")).toBeTruthy();
 });
 
-it("counts the votes towards the three that clear the warning", () => {
-  show(
+it("counts the votes towards the three that clear the warning", async () => {
+  await show(
     obstacle({
       solvedVotes: [
         { userIdentifier: "a", trailObstacleIdentifier: OBSTACLE_ID },
@@ -164,8 +164,8 @@ it("counts the votes towards the three that clear the warning", () => {
   expect(screen.getByText("2/3")).toBeTruthy();
 });
 
-it("counts the votes of people this reader blocked, which the server leaves out of the list", () => {
-  show(
+it("counts the votes of people this reader blocked, which the server leaves out of the list", async () => {
+  await show(
     obstacle({
       solvedVotes: [{ userIdentifier: "a", trailObstacleIdentifier: OBSTACLE_ID }],
       solvedVoteCount: 2,
@@ -175,22 +175,22 @@ it("counts the votes of people this reader blocked, which the server leaves out 
   expect(screen.getByText("2/3")).toBeTruthy();
 });
 
-it("counts an obstacle nobody has voted on as zero", () => {
-  show(obstacle({ solvedVotes: undefined }));
+it("counts an obstacle nobody has voted on as zero", async () => {
+  await show(obstacle({ solvedVotes: undefined }));
 
   expect(screen.getByText("0/3")).toBeTruthy();
 });
 
-it("lets the reporter edit and delete, and not vote on their own report", () => {
-  show(obstacle({ userIdentifier: "me" }));
+it("lets the reporter edit and delete, and not vote on their own report", async () => {
+  await show(obstacle({ userIdentifier: "me" }));
 
   expect(screen.getByTestId("icon-edit")).toBeTruthy();
   expect(screen.getByTestId("icon-delete-outline")).toBeTruthy();
   expect(screen.queryByTestId("icon-radio-button-unchecked")).toBeNull();
 });
 
-it("lets everyone else vote, and not edit or delete", () => {
-  show();
+it("lets everyone else vote, and not edit or delete", async () => {
+  await show();
 
   expect(screen.getByTestId("icon-radio-button-unchecked")).toBeTruthy();
   expect(screen.queryByTestId("icon-edit")).toBeNull();
@@ -198,8 +198,8 @@ it("lets everyone else vote, and not edit or delete", () => {
 });
 
 // userIdentifier is null once the reporter has deleted their account: nobody owns it then.
-it("gives an orphaned report no owner actions", () => {
-  show(obstacle({ userIdentifier: null }));
+it("gives an orphaned report no owner actions", async () => {
+  await show(obstacle({ userIdentifier: null }));
 
   expect(screen.queryByTestId("icon-edit")).toBeNull();
   expect(screen.getByTestId("icon-radio-button-unchecked")).toBeTruthy();
@@ -207,7 +207,7 @@ it("gives an orphaned report no owner actions", () => {
 
 it("asks an anonymous visitor to log in instead of registering a vote", async () => {
   mockIsAuthenticated = false;
-  show();
+  await show();
 
   await press("icon-radio-button-unchecked");
 
@@ -218,10 +218,10 @@ it("asks an anonymous visitor to log in instead of registering a vote", async ()
 // The dialog sits inside a modal that has to close before the login screen can be seen.
 it("closes the obstacle modal on the way to the login screen", async () => {
   mockIsAuthenticated = false;
-  show();
+  await show();
 
   await press("icon-radio-button-unchecked");
-  fireEvent.press(screen.getByText("Logga in"));
+  await fireEvent.press(screen.getByText("Logga in"));
   await settle();
 
   expect(onCloseModal).toHaveBeenCalled();
@@ -229,7 +229,7 @@ it("closes the obstacle modal on the way to the login screen", async () => {
 });
 
 it("confirms before marking an obstacle as solved", async () => {
-  show();
+  await show();
 
   await press("icon-radio-button-unchecked");
 
@@ -238,47 +238,47 @@ it("confirms before marking an obstacle as solved", async () => {
 });
 
 it("registers the vote on this obstacle once confirmed", async () => {
-  show();
+  await show();
 
   await press("icon-radio-button-unchecked");
-  fireEvent.press(screen.getByText("Ok"));
+  await fireEvent.press(screen.getByText("Ok"));
   await settle();
 
   expect(mockAddVote).toHaveBeenCalledWith(OBSTACLE_ID);
 });
 
 it("registers nothing when the confirmation is cancelled, and closes the dialog", async () => {
-  show();
+  await show();
 
   await press("icon-radio-button-unchecked");
-  fireEvent.press(screen.getByText("Avbryt"));
+  await fireEvent.press(screen.getByText("Avbryt"));
   await flushUntilGone(() => screen.queryByText("Hinder åtgärdat"));
 
   expect(mockAddVote).not.toHaveBeenCalled();
   expect(screen.queryByText("Hinder åtgärdat")).toBeNull();
 });
 
-it("marks the obstacle as one you have already voted on", () => {
-  show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
+it("marks the obstacle as one you have already voted on", async () => {
+  await show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
 
   expect(screen.getByTestId("icon-check-circle")).toBeTruthy();
   expect(screen.queryByTestId("icon-radio-button-unchecked")).toBeNull();
 });
 
 // Someone else's vote is not yours: the button still offers to add one.
-it("does not treat another user's vote as yours", () => {
-  show(obstacle({ solvedVotes: [{ userIdentifier: "not-me", trailObstacleIdentifier: OBSTACLE_ID }] }));
+it("does not treat another user's vote as yours", async () => {
+  await show(obstacle({ solvedVotes: [{ userIdentifier: "not-me", trailObstacleIdentifier: OBSTACLE_ID }] }));
 
   expect(screen.getByTestId("icon-radio-button-unchecked")).toBeTruthy();
 });
 
 it("takes back your vote after confirming, rather than voting twice", async () => {
-  show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
+  await show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
 
   await press("icon-check-circle");
   expect(screen.getByText("Ta bort markering")).toBeTruthy();
 
-  fireEvent.press(screen.getByText("Ta bort"));
+  await fireEvent.press(screen.getByText("Ta bort"));
   await settle();
 
   expect(mockDeleteVote).toHaveBeenCalledWith(OBSTACLE_ID);
@@ -286,10 +286,10 @@ it("takes back your vote after confirming, rather than voting twice", async () =
 });
 
 it("keeps your vote when you back out of taking it back", async () => {
-  show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
+  await show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
 
   await press("icon-check-circle");
-  fireEvent.press(screen.getByText("Avbryt"));
+  await fireEvent.press(screen.getByText("Avbryt"));
   await flushUntilGone(() => screen.queryByText("Ta bort markering"));
 
   expect(mockDeleteVote).not.toHaveBeenCalled();
@@ -297,7 +297,7 @@ it("keeps your vote when you back out of taking it back", async () => {
 });
 
 it("warns that deleting the report cannot be undone", async () => {
-  show(obstacle({ userIdentifier: "me" }));
+  await show(obstacle({ userIdentifier: "me" }));
 
   await press("icon-delete-outline");
 
@@ -307,20 +307,20 @@ it("warns that deleting the report cannot be undone", async () => {
 });
 
 it("deletes the report it was opened on once confirmed", async () => {
-  show(obstacle({ userIdentifier: "me" }));
+  await show(obstacle({ userIdentifier: "me" }));
 
   await press("icon-delete-outline");
-  fireEvent.press(screen.getByText("Ta bort"));
+  await fireEvent.press(screen.getByText("Ta bort"));
   await settle();
 
   expect(mockDeleteObstacle).toHaveBeenCalledWith(OBSTACLE_ID);
 });
 
 it("deletes nothing when the confirmation is cancelled, and closes the dialog", async () => {
-  show(obstacle({ userIdentifier: "me" }));
+  await show(obstacle({ userIdentifier: "me" }));
 
   await press("icon-delete-outline");
-  fireEvent.press(screen.getByText("Avbryt"));
+  await fireEvent.press(screen.getByText("Avbryt"));
   await flushUntilGone(() => screen.queryByText("Åtgärden kan inte ångras."));
 
   expect(mockDeleteObstacle).not.toHaveBeenCalled();
@@ -333,7 +333,7 @@ describe("a banned account", () => {
   });
 
   it("is told why instead of being asked to confirm a vote", async () => {
-    show();
+    await show();
 
     await press("icon-radio-button-unchecked");
 
@@ -342,7 +342,7 @@ describe("a banned account", () => {
   });
 
   it("can still take back a vote it already cast", async () => {
-    show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
+    await show(obstacle({ solvedVotes: [{ userIdentifier: "me", trailObstacleIdentifier: OBSTACLE_ID }] }));
 
     await press("icon-check-circle");
 
@@ -350,7 +350,7 @@ describe("a banned account", () => {
   });
 
   it("is told why instead of opening the edit form", async () => {
-    show(obstacle({ userIdentifier: "me" }));
+    await show(obstacle({ userIdentifier: "me" }));
 
     await press("icon-edit");
 
@@ -360,7 +360,7 @@ describe("a banned account", () => {
 });
 
 it("opens the edit form on this report, filled in with what it says now", async () => {
-  show(obstacle({ userIdentifier: "me" }));
+  await show(obstacle({ userIdentifier: "me" }));
 
   expect(screen.queryByTestId("update-form")).toBeNull();
 
@@ -375,29 +375,29 @@ it("opens the edit form on this report, filled in with what it says now", async 
 it("greys the vote button out while the vote is on its way", async () => {
   let release: (value: { success: boolean }) => void = () => {};
   mockAddVote.mockReturnValue(new Promise<{ success: boolean }>((resolve) => (release = resolve)));
-  show();
+  await show();
 
   await press("icon-radio-button-unchecked");
-  fireEvent.press(screen.getByText("Ok"));
+  await fireEvent.press(screen.getByText("Ok"));
   await settle();
 
   expect(screen.getByTestId("icon-radio-button-unchecked").props.color).toBe(AppDefaultTheme.colors.outline);
   expect(screen.getByTestId("vote-button").props.accessibilityState).toMatchObject({ disabled: true });
-  fireEvent.press(screen.getByTestId("vote-button"));
+  await fireEvent.press(screen.getByTestId("vote-button"));
   expect(mockAddVote).toHaveBeenCalledTimes(1);
 
   release({ success: true });
   await settle();
 });
 
-it("draws the vote button in the accent colour until it is pressed", () => {
-  show();
+it("draws the vote button in the accent colour until it is pressed", async () => {
+  await show();
 
   expect(screen.getByTestId("icon-radio-button-unchecked").props.color).toBe(AppDefaultTheme.colors.tertiary);
 });
 
-it("sits in a rounded, outlined card, in both themes", () => {
-  const light = show();
+it("sits in a rounded, outlined card, in both themes", async () => {
+  const light = await show();
 
   expect(screen.getByTestId("obstacle-card")).toHaveStyle({
     borderWidth: 1,
@@ -405,15 +405,15 @@ it("sits in a rounded, outlined card, in both themes", () => {
     padding: 12,
     borderColor: AppDefaultTheme.colors.outlineVariant,
   });
-  light.unmount();
+  await light.unmount();
 
-  show(obstacle(), AppDarkTheme);
+  await show(obstacle(), AppDarkTheme);
 
   expect(screen.getByTestId("obstacle-card")).toHaveStyle({ borderColor: AppDarkTheme.colors.outlineVariant });
 });
 
 it("offers to report someone else's obstacle, and opens the form on that obstacle", async () => {
-  show();
+  await show();
 
   await press("report-obstacle-button");
 
@@ -423,8 +423,8 @@ it("offers to report someone else's obstacle, and opens the form on that obstacl
 // Reports stored before the form trimmed carry trailing newlines, which render as blank
 // lines and leave a gap between the description and the date.
 // The default matcher collapses whitespace, so the raw string is what has to be asserted.
-it("draws a stored description without the blank lines around it", () => {
-  show(obstacle({ description: "\n  Oframkomligt pga lerhav\n\n\n" }));
+it("draws a stored description without the blank lines around it", async () => {
+  await show(obstacle({ description: "\n  Oframkomligt pga lerhav\n\n\n" }));
 
   const verbatim = { normalizer: (text: string) => text };
 
@@ -432,8 +432,8 @@ it("draws a stored description without the blank lines around it", () => {
 });
 
 // Reporting is one action wherever it appears, so the obstacle uses the review's icon.
-it("reports with the same icon as a review report", () => {
-  show();
+it("reports with the same icon as a review report", async () => {
+  await show();
 
   expect(screen.getByTestId("icon-alert-circle")).toBeTruthy();
   expect(screen.queryByTestId("icon-flag")).toBeNull();
@@ -441,22 +441,22 @@ it("reports with the same icon as a review report", () => {
 
 // Both buttons carry hitSlop 12, so a gap under 24 makes their touch areas overlap and a
 // thumb aimed at one lands on the other.
-it("keeps the report and the vote far enough apart not to overlap", () => {
-  show();
+it("keeps the report and the vote far enough apart not to overlap", async () => {
+  await show();
 
   expect(screen.getByTestId("obstacle-actions")).toHaveStyle({ gap: 24 });
 });
 
 // Nobody reports their own report; the owner gets edit and delete instead.
-it("offers the owner no report button", () => {
-  show(obstacle({ userIdentifier: "me" }));
+it("offers the owner no report button", async () => {
+  await show(obstacle({ userIdentifier: "me" }));
 
   expect(screen.queryByTestId("report-obstacle-button")).toBeNull();
 });
 
 it("asks a signed-out visitor to sign in instead of opening the form", async () => {
   mockIsAuthenticated = false;
-  show();
+  await show();
 
   await press("report-obstacle-button");
 

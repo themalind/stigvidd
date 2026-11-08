@@ -51,21 +51,21 @@ beforeEach(() => {
 });
 
 describe("UserReportIssue", () => {
-  it("offers to report an issue", () => {
-    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+  it("offers to report an issue", async () => {
+    await renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
 
     expect(screen.getByText("Rapportera")).toBeTruthy();
     expect(screen.getByTestId("icon-warning-amber")).toBeTruthy();
   });
 
-  it("keeps the form closed until pressed", () => {
-    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+  it("keeps the form closed until pressed", async () => {
+    await renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
     expect(screen.queryByTestId("obstacle-form")).toBeNull();
   });
 
   it("opens the form for the trail it belongs to", async () => {
-    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
-    fireEvent.press(screen.getByText("Rapportera"));
+    await renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+    await fireEvent.press(screen.getByText("Rapportera"));
     await settle();
 
     expect(screen.getByTestId("obstacle-form")).toHaveTextContent(TRAIL_ID);
@@ -73,8 +73,8 @@ describe("UserReportIssue", () => {
 
   it("asks a signed-out user to sign in instead of opening the form", async () => {
     mockIsAuthenticated = false;
-    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
-    fireEvent.press(screen.getByText("Rapportera"));
+    await renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+    await fireEvent.press(screen.getByText("Rapportera"));
     await settle();
 
     expect(screen.getByText("Du behöver vara inloggad för att rapportera en händelse.")).toBeTruthy();
@@ -84,8 +84,8 @@ describe("UserReportIssue", () => {
   // A ban leaves the screen alone, so the button names the ban rather than the login screen.
   it("tells a banned user why, instead of opening the form", async () => {
     mockUser = { bannedAt: "2026-03-04T10:00:00Z" };
-    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
-    fireEvent.press(screen.getByText("Rapportera"));
+    await renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+    await fireEvent.press(screen.getByText("Rapportera"));
     await settle();
 
     expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
@@ -93,23 +93,23 @@ describe("UserReportIssue", () => {
   });
 
   it("closes the form when it reports itself done", async () => {
-    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
-    fireEvent.press(screen.getByText("Rapportera"));
+    await renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+    await fireEvent.press(screen.getByText("Rapportera"));
     await settle();
 
-    fireEvent.press(screen.getByTestId("obstacle-form"));
+    await fireEvent.press(screen.getByTestId("obstacle-form"));
     await settle();
 
     expect(screen.queryByTestId("obstacle-form")).toBeNull();
   });
 
   it("can be opened again after closing", async () => {
-    renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
-    fireEvent.press(screen.getByText("Rapportera"));
+    await renderWithProviders(<UserReportIssue trailIdentifier={TRAIL_ID} />);
+    await fireEvent.press(screen.getByText("Rapportera"));
     await settle();
-    fireEvent.press(screen.getByTestId("obstacle-form"));
+    await fireEvent.press(screen.getByTestId("obstacle-form"));
     await settle();
-    fireEvent.press(screen.getByText("Rapportera"));
+    await fireEvent.press(screen.getByText("Rapportera"));
     await settle();
 
     expect(screen.getByTestId("obstacle-form")).toBeTruthy();

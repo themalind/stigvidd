@@ -10,18 +10,18 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
-it("shows the message on the page background", () => {
-  renderWithProviders(<InlineError testID="error" message="Kunde inte hämta" onRetry={jest.fn()} />);
+it("shows the message on the page background", async () => {
+  await renderWithProviders(<InlineError testID="error" message="Kunde inte hämta" onRetry={jest.fn()} />);
 
   expect(screen.getByText("Kunde inte hämta")).toBeTruthy();
   expect(screen.getByTestId("error")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.background });
 });
 
-it("calls onRetry when the retry button is pressed", () => {
+it("calls onRetry when the retry button is pressed", async () => {
   const onRetry = jest.fn();
-  renderWithProviders(<InlineError message="Kunde inte hämta" onRetry={onRetry} />);
+  await renderWithProviders(<InlineError message="Kunde inte hämta" onRetry={onRetry} />);
 
-  fireEvent.press(screen.getByText("Försök igen"));
+  await fireEvent.press(screen.getByText("Försök igen"));
 
   expect(onRetry).toHaveBeenCalledTimes(1);
 });

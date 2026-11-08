@@ -37,8 +37,8 @@ function show(
   return renderWithProviders(<MapFilterMenu filter={{ ...NOTHING_ON, ...filter }} onChange={onChange} />, { theme });
 }
 
-function open() {
-  fireEvent.press(screen.getByTestId("map-filter-trigger"));
+async function open() {
+  await fireEvent.press(screen.getByTestId("map-filter-trigger"));
 }
 
 beforeEach(() => {
@@ -46,18 +46,18 @@ beforeEach(() => {
 });
 
 // The map is the point; the menu is a pill until it is asked for.
-it("starts collapsed, showing only the pill", () => {
-  show();
+it("starts collapsed, showing only the pill", async () => {
+  await show();
 
   expect(screen.getByText("Filter")).toBeTruthy();
   expect(screen.queryByTestId("map-filter-panel")).toBeNull();
   expect(screen.queryByText("Leder")).toBeNull();
 });
 
-it("opens on the pill and lists every category", () => {
-  show();
+it("opens on the pill and lists every category", async () => {
+  await show();
 
-  open();
+  await open();
 
   expect(screen.getByText("Leder")).toBeTruthy();
   expect(screen.getByText("Vindskydd")).toBeTruthy();
@@ -65,87 +65,87 @@ it("opens on the pill and lists every category", () => {
   expect(screen.getByText("Tillgänglighet")).toBeTruthy();
 });
 
-it("closes again on a second press", () => {
-  show();
+it("closes again on a second press", async () => {
+  await show();
 
-  open();
-  open();
+  await open();
+  await open();
 
   expect(screen.queryByTestId("map-filter-panel")).toBeNull();
 });
 
-it("turns the chevron over while it is open", () => {
-  show();
+it("turns the chevron over while it is open", async () => {
+  await show();
 
   expect(screen.getByTestId("icon-keyboard-arrow-down")).toBeTruthy();
 
-  open();
+  await open();
 
   expect(screen.getByTestId("icon-keyboard-arrow-up")).toBeTruthy();
   expect(screen.queryByTestId("icon-keyboard-arrow-down")).toBeNull();
 });
 
 // The badge is how a closed menu says the map is showing less than everything.
-it("counts the filters that are on", () => {
-  show({ trails: true, shelters: true });
+it("counts the filters that are on", async () => {
+  await show({ trails: true, shelters: true });
 
   expect(screen.getByText("2")).toBeTruthy();
 });
 
-it("counts all five", () => {
-  show(ALL_ON);
+it("counts all five", async () => {
+  await show(ALL_ON);
 
   expect(screen.getByText("5")).toBeTruthy();
 });
 
-it("shows no badge when nothing is filtered on", () => {
-  show(NOTHING_ON);
+it("shows no badge when nothing is filtered on", async () => {
+  await show(NOTHING_ON);
 
   expect(screen.queryByText("0")).toBeNull();
 });
 
-it("turns on the category that was pressed, and leaves the others alone", () => {
-  show({ shelters: true });
+it("turns on the category that was pressed, and leaves the others alone", async () => {
+  await show({ shelters: true });
 
-  open();
-  fireEvent.press(screen.getByTestId("map-filter-row-trails"));
+  await open();
+  await fireEvent.press(screen.getByTestId("map-filter-row-trails"));
 
   expect(onChange).toHaveBeenCalledWith({ ...NOTHING_ON, trails: true, shelters: true });
 });
 
-it("turns off a category that is already on", () => {
-  show(ALL_ON);
+it("turns off a category that is already on", async () => {
+  await show(ALL_ON);
 
-  open();
-  fireEvent.press(screen.getByTestId("map-filter-row-firePits"));
+  await open();
+  await fireEvent.press(screen.getByTestId("map-filter-row-firePits"));
 
   expect(onChange).toHaveBeenCalledWith({ ...ALL_ON, firePits: false });
 });
 
 // Accessibility filters every category rather than being one of its own.
-it("treats accessibility as a filter like any other to toggle", () => {
-  show();
+it("treats accessibility as a filter like any other to toggle", async () => {
+  await show();
 
-  open();
-  fireEvent.press(screen.getByTestId("map-filter-row-accessibility"));
+  await open();
+  await fireEvent.press(screen.getByTestId("map-filter-row-accessibility"));
 
   expect(onChange).toHaveBeenCalledWith({ ...NOTHING_ON, accessibility: true });
 });
 
-it("ticks the boxes of the categories that are on", () => {
-  show({ trails: true, firePits: true });
+it("ticks the boxes of the categories that are on", async () => {
+  await show({ trails: true, firePits: true });
 
-  open();
+  await open();
 
   expect(screen.getAllByTestId("icon-check-box")).toHaveLength(2);
   expect(screen.getAllByTestId("icon-check-box-outline-blank")).toHaveLength(3);
 });
 
 // The swatch is a legend: it has to be the colour that category's pin is drawn in.
-it("draws each category's swatch in that category's marker colour", () => {
-  show();
+it("draws each category's swatch in that category's marker colour", async () => {
+  await show();
 
-  open();
+  await open();
 
   expect(screen.getByTestId("map-filter-dot-trails")).toHaveStyle({
     backgroundColor: MARKER_COLORS.trails.fill,
@@ -160,36 +160,36 @@ it("draws each category's swatch in that category's marker colour", () => {
 });
 
 // Accessibility has no pin on the map, so it gets its own icon instead of a swatch.
-it("gives accessibility an icon rather than a colour swatch", () => {
-  show();
+it("gives accessibility an icon rather than a colour swatch", async () => {
+  await show();
 
-  open();
+  await open();
 
   expect(screen.queryByTestId("map-filter-dot-accessibility")).toBeNull();
   expect(screen.getByTestId("icon-wheelchair-accessibility")).toBeTruthy();
 });
 
-it("keeps the swatches the same in dark mode, since the basemap stays light", () => {
-  show({}, AppDarkTheme);
+it("keeps the swatches the same in dark mode, since the basemap stays light", async () => {
+  await show({}, AppDarkTheme);
 
-  open();
+  await open();
 
   expect(screen.getByTestId("map-filter-dot-trails")).toHaveStyle({ backgroundColor: MARKER_COLORS.trails.fill });
 });
 
-it("dims the label of a category that is switched off", () => {
-  show({ trails: true });
+it("dims the label of a category that is switched off", async () => {
+  await show({ trails: true });
 
-  open();
+  await open();
 
   expect(screen.getByText("Leder")).toHaveStyle({ color: AppDefaultTheme.colors.onSurface });
   expect(screen.getByText("Vindskydd")).toHaveStyle({ color: AppDefaultTheme.colors.onSurfaceVariant });
 });
 
-it("draws a ticked box in the accent colour and an empty one in the outline colour", () => {
-  show({ trails: true });
+it("draws a ticked box in the accent colour and an empty one in the outline colour", async () => {
+  await show({ trails: true });
 
-  open();
+  await open();
 
   expect(screen.getByTestId("icon-check-box").props.color).toBe(AppDefaultTheme.colors.primary);
   expect(screen.getAllByTestId("icon-check-box-outline-blank")[0].props.color).toBe(
@@ -198,10 +198,10 @@ it("draws a ticked box in the accent colour and an empty one in the outline colo
 });
 
 // Depth comes from elevation colour rather than a shadow, so the level matters.
-it("lifts pill and panel onto the theme's second elevation level", () => {
-  show();
+it("lifts pill and panel onto the theme's second elevation level", async () => {
+  await show();
 
-  open();
+  await open();
 
   expect(screen.getByTestId("map-filter-trigger")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.elevation.level2,
@@ -213,10 +213,10 @@ it("lifts pill and panel onto the theme's second elevation level", () => {
   });
 });
 
-it("lifts them onto the dark theme's second elevation level too", () => {
-  show({}, AppDarkTheme);
+it("lifts them onto the dark theme's second elevation level too", async () => {
+  await show({}, AppDarkTheme);
 
-  open();
+  await open();
 
   expect(screen.getByTestId("map-filter-panel")).toHaveStyle({
     backgroundColor: AppDarkTheme.colors.elevation.level2,

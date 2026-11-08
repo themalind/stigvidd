@@ -38,22 +38,22 @@ function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTh
 }
 
 async function press(label: string) {
-  fireEvent.press(screen.getByText(label));
+  await fireEvent.press(screen.getByText(label));
   await settle();
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockVersion = "1.4.2";
-  jest.spyOn(Linking, "openURL").mockResolvedValue(true);
+  jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
 });
 
 afterEach(() => {
   jest.restoreAllMocks();
 });
 
-it("says what the app is for", () => {
-  show();
+it("says what the app is for", async () => {
+  await show();
 
   expect(screen.getByText("Stigvidd")).toBeTruthy();
   expect(screen.getByText("Upptäck leder nära dig")).toBeTruthy();
@@ -61,8 +61,8 @@ it("says what the app is for", () => {
 });
 
 // t("about.features") is an array; a missing key returns the key itself and empties the list, so the count is asserted.
-it("lists every feature, each with its bullet", () => {
-  show();
+it("lists every feature, each with its bullet", async () => {
+  await show();
 
   expect(screen.getByText("Det här kan du göra")).toBeTruthy();
   expect(screen.getAllByText("•")).toHaveLength(12);
@@ -72,7 +72,7 @@ it("lists every feature, each with its bullet", () => {
 });
 
 it("offers a way to get in touch", async () => {
-  show();
+  await show();
 
   expect(screen.getByText("Hör av dig")).toBeTruthy();
   await press(EMAIL);
@@ -83,7 +83,7 @@ it("offers a way to get in touch", async () => {
 // A phone with no mail client rejects openURL, and an unhandled rejection is a crash in a release build.
 it("survives a device that cannot open mail", async () => {
   jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("no handler"));
-  show();
+  await show();
 
   await press(EMAIL);
 
@@ -91,7 +91,7 @@ it("survives a device that cannot open mail", async () => {
 });
 
 it("links to the privacy policy and the terms of use", async () => {
-  show();
+  await show();
 
   // Pins the promise the app makes about analytics. It used to read "inga annonser,
   // analysverktyg eller spårning" — an absolute no-analytics claim that became false the
@@ -110,7 +110,7 @@ it("links to the privacy policy and the terms of use", async () => {
 
 it("survives a link that will not open", async () => {
   jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("no browser"));
-  show();
+  await show();
 
   await press("Läs integritetspolicyn");
 
@@ -118,8 +118,8 @@ it("survives a link that will not open", async () => {
 });
 
 // Borås Stad's licence requires the attribution, and MapTiler's the map credit.
-it("credits the trail data and the map", () => {
-  show();
+it("credits the trail data and the map", async () => {
+  await show();
 
   expect(screen.getByText(/Borås Stads öppna dataportal/)).toBeTruthy();
   expect(screen.getByText(/Creative Commons CC0 1.0/)).toBeTruthy();
@@ -129,7 +129,7 @@ it("credits the trail data and the map", () => {
 
 // AGPL §13: this link is how the source offer is made to everyone using the deployed backend.
 it("names both licences and offers the source", async () => {
-  show();
+  await show();
 
   expect(screen.getByText("Öppen källkod")).toBeTruthy();
   expect(screen.getByText(/Mozilla Public License 2.0/)).toBeTruthy();
@@ -141,15 +141,15 @@ it("names both licences and offers the source", async () => {
 });
 
 // A bug report is worth little without the build it came from.
-it("shows the build's version", () => {
-  show();
+it("shows the build's version", async () => {
+  await show();
 
   expect(screen.getByText("Version 1.4.2")).toBeTruthy();
 });
 
-it("leaves the version out when the build has none, rather than an empty label", () => {
+it("leaves the version out when the build has none, rather than an empty label", async () => {
   mockVersion = undefined;
-  show();
+  await show();
 
   expect(screen.queryByText(/Version/)).toBeNull();
   expect(screen.getByText("Skapad med omtanke om naturen")).toBeTruthy();
@@ -157,16 +157,16 @@ it("leaves the version out when the build has none, rather than an empty label",
 
 // iOS has no hardware back button, so the screen carries its own; Android does not.
 it("goes back from the header button", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("icon-chevron-left"));
+  await fireEvent.press(screen.getByTestId("icon-chevron-left"));
   await settle();
 
   expect(mockBack).toHaveBeenCalled();
 });
 
-it("fills the screen with the theme's background", () => {
-  show();
+it("fills the screen with the theme's background", async () => {
+  await show();
 
   expect(screen.getByTestId("about-screen")).toHaveStyle({
     flex: 1,
@@ -174,20 +174,20 @@ it("fills the screen with the theme's background", () => {
   });
 });
 
-it("fills the screen with the dark theme's background too", () => {
-  show(AppDarkTheme);
+it("fills the screen with the dark theme's background too", async () => {
+  await show(AppDarkTheme);
 
   expect(screen.getByTestId("about-screen")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
 });
 
-it("keeps the text off the edges of the screen", () => {
-  show();
+it("keeps the text off the edges of the screen", async () => {
+  await show();
 
   expect(screen.getByTestId("about-content")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING, gap: 16 });
 });
 
-it("draws each block as a card on the theme's container colour", () => {
-  show();
+it("draws each block as a card on the theme's container colour", async () => {
+  await show();
 
   for (const section of ["features", "contact", "privacy", "data-source", "licence"]) {
     expect(screen.getByTestId(`about-section-${section}`)).toHaveStyle({
@@ -198,8 +198,8 @@ it("draws each block as a card on the theme's container colour", () => {
   }
 });
 
-it("draws the cards on the dark theme's container colour too", () => {
-  show(AppDarkTheme);
+it("draws the cards on the dark theme's container colour too", async () => {
+  await show(AppDarkTheme);
 
   expect(screen.getByTestId("about-section-licence")).toHaveStyle({
     backgroundColor: AppDarkTheme.colors.secondaryContainer,
@@ -207,8 +207,8 @@ it("draws the cards on the dark theme's container colour too", () => {
 });
 
 // A feature is a long line beside a bullet, and flex is what wraps it inside the card.
-it("lets a feature wrap inside its row", () => {
-  show();
+it("lets a feature wrap inside its row", async () => {
+  await show();
 
   expect(
     screen.getByText("Utforska och filtrera vandringsleder efter svårighetsgrad, tillgänglighet och längd"),
@@ -218,8 +218,8 @@ it("lets a feature wrap inside its row", () => {
 });
 
 // The links sit among body text, so colour and weight are what say they can be pressed.
-it("marks the links as links", () => {
-  show();
+it("marks the links as links", async () => {
+  await show();
 
   for (const label of ["Läs integritetspolicyn", "Läs användarvillkoren", SOURCE_LINK, EMAIL]) {
     expect(screen.getByText(label)).toHaveStyle({ color: AppDefaultTheme.colors.primary, fontWeight: "600" });

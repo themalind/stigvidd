@@ -41,8 +41,8 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-it("shows its title, its body and its buttons", () => {
-  show();
+it("shows its title, its body and its buttons", async () => {
+  await show();
 
   expect(screen.getByText("Ta bort promenad")).toBeTruthy();
   expect(screen.getByText("Vill du ta bort promenaden?")).toBeTruthy();
@@ -50,35 +50,35 @@ it("shows its title, its body and its buttons", () => {
   expect(screen.getByText("Avbryt")).toBeTruthy();
 });
 
-it("renders nothing, and dims nothing, while it is hidden", () => {
-  show({ visible: false });
+it("renders nothing, and dims nothing, while it is hidden", async () => {
+  await show({ visible: false });
 
   expect(screen.queryByText("Ta bort promenad")).toBeNull();
   expect(screen.queryByTestId("modal-scrim", { includeHiddenElements: true })).toBeNull();
 });
 
-it("dims the screen behind it like the app's other modals", () => {
-  show();
+it("dims the screen behind it like the app's other modals", async () => {
+  await show();
 
   expect(screen.getByTestId("modal-scrim", { includeHiddenElements: true })).toHaveStyle({
     backgroundColor: SCRIM_COLOR,
   });
 });
 
-it("sits on the theme's surface with the shared radius, in both themes", () => {
-  const { unmount } = show();
+it("sits on the theme's surface with the shared radius, in both themes", async () => {
+  const { unmount } = await show();
   expect(screen.getByTestId("dialog-surface")).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.surface,
     borderRadius: DIALOG_BORDER_RADIUS,
   });
 
-  unmount();
-  show({}, AppDarkTheme);
+  await unmount();
+  await show({}, AppDarkTheme);
   expect(screen.getByTestId("dialog-surface")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.surface });
 });
 
-it("leads the title with a small icon in the accent colour", () => {
-  show({ icon: "lock-outline" });
+it("leads the title with a small icon in the accent colour", async () => {
+  await show({ icon: "lock-outline" });
 
   expect(icon("lock-outline").props.size).toBe(18);
   expect(icon("lock-outline").props.color).toBe(AppDefaultTheme.colors.primary);
@@ -86,48 +86,48 @@ it("leads the title with a small icon in the accent colour", () => {
   expect(screen.getByTestId("dialog-header")).toHaveStyle({ flexDirection: "row", justifyContent: "space-between" });
 });
 
-it("turns the icon red for a destructive dialog", () => {
-  show({ icon: "delete-outline", tone: "danger" });
+it("turns the icon red for a destructive dialog", async () => {
+  await show({ icon: "delete-outline", tone: "danger" });
 
   expect(icon("delete-outline").props.color).toBe(AppDefaultTheme.colors.error);
 });
 
 it("offers a close cross only when asked to", async () => {
-  const { rerender } = show();
+  const { rerender } = await show();
   expect(screen.queryByTestId("dialog-close")).toBeNull();
 
-  rerender(
+  await rerender(
     <DialogFrame visible onDismiss={onDismiss} title="Info" showClose actions={[]}>
       <Text>Text</Text>
     </DialogFrame>,
   );
-  fireEvent.press(screen.getByTestId("dialog-close"));
+  await fireEvent.press(screen.getByTestId("dialog-close"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalledTimes(1);
   expect(screen.getByTestId("dialog-close").props.accessibilityLabel).toBe("Stäng");
 });
 
-it("calls back the button that was pressed", () => {
-  show();
+it("calls back the button that was pressed", async () => {
+  await show();
 
-  fireEvent.press(screen.getByTestId("confirm"));
+  await fireEvent.press(screen.getByTestId("confirm"));
   expect(onConfirm).toHaveBeenCalledTimes(1);
   expect(onDismiss).not.toHaveBeenCalled();
 
-  fireEvent.press(screen.getByTestId("cancel"));
+  await fireEvent.press(screen.getByTestId("cancel"));
   expect(onDismiss).toHaveBeenCalledTimes(1);
 });
 
-it("fills the main button and leaves the secondary one as text", () => {
-  show();
+it("fills the main button and leaves the secondary one as text", async () => {
+  await show();
 
   expect(screen.getByTestId("confirm-container")).toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primary });
   expect(screen.getByTestId("cancel-container")).not.toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primary });
 });
 
-it("paints a danger button in the error colour", () => {
-  show({
+it("paints a danger button in the error colour", async () => {
+  await show({
     actions: [
       { label: "Ta bort", onPress: onConfirm, variant: "danger", testID: "confirm" },
       { label: "Avbryt", onPress: onDismiss, variant: "text", testID: "cancel" },
@@ -138,18 +138,18 @@ it("paints a danger button in the error colour", () => {
 });
 
 it("closes on a tap outside", async () => {
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("dialog-backdrop"));
+  await fireEvent.press(screen.getByTestId("dialog-backdrop"));
   await settle();
 
   expect(onDismiss).toHaveBeenCalledTimes(1);
 });
 
 it("stays put on a tap outside when it needs an explicit answer", async () => {
-  show({ dismissable: false });
+  await show({ dismissable: false });
 
-  fireEvent.press(screen.getByTestId("dialog-backdrop"));
+  await fireEvent.press(screen.getByTestId("dialog-backdrop"));
   await settle();
 
   expect(onDismiss).not.toHaveBeenCalled();

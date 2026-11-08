@@ -14,13 +14,13 @@ import { UseQueryResult } from "@tanstack/react-query";
 
 type Result = UseQueryResult<WeatherData | null>;
 
-function renderHook(latitude?: number, longitude?: number) {
+async function renderHook(latitude?: number, longitude?: number) {
   let query!: Result;
   function Probe() {
     query = useWeather(latitude, longitude);
     return null;
   }
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   return {
     ...rendered,
     query: () => query,
@@ -55,7 +55,7 @@ beforeEach(() => {
 describe("asking SMHI", () => {
   it("asks for the point forecast at the given position", async () => {
     const fetchMock = respond({ body: forecast(7, 3) });
-    const harness = renderHook(57.7209612, 12.9381634);
+    const harness = await renderHook(57.7209612, 12.9381634);
     await harness.settled();
 
     expect(fetchMock.mock.calls[0][0]).toBe(
@@ -66,7 +66,7 @@ describe("asking SMHI", () => {
   // SMHI's grid does not cover the whole planet, and a 404 is how it says "outside my area".
   it("falls back to Borås when the position is outside the forecast area", async () => {
     const fetchMock = respond({ status: 404, ok: false }, { body: forecast(2) });
-    const harness = renderHook(0, 0);
+    const harness = await renderHook(0, 0);
     await harness.settled();
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -78,7 +78,7 @@ describe("asking SMHI", () => {
 
   it("does not fall back when the first answer is usable", async () => {
     const fetchMock = respond({ body: forecast(7, 3) });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -87,7 +87,7 @@ describe("asking SMHI", () => {
   // Anything but a 404 is a real failure; the banner shows nothing rather than a stale guess.
   it("fails on a server error rather than falling back", async () => {
     respond({ status: 500, ok: false, statusText: "Internal Server Error" });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().isError).toBe(true);
@@ -96,7 +96,7 @@ describe("asking SMHI", () => {
 
   it("asks for nothing without a position", async () => {
     const fetchMock = respond({ body: forecast(7) });
-    const harness = renderHook(undefined, undefined);
+    const harness = await renderHook(undefined, undefined);
     await settle();
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -105,7 +105,7 @@ describe("asking SMHI", () => {
 
   it("asks for nothing with only half a position", async () => {
     const fetchMock = respond({ body: forecast(7) });
-    const harness = renderHook(57.72, undefined);
+    const harness = await renderHook(57.72, undefined);
     await settle();
 
     expect(fetchMock).not.toHaveBeenCalled();
@@ -116,7 +116,7 @@ describe("asking SMHI", () => {
   // Latitude 0 is a real coordinate, and a falsy check here would refuse to look it up.
   it("treats a zero coordinate as a position", async () => {
     const fetchMock = respond({ body: forecast(7) });
-    const harness = renderHook(0, 0);
+    const harness = await renderHook(0, 0);
     await harness.settled();
 
     expect(fetchMock).toHaveBeenCalled();
@@ -126,7 +126,7 @@ describe("asking SMHI", () => {
 describe("reading the forecast", () => {
   it("rounds the temperature to whole degrees", async () => {
     respond({ body: forecast(7.4) });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data?.temperature).toBe(7);
@@ -134,7 +134,7 @@ describe("reading the forecast", () => {
 
   it("rounds a negative temperature the same way", async () => {
     respond({ body: forecast(-3.5) });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data?.temperature).toBe(-3);
@@ -144,7 +144,7 @@ describe("reading the forecast", () => {
     respond({
       body: { timeSeries: [{ data: { air_temperature: 7, symbol_code: 1 } }, { data: { air_temperature: 20 } }] },
     });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toEqual({ temperature: 7, symbolCode: 1 });
@@ -153,7 +153,7 @@ describe("reading the forecast", () => {
   // Overcast is the least wrong thing to draw when the symbol is missing.
   it("shows overcast when SMHI sends no symbol", async () => {
     respond({ body: forecast(7) });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data?.symbolCode).toBe(6);
@@ -162,7 +162,7 @@ describe("reading the forecast", () => {
   // A temperature is the whole point of the banner; without one there is nothing to show.
   it("reports nothing when the entry has no temperature", async () => {
     respond({ body: forecast(null, 3) });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBeNull();
@@ -170,7 +170,7 @@ describe("reading the forecast", () => {
 
   it("reports nothing when the series is empty", async () => {
     respond({ body: { timeSeries: [] } }, { body: { timeSeries: [] } });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBeNull();
@@ -178,7 +178,7 @@ describe("reading the forecast", () => {
 
   it("reports nothing when both the position and Borås come back empty", async () => {
     respond({ status: 404, ok: false }, { status: 404, ok: false });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(harness.query().data).toBeNull();
@@ -188,7 +188,7 @@ describe("reading the forecast", () => {
 describe("caching", () => {
   it("keeps a forecast for half an hour", async () => {
     respond({ body: forecast(7) });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(staleTimeOf(harness.queryClient, ["weather", 57.72, 12.94])).toBe(1000 * 60 * 30);
@@ -197,7 +197,7 @@ describe("caching", () => {
   // A failed forecast fails the same way every time; retrying only delays the empty banner.
   it("does not retry a failure", async () => {
     const fetchMock = respond({ status: 500, ok: false }, { status: 500, ok: false });
-    const harness = renderHook(57.72, 12.94);
+    const harness = await renderHook(57.72, 12.94);
     await harness.settled();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);

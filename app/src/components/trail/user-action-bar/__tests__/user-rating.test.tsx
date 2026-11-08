@@ -68,43 +68,43 @@ beforeEach(() => {
 });
 
 describe("UserRating", () => {
-  it("invites a rating when the trail has none from this user", () => {
-    renderWithProviders(<UserRating trail={trail()} />);
+  it("invites a rating when the trail has none from this user", async () => {
+    await renderWithProviders(<UserRating trail={trail()} />);
 
     expect(screen.getByText("Betygsätt")).toBeTruthy();
     expect(screen.getByTestId("icon-thumb-up-off-alt")).toBeTruthy();
   });
 
-  it("shows the trail as rated once the user has reviewed it", () => {
+  it("shows the trail as rated once the user has reviewed it", async () => {
     mockHasReviewed = true;
-    renderWithProviders(<UserRating trail={trail()} />);
+    await renderWithProviders(<UserRating trail={trail()} />);
 
     expect(screen.getByText("Betygsatt")).toBeTruthy();
     expect(screen.getByTestId("icon-thumb-up-alt")).toBeTruthy();
   });
 
-  it("asks about this trail", () => {
-    renderWithProviders(<UserRating trail={trail()} />);
+  it("asks about this trail", async () => {
+    await renderWithProviders(<UserRating trail={trail()} />);
     expect(mockUseHasReviewedTrail).toHaveBeenCalledWith(TRAIL_ID);
   });
 
   it("opens the review form with the trail it belongs to", async () => {
-    renderWithProviders(<UserRating trail={trail()} />);
-    fireEvent.press(screen.getByText("Betygsätt"));
+    await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsätt"));
     await settle();
 
     expect(screen.getByTestId("add-review")).toHaveTextContent(`${TRAIL_ID}|Kronängsleden|4.2`);
   });
 
-  it("keeps the form closed until pressed", () => {
-    renderWithProviders(<UserRating trail={trail()} />);
+  it("keeps the form closed until pressed", async () => {
+    await renderWithProviders(<UserRating trail={trail()} />);
     expect(screen.queryByTestId("add-review")).toBeNull();
   });
 
   it("asks a signed-out user to sign in instead of opening the form", async () => {
     mockIsAuthenticated = false;
-    renderWithProviders(<UserRating trail={trail()} />);
-    fireEvent.press(screen.getByText("Betygsätt"));
+    await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsätt"));
     await settle();
 
     expect(screen.getByText("Du behöver vara inloggad för att lägga till en recension.")).toBeTruthy();
@@ -115,8 +115,8 @@ describe("UserRating", () => {
   // than opening a form that would post a duplicate.
   it("warns instead of opening the form when the trail is already rated", async () => {
     mockHasReviewed = true;
-    const { store } = renderWithProviders(<UserRating trail={trail()} />);
-    fireEvent.press(screen.getByText("Betygsatt"));
+    const { store } = await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsatt"));
     await settle();
 
     expect(store.get(snackbarAtom)).toMatchObject({
@@ -129,20 +129,20 @@ describe("UserRating", () => {
 
   it("treats an unknown review state as not yet rated", async () => {
     mockHasReviewed = undefined;
-    renderWithProviders(<UserRating trail={trail()} />);
-    fireEvent.press(screen.getByText("Betygsätt"));
+    await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsätt"));
     await settle();
 
     expect(screen.getByTestId("add-review")).toBeTruthy();
   });
 
   it("refreshes the trail when the form closes, so the new rating is shown", async () => {
-    const { queryClient } = renderWithProviders(<UserRating trail={trail()} />);
+    const { queryClient } = await renderWithProviders(<UserRating trail={trail()} />);
     const invalidate = jest.spyOn(queryClient, "invalidateQueries");
 
-    fireEvent.press(screen.getByText("Betygsätt"));
+    await fireEvent.press(screen.getByText("Betygsätt"));
     await settle();
-    fireEvent.press(screen.getByTestId("add-review"));
+    await fireEvent.press(screen.getByTestId("add-review"));
     await settle();
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["trail", TRAIL_ID] });

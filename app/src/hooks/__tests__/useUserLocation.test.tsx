@@ -36,7 +36,7 @@ const PRECISE = position(57.6, 12.6);
 
 type Result = ReturnType<typeof useUserLocation>;
 
-function renderHook() {
+async function renderHook() {
   let query!: Result;
   let real: ReturnType<typeof useRealUserLocation> = null;
   function Probe() {
@@ -44,7 +44,7 @@ function renderHook() {
     real = useRealUserLocation();
     return null;
   }
-  const rendered = renderWithProviders(<Probe />);
+  const rendered = await renderWithProviders(<Probe />);
   return {
     ...rendered,
     query: () => query,
@@ -64,7 +64,7 @@ describe("with a cached fix available", () => {
   // The camera glide and the locate button both wait on this call, so the cached fix is
   // what makes them respond at once instead of after a GPS lock.
   it("answers from the last known position without waiting for a precise fix", async () => {
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(harness.query().data).toEqual({ latitude: 57.5, longitude: 12.5, isFallback: false });
@@ -75,7 +75,7 @@ describe("with a cached fix available", () => {
     // A native fix never returns in the same tick as the cached one; resolving it instantly
     // would let react-query write the cached position over the refined one.
     mockCurrentPosition.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve(PRECISE), 0)));
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
     await flushUntil(() => harness.query().data?.latitude === 57.6);
 
@@ -95,7 +95,7 @@ describe("with a cached fix available", () => {
           }, 0),
         ),
     );
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
     await flushUntil(() => refineSettled);
     await settle();
@@ -108,7 +108,7 @@ describe("with a cached fix available", () => {
 describe("with no cached fix", () => {
   it("waits for a fresh one", async () => {
     mockLastKnown.mockResolvedValue(null);
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(harness.query().data).toEqual({ latitude: 57.6, longitude: 12.6, isFallback: false });
@@ -118,7 +118,7 @@ describe("with no cached fix", () => {
   it("falls back to Borås when no fix can be had at all", async () => {
     mockLastKnown.mockResolvedValue(null);
     mockCurrentPosition.mockRejectedValue(new Error("location services off"));
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(harness.query().data).toEqual({
@@ -133,7 +133,7 @@ describe("with no cached fix", () => {
 
 describe("how long an answer keeps", () => {
   it("holds a real fix for ten minutes", async () => {
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(staleTimeOf(harness.queryClient, USER_LOCATION_KEY)).toBe(600_000);
@@ -143,7 +143,7 @@ describe("how long an answer keeps", () => {
   // retry it — that is how a permission granted in Settings ever reaches the app.
   it("holds the Borås fallback for no time at all", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: false });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(staleTimeOf(harness.queryClient, USER_LOCATION_KEY)).toBe(0);
@@ -152,7 +152,7 @@ describe("how long an answer keeps", () => {
 
 describe("useRealUserLocation", () => {
   it("hands back a real fix", async () => {
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(harness.real()).toEqual({ latitude: 57.5, longitude: 12.5, isFallback: false });
@@ -161,7 +161,7 @@ describe("useRealUserLocation", () => {
   // Presenting Borås as "you" would put a plausible-looking wrong distance on every card.
   it("hands back nothing when all we have is the fallback", async () => {
     mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: false });
-    const harness = renderHook();
+    const harness = await renderHook();
     await harness.settled();
 
     expect(harness.query().data?.isFallback).toBe(true);

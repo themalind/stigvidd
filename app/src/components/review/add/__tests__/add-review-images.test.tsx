@@ -8,6 +8,7 @@
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import AddReviewImages from "@/components/review/add/add-review-images";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
+import { closestByType, getAllByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { getDialog, hideDialog } from "@/services/dialog";
 import { renderWithProviders } from "@/test/render";
@@ -15,7 +16,7 @@ import { resizeImage } from "@/utils/resizeImage";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { Dimensions, StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { Dimensions, Pressable, StyleProp, StyleSheet, ViewStyle } from "react-native";
 
 // The picker dialog and the resizer are the platform's; the component owns what it does with their answers.
 jest.mock("expo-image-picker", () => ({
@@ -50,7 +51,7 @@ function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTh
 // One trip through the picker: the dialog answers with this asset.
 async function pickAsset(asset: Record<string, unknown>) {
   launchLibrary.mockResolvedValueOnce({ canceled: false, assets: [asset] });
-  fireEvent.press(screen.getByTestId("add-review-image-add"));
+  await fireEvent.press(screen.getByTestId("add-review-image-add"));
   await settle();
 }
 
@@ -60,20 +61,18 @@ async function pick(name: string) {
 
 // The button's style is a function of the press state, and it sits on the Pressable above the host view.
 function buttonStyle(pressed: boolean) {
-  let node = screen.getByTestId("add-review-image-add").parent;
-  while (node && typeof node.props.style !== "function") {
-    node = node.parent;
-  }
-  const style = node!.props.style as (state: { pressed: boolean }) => StyleProp<ViewStyle>;
+  const style = closestByType(screen.getByTestId("add-review-image-add"), Pressable).props.style as (state: {
+    pressed: boolean;
+  }) => StyleProp<ViewStyle>;
   return StyleSheet.flatten(style({ pressed }));
 }
 
 function sources() {
-  return screen.UNSAFE_getAllByType(Image).map((image) => image.props.source.uri);
+  return getAllByType(Image).map((image) => image.props.source.uri);
 }
 
-it("starts with nothing but the button that opens the picker", () => {
-  show();
+it("starts with nothing but the button that opens the picker", async () => {
+  await show();
 
   expect(screen.getByTestId("add-review-image-add")).toBeTruthy();
   expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
@@ -82,7 +81,7 @@ it("starts with nothing but the button that opens the picker", () => {
 
 // The upload is the shrunken copy, so it is that uri the review carries.
 it("shows the shrunken copy of the picked photo, not the original", async () => {
-  show();
+  await show();
 
   await pick("vandring");
 
@@ -91,7 +90,7 @@ it("shows the shrunken copy of the picked photo, not the original", async () => 
 });
 
 it("hands the review form the pictures it is holding", async () => {
-  show();
+  await show();
 
   await pick("vandring");
   expect(setReviewImages).toHaveBeenLastCalledWith(["file:///dcim/vandring-liten.jpg"]);
@@ -105,7 +104,7 @@ it("hands the review form the pictures it is holding", async () => {
 
 // Cropping is off: the component resizes and re-compresses the picked file itself.
 it("asks the library for photos, uncropped", async () => {
-  show();
+  await show();
 
   await pick("vandring");
 
@@ -113,7 +112,7 @@ it("asks the library for photos, uncropped", async () => {
 });
 
 it("keeps the pictures in the order they were picked", async () => {
-  show();
+  await show();
 
   await pick("ett");
   await pick("tva");
@@ -123,7 +122,7 @@ it("keeps the pictures in the order they were picked", async () => {
 });
 
 it("works on its own, without a form to report to", async () => {
-  renderWithProviders(<AddReviewImages />);
+  await renderWithProviders(<AddReviewImages />);
 
   await pick("vandring");
 
@@ -132,9 +131,9 @@ it("works on its own, without a form to report to", async () => {
 
 it("asks for the library before opening it, and gives up when it is refused", async () => {
   requestPermission.mockResolvedValue({ granted: false });
-  show();
+  await show();
 
-  fireEvent.press(screen.getByTestId("add-review-image-add"));
+  await fireEvent.press(screen.getByTestId("add-review-image-add"));
   await settle();
 
   expect(getDialog()).toMatchObject({ title: "Tillgång krävs", message: "Tillgång till mediabiblioteket krävs." });
@@ -143,10 +142,10 @@ it("asks for the library before opening it, and gives up when it is refused", as
 });
 
 it("does nothing when the picker is closed without a picture", async () => {
-  const { store } = show();
+  const { store } = await show();
   launchLibrary.mockResolvedValueOnce({ canceled: true, assets: null });
 
-  fireEvent.press(screen.getByTestId("add-review-image-add"));
+  await fireEvent.press(screen.getByTestId("add-review-image-add"));
   await settle();
 
   expect(resize).not.toHaveBeenCalled();
@@ -158,7 +157,7 @@ it("does nothing when the picker is closed without a picture", async () => {
 
 // iPhones store photos as HEIC; the resize re-encodes every pick as JPEG, so the original format must not matter.
 it("takes an iPhone HEIC picture and hands it to the resizer", async () => {
-  const { store } = show();
+  const { store } = await show();
 
   await pickAsset({ uri: "file:///dcim/IMG_0001.heic", mimeType: "image/heic" });
 
@@ -169,7 +168,7 @@ it("takes an iPhone HEIC picture and hands it to the resizer", async () => {
 });
 
 it("takes a picture the library cannot name a type for", async () => {
-  const { store } = show();
+  const { store } = await show();
 
   await pickAsset({ uri: "file:///dcim/okand.jpg" });
 
@@ -179,7 +178,7 @@ it("takes a picture the library cannot name a type for", async () => {
 });
 
 it("says so when the picture cannot be shrunk, and keeps the ones already picked", async () => {
-  const { store } = show();
+  const { store } = await show();
   await pick("vandring");
   resize.mockRejectedValueOnce(new Error("out of disk"));
 
@@ -194,10 +193,10 @@ it("says so when the picture cannot be shrunk, and keeps the ones already picked
 });
 
 it("says so when the picker itself fails", async () => {
-  const { store } = show();
+  const { store } = await show();
   launchLibrary.mockRejectedValueOnce(new Error("no library"));
 
-  fireEvent.press(screen.getByTestId("add-review-image-add"));
+  await fireEvent.press(screen.getByTestId("add-review-image-add"));
   await settle();
 
   expect(store.get(snackbarAtom)).toMatchObject({ visible: true, message: "Kunde inte spara bilder" });
@@ -205,12 +204,12 @@ it("says so when the picker itself fails", async () => {
 });
 
 it("removes the picture whose cross is pressed, and only that one", async () => {
-  show();
+  await show();
   await pick("ett");
   await pick("tva");
   await pick("tre");
 
-  fireEvent.press(screen.getAllByTestId("add-review-image-delete")[1]);
+  await fireEvent.press(screen.getAllByTestId("add-review-image-delete")[1]);
   await settle();
 
   expect(sources()).toEqual(["file:///dcim/ett-liten.jpg", "file:///dcim/tre-liten.jpg"]);
@@ -218,7 +217,7 @@ it("removes the picture whose cross is pressed, and only that one", async () => 
 });
 
 it("gives every picture a cross of its own", async () => {
-  show();
+  await show();
   await pick("ett");
   await pick("tva");
 
@@ -228,7 +227,7 @@ it("gives every picture a cross of its own", async () => {
 
 // Three is the limit a review carries, so the button is taken away rather than failing on the fourth.
 it("stops offering the picker at three pictures", async () => {
-  show();
+  await show();
   await pick("ett");
   await pick("tva");
   expect(screen.getByTestId("add-review-image-add")).toBeTruthy();
@@ -240,19 +239,19 @@ it("stops offering the picker at three pictures", async () => {
 });
 
 it("offers the picker again once a picture is removed", async () => {
-  show();
+  await show();
   await pick("ett");
   await pick("tva");
   await pick("tre");
 
-  fireEvent.press(screen.getAllByTestId("add-review-image-delete")[0]);
+  await fireEvent.press(screen.getAllByTestId("add-review-image-delete")[0]);
   await settle();
 
   expect(screen.getByTestId("add-review-image-add")).toBeTruthy();
 });
 
-it("lays the pictures out in a row that wraps", () => {
-  show();
+it("lays the pictures out in a row that wraps", async () => {
+  await show();
 
   expect(screen.getByTestId("add-review-images")).toHaveStyle({
     flexDirection: "row",
@@ -265,16 +264,16 @@ it("lays the pictures out in a row that wraps", () => {
 
 // The thumbnails are portrait and a quarter of the screen wide, so three and the button share the row.
 it("shows each thumbnail as a quarter-width portrait, cropped to fill", async () => {
-  show();
+  await show();
   await pick("vandring");
 
-  const image = screen.UNSAFE_getAllByType(Image)[0];
+  const image = getAllByType(Image)[0];
   expect(image.props.contentFit).toBe("cover");
   expect(image.props.style).toMatchObject({ width: BUTTON_WIDTH, aspectRatio: 3 / 4 });
 });
 
-it("gives the picker button the same footprint as a thumbnail", () => {
-  show();
+it("gives the picker button the same footprint as a thumbnail", async () => {
+  await show();
 
   expect(screen.getByTestId("add-review-image-add")).toHaveStyle({
     width: BUTTON_WIDTH,
@@ -287,15 +286,15 @@ it("gives the picker button the same footprint as a thumbnail", () => {
   });
 });
 
-it("dims the picker button while it is held down", () => {
-  show();
+it("dims the picker button while it is held down", async () => {
+  await show();
 
-  expect(buttonStyle(false).opacity).toBeUndefined();
-  expect(buttonStyle(true).opacity).toBe(0.7);
+  expect(buttonStyle(false)?.opacity).toBeUndefined();
+  expect(buttonStyle(true)?.opacity).toBe(0.7);
 });
 
-it("draws the plus in the theme's primary", () => {
-  show();
+it("draws the plus in the theme's primary", async () => {
+  await show();
 
   const plus = screen.getByTestId("icon-file-image-plus-outline");
   expect(plus.props.size).toBe(40);
@@ -304,7 +303,7 @@ it("draws the plus in the theme's primary", () => {
 
 // The cross sits over the thumbnail's top corner, on the background colour so it stays readable.
 it("puts the cross in the thumbnail's top corner, above the picture", async () => {
-  show();
+  await show();
   await pick("vandring");
 
   expect(screen.getByTestId("add-review-image-delete")).toHaveStyle({
@@ -318,7 +317,7 @@ it("puts the cross in the thumbnail's top corner, above the picture", async () =
 });
 
 it("draws the cross large enough to hit", async () => {
-  show();
+  await show();
   await pick("vandring");
 
   const cross = screen.getByTestId("icon-close");
@@ -327,7 +326,7 @@ it("draws the cross large enough to hit", async () => {
 });
 
 it("carries the dark theme's colours too", async () => {
-  show(AppDarkTheme);
+  await show(AppDarkTheme);
   await pick("vandring");
 
   expect(screen.getByTestId("add-review-image-delete")).toHaveStyle({
