@@ -36,18 +36,16 @@ const WIDTH = Dimensions.get("screen").width;
 const registerFields = z
   .object({
     nickName: z
-      .string({ required_error: "auth.validation.nicknameRequired" })
+      .string({ error: "auth.validation.nicknameRequired" })
       .trim()
       .min(1, "auth.validation.nicknameRequired")
       .min(MIN_NICKNAME_LENGTH, "auth.validation.nicknameTooShort")
       .max(20, "auth.validation.nicknameTooLong")
       .regex(/^[a-zA-Z0-9åäöÅÄÖ_-]+$/, "auth.validation.nicknameInvalidChars"),
-    email: z.string({ required_error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
-    password: z
-      .string({ required_error: "auth.validation.passwordRequired" })
-      .min(8, "auth.validation.passwordTooShort"),
+    email: z.string({ error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
+    password: z.string({ error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
     confirmPassword: z
-      .string({ required_error: "auth.validation.confirmPasswordRequired" })
+      .string({ error: "auth.validation.confirmPasswordRequired" })
       .min(8, "auth.validation.passwordTooShort"),
   })
   .superRefine(({ confirmPassword, password }, ctx) => {

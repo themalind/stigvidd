@@ -39,7 +39,7 @@ interface Props {
 }
 
 const saveHikeFields = z.object({
-  // No required_error: the field defaults to "", so it is never undefined and min(3) is
+  // No required message: the field defaults to "", so it is never undefined and min(3) is
   // what an untouched form trips.
   hikeName: z.string().min(3, "hike.nameTooShort").max(40, "hike.nameTooLong"),
 });

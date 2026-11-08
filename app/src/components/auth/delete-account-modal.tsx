@@ -27,7 +27,7 @@ interface Props {
 }
 
 const deleteUserFields = z.object({
-  password: z.string({ required_error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
+  password: z.string({ error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
 });
 
 type FormFields = z.infer<typeof deleteUserFields>;

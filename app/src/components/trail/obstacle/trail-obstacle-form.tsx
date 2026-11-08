@@ -36,7 +36,7 @@ import { logger } from "../../../services/logger";
 
 const obstacleFields = z.object({
   description: z
-    .string({ required_error: "obstacle.descriptionRequired" })
+    .string({ error: "obstacle.descriptionRequired" })
     .trim()
     .min(15, "obstacle.descriptionTooShort")
     .max(500, "obstacle.descriptionMax"),

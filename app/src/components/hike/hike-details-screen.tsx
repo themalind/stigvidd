@@ -46,8 +46,7 @@ import { Icon, useTheme } from "react-native-paper";
 
 // keep-comment: each tab stack passes its own follow route, so back from the map returns to this screen
 export type HikeFollowRoute =
-  | "/(tabs)/(home)/hike-follow/[identifier]"
-  | "/(tabs)/(profile-stack)/hike-follow/[identifier]";
+  "/(tabs)/(home)/hike-follow/[identifier]" | "/(tabs)/(profile-stack)/hike-follow/[identifier]";
 
 const trackShared = (outcome: "success" | ShareFailure, request: ShareHikeRequest) =>
   track("hike.shared", {

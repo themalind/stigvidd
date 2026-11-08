@@ -31,8 +31,8 @@ const newReviewForm = z.object({
   trailReview: z.optional(z.string().max(500, "review.reviewTooLong")),
   rating: z.number().min(1, "review.ratingRequired").max(5, "review.ratingRequired"),
   trailIdentifier: z
-    .string({ required_error: "trailIdentifier is required." })
-    .uuid({ message: "trailIdentifier must be of type uuid." }),
+    .string({ error: "trailIdentifier is required." })
+    .guid({ error: "trailIdentifier must be of type uuid." }),
 });
 
 type FormFields = z.infer<typeof newReviewForm>;

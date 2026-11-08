@@ -27,11 +27,11 @@ export default function TrailMiscInfo({ trail, onOpenGuide }: Props) {
   // Ett tomt VisitorInformation-objekt är fortfarande truthy — kolla innehållet.
   const hasVisitorInfo = Boolean(
     visitorInfo &&
-      (visitorInfo.gettingThere ||
-        visitorInfo.publicTransport ||
-        visitorInfo.parking ||
-        visitorInfo.maintainedBy ||
-        (visitorInfo.illumination && visitorInfo.illuminationText)),
+    (visitorInfo.gettingThere ||
+      visitorInfo.publicTransport ||
+      visitorInfo.parking ||
+      visitorInfo.maintainedBy ||
+      (visitorInfo.illumination && visitorInfo.illuminationText)),
   );
   const sections: { id: string; title: string; content: React.ReactNode }[] = [];
   if (visitorInfo && hasVisitorInfo) {

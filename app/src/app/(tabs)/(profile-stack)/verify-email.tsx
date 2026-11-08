@@ -31,7 +31,7 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 const verifyFields = z.object({
   code: z
-    .string({ required_error: "auth.validation.codeRequired" })
+    .string({ error: "auth.validation.codeRequired" })
     .trim()
     .regex(/^[0-9]{6}$/, "auth.validation.codeInvalid"),
 });

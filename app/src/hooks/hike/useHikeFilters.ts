@@ -9,14 +9,7 @@ import { compareSv } from "@/utils/compare-sv";
 import { useMemo, useState } from "react";
 
 export type HikeSortOption =
-  | "name-asc"
-  | "name-desc"
-  | "date-asc"
-  | "date-desc"
-  | "length-asc"
-  | "length-desc"
-  | "duration-asc"
-  | "duration-desc";
+  "name-asc" | "name-desc" | "date-asc" | "date-desc" | "length-asc" | "length-desc" | "duration-asc" | "duration-desc";
 
 export interface HikeFilterOptions {
   minLength?: number;

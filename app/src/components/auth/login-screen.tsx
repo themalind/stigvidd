@@ -36,8 +36,8 @@ const addOpacity = (color: string, opacity: number): string => {
 };
 
 const loginFields = z.object({
-  email: z.string({ required_error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
-  password: z.string({ required_error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
+  email: z.string({ error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
+  password: z.string({ error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
 });
 
 type FormFields = z.infer<typeof loginFields>;
