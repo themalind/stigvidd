@@ -14,12 +14,18 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
-      "buildNumber": "11",
-      "associatedDomains": ["applinks:link.stigvidd.se"],
+      "buildNumber": "12",
+      "associatedDomains": [
+        "applinks:link.stigvidd.se"
+      ],
       "infoPlist": {
         "CFBundleDevelopmentRegion": "sv",
-        "CFBundleLocalizations": ["sv"],
-        "UIBackgroundModes": ["location"],
+        "CFBundleLocalizations": [
+          "sv"
+        ],
+        "UIBackgroundModes": [
+          "location"
+        ],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -27,7 +33,7 @@
       "sv": "./src/i18n/ios/sv.json"
     },
     "android": {
-      "versionCode": 13,
+      "versionCode": 14,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",
@@ -60,7 +66,10 @@
               "pathPrefix": "/event/"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
