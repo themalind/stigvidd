@@ -942,3 +942,6 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   Deleting an event from its own detail screen logged getEvent / getEventParticipants failed 404 in the dev build because onSuccess
   invalidated all of ["events"] while useQuery observers were still mounted. queryClient.removeQueries does not help: the observer
   rebuilds the query on re-render and fetches. Fix: invalidateQueries with predicate queryKey[2] !== identifier (useEventManage.ts deleteMutation, react-query cache, delete mutation, 404 after delete).
+- [npm audit tells you to go back to ESLint 9: the minimatch override is why it does not](npm-audit-suggests-eslint-9-minimatch-override-instead.md) —
+  ESLint 10 and typescript-eslint use minimatch 10.2.6, covered by GHSA-g3hv-75wg-m249, so npm audit in web/ and site/ reports moderate and offers eslint@9.39.5 as the fix.
+  package.json overrides minimatch to ^11.0.5 instead; audit reports 0 and eslint.config.js no-restricted-imports feature boundaries still apply (measured). Remove the override once npm ls minimatch shows nothing below 11.0.1.

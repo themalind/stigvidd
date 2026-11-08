@@ -1,12 +1,18 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import maplibregl, {
+import {
+  LngLatBounds,
+  setWorkerUrl,
   type FitBoundsOptions,
   type GeoJSONSource,
   type Map as MapLibreMap,
   type StyleSpecification,
 } from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+
+// keep-comment: a bundled maplibre cannot find its own worker, and without one no source ever loads
+setWorkerUrl(workerUrl);
 
 // keep-comment: the app's MapTiler key is locked to a User-Agent a browser cannot send, so the admin needs its own origin-restricted key
 const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
@@ -42,7 +48,7 @@ export function upsertSource(map: MapLibreMap, id: string, data: GeoJSON.Feature
 export function fitTo(map: MapLibreMap, points: GeoJSON.Position[], options: FitBoundsOptions): void {
   if (points.length < 2) return;
 
-  const bounds = new maplibregl.LngLatBounds();
+  const bounds = new LngLatBounds();
   for (const [lng, lat] of points) bounds.extend([lng, lat]);
   map.fitBounds(bounds, options);
 }

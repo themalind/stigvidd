@@ -64,7 +64,7 @@ export class FakeMap {
   remove() {}
 }
 
-class LngLatBounds {
+export class LngLatBounds {
   extend() {
     return this;
   }
@@ -72,4 +72,6 @@ class LngLatBounds {
 
 class Control {}
 
-export default { Map: FakeMap, LngLatBounds, NavigationControl: Control, ScaleControl: Control };
+export { FakeMap as Map, Control as NavigationControl, Control as ScaleControl };
+
+export function setWorkerUrl() {}

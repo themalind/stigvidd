@@ -27,10 +27,6 @@ globalThis.ResizeObserver ??= class {
   disconnect() {}
 };
 
-let objectUrls = 0;
-URL.createObjectURL ??= () => `blob:test/${++objectUrls}`;
-URL.revokeObjectURL ??= () => {};
-
 // Every test file gets a fresh document, but storage does not reset with it: a
 // leftover refresh token or a staged file would be read by the next test as if
 // the code under test had written it.

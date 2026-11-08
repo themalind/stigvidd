@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { type Map as MapLibreMap } from "maplibre-gl";
+import { Map as MapLibreMap, NavigationControl, ScaleControl } from "maplibre-gl";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { fitTo, mapStyle } from "@/lib/maplibre";
 
@@ -39,14 +39,14 @@ export function useMapLibre({ satellite, zoom, draw, fitPoints, fitPadding, setu
     const { satellite, zoom, fitPoints, setup } = latest.current;
     const [lng, lat] = fitPoints()[0] ?? BORAS;
 
-    const map = new maplibregl.Map({
+    const map = new MapLibreMap({
       container: containerRef.current,
       style: mapStyle(satellite),
       center: [lng, lat],
       zoom,
     });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.addControl(new maplibregl.ScaleControl({ unit: "metric" }), "bottom-right");
+    map.addControl(new NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new ScaleControl({ unit: "metric" }), "bottom-right");
     mapRef.current = map;
 
     let fitted = false;

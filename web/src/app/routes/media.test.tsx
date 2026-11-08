@@ -49,6 +49,10 @@ import MediaPage from "./media";
 globalThis.Blob = NodeBlob as unknown as typeof Blob;
 globalThis.File = NodeFile as unknown as typeof File;
 
+let objectUrls = 0;
+// keep-comment: vitest copies the swap above onto jsdom's window, and its own createObjectURL then throws on a Node File
+URL.createObjectURL = () => `blob:test/${++objectUrls}`;
+
 const TRAILS = "/api/v1/admin/trails";
 const FACILITIES = "/api/v1/admin/facilities";
 const MEDIA = "/api/v1/admin/media";

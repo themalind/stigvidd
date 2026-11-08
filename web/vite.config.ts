@@ -3,27 +3,38 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
+function packages(...names: string[]) {
+  return new RegExp(`[\\\\/]node_modules[\\\\/](${names.join("|")})[\\\\/]`);
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          "react-vendor": ["react", "react-dom", "react-router"],
-          tanstack: ["@tanstack/react-query", "@tanstack/react-table"],
-          radix: ["radix-ui"],
-          icons: ["lucide-react"],
-          // Only fetched on the mail-template route, which is lazy-loaded. "@tiptap/pm" is
-          // deliberately absent: it is a namespace package with subpath exports only and no
-          // "." entry, so listing it here fails the build outright. Its prosemirror modules
-          // follow their importers into this chunk anyway.
-          editor: ["@tiptap/core", "@tiptap/react", "@tiptap/starter-kit", "@tiptap/extension-link"],
+        codeSplitting: {
+          groups: [
+            { name: "react-vendor", test: packages("react", "react-dom", "react-router", "scheduler") },
+            {
+              name: "tanstack",
+              test: packages(
+                "@tanstack/react-query",
+                "@tanstack/query-core",
+                "@tanstack/react-table",
+                "@tanstack/table-core",
+              ),
+            },
+            { name: "radix", test: packages("radix-ui", "@radix-ui/[^\\\\/]+") },
+            { name: "icons", test: packages("lucide-react") },
+            // Only fetched on the mail-template route, which is lazy-loaded.
+            { name: "editor", test: packages("@tiptap/[^\\\\/]+", "prosemirror-[^\\\\/]+") },
+          ],
         },
       },
     },

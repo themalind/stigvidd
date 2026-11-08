@@ -35,6 +35,12 @@ one module that needs it.
 Node's `File` also degrades to a `Blob` across a clone (losing `name` and `lastModified`),
 which does not matter for `staged-media.ts` because it stores those as its own fields.
 
+**Since Vitest 5 the swap also reaches jsdom's `window`.** Vitest's own `URL.createObjectURL`
+then takes a Node `File` for a jsdom `Blob` and throws "Vitest cannot read the bytes of a jsdom
+Blob" (14 failures in `media.test.tsx`, reported as a Vitest bug but caused by the swap). A file
+that swaps and also renders a preview stubs `URL.createObjectURL` itself. Other files need no
+stub, because Vitest now provides `createObjectURL` and `revokeObjectURL`.
+
 ## `test.env` in `vitest.config.ts`, not `web/.env`
 
 `services/keycloak-auth.ts` reads `VITE_OIDC_URL` / `VITE_OIDC_REALM` / `VITE_CLIENT_ID` at
@@ -142,14 +148,15 @@ import semantics:
 Rendering that page in a test needs the whole module boundary stubbed — `@/api/trail-import`
 (including `confidenceOrder`, a **value** the summary row maps over, so a partial mock
 renders nothing), `@/api/trail`, `sonner`, and `ProposalDetail`/`ApplyPanel`, both of which
-would otherwise fetch on their own. And because `restoreMocks: true` wipes every
-implementation between tests, a `vi.fn().mockResolvedValue(...)` written into a `vi.mock`
-factory is gone by the second test: set those in `beforeEach` instead.
+would otherwise fetch on their own. Since Vitest 4, `restoreMocks: true` restores only
+`vi.spyOn` spies, so a `vi.fn()` keeps its implementation between tests. Since Vitest 5,
+`clearMocks` is on by default, so its recorded calls are still cleared. Set per-test behaviour in
+`beforeEach` all the same, or it leaks into the next test.
 
 ## What `setup.ts` adds, and why Radix fails silently without it
 
 jsdom implements none of `hasPointerCapture`, `setPointerCapture`, `releasePointerCapture`,
-`scrollIntoView`, `ResizeObserver` or `URL.createObjectURL`. Unlike the Blob swap above these
+`scrollIntoView` or `ResizeObserver`. Unlike the Blob swap above these
 are **additions**, not replacements, so `setup.ts` installs them globally with `??=`.
 
 The one worth knowing about is pointer capture. Radix's Select and Popover are not native

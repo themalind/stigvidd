@@ -6,6 +6,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
+// keep-comment: why package.json overrides minimatch: docs/notes/npm-audit-suggests-eslint-9-minimatch-override-instead.md
 // keep-comment: shared -> features -> app, and no feature imports another (github.com/alan2207/bulletproof-react, docs/project-structure.md)
 // keep-comment: a later block replaces an earlier one's no-restricted-imports options, so each block lists every pattern it needs
 const features = fs

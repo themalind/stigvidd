@@ -8,6 +8,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
+// keep-comment: why package.json overrides minimatch: docs/notes/npm-audit-suggests-eslint-9-minimatch-override-instead.md
 export default defineConfig([
   globalIgnores(["dist"]),
   {
