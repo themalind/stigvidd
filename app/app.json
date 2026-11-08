@@ -15,17 +15,11 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
       "buildNumber": "12",
-      "associatedDomains": [
-        "applinks:link.stigvidd.se"
-      ],
+      "associatedDomains": ["applinks:link.stigvidd.se"],
       "infoPlist": {
         "CFBundleDevelopmentRegion": "sv",
-        "CFBundleLocalizations": [
-          "sv"
-        ],
-        "UIBackgroundModes": [
-          "location"
-        ],
+        "CFBundleLocalizations": ["sv"],
+        "UIBackgroundModes": ["location"],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -66,10 +60,7 @@
               "pathPrefix": "/event/"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
