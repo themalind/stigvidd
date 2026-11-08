@@ -11,7 +11,7 @@ import { REVIEWS_STALE_TIME } from "@/constants/cache";
 import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import React, { RefObject, useEffect, useMemo, useState } from "react";
+import React, { type ComponentRef, RefObject, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Surface, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ import { useHasReviewedTrail } from "@/hooks/review/useHasReviewedTrail";
 
 interface ReviewWrapperProps {
   trail: Trail;
-  surfaceToScrollToRef: RefObject<View | null>;
+  surfaceToScrollToRef: RefObject<ComponentRef<typeof View> | null>;
   onReviewsLoaded?: (reviews: Review[], total: number) => void;
 }
 

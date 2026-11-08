@@ -276,7 +276,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
 
             <Button
               testID="obstacle-submit"
-              onPress={handleSubmit(onSubmit)}
+              onPress={() => handleSubmit(onSubmit)()}
               mode="contained"
               style={s.button}
               disabled={isPending}

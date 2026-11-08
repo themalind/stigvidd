@@ -119,7 +119,7 @@ export default function CoverFramer({
 
 const s = StyleSheet.create({
   clip: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderRadius: BORDER_RADIUS,
     overflow: "hidden",
   },

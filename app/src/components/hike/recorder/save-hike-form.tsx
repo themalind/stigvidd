@@ -252,7 +252,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             (isPending || !canSave) && s.disabledButton,
           ]}
           disabled={isPending || !canSave}
-          onPress={openDialogIfValid}
+          onPress={() => openDialogIfValid()}
         >
           <MaterialIcons name="save" size={22} color={theme.colors.onPrimary} />
           <Text style={[s.buttonText, { color: theme.colors.onPrimary }]}>

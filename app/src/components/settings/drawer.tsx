@@ -172,7 +172,7 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
 
 const s = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   panel: {
     position: "absolute",

@@ -149,7 +149,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
         <Button
           mode="contained"
           style={s.button}
-          onPress={handleSubmit(onSubmit)}
+          onPress={() => handleSubmit(onSubmit)()}
           disabled={isSubmitting || createReviewMutation.isPending}
         >
           {createReviewMutation.isPending ? t("common.saving") : t("common.save")}

@@ -407,7 +407,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
               icon="send"
               loading={mutation.isPending}
               disabled={!canSubmit}
-              onPress={submit}
+              onPress={() => submit()}
             >
               {t("publish.submit")}
             </SlimButton>

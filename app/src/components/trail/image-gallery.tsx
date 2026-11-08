@@ -11,7 +11,7 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailImage } from "@/data/types";
 import { useIsOnline } from "@/hooks/useIsOnline";
 import { Image } from "expo-image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ComponentRef, useCallback, useEffect, useRef, useState } from "react";
 import {
   FlatList,
   LayoutChangeEvent,
@@ -40,7 +40,7 @@ export default function ImageGallery({ images }: GalleryProps) {
   const [width, setWidth] = useState(windowWidth);
   const [viewerOpen, setViewerOpen] = useState(false);
   const pagerRef = useRef<FlatList<TrailImage>>(null);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const theme = useTheme();
   const isOnline = useIsOnline();
 
@@ -203,7 +203,7 @@ const s = StyleSheet.create({
     opacity: 0.6,
   },
   activeBorder: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     borderWidth: 2,
     borderRadius: BORDER_RADIUS,
   },

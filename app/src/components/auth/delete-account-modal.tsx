@@ -120,7 +120,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
             style={s.button}
             disabled={isDeleting}
             loading={isDeleting}
-            onPress={handleSubmit(onSubmit)}
+            onPress={() => handleSubmit(onSubmit)()}
           >
             {isDeleting ? t("auth.deletingAccount") : t("common.send")}
           </Button>

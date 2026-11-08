@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.description    = 'Background location tracking using CLLocationUpdate.liveUpdates and CLBackgroundActivitySession, which keep delivering fixes while the app is backgrounded/pocketed — unlike the classic continuous-updates API.'
   s.author         = 'Stigvidd'
   s.homepage       = 'https://stigvidd.se'
-  s.platforms      = { :ios => '15.1' }
+  s.platforms      = { :ios => '16.4' }
   s.source         = { git: '' }
   s.static_framework = true
 

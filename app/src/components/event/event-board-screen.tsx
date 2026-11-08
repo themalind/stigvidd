@@ -21,7 +21,7 @@ import { eventBoardKey, firstUnreadPostId, useEventBoard, useEventBoardMutations
 import { useEvent } from "@/hooks/events/useEventQueries";
 import { eventErrorCode } from "@/utils/event-errors";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useBottomTabBarHeight } from "expo-router/js-tabs";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -186,7 +186,7 @@ function EventBoard({ identifier }: { identifier: string }) {
         onEndReached={() => {
           if (board.hasNextPage && !board.isFetchingNextPage) void board.fetchNextPage();
         }}
-        ListFooterComponent={board.isFetchingNextPage ? <LoadingIndicator /> : null}
+        ListFooterComponent={board.isFetchingNextPage ? <LoadingIndicator /> : undefined}
         ListEmptyComponent={
           <Text style={[s.empty, { color: theme.colors.onSurfaceVariant }]}>{t("events.noPosts")}</Text>
         }

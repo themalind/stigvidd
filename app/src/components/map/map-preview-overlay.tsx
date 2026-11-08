@@ -62,7 +62,7 @@ export default function MapPreviewOverlay({ label, onPress, startPosition, direc
 
 const s = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: "flex-end",
     justifyContent: "flex-end",
     padding: 10,

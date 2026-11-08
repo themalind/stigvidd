@@ -263,7 +263,7 @@ export default function RegisterScreen() {
                   testID="register-submit"
                   mode="contained"
                   style={s.button}
-                  onPress={handleSubmit(onSubmit)}
+                  onPress={() => handleSubmit(onSubmit)()}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? t("auth.registering") : t("auth.register")}

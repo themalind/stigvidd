@@ -201,7 +201,7 @@ export default function ReportContentForm({
 
           <Button
             testID="report-submit"
-            onPress={handleSubmit(onSubmit)}
+            onPress={() => handleSubmit(onSubmit)()}
             mode="contained"
             style={s.button}
             disabled={isPending}

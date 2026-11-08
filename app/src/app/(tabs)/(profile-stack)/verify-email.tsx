@@ -160,7 +160,7 @@ export default function VerifyEmailScreen() {
                     autoCapitalize="none"
                     keyboardType="number-pad"
                     maxLength={6}
-                    onSubmitEditing={handleSubmit(onSubmit)}
+                    onSubmitEditing={() => handleSubmit(onSubmit)()}
                     theme={{ colors: { primary: theme.colors.onSurface } }}
                   />
                 )}
@@ -185,7 +185,7 @@ export default function VerifyEmailScreen() {
                   testID="verify-email-submit"
                   mode="contained"
                   style={s.button}
-                  onPress={handleSubmit(onSubmit)}
+                  onPress={() => handleSubmit(onSubmit)()}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? t("auth.verifying") : t("auth.verify")}

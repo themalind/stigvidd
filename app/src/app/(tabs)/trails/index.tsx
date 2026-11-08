@@ -173,7 +173,7 @@ export default function TrailsScreen() {
             <Pressable testID="trails-back-to-top" style={s.backToTop} onPress={onPressScrollToTop}>
               <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
             </Pressable>
-          ) : null
+          ) : undefined
         }
       />
 

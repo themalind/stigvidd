@@ -6,6 +6,9 @@ jest.mock("@react-native-async-storage/async-storage", () =>
 
 jest.mock("@react-native-community/netinfo", () => require("@react-native-community/netinfo/jest/netinfo-mock.js"));
 
+// Worklets throws at import time without a native binary, and Reanimated imports it.
+jest.mock("react-native-worklets", () => require("react-native-worklets/lib/module/mock"));
+
 // MapLibre throws at import time without a native binary; see __mocks__/@maplibre/maplibre-react-native.js.
 jest.mock("@maplibre/maplibre-react-native");
 

@@ -97,7 +97,7 @@ function watermarkFontSize(width: number) {
 
 const s = StyleSheet.create({
   fill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   badge: {
     position: "absolute",
@@ -146,7 +146,7 @@ const s = StyleSheet.create({
     textAlign: "center",
   },
   watermarkFill: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: "center",
     justifyContent: "center",
   },

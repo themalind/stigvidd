@@ -189,7 +189,7 @@ export default function ShareHikeModal({
                   icon="arrow-right"
                   style={s.button}
                   contentStyle={s.buttonContent}
-                  onPress={handleSubmit(onSubmit)}
+                  onPress={() => handleSubmit(onSubmit)()}
                 >
                   {t("common.next")}
                 </SlimButton>

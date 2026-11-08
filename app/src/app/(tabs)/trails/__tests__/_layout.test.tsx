@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getActionFromState } from "@react-navigation/native";
+import { getActionFromState } from "expo-router/react-navigation";
 import { Stack, Tabs, router } from "expo-router";
 import { store } from "expo-router/build/global-state/router-store";
 import { act, renderRouter, screen } from "expo-router/testing-library";

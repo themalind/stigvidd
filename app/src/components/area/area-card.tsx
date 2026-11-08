@@ -175,7 +175,7 @@ const s = StyleSheet.create({
     width: "100%",
   },
   gradient: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   overlay: {
     position: "absolute",

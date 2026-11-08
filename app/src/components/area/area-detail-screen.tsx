@@ -192,7 +192,7 @@ const s = StyleSheet.create({
     justifyContent: "flex-end",
   },
   heroImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   heroContent: {
     paddingHorizontal: SCREEN_PADDING + 4,

@@ -160,7 +160,7 @@ export default function MyHikesScreen() {
         windowSize={5}
         updateCellsBatchingPeriod={50}
         removeClippedSubviews
-        ListHeaderComponent={hikes && totalCount > 0 ? <HikeStatsBanner hikes={hikes} /> : null}
+        ListHeaderComponent={hikes && totalCount > 0 ? <HikeStatsBanner hikes={hikes} /> : undefined}
         ListEmptyComponent={
           totalCount === 0 ? (
             <Text style={s.emptyText}>{t("hike.noHikes")}</Text>

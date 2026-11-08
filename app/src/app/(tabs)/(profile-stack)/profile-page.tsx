@@ -28,7 +28,7 @@ export default function ProfilePageScreen() {
   const { t } = useTranslation();
   const [{ data: user, isLoading, isError, error, refetch }] = useAtom(stigviddUserAtom);
   const setError = useSetAtom(showErrorAtom);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const { data: incomingFriendRequests } = useAtomValue(incomingRequestsAtom);

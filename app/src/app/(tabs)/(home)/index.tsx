@@ -39,7 +39,7 @@ const AREA_COVERS = [
 ];
 
 export default function HomeScreen() {
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const theme = useTheme();
   const { t } = useTranslation();
   // keep-comment: the Borås fallback is not the user's position, so it never reaches the API; without coordinates the section asks for popular trails

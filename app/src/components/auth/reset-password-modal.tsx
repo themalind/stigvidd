@@ -112,7 +112,7 @@ export default function ResetPasswordModal({ visible, onDismiss }: Props) {
               </View>
             )}
           </View>
-          <Button mode="contained" style={s.button} disabled={isSubmitting} onPress={handleSubmit(onSubmit)}>
+          <Button mode="contained" style={s.button} disabled={isSubmitting} onPress={() => handleSubmit(onSubmit)()}>
             {isSubmitting ? t("common.sending") : t("common.send")}
           </Button>
           {resetError && <Text style={[s.errorText, { color: theme.colors.error }]}>{resetError}</Text>}

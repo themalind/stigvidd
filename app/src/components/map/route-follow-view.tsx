@@ -216,7 +216,7 @@ const s = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
   },
   centreOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: "center",
     justifyContent: "center",
   },

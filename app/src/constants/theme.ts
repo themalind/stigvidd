@@ -5,13 +5,16 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { DarkTheme as NavigationDarkTheme, DefaultTheme as NavigationDefaultTheme } from "@react-navigation/native";
+import { DarkTheme as NavigationDarkTheme, DefaultTheme as NavigationDefaultTheme } from "expo-router/react-navigation";
 import merge from "deepmerge";
 import { MD3DarkTheme, MD3LightTheme, adaptNavigationTheme } from "react-native-paper";
 
+// The navigation types allow any ColorValue and Paper only strings; both default themes hold strings. keep-comment: why the casts
+type StringColors<T extends { colors: object }> = Omit<T, "colors"> & { colors: { [K in keyof T["colors"]]: string } };
+
 const { LightTheme, DarkTheme } = adaptNavigationTheme({
-  reactNavigationLight: NavigationDefaultTheme,
-  reactNavigationDark: NavigationDarkTheme,
+  reactNavigationLight: NavigationDefaultTheme as StringColors<typeof NavigationDefaultTheme>,
+  reactNavigationDark: NavigationDarkTheme as StringColors<typeof NavigationDarkTheme>,
 });
 
 const CombinedDefaultTheme = merge(MD3LightTheme, LightTheme);

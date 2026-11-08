@@ -10,7 +10,7 @@ import SearchField from "@/components/search-field";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRef, useState } from "react";
+import { type ComponentRef, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Keyboard, Platform, Pressable, StyleSheet, View } from "react-native";
 import { Divider, Portal, Text, useTheme } from "react-native-paper";
@@ -58,7 +58,7 @@ export default function ListHeaderAction({
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
-  const anchorRef = useRef<View>(null);
+  const anchorRef = useRef<ComponentRef<typeof View>>(null);
   // Window coordinates of the sort menu, measured off the icon each time it opens.
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
 

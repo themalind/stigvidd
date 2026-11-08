@@ -35,7 +35,7 @@ import {
 import { openPushRoute } from "@/services/open-push-route";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
-import { ThemeProvider } from "@react-navigation/native";
+import { ThemeProvider } from "expo-router/react-navigation";
 import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
@@ -75,7 +75,7 @@ function NotificationHandler() {
     const subscription = Notifications.addNotificationReceivedListener((notification) => {
       const data = notification.request.content.data;
       const handler = notificationHandlerFor(data);
-      if (handler) invalidateForPush(queryClient, handler, data);
+      if (handler && data) invalidateForPush(queryClient, handler, data);
     });
     return () => subscription.remove();
   }, [queryClient]);

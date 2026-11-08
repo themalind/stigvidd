@@ -20,7 +20,7 @@ export function useUserTheme() {
   // Uppdatera navigation bar på Android
   useEffect(() => {
     if (Platform.OS === "android") {
-      NavigationBar.setButtonStyleAsync(theme.dark ? "light" : "dark");
+      NavigationBar.setStyle(theme.dark ? "light" : "dark");
     }
   }, [theme.dark]);
 

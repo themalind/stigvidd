@@ -185,7 +185,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
                 testID="login-submit"
                 mode="contained"
                 style={s.button}
-                onPress={handleSubmit(onSubmit)}
+                onPress={() => handleSubmit(onSubmit)()}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? t("auth.loggingIn") : t("auth.login")}

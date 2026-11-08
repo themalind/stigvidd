@@ -123,7 +123,7 @@ export default function EditHikeModal({ hike, onDismiss, onSave, isPending }: Pr
               icon="content-save"
               loading={isPending}
               disabled={isPending}
-              onPress={handleSubmit(submit)}
+              onPress={() => handleSubmit(submit)()}
             >
               {t("common.save")}
             </SlimButton>

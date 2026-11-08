@@ -173,9 +173,9 @@ export default function EventsListScreen() {
         data={data}
         keyExtractor={(item) => item.identifier}
         renderItem={renderItem}
-        ListHeaderComponent={header}
+        ListHeaderComponent={header ?? undefined}
         ListEmptyComponent={empty}
-        ListFooterComponent={active.isFetchingNextPage ? <LoadingIndicator /> : null}
+        ListFooterComponent={active.isFetchingNextPage ? <LoadingIndicator /> : undefined}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         onEndReachedThreshold={0.5}
