@@ -116,6 +116,15 @@ beforeEach(() => {
 });
 
 describe("EventBoardScreen", () => {
+  it("keeps the way back on the error screen of a board that failed to load", async () => {
+    mockGetEvent.mockResolvedValue(EVENT);
+    mockGetPosts.mockRejectedValue(new ApiError("HTTP error: getEventPosts: 500", 500));
+    renderWithProviders(<EventBoardScreen />);
+
+    await flushUntil(() => screen.queryByText("Försök igen") !== null);
+    expect(screen.getByTestId("back-button")).toBeTruthy();
+  });
+
   it("sends a post and clears the draft", async () => {
     mockCreatePost.mockResolvedValue(post({ identifier: "p2", body: "Hej" }));
     await show([]);

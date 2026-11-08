@@ -11,7 +11,7 @@ import { useAuth } from "@/components/auth/auth-provider";
 import SignInPrompt from "@/components/auth/sign-in-prompt";
 import BackButton from "@/components/back-button";
 import CountedTextInput from "@/components/counted-text-input";
-import ErrorView from "@/components/error-view";
+import ErrorScreen from "@/components/error-screen";
 import LoadingIndicator from "@/components/loading-indicator";
 import ReportContentForm from "@/components/report/report-content-form";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
@@ -114,7 +114,7 @@ function EventBoard({ identifier }: { identifier: string }) {
 
   if (board.isLoading || event.isLoading) return <LoadingIndicator />;
   if (isApiStatus(board.error, 404) || isApiStatus(event.error, 404)) return <EventGoneView />;
-  if (board.isError && !board.data) return <ErrorView error={board.error} onRetry={() => void board.refetch()} />;
+  if (board.isError && !board.data) return <ErrorScreen error={board.error} onRetry={() => void board.refetch()} />;
 
   const send = () => {
     const body = draft.trim();

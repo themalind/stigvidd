@@ -45,6 +45,7 @@ let mockLastResponse: unknown;
 let mockReceived: ((notification: unknown) => void) | undefined;
 // Drawn inside the navigator, standing in for the screen that is open.
 let mockScreenContent: unknown;
+let mockPathname: string;
 // The app-state handler the query cache follows the foreground with.
 let appStateChanged: ((status: AppStateStatus) => void) | undefined;
 
@@ -85,7 +86,11 @@ jest.mock("expo-router", () => {
   Stack.Screen = function StackScreen() {
     return null;
   };
-  return { Stack, router: { navigate: (...args: unknown[]) => mockNavigate(...args) } };
+  return {
+    Stack,
+    router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
+    usePathname: () => mockPathname,
+  };
 });
 
 jest.mock("expo-navigation-bar", () => ({ setButtonStyleAsync: jest.fn() }));
@@ -171,6 +176,7 @@ beforeEach(async () => {
   mockLastResponse = null;
   mockReceived = undefined;
   mockScreenContent = null;
+  mockPathname = "/";
   mockLoadUserTheme.mockResolvedValue("auto");
   mockRegisterPush.mockResolvedValue(undefined);
   store.set(userThemeAtom, "auto");
@@ -458,6 +464,39 @@ it("opens the screen a tapped notification points at, and refreshes it", async (
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/shared-hikes", ANCHORED);
   expect(QueryClient.prototype.invalidateQueries).toHaveBeenCalledWith({ queryKey: ["shared-hikes"] });
   expect(mockClearLastResponse).toHaveBeenCalledTimes(1);
+});
+
+function tapBoardPost(identifier: string) {
+  mockLastResponse = {
+    notification: {
+      request: { identifier: "notif-board", content: { data: { type: "event_post", eventIdentifier: identifier } } },
+    },
+  };
+}
+
+it("opens a board post with its event beneath the board", async () => {
+  tapBoardPost("ev1");
+  mockAuth = { user: USER, isLoading: false };
+  await show();
+  await settle();
+  await act(async () => {
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+  });
+
+  expect(mockNavigate.mock.calls).toEqual([
+    ["/(tabs)/events/event/ev1", ANCHORED],
+    ["/(tabs)/events/board/ev1", ANCHORED],
+  ]);
+});
+
+it("adds no event above a board that is already open on the post's event", async () => {
+  mockPathname = "/events/board/ev1";
+  tapBoardPost("ev1");
+  mockAuth = { user: USER, isLoading: false };
+  await show();
+  await settle();
+
+  expect(mockNavigate.mock.calls).toEqual([["/(tabs)/events/board/ev1", ANCHORED]]);
 });
 
 // A cold start waits for the session before navigating, or it lands on a screen with no account.

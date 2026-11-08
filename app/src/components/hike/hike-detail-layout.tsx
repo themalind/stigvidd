@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import BackButton from "@/components/back-button";
-import ErrorView from "@/components/error-view";
+import ErrorScreen from "@/components/error-screen";
 import { HikeFact, HikeFactsCard, HikeInfo, HikeInfoCard } from "@/components/hike/hike-detail-sections";
 import RoutePreviewMap from "@/components/map/route-preview-map";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
@@ -110,14 +110,7 @@ function HikeDetailHeader({ title, action }: { title?: string; action?: ReactNod
 }
 
 export function HikeDetailFallback({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
-  const theme = useTheme();
-
-  return (
-    <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <HikeDetailHeader />
-      <ErrorView error={error} onRetry={onRetry} />
-    </View>
-  );
+  return <ErrorScreen error={error} onRetry={onRetry} />;
 }
 
 const s = StyleSheet.create({

@@ -16,7 +16,7 @@ export default function BackButton() {
   if (Platform.OS !== "ios") return null;
 
   return (
-    <Pressable onPress={() => router.back()} hitSlop={12} style={s.button}>
+    <Pressable testID="back-button" onPress={() => router.back()} hitSlop={12} style={s.button}>
       <MaterialIcons name="chevron-left" size={32} color={theme.colors.onBackground} />
     </Pressable>
   );

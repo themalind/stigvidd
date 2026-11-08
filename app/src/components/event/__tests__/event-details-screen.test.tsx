@@ -150,6 +150,13 @@ describe("EventDetailsScreen", () => {
     expect(screen.getByText("Evenemanget finns inte längre")).toBeTruthy();
   });
 
+  it("keeps the way back on the error screen of an event that failed to load", async () => {
+    await show(new ApiError("HTTP error: getEvent: 401", 401));
+
+    await flushUntil(() => screen.queryByText("Försök igen") !== null);
+    expect(screen.getByTestId("back-button")).toBeTruthy();
+  });
+
   it("joins an open event from the action bar", async () => {
     await show(hikingEvent({ permissions: { ...NO_PERMISSIONS, canJoin: true, canMarkInterested: true } }));
     await flushUntil(() => screen.queryByText("Gå med") !== null);

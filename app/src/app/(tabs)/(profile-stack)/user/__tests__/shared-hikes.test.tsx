@@ -258,6 +258,16 @@ it("loads the shared walks again when the user retries after a failure", async (
   expect(mockGetSharedHikes).toHaveBeenCalledTimes(2);
 });
 
+it("keeps the way back on the error screen on iOS, the platform that draws one", async () => {
+  Platform.OS = "ios";
+  mockGetSharedHikes.mockRejectedValueOnce(new Error("nätverket"));
+  renderWithProviders(<SharedHikesScreen />);
+  await flushUntil(() => screen.queryByText("Försök igen"));
+
+  expect(screen.getByTestId("back-button")).toBeTruthy();
+  Platform.OS = "android";
+});
+
 it("offers a retry when the invitations could not be fetched", async () => {
   mockIncoming = { data: undefined, isPending: false, isError: true };
   await show();

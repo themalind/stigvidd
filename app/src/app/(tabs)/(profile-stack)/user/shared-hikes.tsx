@@ -8,7 +8,7 @@
 import { getIncomingSharedHike } from "@/api/shared-hikes";
 import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
 import BackButton from "@/components/back-button";
-import ErrorView from "@/components/error-view";
+import ErrorScreen from "@/components/error-screen";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
 import ListHeaderActions, { SortField } from "@/components/list-header-actions";
 import LoadingIndicator from "@/components/loading-indicator";
@@ -105,7 +105,7 @@ export default function SharedHikesScreen() {
 
   // A failed refetch keeps the cached data, so the error screen is only for having nothing to show. keep-comment: refetch-error semantics
   if (getSharedHikesError && !hikes) {
-    return <ErrorView error={error} onRetry={refetch} />;
+    return <ErrorScreen error={error} onRetry={refetch} />;
   }
 
   return (

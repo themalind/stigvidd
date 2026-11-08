@@ -32,10 +32,11 @@ import {
   registerForPushNotificationsAsync,
   releaseNotificationResponse,
 } from "@/services/notifications";
+import { openPushRoute } from "@/services/open-push-route";
 import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import * as Notifications from "expo-notifications";
 import { ThemeProvider } from "@react-navigation/native";
-import { router, Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
@@ -58,10 +59,16 @@ function NotificationHandler() {
   const lastResponse = Notifications.useLastNotificationResponse();
   const handledNotificationId = useRef<string | null>(null);
   const signedInUserId = useRef<string | undefined>(undefined);
+  const pathname = usePathname();
+  const currentPath = useRef(pathname);
 
   useEffect(() => {
     signedInUserId.current = user?.id;
   }, [user]);
+
+  useEffect(() => {
+    currentPath.current = pathname;
+  }, [pathname]);
 
   // Foreground: notification arrives while app is open — just refresh data, no navigation.
   useEffect(() => {
@@ -84,7 +91,7 @@ function NotificationHandler() {
     if (!type) return;
     const userId = user.id;
     void claimNotificationResponse(notifId)
-      .then((isNew) => {
+      .then(async (isNew) => {
         if (!isNew) return;
         if (signedInUserId.current !== userId) {
           if (handledNotificationId.current === notifId) handledNotificationId.current = null;
@@ -93,8 +100,7 @@ function NotificationHandler() {
         const handler = notificationHandlerFor(data);
         if (handler) {
           invalidateForPush(queryClient, handler, data);
-          const route = handler.route(data);
-          if (route) router.navigate(route as never, { withAnchor: true });
+          await openPushRoute(handler, data, currentPath.current);
         }
         Notifications.clearLastNotificationResponse();
       })

@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { isApiStatus } from "@/api/api-error";
-import ErrorView from "@/components/error-view";
+import ErrorScreen from "@/components/error-screen";
 import LoadingIndicator from "@/components/loading-indicator";
 import { HikingEvent } from "@/data/types";
 import { useEvent } from "@/hooks/events/useEventQueries";
@@ -25,7 +25,7 @@ export default function EventGate({ identifier, children }: Props) {
 
   if (isLoading) return <LoadingIndicator />;
   if (isApiStatus(error, 404)) return <EventGoneView />;
-  if (isError && !event) return <ErrorView error={error} onRetry={() => void refetch()} />;
+  if (isError && !event) return <ErrorScreen error={error} onRetry={() => void refetch()} />;
   if (!event) return <EventGoneView />;
   return children(event, query);
 }

@@ -35,6 +35,17 @@ app's `Tabs` is type `tab`, not `expo-tab`, so expo-router sends POP_TO to the T
 drops it ("The action 'POP_TO' ... was not handled by any navigator"). Making it work needed a
 `TabActions.jumpTo` dispatch first. An extra back step costs less than a lost live screen.
 
+**A board post opens with its event beneath the board** (`routeBeneath`,
+[open-push-route.ts](../../app/src/services/open-push-route.ts)). Two `navigate` calls in a row into
+an unmounted tab keep only the last one, because the tab holds just the latest nested params: the
+stack was `[index, board]`. One `requestAnimationFrame` between them gives `[index, event, board]`
+(measured with real timers; not yet on a device). If the frame ever comes too early, the result is
+that same `[index, board]`: the event is skipped, but the tab is not stuck.
+`renderRouter` turns on fake timers, so a test that awaits a frame hangs until the 5 s timeout. Call
+`jest.useRealTimers()` after it and start the navigation outside `act`, which holds back the render
+the tab mounts in. All eight push types are in
+[notification-navigation.test.tsx](../../app/src/app/__tests__/notification-navigation.test.tsx).
+
 **Measured** with the real router in
 [(profile-stack)/__tests__/_layout.test.tsx](../../app/src/app/%28tabs%29/%28profile-stack%29/__tests__/_layout.test.tsx).
 A plain push goes back to `/`, and `withAnchor` goes back to `/profile-page`.

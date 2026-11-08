@@ -39,6 +39,7 @@ export type PushData = Record<string, unknown>;
 export interface NotificationHandler {
   queryKeys: (data: PushData) => unknown[][];
   route: (data: PushData) => string | undefined;
+  routeBeneath?: (data: PushData) => string | undefined;
 }
 
 export const NOTIFICATION_HANDLERS: Record<PushType, NotificationHandler> = {
@@ -83,6 +84,7 @@ export const NOTIFICATION_HANDLERS: Record<PushType, NotificationHandler> = {
         ["events", "feed"],
       ]),
     route: (data) => eventRoute(data, "board"),
+    routeBeneath: (data) => eventRoute(data, "event"),
   },
 };
 
