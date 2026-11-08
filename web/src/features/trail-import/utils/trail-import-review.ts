@@ -107,8 +107,7 @@ export type ProposalPage = {
  * batch-decide a subset believing it was everything.
  */
 export type CollectOutcome =
-  | { complete: true; checked: Map<number, MatchConfidence> }
-  | { complete: false; pagesWalked: number };
+  { complete: true; checked: Map<number, MatchConfidence> } | { complete: false; pagesWalked: number };
 
 /**
  * Every proposal matching the current filter, not just the page in view. The walk's only

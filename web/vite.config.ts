@@ -21,15 +21,7 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: "react-vendor", test: packages("react", "react-dom", "react-router", "scheduler") },
-            {
-              name: "tanstack",
-              test: packages(
-                "@tanstack/react-query",
-                "@tanstack/query-core",
-                "@tanstack/react-table",
-                "@tanstack/table-core",
-              ),
-            },
+            { name: "tanstack", test: packages("@tanstack/react-query", "@tanstack/query-core") },
             { name: "radix", test: packages("radix-ui", "@radix-ui/[^\\\\/]+") },
             { name: "icons", test: packages("lucide-react") },
             // Only fetched on the mail-template route, which is lazy-loaded.
