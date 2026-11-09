@@ -84,7 +84,7 @@ optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map
 | ----------------------------------------- | ---------- | --------------- |
 | @expo-google-fonts/inter                  | ^0.4.2     | MIT AND OFL-1.1 |
 | @expo/vector-icons                        | ^15.0.3    | MIT             |
-| @hookform/resolvers                       | ^7.0.3     | MIT             |
+| @hookform/resolvers                       | ^7.0.5     | MIT             |
 | @likashefqet/react-native-image-zoom      | ^4.3.0     | MIT             |
 | @maplibre/maplibre-react-native           | 11.5.1     | MIT             |
 | @miblanchard/react-native-slider          | ^2.6.0     | MIT             |
@@ -108,6 +108,7 @@ optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map
 | expo-constants                            | ~58.0.15   | MIT             |
 | expo-dev-client                           | ~58.0.18   | MIT             |
 | expo-device                               | ~58.0.5    | MIT             |
+| expo-file-system                          | ~58.0.13   | MIT             |
 | expo-font                                 | ~58.0.11   | MIT             |
 | expo-image                                | ~58.0.18   | MIT             |
 | expo-image-manipulator                    | ~58.0.16   | MIT             |
@@ -128,19 +129,19 @@ optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map
 | i18next                                   | ^27.0.1    | MIT             |
 | jest                                      | ~30.5.2    | MIT             |
 | jest-expo                                 | ~58.0.14   | MIT             |
-| jotai                                     | ^3.0.1     | MIT             |
+| jotai                                     | ^3.0.2     | MIT             |
 | jotai-tanstack-query                      | ^0.11.0    | MIT             |
 | jwt-decode                                | ^4.0.0     | MIT             |
 | prettier                                  | 3.9.10     | MIT             |
 | react                                     | 19.3.0     | MIT             |
 | react-dom                                 | 19.3.0     | MIT             |
 | react-hook-form                           | ^7.66.0    | MIT             |
-| react-i18next                             | ^18.0.0    | MIT             |
+| react-i18next                             | ^18.0.1    | MIT             |
 | react-native                              | 0.88.1     | MIT             |
 | react-native-gesture-handler              | ~3.3.0     | MIT             |
 | react-native-keyboard-aware-scroll-view   | 0.9.5      | MIT             |
 | react-native-paper                        | ^5.14.5    | MIT             |
-| react-native-paper-dates                  | 0.24.1     | MIT             |
+| react-native-paper-dates                  | 0.24.2     | MIT             |
 | react-native-reanimated                   | 4.7.1      | MIT             |
 | react-native-reanimated-carousel          | ^4.0.3     | MIT             |
 | react-native-safe-area-context            | ~5.11.1    | MIT             |
@@ -150,6 +151,6 @@ optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map
 | react-native-uuid                         | ^2.0.3     | MIT             |
 | react-native-web                          | ~0.21.0    | MIT             |
 | react-native-worklets                     | 0.13.0     | MIT             |
-| test-renderer                             | ^1.3.0     | MIT             |
+| test-renderer                             | ^1.3.1     | MIT             |
 | typescript                                | ~6.0.3     | Apache-2.0      |
 | zod                                       | ^4.6.7     | MIT             |

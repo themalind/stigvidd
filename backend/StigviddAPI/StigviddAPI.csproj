@@ -13,8 +13,8 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.2.0" />
     <PackageReference Include="Keycloak.AuthServices.Authentication" Version="3.0.0" />
     <PackageReference Include="Keycloak.AuthServices.Sdk" Version="3.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.14" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
     <!-- pinned above the 2.0.0 that Microsoft.AspNetCore.OpenApi resolves: GHSA-v5pm-xwqc-g5wc -->
     <PackageReference Include="Microsoft.OpenApi" Version="2.13.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
@@ -25,8 +25,8 @@
          instrumentation is deliberately absent: it ships prerelease only. -->
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.20.1" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.1" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.20.1" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.20.2" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.Http" Version="1.20.2" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" Version="1.20.1" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.7.1" />
     <PackageReference Include="NSwag.Core" Version="14.7.1" />

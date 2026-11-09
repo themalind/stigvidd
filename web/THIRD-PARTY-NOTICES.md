@@ -65,7 +65,7 @@ tree, and no package with a missing licence field.
 | @types/node                    | ^24.10.9   | MIT          |
 | @types/react                   | ^19.2.5    | MIT          |
 | @types/react-dom               | ^19.2.3    | MIT          |
-| @vitejs/plugin-react           | ^6.2.1     | MIT          |
+| @vitejs/plugin-react           | ^6.3.0     | MIT          |
 | class-variance-authority       | ^0.7.1     | Apache-2.0   |
 | clsx                           | ^2.1.1     | MIT          |
 | eslint                         | ^10.14.0   | MIT          |
