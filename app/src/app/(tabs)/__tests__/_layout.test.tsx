@@ -131,7 +131,7 @@ it("shows no events badge without invitations", async () => {
 it("keeps settings off the tab bar", async () => {
   await show();
 
-  expect(tab("(settings)").href).toBeNull();
+  expect(tab("(settings)").tabBarItemStyle).toEqual({ display: "none" });
   expect(tab("(settings)").tabBarIcon).toBeUndefined();
 });
 

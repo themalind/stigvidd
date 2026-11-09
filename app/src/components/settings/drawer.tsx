@@ -39,13 +39,13 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
   function handleTheme() {
     setActive("theme");
     onDismiss();
-    router.replace("/(tabs)/(settings)/theme");
+    router.navigate("/(tabs)/(settings)/theme");
   }
 
   function handleAbout() {
     setActive("about");
     onDismiss();
-    router.replace("/(tabs)/(settings)/about");
+    router.navigate("/(tabs)/(settings)/about");
   }
 
   async function handleSignOut() {
@@ -66,19 +66,19 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
     onDismiss();
     // Send login into the profile stack so the auth guard lands on the profile
     // page once signed in. The (settings) stack has no post-login destination.
-    router.replace("/(tabs)/(profile-stack)/login");
+    router.navigate("/(tabs)/(profile-stack)/login");
   }
 
   function handleGuide() {
     setActive("guide");
     onDismiss();
-    router.replace("/(tabs)/(settings)/guide");
+    router.navigate("/(tabs)/(settings)/guide");
   }
 
   function handlePrivacy() {
     setActive("privacy");
     onDismiss();
-    router.replace("/(tabs)/(settings)/privacy");
+    router.navigate("/(tabs)/(settings)/privacy");
   }
 
   return (

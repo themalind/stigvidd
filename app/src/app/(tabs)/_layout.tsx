@@ -136,7 +136,8 @@ export default function TabsLayout() {
         <Tabs.Screen
           name="(settings)"
           options={{
-            href: null,
+            // Off the bar only: a focused tab with href null redirects to the start tab. keep-comment: expo-router 58 behaviour
+            tabBarItemStyle: { display: "none" },
           }}
         />
       </Tabs>

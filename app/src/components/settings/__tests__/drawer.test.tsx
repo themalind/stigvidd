@@ -16,7 +16,7 @@ import { fireEvent, screen } from "@testing-library/react-native";
 import { Dimensions, StyleSheet } from "react-native";
 
 const mockLogout = jest.fn();
-const mockReplace = jest.fn();
+const mockNavigate = jest.fn();
 // Read inside the hook so a test can sign in before it renders; the "mock" prefix is what lets the
 // factory below reach it.
 let mockAuthenticated = false;
@@ -26,7 +26,7 @@ jest.mock("@/components/auth/auth-provider", () => ({
 }));
 
 jest.mock("expo-router", () => ({
-  router: { replace: (...args: unknown[]) => mockReplace(...args) },
+  router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
 }));
 
 const WIDTH = Dimensions.get("screen").width;
@@ -102,7 +102,7 @@ it("closes itself on the way to the guide", async () => {
 
   await press("Naturguide");
 
-  expect(mockReplace).toHaveBeenCalledWith("/(tabs)/(settings)/guide");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(settings)/guide");
   expect(onDismiss).toHaveBeenCalled();
 });
 
@@ -111,7 +111,7 @@ it("closes itself on the way to the about screen", async () => {
 
   await press("Om Stigvidd");
 
-  expect(mockReplace).toHaveBeenCalledWith("/(tabs)/(settings)/about");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(settings)/about");
   expect(onDismiss).toHaveBeenCalled();
 });
 
@@ -128,7 +128,7 @@ it("sends login into the profile stack", async () => {
 
   await press("Logga in");
 
-  expect(mockReplace).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/login");
   expect(onDismiss).toHaveBeenCalled();
 });
 
@@ -149,7 +149,7 @@ it("logs out without navigating anywhere", async () => {
 
   expect(mockLogout).toHaveBeenCalledTimes(1);
   expect(onDismiss).toHaveBeenCalled();
-  expect(mockReplace).not.toHaveBeenCalled();
+  expect(mockNavigate).not.toHaveBeenCalled();
 });
 
 // A logout that failed silently leaves a user who believes they are signed out.
@@ -182,7 +182,7 @@ it("opens the theme picker and closes behind itself", async () => {
 
   await press("Tema");
 
-  expect(mockReplace).toHaveBeenCalledWith("/(tabs)/(settings)/theme");
+  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(settings)/theme");
   expect(onDismiss).toHaveBeenCalled();
   expect(AsyncStorage.setItem).not.toHaveBeenCalled();
 });
