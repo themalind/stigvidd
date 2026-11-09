@@ -24,7 +24,7 @@ import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -52,11 +52,9 @@ export default function AdventureCard() {
     return Object.values(rest).filter((v) => v !== undefined).length + (hasLengthRange ? 1 : 0);
   }, [filters]);
 
-  useEffect(() => {
-    if (pick && !filteredTrails.some((trail) => trail.identifier === pick.identifier)) {
-      setPick(null);
-    }
-  }, [filteredTrails, pick]);
+  if (pick && !filteredTrails.some((trail) => trail.identifier === pick.identifier)) {
+    setPick(null);
+  }
 
   const roll = () => setPick(pickRandomTrail(filteredTrails, pick?.identifier));
 

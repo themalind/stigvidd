@@ -57,7 +57,7 @@ export default function ImageViewer({
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width: itemWidth, height: itemHeight } = useWindowDimensions();
-  const scrollX = React.useRef(new Animated.Value(0)).current;
+  const [scrollX] = useState(() => new Animated.Value(0));
   const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
   const [wasVisible, setWasVisible] = useState(visible);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);

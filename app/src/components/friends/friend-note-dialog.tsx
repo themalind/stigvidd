@@ -8,7 +8,7 @@
 import CountedTextInput from "@/components/counted-text-input";
 import DialogFrame, { DialogAction } from "@/components/dialog/dialog-frame";
 import { FRIEND_NOTE_MAX_LENGTH } from "@/constants/constants";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -26,9 +26,12 @@ export default function FriendNoteDialog({ visible, nickName, note, onDismiss, o
   const { t } = useTranslation();
   const [text, setText] = useState(note ?? "");
 
-  useEffect(() => {
+  const [synced, setSynced] = useState({ visible, note });
+
+  if (synced.visible !== visible || synced.note !== note) {
+    setSynced({ visible, note });
     if (visible) setText(note ?? "");
-  }, [visible, note]);
+  }
 
   const save = (value: string | null) => {
     onSave(value);

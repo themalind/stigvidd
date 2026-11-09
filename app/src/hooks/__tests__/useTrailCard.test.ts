@@ -227,6 +227,22 @@ describe("useTrailCards", () => {
     expect(mockGetTrailCards).not.toHaveBeenCalled();
   });
 
+  it("clears its cards and error when the identifier list empties", async () => {
+    const card1 = makeCard("t1");
+    mockGetItem.mockResolvedValueOnce(JSON.stringify({ data: card1, cachedAt: Date.now() })).mockResolvedValue(null);
+    mockGetTrailCards.mockRejectedValue(new Error("network error"));
+    const { result, rerender } = await renderHook((identifiers: string[]) => useTrailCards(identifiers), {
+      initialProps: ["t1", "t2"],
+    });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.cards).toEqual({ t1: card1 });
+
+    await rerender([]);
+
+    expect(result.current.cards).toEqual({});
+    expect(result.current.isError).toBe(false);
+  });
+
   it("serves every card from cache when all entries are fresh, without a batch fetch", async () => {
     const card1 = makeCard("t1");
     const card2 = makeCard("t2");

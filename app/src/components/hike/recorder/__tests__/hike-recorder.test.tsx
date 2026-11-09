@@ -307,6 +307,39 @@ it("shows the distance in kilometres, to two decimals", async () => {
 });
 
 // The stopwatch is wall clock, not GPS span, and the interval only runs while recording.
+it("leaves the camera on the route when a slow precise fix arrives after the walk has begun", async () => {
+  let resolveFix: (position: { coords: { latitude: number; longitude: number } }) => void = () => {};
+  mockCurrentPosition.mockReturnValue(
+    new Promise((resolve) => {
+      resolveFix = resolve;
+    }),
+  );
+  const { rerender } = await show();
+  await fireEvent(screen.getByTestId("maplibre-Map"), "didFinishLoadingMap");
+
+  mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000)]) });
+  await rerender(<HikeRecorder />);
+  await act(async () => {
+    resolveFix({ coords: { latitude: 57.73, longitude: 12.95 } });
+  });
+  await settle();
+
+  expect(camera().easeTo).not.toHaveBeenCalledWith(expect.objectContaining({ zoom: 16 }));
+});
+
+it("reads the time from the tracker's latest getActiveTime", async () => {
+  mockTracking = trackingState({ isTracking: true, currentSegment: segment([point(0, 1_000)]) });
+  const { rerender } = await show();
+
+  mockTracking = {
+    ...trackingState({ segments: [segment([point(0, 1_000), point(1, 2_000)])] }),
+    getActiveTime: jest.fn(() => 7_000),
+  };
+  await rerender(<HikeRecorder />);
+
+  expect(screen.getByText("00:00:07")).toBeTruthy();
+});
+
 it("ticks the timer once a second while recording, and stops when it does", async () => {
   jest.useFakeTimers();
   try {

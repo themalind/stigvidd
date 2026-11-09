@@ -40,6 +40,7 @@ export default function MapScreen() {
 
   const [isMapReady, setIsMapReady] = useState(false);
   const [isFocused, setIsFocused] = useState(true);
+  const [returnViewState, setReturnViewState] = useState<InitialViewState | null>(null);
   const [filters, setFilters] = useState<MapMarkerFilter>({
     trails: true,
     contributions: true,
@@ -116,6 +117,7 @@ export default function MapScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setReturnViewState(lastViewState.current);
       setIsFocused(true);
       return () => startTransition(() => setIsFocused(false));
     }, []),
@@ -123,7 +125,7 @@ export default function MapScreen() {
 
   // A cached fix seeds the camera so a warm return skips the Borås flash. keep-comment: why seed
   const seededViewState: InitialViewState | undefined =
-    lastViewState.current ??
+    returnViewState ??
     (userLocation && !userLocation.isFallback
       ? { center: [userLocation.longitude, userLocation.latitude], zoom: 12 }
       : undefined);

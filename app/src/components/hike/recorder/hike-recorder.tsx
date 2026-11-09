@@ -52,7 +52,9 @@ export default function HikeRecorder() {
 
   const [displayTime, setDisplayTime] = useState(0);
   const getActiveTimeRef = useRef(getActiveTime);
-  getActiveTimeRef.current = getActiveTime;
+  useEffect(() => {
+    getActiveTimeRef.current = getActiveTime;
+  });
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -85,7 +87,9 @@ export default function HikeRecorder() {
   // Kept in a ref so the one-shot load effect can read the latest route without
   // re-running when points come in.
   const routePositionsRef = useRef(routePositions);
-  routePositionsRef.current = routePositions;
+  useEffect(() => {
+    routePositionsRef.current = routePositions;
+  });
 
   // Camera commands sent before the native map has finished loading hit a view
   // whose tag can't be resolved yet (ReactTagResolver: resolved to null). Gate

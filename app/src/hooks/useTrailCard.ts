@@ -52,12 +52,13 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
   const [card, setCard] = useState<TrailCard | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  if (!identifier && (card !== null || isLoading)) {
+    setCard(null);
+    setIsLoading(false);
+  }
+
   useEffect(() => {
-    if (!identifier) {
-      setCard(null);
-      setIsLoading(false);
-      return;
-    }
+    if (!identifier) return;
 
     // cancelled flag prevents setState calls after the effect has been cleaned up
     // (e.g. user taps a different trail before the first fetch completes).
@@ -136,14 +137,15 @@ export function useTrailCards(identifiers: string[]): {
 
   const refetch = useCallback(() => setReloadIndex((i) => i + 1), []);
 
+  if (identifiers.length === 0 && (Object.keys(cards).length > 0 || isLoading || isError || notFound.size > 0)) {
+    setCards({});
+    setIsLoading(false);
+    setIsError(false);
+    setNotFound(new Set());
+  }
+
   useEffect(() => {
-    if (identifiers.length === 0) {
-      setCards({});
-      setIsLoading(false);
-      setIsError(false);
-      setNotFound(new Set());
-      return;
-    }
+    if (identifiers.length === 0) return;
 
     let cancelled = false;
 

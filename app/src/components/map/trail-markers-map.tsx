@@ -134,7 +134,7 @@ function ClusterSource({
   colors: MarkerColors;
   pointRadius: number;
   sourceRef: RefObject<GeoJSONSourceRef | null>;
-  onPress: (event: NativeSyntheticEvent<PressEventWithFeatures>) => void;
+  onPress: (event: NativeSyntheticEvent<PressEventWithFeatures>, sourceRef: RefObject<GeoJSONSourceRef | null>) => void;
 }) {
   return (
     <GeoJSONSource
@@ -144,7 +144,7 @@ function ClusterSource({
       cluster
       clusterRadius={60}
       clusterMaxZoom={CLUSTER_MAX_ZOOM}
-      onPress={onPress}
+      onPress={(event) => onPress(event, sourceRef)}
     >
       <Layer
         type="circle"
@@ -236,16 +236,13 @@ export default function TrailMarkersMap({
   // Dismiss a facility's name bubble as soon as its marker stops rendering — when
   // its type filter is turned off, or the accessibility filter hides it. Without
   // this the label lingers over an empty spot after the pin disappears.
-  useEffect(() => {
-    setSelectedFacility((prev) => {
-      if (!prev) return prev;
-      const typeVisible =
-        (prev.type === FacilityType.FirePit && filter.firePits) ||
-        (prev.type === FacilityType.Shelter && filter.shelters);
-      const accessibilityVisible = !filter.accessibility || prev.isAccessible;
-      return typeVisible && accessibilityVisible ? prev : null;
-    });
-  }, [filter.firePits, filter.shelters, filter.accessibility]);
+  if (selectedFacility) {
+    const typeVisible =
+      (selectedFacility.type === FacilityType.FirePit && filter.firePits) ||
+      (selectedFacility.type === FacilityType.Shelter && filter.shelters);
+    const accessibilityVisible = !filter.accessibility || selectedFacility.isAccessible;
+    if (!typeVisible || !accessibilityVisible) setSelectedFacility(null);
+  }
 
   const { data: trailMarkers, isError: trailMarkersError } = useQuery({
     queryKey: ["trails", "markers"],
@@ -306,7 +303,7 @@ export default function TrailMarkersMap({
   }, [highlight]);
 
   const handleTrailPress = useCallback(
-    (sourceRef: RefObject<GeoJSONSourceRef | null>) => async (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+    async (event: NativeSyntheticEvent<PressEventWithFeatures>, sourceRef: RefObject<GeoJSONSourceRef | null>) => {
       event.stopPropagation();
       setSelectedFacility(null);
       const feature = event.nativeEvent.features?.[0];
@@ -344,8 +341,8 @@ export default function TrailMarkersMap({
   );
 
   const handleFacilityPress = useCallback(
-    (type: FacilityTypeValue, sourceRef: RefObject<GeoJSONSourceRef | null>) =>
-      async (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+    (type: FacilityTypeValue) =>
+      async (event: NativeSyntheticEvent<PressEventWithFeatures>, sourceRef: RefObject<GeoJSONSourceRef | null>) => {
         // Stop the press from dismissing the map.
         event.stopPropagation();
         const feature = event.nativeEvent.features?.[0];
@@ -402,7 +399,7 @@ export default function TrailMarkersMap({
             data={trailFC}
             colors={MARKER_COLORS.trails}
             pointRadius={POINT_RADIUS}
-            onPress={handleTrailPress(trailSourceRef)}
+            onPress={handleTrailPress}
           />
         )}
 
@@ -413,7 +410,7 @@ export default function TrailMarkersMap({
             data={contributionFC}
             colors={MARKER_COLORS.contributions}
             pointRadius={POINT_RADIUS}
-            onPress={handleTrailPress(contributionSourceRef)}
+            onPress={handleTrailPress}
           />
         )}
 
@@ -424,7 +421,7 @@ export default function TrailMarkersMap({
             data={firePitFC}
             colors={MARKER_COLORS.firePits}
             pointRadius={FACILITY_POINT_RADIUS}
-            onPress={handleFacilityPress(FacilityType.FirePit, firePitSourceRef)}
+            onPress={handleFacilityPress(FacilityType.FirePit)}
           />
         )}
 
@@ -435,7 +432,7 @@ export default function TrailMarkersMap({
             data={shelterFC}
             colors={MARKER_COLORS.shelters}
             pointRadius={FACILITY_POINT_RADIUS}
-            onPress={handleFacilityPress(FacilityType.Shelter, shelterSourceRef)}
+            onPress={handleFacilityPress(FacilityType.Shelter)}
           />
         )}
 

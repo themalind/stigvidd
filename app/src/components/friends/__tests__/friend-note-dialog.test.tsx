@@ -47,6 +47,28 @@ it("saves a cleared note as a removal", async () => {
   expect(onSave).toHaveBeenCalledWith(null);
 });
 
+function dialog(visible: boolean, note: string | null) {
+  return <FriendNoteDialog visible={visible} nickName="anna" note={note} onDismiss={onDismiss} onSave={onSave} />;
+}
+
+it("drops a discarded edit when it is opened again", async () => {
+  const { rerender } = await renderWithProviders(dialog(true, "Från jobbet"));
+  await fireEvent.changeText(screen.getByTestId("note-input"), "Halvskriven");
+
+  await rerender(dialog(false, "Från jobbet"));
+  await rerender(dialog(true, "Från jobbet"));
+
+  expect(screen.getByTestId("note-input")).toHaveDisplayValue("Från jobbet");
+});
+
+it("picks up a note that changes while it is open", async () => {
+  const { rerender } = await renderWithProviders(dialog(true, "Från jobbet"));
+
+  await rerender(dialog(true, "Från klubben"));
+
+  expect(screen.getByTestId("note-input")).toHaveDisplayValue("Från klubben");
+});
+
 it("offers removal only when there is a note", async () => {
   await show(null);
 

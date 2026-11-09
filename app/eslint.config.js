@@ -8,13 +8,6 @@ module.exports = defineConfig([
     ignores: ["dist/*"],
   },
   {
-    // eslint-config-expo 58 turned these on over existing code that works; to be worked through separately.
-    rules: {
-      "react-hooks/refs": "warn",
-      "react-hooks/set-state-in-effect": "warn",
-    },
-  },
-  {
     // Manual mocks are modules Jest loads, not test files, so the patterns below do not
     // reach them — but they call jest.fn() all the same.
     files: ["**/__mocks__/**"],

@@ -126,6 +126,19 @@ it("marks which card is showing, and moves the mark when the list settles on ano
   expect(screen.getByText("2/3")).toBeTruthy();
 });
 
+it("starts on the first card when another cluster is opened", async () => {
+  const { rerender } = await show(["a", "b", "c"]);
+  await fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
+    nativeEvent: { contentOffset: { x: CARD_WIDTH + SCREEN_PADDING }, contentSize: {}, layoutMeasurement: {} },
+  });
+  expect(screen.getAllByTestId("carousel-dot")[1]).toHaveStyle({ width: 18 });
+
+  await rerender(<TrailCardCarousel identifiers={["a", "b"]} onClose={noop} onReadMore={noop} onShowOnMap={noop} />);
+
+  expect(screen.getAllByTestId("carousel-dot")[0]).toHaveStyle({ width: 18 });
+  expect(screen.getAllByTestId("carousel-dot")[1]).toHaveStyle({ width: 6 });
+});
+
 // A single card is the whole carousel, so dots would be one dot: noise.
 it("draws dots only for a cluster, with the active one widened", async () => {
   const { unmount } = await show(["a", "b", "c"]);

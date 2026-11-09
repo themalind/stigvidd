@@ -53,8 +53,12 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
 
   // Reset to the first card whenever a different cluster is opened — otherwise the
   // list keeps its previous scroll offset / index (e.g. lands on "3/4").
-  useEffect(() => {
+  const [shownIdentifiers, setShownIdentifiers] = useState(identifiers);
+  if (identifiers !== shownIdentifiers) {
+    setShownIdentifiers(identifiers);
     setActiveIndex(0);
+  }
+  useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [identifiers]);
 

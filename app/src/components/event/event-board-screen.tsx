@@ -75,21 +75,22 @@ function EventBoard({ identifier }: { identifier: string }) {
 
   const [pinsOpen, setPinsOpen] = useState(false);
   const listRef = useRef<FlatList<EventPost>>(null);
-  const [scrollTarget, setScrollTarget] = useState<string | null>(null);
+  const scrollTarget = useRef<string | null>(null);
+  const [scrollRequest, setScrollRequest] = useState(0);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = board;
   // An older pin may lie beyond the loaded pages, so pages are fetched until it appears. keep-comment: why the effect pages
   useEffect(() => {
-    if (scrollTarget === null) return;
-    const index = posts.findIndex((post) => post.identifier === scrollTarget);
+    if (scrollTarget.current === null) return;
+    const index = posts.findIndex((post) => post.identifier === scrollTarget.current);
     if (index >= 0) {
-      setScrollTarget(null);
+      scrollTarget.current = null;
       listRef.current?.scrollToIndex({ index, viewPosition: 0.5 });
     } else if (hasNextPage) {
       if (!isFetchingNextPage) void fetchNextPage();
     } else {
-      setScrollTarget(null);
+      scrollTarget.current = null;
     }
-  }, [scrollTarget, posts, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [scrollRequest, posts, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const canModerate = event.data?.permissions.canPinOrDeletePosts ?? false;
   const pin = pinMutation.mutate;
@@ -168,7 +169,15 @@ function EventBoard({ identifier }: { identifier: string }) {
         />
       </View>
 
-      {pinsOpen ? <EventPinnedPosts pinned={pinned} onSelect={(post) => setScrollTarget(post.identifier)} /> : null}
+      {pinsOpen ? (
+        <EventPinnedPosts
+          pinned={pinned}
+          onSelect={(post) => {
+            scrollTarget.current = post.identifier;
+            setScrollRequest((request) => request + 1);
+          }}
+        />
+      ) : null}
 
       <FlatList
         ref={listRef}

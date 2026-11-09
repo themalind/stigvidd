@@ -71,7 +71,9 @@ export default function ImageGallery({ images }: GalleryProps) {
   );
 
   const retryFailedRef = useRef(retryFailed);
-  retryFailedRef.current = retryFailed;
+  useEffect(() => {
+    retryFailedRef.current = retryFailed;
+  });
   useEffect(() => {
     if (isOnline) retryFailedRef.current();
   }, [isOnline]);

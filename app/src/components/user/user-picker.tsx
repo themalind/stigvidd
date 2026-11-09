@@ -12,7 +12,7 @@ import { FRIENDS_STALE_TIME, USER_SEARCH_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, MAX_SHARE_RECIPIENTS, MIN_USER_SEARCH_LENGTH } from "@/constants/constants";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Checkbox, Chip, Divider, Icon, Text, TextInput, useTheme } from "react-native-paper";
@@ -58,11 +58,13 @@ export default function UserPicker({
   const currentUser = useAtomValue(stigviddUserAtom);
   const authUser = useAtomValue(userAtom);
   const [selected, setSelected] = useState<string[]>(initialSelected ?? []);
-  useEffect(() => {
+  const [appliedDrop, setAppliedDrop] = useState<typeof dropNickNames>(undefined);
+  if (dropNickNames !== appliedDrop) {
+    setAppliedDrop(dropNickNames);
     if (dropNickNames && dropNickNames.length > 0) {
       setSelected((prev) => prev.filter((nickName) => !dropNickNames.includes(nickName)));
     }
-  }, [dropNickNames]);
+  }
   const [search, setSearch] = useState("");
   const query = useDeferredValue(search.trim());
   const searching = searchable && query.length >= MIN_USER_SEARCH_LENGTH;
