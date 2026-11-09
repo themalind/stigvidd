@@ -23,6 +23,7 @@ jest.mock("@/services/logger", () => ({
 jest.mock("@/services/keycloak-auth", () => ({ getValidAccessToken: jest.fn() }));
 
 import { getValidAccessToken } from "@/services/keycloak-auth";
+import { File } from "expo-file-system";
 import { ApiError, problemStrings } from "../api-error";
 import { getAreaByIdentifier, getAreas } from "../areas";
 import {
@@ -1131,19 +1132,18 @@ describe("endpoints that are not plain JSON", () => {
 
   it("createReview appends one image part per uri, each as a jpeg", async () => {
     const fetchMock = mockFetch(true);
-    await createReview({ trailIdentifier: "t1", review: "Fin led", rating: 4, imageUris: ["file://a", "file://b"] });
+    await createReview({
+      trailIdentifier: "t1",
+      review: "Fin led",
+      rating: 4,
+      imageUris: ["file:///cache/a.jpg", "file:///cache/b.jpg"],
+    });
 
     const body = fetchMock.mock.calls[0][1].body as unknown as RecordingFormData;
-    const images = body.parts.filter(([key]) => key === "images") as [
-      string,
-      { bytes: () => Promise<Uint8Array>; type: string; name: string },
-    ][];
+    const images = body.parts.filter(([key]) => key === "images").map(([, part]) => part);
     expect(images).toHaveLength(2);
-    expect(images.every(([, part]) => typeof part.bytes === "function")).toBe(true);
-    expect(images.every(([, part]) => part.type === "image/jpeg")).toBe(true);
-    // Names are generated per part, so two images can never collide server-side.
-    expect(images[0][1].name).not.toBe(images[1][1].name);
-    expect(images.every(([, part]) => part.name.endsWith(".jpg"))).toBe(true);
+    expect(images.every((part) => part instanceof File)).toBe(true);
+    expect(images.map((part) => (part as File).uri)).toEqual(["file:///cache/a.jpg", "file:///cache/b.jpg"]);
   });
 
   // Setting Content-Type by hand drops the multipart boundary and the upload fails server-side.
@@ -1158,15 +1158,15 @@ describe("endpoints that are not plain JSON", () => {
 
   it("setEventImage posts the cover as one multipart image part", async () => {
     const fetchMock = mockFetch(true);
-    await setEventImage("e1", "file://cover");
+    await setEventImage("e1", "file:///cache/cover.jpg");
 
     const init = fetchMock.mock.calls[0][1];
     const body = init.body as unknown as RecordingFormData;
     expect(body.parts).toHaveLength(1);
-    const [key, part] = body.parts[0] as [string, { bytes: () => Promise<Uint8Array>; type: string }];
+    const [key, part] = body.parts[0];
     expect(key).toBe("image");
-    expect(part.type).toBe("image/jpeg");
-    expect(typeof part.bytes).toBe("function");
+    expect(part).toBeInstanceOf(File);
+    expect((part as File).uri).toBe("file:///cache/cover.jpg");
     expect((init.headers as Record<string, string>)["Content-Type"]).toBeUndefined();
   });
 

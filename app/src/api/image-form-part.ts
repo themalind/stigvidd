@@ -6,14 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { File } from "expo-file-system";
-import uuid from "react-native-uuid";
 
-// expo/fetch, the global fetch since SDK 58, rejects React Native's { uri, type, name } part. keep-comment: hidden platform constraint, every upload must use this
-export function imageFormPart(uri: string): Blob {
-  const part = {
-    name: `${uuid.v4()}.jpg`,
-    type: "image/jpeg",
-    bytes: () => new File(uri).bytes(),
-  };
-  return part as unknown as Blob;
+// expo/fetch, the global fetch since SDK 58, sends a File but rejects React Native's { uri, type, name } part. keep-comment: hidden platform constraint, every upload must use this
+export function imageFormPart(uri: string): File {
+  return new File(uri);
 }

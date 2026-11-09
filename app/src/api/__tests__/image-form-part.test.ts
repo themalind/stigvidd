@@ -13,10 +13,14 @@ import { imageFormPart } from "../image-form-part";
 const mockBytes = jest.fn();
 const mockFileUris: string[] = [];
 
+// Shaped like expo-file-system's File: a name and type from the path, bytes read on demand.
 jest.mock("expo-file-system", () => ({
   File: class {
+    name: string;
+    type = "image/jpeg";
     constructor(uri: string) {
       mockFileUris.push(uri);
+      this.name = uri.split("/").pop() ?? "";
     }
     bytes() {
       return mockBytes();
@@ -31,29 +35,23 @@ function formWith(part: unknown) {
 
 beforeEach(() => {
   mockFileUris.length = 0;
-  mockBytes.mockResolvedValue(new Uint8Array([65, 66, 67]));
+  mockBytes.mockReset().mockResolvedValue(new Uint8Array([65, 66, 67]));
 });
 
 it("becomes a jpeg part of the multipart body, with the file's bytes", async () => {
-  const { body, boundary } = await convertFormDataAsync(formWith(imageFormPart("file:///photo.jpg")));
+  const { body, boundary } = await convertFormDataAsync(formWith(imageFormPart("file:///cache/photo.jpg")));
   const text = new TextDecoder().decode(body);
 
-  expect(mockFileUris).toEqual(["file:///photo.jpg"]);
+  expect(mockFileUris).toEqual(["file:///cache/photo.jpg"]);
   expect(text).toContain(`--${boundary}\r\n`);
-  expect(text).toMatch(/content-disposition: form-data; name="image"; filename="[\w-]+\.jpg"\r\n/);
+  expect(text).toContain('content-disposition: form-data; name="image"; filename="photo.jpg"\r\n');
   expect(text).toContain("content-type: image/jpeg\r\n\r\nABC\r\n");
 });
 
-it("gets a new name per part, so two images cannot collide on the server", () => {
-  const [first, second] = [imageFormPart("file://a"), imageFormPart("file://b")] as unknown as { name: string }[];
-
-  expect(first.name).not.toBe(second.name);
-});
-
 it("leaves the file unread until the upload needs it", () => {
-  imageFormPart("file:///photo.jpg");
+  imageFormPart("file:///cache/photo.jpg");
 
-  expect(mockFileUris).toEqual([]);
+  expect(mockBytes).not.toHaveBeenCalled();
 });
 
 // The format every upload used until SDK 58: this is what broke them.
@@ -67,7 +65,7 @@ it("is the only way an api module builds a file part", () => {
   const apiDir = path.join(__dirname, "..");
   const sources = readdirSync(apiDir).filter((file) => /\.tsx?$/.test(file));
   const offenders = sources.filter((file) =>
-    /type:\s*"image\/jpeg"/.test(readFileSync(path.join(apiDir, file), "utf8")),
+    /\{\s*uri[,:]|new File\(/.test(readFileSync(path.join(apiDir, file), "utf8")),
   );
 
   expect(offenders).toEqual(["image-form-part.ts"]);
