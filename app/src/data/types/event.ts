@@ -197,6 +197,7 @@ export interface EventRequest {
 
 export interface CreateEventRequest extends EventRequest {
   visibility: EventVisibility;
+  clientRequestId: string;
 }
 
 export interface UpdateEventRequest extends EventRequest {

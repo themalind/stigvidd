@@ -18,5 +18,8 @@ public class HikeConfiguration : IEntityTypeConfiguration<Hike>
 
         builder.Property(h => h.HikeLength)
             .HasPrecision(18, 2);
+
+        builder.HasIndex(h => h.ClientRequestId)
+            .IsUnique();
     }
 }

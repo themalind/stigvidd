@@ -7,6 +7,8 @@ namespace Infrastructure.Data.Entities;
 
 public class EventPost : BaseEntity
 {
+    // Set by the app, so a retried save finds the row instead of adding another.
+    public Guid? ClientRequestId { get; set; }
     public int EventId { get; set; }
     public int? UserId { get; set; }
     public required string Body { get; set; }

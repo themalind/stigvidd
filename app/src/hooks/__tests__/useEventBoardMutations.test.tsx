@@ -74,6 +74,20 @@ describe("useEventBoardMutations", () => {
     expect(invalidated(FEED)).toBe(false);
   });
 
+  it("sends one key for a retried post and a new key for the next post", async () => {
+    mockCreatePost.mockRejectedValueOnce(new Error("offline")).mockResolvedValue({});
+    const { post } = await render();
+
+    await post();
+    await post();
+    await post();
+
+    const [first, retry, next] = mockCreatePost.mock.calls.map((call) => call[2]);
+    expect(first).toEqual(expect.any(String));
+    expect(retry).toBe(first);
+    expect(next).not.toBe(first);
+  });
+
   it("clears the unread count on this event's detail once the board is read", async () => {
     const { queryClient, markRead } = await render();
     const detail = ["events", "detail", "e1", "u1"];

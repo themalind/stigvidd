@@ -6,6 +6,7 @@ namespace WebDataContracts.RequestModels.Event;
 public class EventPostRequest
 {
     public required string Body { get; set; }
+    public Guid? ClientRequestId { get; set; }
 }
 
 public class EventPostPinRequest

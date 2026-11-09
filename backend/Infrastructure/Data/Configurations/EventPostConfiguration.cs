@@ -30,5 +30,8 @@ public class EventPostConfiguration : IEntityTypeConfiguration<EventPost>
 
         builder.HasIndex(p => p.Identifier)
             .IsUnique();
+
+        builder.HasIndex(p => p.ClientRequestId)
+            .IsUnique();
     }
 }

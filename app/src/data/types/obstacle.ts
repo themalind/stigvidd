@@ -16,6 +16,7 @@ export interface CreateTrailObstacleRequest {
   trailIdentifier: string;
   incidentLongitude: number | null;
   incidentLatitude: number | null;
+  clientRequestId: string;
 }
 
 export interface TrailObstacle {

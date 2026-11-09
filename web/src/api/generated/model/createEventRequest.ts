@@ -9,4 +9,6 @@ import type { EventRequest } from "./eventRequest";
 
 export type CreateEventRequest = EventRequest & {
   visibility: string;
+  /** @nullable */
+  clientRequestId?: string | null;
 };

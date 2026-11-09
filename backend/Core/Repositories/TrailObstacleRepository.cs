@@ -77,10 +77,25 @@ public class TrailObstacleRepository : ITrailObstacleRepository
     {
         try
         {
+            if (await FindRetriedAsync(obstacle, ctoken) is TrailObstacle retried)
+                return RepositoryResult<TrailObstacle>.Success(retried);
+
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             context.TrailObstacles.Add(obstacle);
-            await context.SaveChangesAsync(ctoken);
+
+            try
+            {
+                await context.SaveChangesAsync(ctoken);
+            }
+            catch (DbUpdateException) when (obstacle.ClientRequestId is not null)
+            {
+                // keep-comment: the first attempt can still be in flight when the retry arrives
+                if (await FindRetriedAsync(obstacle, ctoken) is TrailObstacle winner)
+                    return RepositoryResult<TrailObstacle>.Success(winner);
+
+                throw;
+            }
 
             await context.Entry(obstacle).Reference(o => o.User).LoadAsync(ctoken);
             await context.Entry(obstacle).Collection(o => o.SolvedVotes).LoadAsync(ctoken);
@@ -92,6 +107,20 @@ public class TrailObstacleRepository : ITrailObstacleRepository
             _logger.LogError(ex, "TrailObstacleRepository: AddTrailObstacleAsync -> Something went wrong when adding trail obstacle.");
             return RepositoryResult<TrailObstacle>.Error();
         }
+    }
+
+    private async Task<TrailObstacle?> FindRetriedAsync(TrailObstacle obstacle, CancellationToken ctoken)
+    {
+        if (obstacle.ClientRequestId is null)
+            return null;
+
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        return await context.TrailObstacles
+            .IgnoreQueryFilters(["Moderation"])
+            .Include(o => o.User)
+            .Include(o => o.SolvedVotes)
+            .FirstOrDefaultAsync(o => o.ClientRequestId == obstacle.ClientRequestId && o.UserId == obstacle.UserId, ctoken);
     }
 
     public async Task<RepositoryResult> AddSolvedVoteAsync(TrailObstacleSolvedVote solvedVote, CancellationToken ctoken)

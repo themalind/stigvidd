@@ -84,6 +84,24 @@ it("saves the walk under the name it was given", async () => {
   );
 });
 
+// The save can land although its answer is lost, so going back and saving again must be seen as a retry.
+it("sends the same key when the form is reopened after a failed save", async () => {
+  mockCreateHike.mockRejectedValue(new Error("offline"));
+  const active = hike();
+  const first = await show(active);
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
+  await save();
+  await first.unmount();
+
+  await show(active);
+  await fireEvent.changeText(nameField(), "Kvällspromenad");
+  await save();
+
+  const [[firstSave], [secondSave]] = mockCreateHike.mock.calls;
+  expect(firstSave.clientRequestId).toEqual(expect.any(String));
+  expect(secondSave.clientRequestId).toBe(firstSave.clientRequestId);
+});
+
 // The field defaults to "" rather than undefined, so an untouched form is "too short", never "missing".
 it("refuses a name shorter than three characters, empty included", async () => {
   await show();

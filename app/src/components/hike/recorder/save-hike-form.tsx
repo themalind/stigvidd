@@ -17,6 +17,7 @@ import { asTranslationKey } from "@/i18n";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { lineStringFromPositions } from "@/utils/geojson";
 import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
+import { recordingRequestKey } from "@/utils/recording-request-key";
 import { recomputeTrimmedHike } from "@/utils/trim-hike";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Slider } from "@miblanchard/react-native-slider";
@@ -99,6 +100,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
       hikeLength: trimmed.distance,
       duration: trimmed.duration,
       coordinates: trimmed.coordinates,
+      clientRequestId: recordingRequestKey(hike),
     };
     mutate(newHike);
   };

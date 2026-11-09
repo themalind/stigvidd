@@ -18,6 +18,7 @@ public interface IEventRepository
     Task<RepositoryResult<int>> CountCreatedSinceAsync(int userId, DateTime since, CancellationToken ctoken);
     // Records EventCreated in the same save and prunes the creator's log rows older than createdLogWindow. keep-comment: the window belongs to EventLimits, not the repository
     Task<RepositoryResult<string>> CreateAsync(Event newEvent, int organizerUserId, TimeSpan createdLogWindow, CancellationToken ctoken);
+    Task<RepositoryResult<string>> FindRetriedAsync(Guid clientRequestId, int organizerUserId, CancellationToken ctoken);
     Task<RepositoryResult<EventCard>> GetPublicCardAsync(string identifier, DateTime now, CancellationToken ctoken);
     Task<RepositoryResult<EventDetail>> GetDetailAsync(string identifier, int viewerId, CancellationToken ctoken);
 

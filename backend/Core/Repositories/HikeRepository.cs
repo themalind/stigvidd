@@ -25,10 +25,25 @@ public class HikeRepository : IHikeRepository
     {
         try
         {
+            if (await FindRetriedAsync(hike, ctoken) is Hike retried)
+                return RepositoryResult<Hike>.Success(retried);
+
             using var context = await _context.CreateDbContextAsync(ctoken);
 
             context.Hikes.Add(hike);
-            await context.SaveChangesAsync(ctoken);
+
+            try
+            {
+                await context.SaveChangesAsync(ctoken);
+            }
+            catch (DbUpdateException) when (hike.ClientRequestId is not null)
+            {
+                // keep-comment: the first attempt can still be in flight when the retry arrives
+                if (await FindRetriedAsync(hike, ctoken) is Hike winner)
+                    return RepositoryResult<Hike>.Success(winner);
+
+                throw;
+            }
 
             return RepositoryResult<Hike>.Success(hike);
         }
@@ -37,6 +52,18 @@ public class HikeRepository : IHikeRepository
             _logger.LogError(ex, "HikeRepository: CreateHikeAsync -> Something went wrong when creating hike.");
             return RepositoryResult<Hike>.Error();
         }
+    }
+
+    private async Task<Hike?> FindRetriedAsync(Hike hike, CancellationToken ctoken)
+    {
+        if (hike.ClientRequestId is null)
+            return null;
+
+        using var context = await _context.CreateDbContextAsync(ctoken);
+
+        return await context.Hikes
+            .Include(h => h.Images)
+            .FirstOrDefaultAsync(h => h.ClientRequestId == hike.ClientRequestId && h.UserId == hike.UserId, ctoken);
     }
 
     public async Task<RepositoryResult<int>> GetHikeIdByIdentifierAsync(string identifier, CancellationToken ctoken)

@@ -24,5 +24,8 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
         // Every event action starts by looking the event up by Identifier. keep-comment: hot path, not only uniqueness
         builder.HasIndex(e => e.Identifier)
             .IsUnique();
+
+        builder.HasIndex(e => e.ClientRequestId)
+            .IsUnique();
     }
 }

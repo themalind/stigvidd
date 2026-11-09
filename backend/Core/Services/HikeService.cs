@@ -109,7 +109,8 @@ public class HikeService : IHikeService
             ParkingInfo = request?.ParkingInfo,
             GettingThere = request?.GettingThere,
             Description = request?.Description,
-            CreatedByNickName = userResult.Value.NickName
+            CreatedByNickName = userResult.Value.NickName,
+            ClientRequestId = request?.ClientRequestId,
         };
 
         var result = await _hikeRepository.CreateHikeAsync(hike, ctoken);

@@ -14,4 +14,6 @@ export interface TrailObstacleRequest {
   incidentLongitude?: number | null;
   /** @nullable */
   incidentLatitude?: number | null;
+  /** @nullable */
+  clientRequestId?: string | null;
 }

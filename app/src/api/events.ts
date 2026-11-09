@@ -226,13 +226,13 @@ export function getEventPosts(identifier: string, cursor?: string): Promise<Even
   });
 }
 
-export function createEventPost(identifier: string, body: string): Promise<EventPost> {
+export function createEventPost(identifier: string, body: string, clientRequestId: string): Promise<EventPost> {
   return sendForJson({
     name: "createEventPost",
     method: "POST",
     path: `${eventPath(identifier)}/posts`,
     endpoint: "/events/{param}/posts",
-    body: { body },
+    body: { body, clientRequestId },
   });
 }
 

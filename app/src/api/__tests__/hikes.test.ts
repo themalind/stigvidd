@@ -61,6 +61,7 @@ const createRequest: CreateHikeRequest = {
     { latitude: 59.3, longitude: 18.0 },
     { latitude: 59.4, longitude: 18.1 },
   ],
+  clientRequestId: "55555555-5555-4555-8555-555555555555",
 };
 
 const updateRequest: UpdateHikeRequest = {

@@ -53,6 +53,18 @@ public class EventService : IEventService
         if (viewer.Message is not null)
             return Result.Fail<EventResponse>(viewer.Message);
 
+        // keep-comment: before the limits, or a retry at the daily cap is refused although the event exists
+        if (request.ClientRequestId is Guid key)
+        {
+            var retried = await _eventRepository.FindRetriedAsync(key, viewer.Value, ctoken);
+
+            if (retried.Status == RepositoryResultStatus.Error)
+                return Result.Fail<EventResponse>(new Message(500, "An error occurred while creating the event."));
+
+            if (retried.IsSuccess)
+                return await GetAsync(userIdentifier, retried.Value, ctoken);
+        }
+
         var now = DateTime.UtcNow;
 
         var upcoming = await _eventRepository.CountUpcomingAsOrganizerAsync(viewer.Value, now, ctoken);
@@ -85,6 +97,7 @@ public class EventService : IEventService
             AllowParticipantInvites = request.AllowParticipantInvites,
             Status = EventStatus.Published,
             ModerationState = ModerationState.Visible,
+            ClientRequestId = request.ClientRequestId,
         };
         Apply(newEvent, request, place.Value);
 

@@ -31,6 +31,7 @@ export interface CreateHikeRequest {
   hikeLength: number;
   duration: number;
   coordinates: LatLng[];
+  clientRequestId: string;
 }
 
 export interface DeleteHikeRequest {

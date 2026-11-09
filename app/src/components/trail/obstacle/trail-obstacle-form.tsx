@@ -14,6 +14,7 @@ import ModalFormScrollView from "@/components/modal-form-scroll-view";
 import SelectInput from "@/components/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
+import { useRetryKey } from "@/hooks/useRetryKey";
 import { CreateTrailObstacleRequest } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";
 import { isNearTrail } from "@/utils/haversine";
@@ -64,6 +65,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const queryClient = useQueryClient();
   const { modalStyle, maxHeight } = useModalKeyboardLift(0.8);
+  const { keyFor, forget } = useRetryKey();
 
   // keep-comment: always mounted inside UserBar, so the visible gate stops these firing on every trail-detail load
   const { data: issueTypes } = useQuery({
@@ -78,6 +80,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   const { mutate, isPending } = useMutation({
     mutationFn: (obstacle: CreateTrailObstacleRequest) => createTrailObstacle(obstacle),
     onSuccess: () => {
+      forget();
       queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
       reset();
       onDismiss();
@@ -107,7 +110,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
   });
 
   const onSubmit: SubmitHandler<FormFields> = (data) => {
-    const newObstacle: CreateTrailObstacleRequest = {
+    const newObstacle = {
       trailIdentifier,
       description: data.description,
       issueType: data.issueType,
@@ -115,7 +118,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
       incidentLongitude: data.incidentLongitude ?? null,
     };
 
-    mutate(newObstacle);
+    mutate({ ...newObstacle, clientRequestId: keyFor(newObstacle) });
   };
 
   const handleLocationToggle = async (enabled: boolean, onChange: (val: boolean) => void) => {

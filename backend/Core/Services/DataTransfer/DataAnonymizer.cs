@@ -27,7 +27,7 @@ public static class DataAnonymizer
                 kept: "Id CreatedAt LastUpdatedAt EmailVerifiedAt",
                 replaced: "NickName Email SubjectId Identifier"),
             ["Hikes"] = Table(
-                kept: "Id Identifier CreatedAt LastUpdatedAt Name Description ParkingInfo GettingThere GeoPath HikeLength Duration UserId",
+                kept: "Id Identifier CreatedAt LastUpdatedAt Name Description ParkingInfo GettingThere GeoPath HikeLength Duration UserId ClientRequestId",
                 replaced: "CreatedBy CreatedByNickName"),
             ["Trails"] = Table(
                 kept: "Id Identifier CreatedAt LastUpdatedAt Accessibility AccessibilityInfo City Classification Description FullDescription GeoPath IsVerified Name Tags TrailLength TrailSymbol TrailSymbolImage",
@@ -61,7 +61,7 @@ public static class DataAnonymizer
             ["UserBlocks"] = Table(kept: "BlockerUserId BlockedUserId CreatedAt"),
             ["UserFavorites"] = Table(kept: "UserId TrailId"),
             ["UserWishList"] = Table(kept: "UserId TrailId"),
-            ["TrailObstacles"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt Description IncidentLocation IssueType ModerationState TrailId UserId"),
+            ["TrailObstacles"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt Description IncidentLocation IssueType ModerationState TrailId UserId ClientRequestId"),
             ["TrailObstacleSolvedVotes"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt TrailObstacleId UserId"),
             ["TrailImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt AltText Caption Height ImageUrl SizeBytes SortOrder TrailId Width"),
             ["TrailLinks"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt Link Title TrailId"),
@@ -77,7 +77,7 @@ public static class DataAnonymizer
             ["MediaReprocessJobs"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt OptionsJson"),
             ["MediaReprocessItems"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt JobId LastError MediaIdentifier OwnerType Status"),
             ["Events"] = Table(
-                kept: "Id Identifier CreatedAt LastUpdatedAt TrailId MeetingPoint Location StartsAt EndsAt PastAfter RegistrationDeadline MaxParticipants ParticipantCount Visibility AllowParticipantInvites Status CancelledAt ModerationState",
+                kept: "Id Identifier CreatedAt LastUpdatedAt TrailId MeetingPoint Location StartsAt EndsAt PastAfter RegistrationDeadline MaxParticipants ParticipantCount Visibility AllowParticipantInvites Status CancelledAt ModerationState ClientRequestId",
                 replaced: "Title Description",
                 cleared: "LocationName MeetingPointName"),
             ["EventParticipants"] = Table(kept: "EventId UserId Role Status JoinedAt MutePosts LastPostPushAt LastReadPostAt"),
@@ -85,7 +85,7 @@ public static class DataAnonymizer
             ["EventImages"] = Table(kept: "Id Identifier CreatedAt LastUpdatedAt EventId ImageUrl ModerationState"),
             ["EventRoutes"] = Table(kept: "EventId Path LengthMetres"),
             ["EventPosts"] = Table(
-                kept: "Id Identifier CreatedAt LastUpdatedAt EventId UserId IsPinned EditedAt ModerationState",
+                kept: "Id Identifier CreatedAt LastUpdatedAt EventId UserId IsPinned EditedAt ModerationState ClientRequestId",
                 replaced: "Body"),
         };
 

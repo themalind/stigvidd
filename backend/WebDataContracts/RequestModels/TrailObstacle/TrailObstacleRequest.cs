@@ -10,4 +10,5 @@ public class TrailObstacleRequest
     public required string IssueType { get; set; }
     public decimal? IncidentLongitude { get; set; }
     public decimal? IncidentLatitude { get; set; }
+    public Guid? ClientRequestId { get; set; }
 }

@@ -79,6 +79,7 @@ public class TrailObstaclesController : StigViddController
             obstacleRequest.IssueType,
             obstacleRequest.IncidentLongitude,
             obstacleRequest.IncidentLatitude,
+            obstacleRequest.ClientRequestId,
             ctoken);
 
         if (!result.Success && result.Message != null)

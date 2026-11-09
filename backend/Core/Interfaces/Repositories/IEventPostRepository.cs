@@ -25,8 +25,8 @@ public interface IEventPostRepository
 {
     Task<RepositoryResult<EventBoardPage>> GetBoardAsync(int eventId, int viewerId, int[] hiddenUserIds, EventPageKey? before, int limit, bool includePinned, CancellationToken ctoken);
 
-    // NotFound means the author is no longer a joined participant. NotifyUserIds are those due a push; their LastPostPushAt is already moved in the same save. keep-comment: the throttle is written with the post
-    Task<RepositoryResult<CreatedEventPost>> CreateAsync(int eventId, int authorId, string body, DateTime now, TimeSpan pushThrottle, CancellationToken ctoken);
+    // NotFound means the author is no longer a joined participant. NotifyUserIds are those due a push; their LastPostPushAt is already moved in the same save, and a retried post gets none. keep-comment: the throttle is written with the post
+    Task<RepositoryResult<CreatedEventPost>> CreateAsync(int eventId, int authorId, string body, Guid? clientRequestId, DateTime now, TimeSpan pushThrottle, CancellationToken ctoken);
 
     // A post hidden by a report is NotFound, as for its author. keep-comment: the Moderation filter applies
     Task<RepositoryResult<EventPostTarget>> FindAsync(string postIdentifier, CancellationToken ctoken);

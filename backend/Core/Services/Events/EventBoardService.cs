@@ -84,7 +84,7 @@ public class EventBoardService : IEventBoardService
             return Result.Fail<EventPostResponse>(refusal);
 
         var e = loaded.Value.Detail.Event;
-        var created = await _postRepository.CreateAsync(e.Id, loaded.Value.ViewerId, request.Body, DateTime.UtcNow, _limits.PostPushThrottle, ctoken);
+        var created = await _postRepository.CreateAsync(e.Id, loaded.Value.ViewerId, request.Body, request.ClientRequestId, DateTime.UtcNow, _limits.PostPushThrottle, ctoken);
 
         if (created.Status == RepositoryResultStatus.NotFound)
             return Result.Fail<EventPostResponse>(await RefusedSinceAsync(userIdentifier, identifier, ctoken));

@@ -78,7 +78,7 @@ public class EventPostRepository : IEventPostRepository
     }
 
     // Muted readers, readers pushed within the throttle and readers who blocked the author get nothing, and their LastPostPushAt stays. keep-comment: a blocker must not be throttled by a push they never got
-    public async Task<RepositoryResult<CreatedEventPost>> CreateAsync(int eventId, int authorId, string body, DateTime now, TimeSpan pushThrottle, CancellationToken ctoken)
+    public async Task<RepositoryResult<CreatedEventPost>> CreateAsync(int eventId, int authorId, string body, Guid? clientRequestId, DateTime now, TimeSpan pushThrottle, CancellationToken ctoken)
     {
         try
         {
@@ -93,8 +93,12 @@ public class EventPostRepository : IEventPostRepository
             if (author is null)
                 return RepositoryResult<CreatedEventPost>.NotFound();
 
+            if (await FindRetriedAsync(context, clientRequestId, eventId, authorId, ctoken) is EventPostRow retried)
+                return RepositoryResult<CreatedEventPost>.Success(new CreatedEventPost(retried, []));
+
             var post = new EventPost
             {
+                ClientRequestId = clientRequestId,
                 EventId = eventId,
                 UserId = authorId,
                 Body = body.Trim(),
@@ -116,7 +120,23 @@ public class EventPostRepository : IEventPostRepository
             foreach (var reader in due)
                 reader.LastPostPushAt = now;
 
-            await context.SaveChangesAsync(ctoken);
+            try
+            {
+                await context.SaveChangesAsync(ctoken);
+            }
+            catch (DbUpdateException) when (clientRequestId is not null)
+            {
+                await transaction.RollbackAsync(ctoken);
+
+                // keep-comment: the first attempt can still be in flight when the retry arrives, and it already sent the push
+                using var fresh = await _context.CreateDbContextAsync(ctoken);
+
+                if (await FindRetriedAsync(fresh, clientRequestId, eventId, authorId, ctoken) is EventPostRow winner)
+                    return RepositoryResult<CreatedEventPost>.Success(new CreatedEventPost(winner, []));
+
+                throw;
+            }
+
             await transaction.CommitAsync(ctoken);
 
             var row = new EventPostRow(post.Id, post.Identifier, authorId, author.Identifier, author.NickName, post.Body, false, now, null);
@@ -127,6 +147,27 @@ public class EventPostRepository : IEventPostRepository
             _logger.LogError(ex, "EventPostRepository: CreateAsync -> Something went wrong when user {UserId} posted on event {EventId}.", authorId, eventId);
             return RepositoryResult<CreatedEventPost>.Error();
         }
+    }
+
+    private static Task<EventPostRow?> FindRetriedAsync(StigViddDbContext context, Guid? clientRequestId, int eventId, int authorId, CancellationToken ctoken)
+    {
+        if (clientRequestId is null)
+            return Task.FromResult<EventPostRow?>(null);
+
+        return context.EventPosts
+            .IgnoreQueryFilters(["Moderation"])
+            .Where(p => p.ClientRequestId == clientRequestId && p.EventId == eventId && p.UserId == authorId)
+            .Select(p => new EventPostRow(
+                p.Id,
+                p.Identifier,
+                p.UserId,
+                p.User == null ? null : p.User.Identifier,
+                p.User == null ? null : p.User.NickName,
+                p.Body,
+                p.IsPinned,
+                p.CreatedAt,
+                p.EditedAt))
+            .FirstOrDefaultAsync(ctoken);
     }
 
     public async Task<RepositoryResult<EventPostTarget>> FindAsync(string postIdentifier, CancellationToken ctoken)

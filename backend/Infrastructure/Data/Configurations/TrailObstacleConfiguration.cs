@@ -19,5 +19,8 @@ public class TrailObstacleConfiguration : IEntityTypeConfiguration<TrailObstacle
 
         // Named so IgnoreQueryFilters(["Moderation"]) can drop just this one. keep-comment: the name is referenced by string elsewhere
         builder.HasQueryFilter("Moderation", to => to.ModerationState == ModerationState.Visible);
+
+        builder.HasIndex(to => to.ClientRequestId)
+            .IsUnique();
     }
 }

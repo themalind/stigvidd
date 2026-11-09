@@ -133,7 +133,7 @@ describe("EventBoardScreen", () => {
     await fireEvent.press(screen.getByTestId("event-post-send"));
     await flushUntil(() => mockCreatePost.mock.calls.length > 0);
 
-    expect(mockCreatePost).toHaveBeenCalledWith("e1", "Hej");
+    expect(mockCreatePost).toHaveBeenCalledWith("e1", "Hej", expect.any(String));
     await flushUntil(() => screen.getByTestId("event-post-input").props.value === "");
     expect(screen.getByTestId("event-post-input").props.value).toBe("");
   });

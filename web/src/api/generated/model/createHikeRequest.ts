@@ -17,4 +17,6 @@ export interface CreateHikeRequest {
   gettingThere?: string | null;
   /** @nullable */
   description?: string | null;
+  /** @nullable */
+  clientRequestId?: string | null;
 }

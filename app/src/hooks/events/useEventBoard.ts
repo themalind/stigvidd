@@ -19,6 +19,7 @@ import { retryUnlessAuthFailure } from "@/api/unauthorized";
 import { userAtom } from "@/atoms/auth-atoms";
 import { EVENT_BOARD_STALE_TIME } from "@/constants/cache";
 import { EventBoard, EventPage, EventPost, HikingEvent } from "@/data/types";
+import { useRetryKey } from "@/hooks/useRetryKey";
 import { InfiniteData, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
@@ -78,6 +79,7 @@ function mapPosts(data: BoardData, map: (posts: EventPost[]) => EventPost[]): Bo
 export function useEventBoardMutations(identifier: string) {
   const queryClient = useQueryClient();
   const { onEventError } = useEventErrorHandler();
+  const { keyFor, forget } = useRetryKey();
   // A new post or a pin refetches this board, as others may have posted meanwhile. keep-comment: errors still refresh every event query
   const refreshBoard = () => void queryClient.invalidateQueries({ queryKey: eventBoardKey(identifier) });
   // An edit, delete or mute is written into the loaded pages, so no page is fetched again. keep-comment: a refetch reloads every page scrolled back to
@@ -87,8 +89,11 @@ export function useEventBoardMutations(identifier: string) {
     );
 
   const createPostMutation = useMutation({
-    mutationFn: (body: string) => createEventPost(identifier, body),
-    onSuccess: refreshBoard,
+    mutationFn: (body: string) => createEventPost(identifier, body, keyFor(body)),
+    onSuccess: () => {
+      forget();
+      refreshBoard();
+    },
     onError: (error) => onEventError(error),
   });
 

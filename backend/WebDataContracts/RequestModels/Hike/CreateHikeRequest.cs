@@ -12,4 +12,5 @@ public class CreateHikeRequest
     public string? ParkingInfo { get; set; }
     public string? GettingThere { get; set; }
     public string? Description { get; set; }
+    public Guid? ClientRequestId { get; set; }
 }

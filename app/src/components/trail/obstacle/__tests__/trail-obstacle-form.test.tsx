@@ -108,8 +108,24 @@ it("reports the obstacle the form describes", async () => {
     issueType: "Other",
     incidentLatitude: null,
     incidentLongitude: null,
+    clientRequestId: expect.any(String),
   });
   await waitFor(() => expect(onDismiss).toHaveBeenCalled());
+});
+
+it("sends the same key when a failed report is sent again, and a new one when the text changes", async () => {
+  mockCreate.mockRejectedValue(new Error("offline"));
+  await showLoaded();
+
+  await fillDescription();
+  await submit();
+  await submit();
+  await fillDescription(`${DESCRIPTION} Och en stor gren.`);
+  await submit();
+
+  const [[first], [retry], [edited]] = mockCreate.mock.calls;
+  expect(retry.clientRequestId).toBe(first.clientRequestId);
+  expect(edited.clientRequestId).not.toBe(first.clientRequestId);
 });
 
 // The input is multiline, so a reporter who presses return before sending would otherwise

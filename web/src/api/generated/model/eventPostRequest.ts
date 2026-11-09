@@ -8,4 +8,6 @@
 
 export interface EventPostRequest {
   body: string;
+  /** @nullable */
+  clientRequestId?: string | null;
 }

@@ -7,6 +7,8 @@ namespace Infrastructure.Data.Entities;
 
 public class Hike : BaseEntity
 {
+    // Set by the app, so a retried save finds the row instead of adding another.
+    public Guid? ClientRequestId { get; set; }
     public required string Name { get; set; }
     public decimal HikeLength { get; set; }
     public int Duration { get; set; }

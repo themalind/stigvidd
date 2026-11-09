@@ -8,6 +8,8 @@ namespace Infrastructure.Data.Entities;
 
 public class TrailObstacle : BaseEntity
 {
+    // Set by the app, so a retried save finds the row instead of adding another.
+    public Guid? ClientRequestId { get; set; }
     public required string Description { get; set; }
     public required TrailIssueType IssueType { get; set; }
 

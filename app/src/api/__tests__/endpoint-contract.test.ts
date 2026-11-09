@@ -161,6 +161,7 @@ const obstacleRequest = {
   trailIdentifier: "t1",
   incidentLongitude: 12.94,
   incidentLatitude: 57.72,
+  clientRequestId: "11111111-1111-4111-8111-111111111111",
 };
 
 const createHikeRequest = {
@@ -168,6 +169,7 @@ const createHikeRequest = {
   hikeLength: 5,
   duration: 3600,
   coordinates: [{ latitude: 57.72, longitude: 12.94 }],
+  clientRequestId: "22222222-2222-4222-8222-222222222222",
 };
 
 const updateHikeRequest = {
@@ -184,6 +186,7 @@ const createEventRequest = {
   startsAt: "2026-11-05T17:00:00.000Z",
   allowParticipantInvites: false,
   visibility: "Open" as const,
+  clientRequestId: "33333333-3333-4333-8333-333333333333",
 };
 
 const updateEventRequest = {
@@ -928,12 +931,12 @@ const endpoints: Endpoint[] = [
   },
   {
     name: "createEventPost",
-    call: () => createEventPost("e1", "Vi ses vid parkeringen"),
+    call: () => createEventPost("e1", "Vi ses vid parkeringen", "44444444-4444-4444-8444-444444444444"),
     method: "POST",
     path: "/events/e1/posts",
     auth: "required",
     carriesStatus: true,
-    body: { body: "Vi ses vid parkeringen" },
+    body: { body: "Vi ses vid parkeringen", clientRequestId: "44444444-4444-4444-8444-444444444444" },
   },
   {
     name: "markEventPostsRead",
@@ -1183,7 +1186,7 @@ describe("endpoints that are not plain JSON", () => {
   it("an uncoded event error carries no code", async () => {
     mockFetch(false, 400, "Titel saknas");
 
-    await expect(createEventPost("e1", "")).rejects.toMatchObject({ status: 400, code: undefined });
+    await expect(createEventPost("e1", "", "k")).rejects.toMatchObject({ status: 400, code: undefined });
   });
 
   it("getEvents leaves out what the caller did not set", async () => {

@@ -8,6 +8,7 @@
 import { createEvent, deleteEventImage, inviteToEvent, setEventImage, updateEvent } from "@/api/events";
 import { showSuccessAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { HikingEvent } from "@/data/types";
+import { useRetryKey } from "@/hooks/useRetryKey";
 import { EventFormValues, toCreateEventRequest, toUpdateEventRequest } from "@/utils/event-form";
 import { useMutation } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
@@ -34,12 +35,13 @@ export function useSaveEvent(original?: HikingEvent) {
   const { refresh, onEventError } = useEventErrorHandler();
   const setSuccess = useSetAtom(showSuccessAtom);
   const setWarning = useSetAtom(showWarningAtom);
+  const { keyFor, forget } = useRetryKey();
 
   return useMutation({
     mutationFn: async ({ values, cover }: SaveInput): Promise<HikingEvent> => {
       const saved = original
         ? await updateEvent(original.identifier, toUpdateEventRequest(values, original))
-        : await createEvent(toCreateEventRequest(values));
+        : await createEvent({ ...toCreateEventRequest(values), clientRequestId: keyFor(values) });
       const invites = !original && values.visibility === "Private" && values.invitees.length > 0;
 
       // The event exists by now, so a failed cover or invite only warns. keep-comment: why these do not reject
@@ -58,7 +60,10 @@ export function useSaveEvent(original?: HikingEvent) {
       else setSuccess(t(original ? "events.form.saved" : "events.form.created"));
       return saved;
     },
-    onSuccess: () => refresh(),
+    onSuccess: () => {
+      forget();
+      refresh();
+    },
     onError: (error) => onEventError(error),
   });
 }

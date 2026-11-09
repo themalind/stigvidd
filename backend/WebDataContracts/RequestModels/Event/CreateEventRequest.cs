@@ -7,4 +7,5 @@ namespace WebDataContracts.RequestModels.Event;
 public class CreateEventRequest : EventRequest
 {
     public required string Visibility { get; set; }
+    public Guid? ClientRequestId { get; set; }
 }

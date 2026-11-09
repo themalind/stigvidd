@@ -204,6 +204,25 @@ describe("EventFormScreen", () => {
     });
   });
 
+  it("sends the same key when a failed create is sent again", async () => {
+    mockCreate.mockRejectedValueOnce(new Error("offline"));
+    await render();
+
+    await fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");
+    await pickStart();
+    await tapMap(12.94, 57.72);
+    await settle();
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
+    await flushUntil(() => mockCreate.mock.calls.length === 1);
+    await settle();
+    await fireEvent.press(screen.getByTestId("event-form-submit"));
+    await flushUntil(() => mockReplace.mock.calls.length > 0);
+
+    const [[first], [retry]] = mockCreate.mock.calls;
+    expect(first.clientRequestId).toEqual(expect.any(String));
+    expect(retry.clientRequestId).toBe(first.clientRequestId);
+  });
+
   it("follows a trail picked from the route picker", async () => {
     await render();
     await fireEvent.changeText(screen.getByTestId("event-form-title"), "Kvällsvandring");

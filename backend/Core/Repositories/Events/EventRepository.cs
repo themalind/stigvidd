@@ -145,13 +145,50 @@ public class EventRepository : IEventRepository
 
             context.Events.Add(newEvent);
             await UserActionLogs.RecordAsync(context, organizerUserId, UserAction.EventCreated, DateTime.UtcNow, createdLogWindow, ctoken);
-            await context.SaveChangesAsync(ctoken);
+
+            try
+            {
+                await context.SaveChangesAsync(ctoken);
+            }
+            catch (DbUpdateException) when (newEvent.ClientRequestId is Guid key)
+            {
+                // keep-comment: the first attempt can still be in flight when the retry arrives
+                var winner = await FindRetriedAsync(key, organizerUserId, ctoken);
+
+                if (winner.IsSuccess)
+                    return winner;
+
+                throw;
+            }
 
             return RepositoryResult<string>.Success(newEvent.Identifier);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "EventRepository: CreateAsync -> Something went wrong when creating an event for user {UserId}.", organizerUserId);
+            return RepositoryResult<string>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<string>> FindRetriedAsync(Guid clientRequestId, int organizerUserId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var identifier = await context.Events
+                .Where(e => e.ClientRequestId == clientRequestId
+                    && e.Participants.Any(p => p.UserId == organizerUserId && p.Role == EventParticipantRole.Organizer))
+                .Select(e => e.Identifier)
+                .FirstOrDefaultAsync(ctoken);
+
+            return identifier is null
+                ? RepositoryResult<string>.NotFound()
+                : RepositoryResult<string>.Success(identifier);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "EventRepository: FindRetriedAsync -> Something went wrong when looking up a retried event for user {UserId}.", organizerUserId);
             return RepositoryResult<string>.Error();
         }
     }

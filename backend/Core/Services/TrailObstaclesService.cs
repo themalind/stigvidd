@@ -44,7 +44,7 @@ public class TrailObstaclesService : ITrailObstaclesService
         return Result.Ok(_responseFactory.Create(result.Value, hiddenUserIds));
     }
 
-    public async Task<Result<TrailObstacleResponse?>> AddTrailObstacle(string userIdentifier, string trailIdentifier, string description, string issueType, decimal? longitude, decimal? latitude, CancellationToken ctoken)
+    public async Task<Result<TrailObstacleResponse?>> AddTrailObstacle(string userIdentifier, string trailIdentifier, string description, string issueType, decimal? longitude, decimal? latitude, Guid? clientRequestId, CancellationToken ctoken)
     {
         var userIdResult = await _userService.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
 
@@ -65,6 +65,7 @@ public class TrailObstaclesService : ITrailObstaclesService
             UserId = userIdResult.Value,
             TrailId = trailIdResult.Value,
             IncidentLocation = GeoPointFactory.FromLonLat(longitude, latitude),
+            ClientRequestId = clientRequestId,
         };
 
         var result = await _obstacleRepository.AddTrailObstacleAsync(obstacle, ctoken);

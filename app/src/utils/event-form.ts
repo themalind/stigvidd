@@ -218,7 +218,7 @@ function baseRequest(values: EventFormValues) {
   };
 }
 
-export function toCreateEventRequest(values: EventFormValues): CreateEventRequest {
+export function toCreateEventRequest(values: EventFormValues): Omit<CreateEventRequest, "clientRequestId"> {
   return { ...baseRequest(values), visibility: values.visibility };
 }
 
