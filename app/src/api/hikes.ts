@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CreateHikeRequest, Hike, HikeImage, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
-import uuid from "react-native-uuid";
 import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
+import { imageFormPart } from "./image-form-part";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
 import { logger } from "@/services/logger";
@@ -222,11 +222,7 @@ export async function uploadHikeImage(hikeIdentifier: string, uri: string): Prom
   }
 
   const formData = new FormData();
-  formData.append("image", {
-    uri,
-    type: "image/jpeg",
-    name: `${uuid.v4()}.jpg`,
-  } as any);
+  formData.append("image", imageFormPart(uri));
 
   try {
     const response = await apiFetch(

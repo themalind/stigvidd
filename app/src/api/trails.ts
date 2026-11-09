@@ -14,7 +14,7 @@ import {
   TrailOverview,
   TrailShortInfoResponse,
 } from "@/data/types";
-import uuid from "react-native-uuid";
+import { imageFormPart } from "./image-form-part";
 import { ApiError } from "./api-error";
 import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { getUserToken } from "./users";
@@ -202,21 +202,11 @@ export async function addTrail(request: CreateTrailRequest): Promise<{ success: 
 
   const formData = new FormData();
 
-  request.images?.forEach((uri) => {
-    const fileName = `${uuid.v4()}.jpg`;
-
-    formData.append("images", {
-      uri: uri,
-      type: "image/jpeg",
-      name: fileName,
-    } as any);
+  request.images?.forEach((image) => {
+    formData.append("images", imageFormPart(image.imageUrl));
   });
 
-  formData.append("trailSymbolImage", {
-    uri: request.trailSymbolImage,
-    type: "image/jpeg",
-    name: `${uuid.v4()}.jpg`,
-  } as any);
+  formData.append("trailSymbolImage", imageFormPart(request.trailSymbolImage));
 
   formData.append("name", request.name);
   formData.append("trailLength", `${request.trailLength}`);

@@ -19,7 +19,7 @@ import {
   MyEventsQuery,
   UpdateEventRequest,
 } from "@/data/types";
-import uuid from "react-native-uuid";
+import { imageFormPart } from "./image-form-part";
 import { queryString as query, sendAuthed as send, sendAuthedForJson as sendForJson } from "./authed-request";
 
 function eventPath(identifier: string): string {
@@ -278,7 +278,7 @@ export async function setEventPostPinned(postIdentifier: string, pinned: boolean
 
 export function setEventImage(identifier: string, uri: string, focusY?: number): Promise<EventImage> {
   const form = new FormData();
-  form.append("image", { uri, type: "image/jpeg", name: `${uuid.v4()}.jpg` } as unknown as Blob);
+  form.append("image", imageFormPart(uri));
   if (focusY !== undefined) form.append("focusY", String(focusY));
 
   return sendForJson({

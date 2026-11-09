@@ -988,9 +988,9 @@ const endpoints: Endpoint[] = [
   },
 ];
 
-// React Native's FormData keeps an appended {uri, type, name} object as-is; the standard
-// FormData this environment provides stringifies it to "[object Object]", which would hide
-// the multipart contract entirely. This records parts the way the runtime does.
+// The runtime's FormData keeps an appended part object as-is; the standard FormData this
+// environment provides stringifies it to "[object Object]", which would hide the multipart
+// contract entirely. This records parts the way the runtime does.
 class RecordingFormData {
   readonly parts: [string, unknown][] = [];
   append(key: string, value: unknown) {
@@ -1133,10 +1133,10 @@ describe("endpoints that are not plain JSON", () => {
     const body = fetchMock.mock.calls[0][1].body as unknown as RecordingFormData;
     const images = body.parts.filter(([key]) => key === "images") as [
       string,
-      { uri: string; type: string; name: string },
+      { bytes: () => Promise<Uint8Array>; type: string; name: string },
     ][];
     expect(images).toHaveLength(2);
-    expect(images.map(([, part]) => part.uri)).toEqual(["file://a", "file://b"]);
+    expect(images.every(([, part]) => typeof part.bytes === "function")).toBe(true);
     expect(images.every(([, part]) => part.type === "image/jpeg")).toBe(true);
     // Names are generated per part, so two images can never collide server-side.
     expect(images[0][1].name).not.toBe(images[1][1].name);
@@ -1160,9 +1160,10 @@ describe("endpoints that are not plain JSON", () => {
     const init = fetchMock.mock.calls[0][1];
     const body = init.body as unknown as RecordingFormData;
     expect(body.parts).toHaveLength(1);
-    const [key, part] = body.parts[0] as [string, { uri: string; type: string }];
+    const [key, part] = body.parts[0] as [string, { bytes: () => Promise<Uint8Array>; type: string }];
     expect(key).toBe("image");
-    expect(part).toMatchObject({ uri: "file://cover", type: "image/jpeg" });
+    expect(part.type).toBe("image/jpeg");
+    expect(typeof part.bytes).toBe("function");
     expect((init.headers as Record<string, string>)["Content-Type"]).toBeUndefined();
   });
 

@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
-import uuid from "react-native-uuid";
+import { imageFormPart } from "./image-form-part";
 import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { getUserToken } from "./users";
 import { ApiError } from "./api-error";
@@ -82,13 +82,7 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
   const formData = new FormData();
 
   request.imageUris?.forEach((uri) => {
-    const fileName = `${uuid.v4()}.jpg`;
-
-    formData.append("images", {
-      uri: uri,
-      type: "image/jpeg",
-      name: fileName,
-    } as any);
+    formData.append("images", imageFormPart(uri));
   });
 
   formData.append("trailIdentifier", request.trailIdentifier);
