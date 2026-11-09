@@ -5,11 +5,15 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { Stack } from "expo-router";
+import { Stack, useIsFocused } from "expo-router";
 import { useTheme } from "react-native-paper";
 
 export default function SettingsLayout() {
   const theme = useTheme();
+  const focused = useIsFocused();
+
+  // Unmounted while away, so the next drawer row starts a fresh stack. keep-comment: else back returns to an earlier visit
+  if (!focused) return null;
 
   return (
     <Stack

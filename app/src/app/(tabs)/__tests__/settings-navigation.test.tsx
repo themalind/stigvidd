@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import TabsLayout from "../_layout";
+import SettingsLayout from "../(settings)/_layout";
 
 jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: false, logout: jest.fn() }),
@@ -68,7 +69,7 @@ async function renderTabs() {
       "(tabs)/events/index": page("events"),
       "(tabs)/(profile-stack)/_layout": plainStack,
       "(tabs)/(profile-stack)/login": page("login"),
-      "(tabs)/(settings)/_layout": plainStack,
+      "(tabs)/(settings)/_layout": SettingsLayout,
       ...Object.fromEntries(SETTINGS_SCREENS.map((name) => [`(tabs)/(settings)/${name}`, page(name)])),
     },
     { initialUrl: "/" },
@@ -113,4 +114,22 @@ describe.each(ROWS)("the drawer's %s row", (label, screenName) => {
 
     expect(app.getPathname()).toBe("/");
   });
+});
+
+it("forgets an earlier visit, so back from the next screen goes to the start tab", async () => {
+  const app = await renderTabs();
+  await pressRow("Om Stigvidd");
+  await act(async () => {
+    router.back();
+  });
+
+  await act(async () => {
+    router.navigate("/(tabs)/(settings)/guide");
+  });
+  expect(app.getPathname()).toBe("/guide");
+  await act(async () => {
+    router.back();
+  });
+
+  expect(app.getPathname()).toBe("/");
 });
