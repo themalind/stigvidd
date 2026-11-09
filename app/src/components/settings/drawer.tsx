@@ -69,12 +69,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
     router.navigate("/(tabs)/(profile-stack)/login");
   }
 
-  function handleGuide() {
-    setActive("guide");
-    onDismiss();
-    router.navigate("/(tabs)/(settings)/guide");
-  }
-
   function handlePrivacy() {
     setActive("privacy");
     onDismiss();
@@ -124,13 +118,6 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
                 </Text>
               )}
               onPress={handleTheme}
-            />
-            <Drawer.Item
-              label={t("settings.guide")}
-              icon="pine-tree"
-              active={active === "guide"}
-              theme={{ roundness: 1 }}
-              onPress={handleGuide}
             />
             <Drawer.Item
               label={t("settings.privacy")}

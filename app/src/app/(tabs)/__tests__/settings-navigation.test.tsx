@@ -33,7 +33,7 @@ jest.mock("@/atoms/event-atoms", () => {
 
 const METRICS = { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 47, left: 0, right: 0, bottom: 34 } };
 const VISIBLE_TABS = 5;
-const SETTINGS_SCREENS = ["theme", "guide", "privacy", "about"];
+const SETTINGS_SCREENS = ["theme", "privacy", "about"];
 
 function page(label: string) {
   return function Page() {
@@ -85,7 +85,6 @@ async function pressRow(label: string) {
 
 const ROWS: [string, string][] = [
   ["Tema", "theme"],
-  ["Naturguide", "guide"],
   ["Integritet", "privacy"],
   ["Om Stigvidd", "about"],
   ["Logga in", "login"],
@@ -124,9 +123,9 @@ it("forgets an earlier visit, so back from the next screen goes to the start tab
   });
 
   await act(async () => {
-    router.navigate("/(tabs)/(settings)/guide");
+    router.navigate("/(tabs)/(settings)/privacy");
   });
-  expect(app.getPathname()).toBe("/guide");
+  expect(app.getPathname()).toBe("/privacy");
   await act(async () => {
     router.back();
   });

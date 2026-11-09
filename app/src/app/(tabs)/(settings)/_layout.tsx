@@ -23,7 +23,6 @@ export default function SettingsLayout() {
       }}
     >
       <Stack.Screen name="about" />
-      <Stack.Screen name="guide" />
       <Stack.Screen name="privacy" />
       <Stack.Screen name="theme" />
     </Stack>

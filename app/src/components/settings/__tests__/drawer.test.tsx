@@ -73,8 +73,9 @@ it("lists every setting, under the app's name", async () => {
 
   expect(screen.getByText("Stigvidd")).toBeTruthy();
   expect(screen.getByText("Tema")).toBeTruthy();
-  expect(screen.getByText("Naturguide")).toBeTruthy();
   expect(screen.getByText("Om Stigvidd")).toBeTruthy();
+  // The guide lives on each trail's page, not among the settings.
+  expect(screen.queryByText("Naturguide")).toBeNull();
 });
 
 // The panel covers most of the screen, so the way out has to be obvious.
@@ -94,15 +95,6 @@ it("closes on the close icon", async () => {
   await fireEvent.press(screen.getByTestId("drawer-close"));
   await settle();
 
-  expect(onDismiss).toHaveBeenCalled();
-});
-
-it("closes itself on the way to the guide", async () => {
-  await show();
-
-  await press("Naturguide");
-
-  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(settings)/guide");
   expect(onDismiss).toHaveBeenCalled();
 });
 
