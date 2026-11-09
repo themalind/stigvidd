@@ -143,7 +143,6 @@ optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map
 | react-native-paper                        | ^5.14.5    | MIT             |
 | react-native-paper-dates                  | 0.24.2     | MIT             |
 | react-native-reanimated                   | 4.7.1      | MIT             |
-| react-native-reanimated-carousel          | ^4.0.3     | MIT             |
 | react-native-safe-area-context            | ~5.11.1    | MIT             |
 | react-native-screens                      | ~4.30.1    | MIT             |
 | react-native-star-rating-widget           | ^1.10.0    | MIT             |
