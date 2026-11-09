@@ -76,10 +76,8 @@ function EventBoard({ identifier }: { identifier: string }) {
   const [pinsOpen, setPinsOpen] = useState(false);
   const listRef = useRef<FlatList<EventPost>>(null);
   const scrollTarget = useRef<string | null>(null);
-  const [scrollRequest, setScrollRequest] = useState(0);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = board;
-  // An older pin may lie beyond the loaded pages, so pages are fetched until it appears. keep-comment: why the effect pages
-  useEffect(() => {
+  const seekPin = useCallback(() => {
     if (scrollTarget.current === null) return;
     const index = posts.findIndex((post) => post.identifier === scrollTarget.current);
     if (index >= 0) {
@@ -90,7 +88,11 @@ function EventBoard({ identifier }: { identifier: string }) {
     } else {
       scrollTarget.current = null;
     }
-  }, [scrollRequest, posts, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [posts, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  // An older pin may lie beyond the loaded pages, so each fetched page is searched again. keep-comment: why the effect pages
+  useEffect(() => {
+    seekPin();
+  }, [seekPin]);
 
   const canModerate = event.data?.permissions.canPinOrDeletePosts ?? false;
   const pin = pinMutation.mutate;
@@ -174,7 +176,7 @@ function EventBoard({ identifier }: { identifier: string }) {
           pinned={pinned}
           onSelect={(post) => {
             scrollTarget.current = post.identifier;
-            setScrollRequest((request) => request + 1);
+            seekPin();
           }}
         />
       ) : null}

@@ -352,6 +352,8 @@ it("ticks the timer once a second while recording, and stops when it does", asyn
     mockGetActiveTime.mockReturnValue(1_000);
     await act(() => jest.advanceTimersByTime(1000));
     expect(screen.getByText("00:00:01")).toBeTruthy();
+    // Read at the tick's time, so a memoized render cannot show a stale reading.
+    expect(mockGetActiveTime).toHaveBeenLastCalledWith(Date.now());
 
     mockTracking = trackingState({ segments: [segment([point(0, 1_000), point(1, 2_000)])] });
     mockGetActiveTime.mockReturnValue(2_000);

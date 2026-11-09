@@ -70,13 +70,11 @@ export default function ImageGallery({ images }: GalleryProps) {
     [failed, retryFailed],
   );
 
-  const retryFailedRef = useRef(retryFailed);
-  useEffect(() => {
-    retryFailedRef.current = retryFailed;
-  });
-  useEffect(() => {
-    if (isOnline) retryFailedRef.current();
-  }, [isOnline]);
+  const [wasOnline, setWasOnline] = useState(isOnline);
+  if (isOnline !== wasOnline) {
+    setWasOnline(isOnline);
+    if (isOnline) retryFailed();
+  }
 
   const keyFor = (url: string) => `${url}#${attempts[url] ?? 0}`;
 

@@ -494,13 +494,13 @@ export function useLocationTracking() {
   // so start/end trimming stays exact; the live stopwatch and the saved duration
   // can therefore differ by the few stationary seconds at a segment's edges, as in
   // any GPS fitness app.
-  const getActiveTime = () => {
+  const getActiveTime = (now: number = Date.now()) => {
     const completedTime = hike.segments.reduce(
       (sum, seg) => sum + Math.max(0, (seg.endTime ?? seg.startTime) - seg.startTime),
       0,
     );
     if (!currentSegment) return completedTime;
-    return completedTime + Math.max(0, Date.now() - currentSegment.startTime);
+    return completedTime + Math.max(0, now - currentSegment.startTime);
   };
 
   return {

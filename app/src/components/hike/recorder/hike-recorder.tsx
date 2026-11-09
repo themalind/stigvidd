@@ -50,11 +50,9 @@ export default function HikeRecorder() {
     getActiveTime,
   } = useLocationTracking();
 
-  const [displayTime, setDisplayTime] = useState(0);
-  const getActiveTimeRef = useRef(getActiveTime);
-  useEffect(() => {
-    getActiveTimeRef.current = getActiveTime;
-  });
+  // The clock only ticks while recording; the time shown is worked out from it on each render. keep-comment: now is an input, so the compiler cannot freeze the reading
+  const [now, setNow] = useState(Date.now);
+  const displayTime = getActiveTime(now);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -134,23 +132,10 @@ export default function HikeRecorder() {
   }, [moveCamera]);
 
   useEffect(() => {
-    // Tick the stopwatch once a second while recording. When paused/stopped the
-    // interval clears and we snap the display to the finalized total once — keyed
-    // on segments so a just-completed segment's time is reflected immediately.
-    if (!isTracking) {
-      setDisplayTime(getActiveTimeRef.current());
-      return;
-    }
-
-    // Update immediately so the first visible value isn't a second behind, then
-    // every second after.
-    setDisplayTime(getActiveTimeRef.current());
-    const interval = setInterval(() => {
-      setDisplayTime(getActiveTimeRef.current());
-    }, 1000);
-
+    if (!isTracking) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [isTracking, hike.segments]);
+  }, [isTracking]);
 
   const formattedTime = FormattedTime(displayTime);
 
@@ -315,7 +300,6 @@ export default function HikeRecorder() {
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
         onConfirm={() => {
-          setDisplayTime(0);
           resetTracking();
           setShowDeleteDialog(false);
         }}
