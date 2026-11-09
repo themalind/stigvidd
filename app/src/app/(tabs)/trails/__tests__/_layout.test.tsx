@@ -114,6 +114,33 @@ it("goes back from a second shared link to the list", async () => {
   expect(app.getPathname()).toBe("/trails");
 });
 
+it("goes back from a shared link to the list, past a trail opened from the list", async () => {
+  const app = await renderApp("/");
+  await act(() => router.navigate("/(tabs)/trails"));
+  await act(() => router.push("/trails/trail/browsed"));
+  expect(app.getPathname()).toBe("/trails/trail/browsed");
+
+  await openLinkWhileRunning(linkTo("shared"));
+  expect(app.getPathname()).toBe("/trails/trail/shared");
+
+  await act(() => router.back());
+  expect(app.getPathname()).toBe("/trails");
+});
+
+it("goes back from a shared link to the list, past a trail left open in the tab earlier", async () => {
+  const app = await renderApp("/");
+  await act(() => router.navigate("/(tabs)/trails"));
+  await act(() => router.push("/trails/trail/browsed"));
+  await act(() => router.navigate("/(tabs)/(home)"));
+  expect(app.getPathname()).toBe("/");
+
+  await openLinkWhileRunning(linkTo("shared"));
+  expect(app.getPathname()).toBe("/trails/trail/shared");
+
+  await act(() => router.back());
+  expect(app.getPathname()).toBe("/trails");
+});
+
 it("opens the trail list from another tab", async () => {
   const app = await renderApp("/");
 

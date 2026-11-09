@@ -98,6 +98,20 @@ it("puts the event list beneath an event a shared link opens while the app is ru
   expect(app.getPathname()).toBe("/events");
 });
 
+it("goes back from a shared link to the list, past an event left open in the tab earlier", async () => {
+  const app = await renderApp("/");
+  await act(() => router.navigate("/(tabs)/events"));
+  await act(() => router.push("/events/event/browsed"));
+  await act(() => router.navigate("/(tabs)/(home)"));
+  expect(app.getPathname()).toBe("/");
+
+  await openLinkWhileRunning(linkTo("shared"));
+  expect(app.getPathname()).toBe("/events/event/shared");
+
+  await act(() => router.back());
+  expect(app.getPathname()).toBe("/events");
+});
+
 it("leaves the tab usable after a link", async () => {
   const app = await renderApp(linkTo("ev1"));
 

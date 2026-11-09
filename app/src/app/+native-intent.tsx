@@ -17,6 +17,8 @@ export function redirectSystemPath({ path, initial }: { path: string; initial: b
   const kind = link[1].toLowerCase();
   const target = `/${kind}s/${kind}/${link[2]}`;
   if (initial) return target;
+  // Focuses the tab first, since singular only replaces an earlier trail or event in a focused stack.
+  router.navigate(`/${kind}s` as never);
   // expo-router opens a running app's links without the anchor, which leaves back without the tab's list; singular so a second link replaces the first. keep-comment: SDK 58's useLinking listener passes no withAnchor
   router.navigate(target as never, { withAnchor: true, dangerouslySingular: (name) => name });
   return null;
