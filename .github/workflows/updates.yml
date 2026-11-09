@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: 2026 The Stigvidd Authors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Weekly dependency check. It goes red when an SDK, a major or a high/critical vulnerability needs
+# action, and a failed scheduled run is emailed to whoever last changed the cron line. Majors held
+# on purpose are listed in scripts/update-holds.json with their reason. It blocks nothing.
+name: Updates
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      # npm outdated reads the installed versions, and dotnet list needs the restored assets.
+      - name: Install
+        run: |
+          for area in app web site; do (cd "$area" && npm ci --ignore-scripts --no-audit --no-fund); done
+          dotnet restore backend/backend.sln
+      - name: Check
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/check-updates.mjs --strict --verbose | tee report.txt
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          { echo '```'; cat report.txt 2>/dev/null || echo "no report"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import {
   assess,
@@ -13,6 +14,7 @@ import {
   npmVulnerabilities,
   nugetFindings,
   nugetVulnerabilities,
+  parseHolds,
   sdkLag,
   versionGap,
 } from "./update-checks.mjs";
@@ -165,6 +167,40 @@ test("the report names SDKs and majors and only counts the small updates", () =>
 
 test("the report says so when nothing is behind", () => {
   assert.match(formatReport(assess({}), "now"), /All SDKs and packages/);
+});
+
+const TS7 = { area: "web", name: "typescript", current: "6.0.3", latest: "7.0.2", gap: "major" };
+const HOLD_TS7 = { area: "web", name: "typescript", major: 7, reason: "typescript-eslint" };
+
+test("a held major is reported with its reason and needs no action", () => {
+  const verdict = assess({ packages: [TS7] }, [HOLD_TS7]);
+  assert.equal(verdict.needsAction, false);
+  assert.deepEqual(verdict.majors, []);
+  assert.match(formatReport(verdict, "now"), /HELD {5}web: typescript 6\.0\.3 -> 7\.0\.2 \(typescript-eslint\)/);
+});
+
+test("a hold covers only its own major, area and package", () => {
+  assert.equal(assess({ packages: [{ ...TS7, latest: "8.0.0" }] }, [HOLD_TS7]).majors.length, 1);
+  assert.equal(assess({ packages: [{ ...TS7, area: "site" }] }, [HOLD_TS7]).majors.length, 1);
+  assert.equal(assess({ packages: [{ ...TS7, name: "eslint" }] }, [HOLD_TS7]).majors.length, 1);
+});
+
+test("a hold that matches nothing needs action, so it gets removed", () => {
+  const verdict = assess({}, [HOLD_TS7]);
+  assert.equal(verdict.needsAction, true);
+  assert.match(formatReport(verdict, "now"), /UNKNOWN {2}web: the hold on typescript 7 matches nothing/);
+});
+
+test("a hold without a reason is refused", () => {
+  assert.deepEqual(parseHolds(JSON.stringify([HOLD_TS7])), [HOLD_TS7]);
+  assert.throws(() => parseHolds(JSON.stringify([{ ...HOLD_TS7, reason: " " }])), /needs area, name, major and a reason/);
+  assert.throws(() => parseHolds(JSON.stringify([{ ...HOLD_TS7, major: "7" }])), /needs area/);
+  assert.throws(() => parseHolds("{}"), /must be a list/);
+});
+
+test("the committed holds file parses", () => {
+  const file = new URL("./update-holds.json", import.meta.url);
+  assert.ok(parseHolds(readFileSync(file, "utf8")).length > 0);
 });
 
 test("a cached result is fresh only within its age", () => {

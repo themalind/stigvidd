@@ -6,7 +6,7 @@
 //
 //   node scripts/check-updates.mjs             full report
 //   node scripts/check-updates.mjs --verbose   also lists each minor and patch update
-//   node scripts/check-updates.mjs --strict    exits 1 when something needs action
+//   node scripts/check-updates.mjs --strict    exits 1 when something needs action (majors in update-holds.json excepted)
 //   node scripts/check-updates.mjs --pre-push  for .githooks/pre-push: checks at most daily, never fails
 import { exec } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -24,6 +24,7 @@ import {
   npmVulnerabilities,
   nugetFindings,
   nugetVulnerabilities,
+  parseHolds,
   sdkLag,
 } from "./update-checks.mjs";
 
@@ -134,7 +135,7 @@ async function prePush() {
 }
 
 function print(result, checkedAt, verbose) {
-  const verdict = assess(result);
+  const verdict = assess(result, parseHolds(readFileSync(path.join(ROOT, "scripts", "update-holds.json"), "utf8")));
   process.stdout.write(formatReport(verdict, checkedAt) + "\n");
   if (verbose) {
     for (const pkg of verdict.smaller) {

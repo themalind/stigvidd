@@ -1,0 +1,44 @@
+[
+  {
+    "area": "app",
+    "name": "typescript",
+    "major": 7,
+    "reason": "typescript-eslint 8 supports typescript <6.1"
+  },
+  {
+    "area": "web",
+    "name": "typescript",
+    "major": 7,
+    "reason": "typescript-eslint 8 supports typescript <6.1"
+  },
+  {
+    "area": "site",
+    "name": "typescript",
+    "major": 7,
+    "reason": "typescript-eslint 8 supports typescript <6.1"
+  },
+  {
+    "area": "app",
+    "name": "eslint",
+    "major": 10,
+    "reason": "eslint-plugin-react 7.37 in eslint-config-expo crashes on eslint 10"
+  },
+  {
+    "area": "web",
+    "name": "@types/node",
+    "major": 26,
+    "reason": "matches the Node 24 runtime in CI and the Dockerfiles"
+  },
+  {
+    "area": "site",
+    "name": "@types/node",
+    "major": 26,
+    "reason": "matches the Node 24 runtime in CI and the Dockerfiles"
+  },
+  {
+    "area": "backend",
+    "name": "Microsoft.OpenApi",
+    "major": 3,
+    "reason": "ASP.NET Core 10 is built on Microsoft.OpenApi 2"
+  }
+]

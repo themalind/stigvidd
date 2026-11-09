@@ -94,17 +94,48 @@ export function dedupe(findings) {
   return [...seen.values()];
 }
 
-export function assess({ sdks = [], packages = [], vulnerabilities = [], failures = [] }) {
+export function parseHolds(text) {
+  const holds = JSON.parse(text);
+  if (!Array.isArray(holds)) throw new Error("update-holds.json must be a list");
+  for (const hold of holds) {
+    const valid =
+      typeof hold?.area === "string" &&
+      typeof hold.name === "string" &&
+      Number.isInteger(hold.major) &&
+      typeof hold.reason === "string" &&
+      hold.reason.trim() !== "";
+    if (!valid) throw new Error(`update-holds.json: each hold needs area, name, major and a reason: ${JSON.stringify(hold)}`);
+  }
+  return holds;
+}
+
+// A hold covers one major of one package in one area, so the next major still needs action. keep-comment: holds must not hide later releases
+function holdFor(pkg, holds) {
+  return holds.find(
+    (hold) => hold.area === pkg.area && hold.name === pkg.name && hold.major === parts(pkg.latest)?.[0],
+  );
+}
+
+export function assess({ sdks = [], packages = [], vulnerabilities = [], failures = [] }, holds = []) {
   const behindSdks = sdks.filter((sdk) => sdk.behind > 0);
-  const majors = packages.filter((pkg) => pkg.gap === "major");
+  const allMajors = packages.filter((pkg) => pkg.gap === "major");
+  const held = allMajors.flatMap((pkg) => {
+    const hold = holdFor(pkg, holds);
+    return hold ? [{ ...pkg, reason: hold.reason }] : [];
+  });
+  const majors = allMajors.filter((pkg) => !holdFor(pkg, holds));
   const smaller = packages.filter((pkg) => pkg.gap === "minor" || pkg.gap === "patch");
   const unreadable = packages
     .filter((pkg) => pkg.gap === "unknown")
     .map((pkg) => `${pkg.area}: ${pkg.name} has no readable version (${pkg.current} -> ${pkg.latest})`);
-  const allFailures = [...failures, ...unreadable];
+  const unused = holds
+    .filter((hold) => !allMajors.some((pkg) => holdFor(pkg, [hold])))
+    .map((hold) => `${hold.area}: the hold on ${hold.name} ${hold.major} matches nothing, remove it from update-holds.json`);
+  const allFailures = [...failures, ...unreadable, ...unused];
   return {
     behindSdks,
     majors,
+    held,
     smaller,
     vulnerabilities,
     failures: allFailures,
@@ -122,6 +153,9 @@ export function formatReport(verdict, checkedAt) {
   }
   for (const pkg of verdict.majors) {
     lines.push(`  MAJOR    ${pkg.area}: ${pkg.name} ${pkg.current} -> ${pkg.latest}`);
+  }
+  for (const pkg of verdict.held ?? []) {
+    lines.push(`  HELD     ${pkg.area}: ${pkg.name} ${pkg.current} -> ${pkg.latest} (${pkg.reason})`);
   }
   if (verdict.smaller.length > 0) {
     const perArea = {};
