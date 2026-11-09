@@ -17,18 +17,11 @@ jest.mock("../logger", () => ({
   logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
+import "@/test/keycloak-env";
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import { logger } from "../logger";
-import type * as KeycloakAuthModule from "../keycloak-auth";
-
-// The module reads these at load time, so they must be set before the require below.
-process.env.EXPO_PUBLIC_OIDC_URL = "https://kc.test/auth";
-process.env.EXPO_PUBLIC_OIDC_REALM = "stigvidd";
-process.env.EXPO_PUBLIC_CLIENT_ID = "stigvidd-app";
-
-// require (not a hoisted import) so the SUT loads AFTER the env vars above are set.
-const {
+import {
   decodeUser,
   passwordGrant,
   refreshGrant,
@@ -44,7 +37,7 @@ const {
   AccountNotVerifiedError,
   SessionUnavailableError,
   TOKEN_REQUEST_TIMEOUT_MS,
-} = require("../keycloak-auth") as typeof KeycloakAuthModule;
+} from "../keycloak-auth";
 
 const TOKEN_ENDPOINT = "https://kc.test/auth/realms/stigvidd/protocol/openid-connect/token";
 const LOGOUT_ENDPOINT = "https://kc.test/auth/realms/stigvidd/protocol/openid-connect/logout";

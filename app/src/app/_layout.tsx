@@ -112,7 +112,7 @@ function NotificationHandler() {
         logger.error("Notification navigation failed", { type, errorMessage: String(error) });
         return releaseNotificationResponse(notifId);
       });
-  }, [lastResponse, user, queryClient]);
+  }, [lastResponse, user, queryClient, navigation]);
 
   return null;
 }

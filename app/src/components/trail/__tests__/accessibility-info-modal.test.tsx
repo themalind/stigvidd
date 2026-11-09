@@ -10,7 +10,6 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
-import { Text } from "react-native-paper";
 
 const TITLE = "Tillgänglighet";
 const ADAPTED = "Tillgänglighetsanpassad";

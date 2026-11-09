@@ -28,7 +28,7 @@ import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Switch, View } from "react-native";
 import { ActivityIndicator, Button, Modal, Portal, Surface, Text, useTheme } from "react-native-paper";
@@ -97,7 +97,6 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<FormFields>({
     resolver: zodResolver(obstacleFields),
@@ -108,6 +107,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
       incidentLongitude: null,
     },
   });
+  const locationChosen = useWatch({ control, name: "useLocation" });
 
   const onSubmit: SubmitHandler<FormFields> = (data) => {
     const newObstacle = {
@@ -273,7 +273,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
                   <Text style={{ color: theme.colors.onSurfaceVariant }}>{t("obstacle.locating")}</Text>
                 </View>
               )}
-              {!isLocating && watch("useLocation") && <Text>{t("obstacle.locationAttached")}</Text>}
+              {!isLocating && locationChosen && <Text>{t("obstacle.locationAttached")}</Text>}
               {locationError && <Text style={[s.bold, { color: theme.colors.error }]}>{locationError}</Text>}
             </ModalFormScrollView>
 
