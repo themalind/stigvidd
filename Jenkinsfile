@@ -187,6 +187,7 @@ pipeline {
         // rather than in a Test stage because a broken hook should stop the build before
         // it spends minutes on dotnet and npm.
         sh 'node scripts/check-hooks.mjs'
+        sh 'node --test scripts/update-checks.test.mjs'
 
         // web/openapi.json is gitignored, so a fresh checkout has none — and the web
         // stage's `npm run generate:api` needs it as input. It cannot wait for the

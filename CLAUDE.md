@@ -12,6 +12,7 @@ web      cd web && npm run lint && npm run generate:api && git diff --exit-code 
 site     cd site && npm run build
 app      cd app && npm run format:check && npm run lint && npm test -- --watchAll=false --silent && npx tsc --noEmit
 harness  node scripts/check-hooks.mjs          # after touching .claude/
+updates  node --test scripts/update-checks.test.mjs   # report: node scripts/check-updates.mjs [--verbose|--strict]
 licence  reuse lint                            # container form + trap: docs/notes/reuse-lint-*.md
 stack    docker compose up -d, then /healthz and /readyz (checks the DB)
 ```

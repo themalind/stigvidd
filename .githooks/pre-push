@@ -1,0 +1,8 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 The Stigvidd Authors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# Prints how far the repo is behind on SDKs and packages. It warns and never stops a push.
+# Turn it on once per clone: git config core.hooksPath .githooks
+node "$(git rev-parse --show-toplevel)/scripts/check-updates.mjs" --pre-push || true
+exit 0

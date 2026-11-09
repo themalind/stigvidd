@@ -31,6 +31,8 @@ jobs:
     # docs/notes/INDEX.md against the files. A note cannot fail a build; a gate can.
     - name: Check hooks
       run: node scripts/check-hooks.mjs
+    - name: Test the dependency check
+      run: node --test scripts/update-checks.test.mjs
 
   backend:
     runs-on: ubuntu-latest
