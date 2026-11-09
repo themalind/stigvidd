@@ -19,7 +19,8 @@ public class HikeConfiguration : IEntityTypeConfiguration<Hike>
         builder.Property(h => h.HikeLength)
             .HasPrecision(18, 2);
 
-        builder.HasIndex(h => h.ClientRequestId)
+        // A retry key is unique per user, so one user's key never blocks another's save. keep-comment: keys are client-made
+        builder.HasIndex(h => new { h.UserId, h.ClientRequestId })
             .IsUnique();
     }
 }

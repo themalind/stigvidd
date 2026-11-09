@@ -202,15 +202,20 @@ public class RetriedCreateIntegrationTests : IClassFixture<BoardWebApplicationFa
     }
 
     [Fact]
-    public async Task Hike_WithAnotherUsersKey_NeverAnswersWithTheirHike()
+    public async Task Hike_WithAnotherUsersKey_IsSavedAsTheirOwn()
     {
         var key = Guid.NewGuid();
-        await PostHikeAsync(BoardRequests.NaturElskaren, key);
+        var first = await PostHikeAsync(BoardRequests.NaturElskaren, key);
 
-        var response = await PostHikeAsync(BoardRequests.VandrarVennen, key);
+        var second = await PostHikeAsync(BoardRequests.VandrarVennen, key);
 
-        response.IsSuccessStatusCode.Should().BeFalse();
-        (await CountAsync(db => db.Hikes.Where(h => h.ClientRequestId == key))).Should().Be(1);
+        second.StatusCode.Should().Be(HttpStatusCode.Created);
+        var firstHike = await first.Content.ReadFromJsonAsync<HikeResponse>(Token);
+        var secondHike = await second.Content.ReadFromJsonAsync<HikeResponse>(Token);
+        firstHike.Should().NotBeNull();
+        secondHike.Should().NotBeNull();
+        secondHike.Identifier.Should().NotBe(firstHike.Identifier);
+        (await CountAsync(db => db.Hikes.Where(h => h.ClientRequestId == key))).Should().Be(2);
     }
 
     [Fact]
@@ -255,6 +260,24 @@ public class RetriedCreateIntegrationTests : IClassFixture<BoardWebApplicationFa
         first.StatusCode.Should().Be(HttpStatusCode.Created);
         second.StatusCode.Should().Be(HttpStatusCode.Created);
         (await CountAsync(db => db.TrailObstacles.Where(o => o.ClientRequestId == key))).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Obstacle_WithAnotherUsersKey_IsSavedAsTheirOwn()
+    {
+        var key = Guid.NewGuid();
+        var repo = new TrailObstacleRepository(Db, NullLogger<TrailObstacleRepository>.Instance, _factory.Services.GetRequiredService<IConfiguration>());
+        var theirs = NewObstacle(key);
+        theirs.UserId = VandrarVennen;
+
+        var first = await repo.AddTrailObstacleAsync(NewObstacle(key), Token);
+        var second = await repo.AddTrailObstacleAsync(theirs, Token);
+
+        first.IsSuccess.Should().BeTrue();
+        second.IsSuccess.Should().BeTrue();
+        second.Value.Should().NotBeNull();
+        second.Value.UserId.Should().Be(VandrarVennen);
+        (await CountAsync(db => db.TrailObstacles.Where(o => o.ClientRequestId == key))).Should().Be(2);
     }
 
     [Fact]
@@ -322,6 +345,25 @@ public class RetriedCreateIntegrationTests : IClassFixture<BoardWebApplicationFa
         second.Value.Post.Identifier.Should().Be(first.Value.Post.Identifier);
         second.Value.Post.NickName.Should().Be(first.Value.Post.NickName);
         (await CountAsync(context => context.EventPosts.Where(p => p.ClientRequestId == key))).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Post_WithAnotherUsersKey_IsPostedAsTheirOwn()
+    {
+        var identifier = await BoardRequests.CreateBoardAsync(_factory);
+        await using var db = await Db.CreateDbContextAsync(Token);
+        var eventId = await db.Events.Where(e => e.Identifier == identifier).Select(e => e.Id).SingleAsync(Token);
+        var repo = _factory.Services.GetRequiredService<IEventPostRepository>();
+        var key = Guid.NewGuid();
+
+        var first = await repo.CreateAsync(eventId, NaturElskaren, "Vi ses vid parkeringen", key, DateTime.UtcNow, TimeSpan.Zero, Token);
+        var second = await repo.CreateAsync(eventId, VandrarVennen, "Jag tar med fika", key, DateTime.UtcNow, TimeSpan.Zero, Token);
+
+        first.Value.Should().NotBeNull();
+        second.Value.Should().NotBeNull();
+        second.Value.Post.Identifier.Should().NotBe(first.Value.Post.Identifier);
+        second.Value.Post.Body.Should().Be("Jag tar med fika");
+        (await CountAsync(context => context.EventPosts.Where(p => p.ClientRequestId == key))).Should().Be(2);
     }
 
     [Fact]

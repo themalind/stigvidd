@@ -31,7 +31,8 @@ public class EventPostConfiguration : IEntityTypeConfiguration<EventPost>
         builder.HasIndex(p => p.Identifier)
             .IsUnique();
 
-        builder.HasIndex(p => p.ClientRequestId)
+        // A retry key is unique per user, so one user's key never blocks another's post. keep-comment: keys are client-made
+        builder.HasIndex(p => new { p.UserId, p.ClientRequestId })
             .IsUnique();
     }
 }

@@ -20,7 +20,8 @@ public class TrailObstacleConfiguration : IEntityTypeConfiguration<TrailObstacle
         // Named so IgnoreQueryFilters(["Moderation"]) can drop just this one. keep-comment: the name is referenced by string elsewhere
         builder.HasQueryFilter("Moderation", to => to.ModerationState == ModerationState.Visible);
 
-        builder.HasIndex(to => to.ClientRequestId)
+        // A retry key is unique per user, so one user's key never blocks another's save. keep-comment: keys are client-made
+        builder.HasIndex(to => new { to.UserId, to.ClientRequestId })
             .IsUnique();
     }
 }
