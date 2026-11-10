@@ -74,7 +74,7 @@
     "expo-task-manager": "~58.0.13",
     "expo-updates": "~58.0.21",
     "geolib": "^4.0.2",
-    "i18next": "^27.0.1",
+    "i18next": "^27.1.1",
     "jotai": "^3.0.2",
     "jotai-tanstack-query": "^0.11.0",
     "jwt-decode": "^4.0.0",
