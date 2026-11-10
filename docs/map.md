@@ -16,15 +16,15 @@ separately in [`record-hike.md`](./record-hike.md).
 | ------------------------------------------------------------------ | --------------------------------------------------------------- |
 | Shared base map (style, puck, attribution)                         | `src/components/map/map.tsx`                                    |
 | Basemap style URL + MapTiler setup                                 | `src/components/map/map-style.ts`                               |
-| Ambient tile-cache health                                          | `src/utils/map-cache.ts`                                        |
+| Ambient tile-cache health                                          | `src/utils/map/map-cache.ts`                                    |
 | Trailhead "start" marker (GeoJSON layers)                          | `src/components/map/start-marker.tsx`                           |
 | Live user puck with heading arrow                                  | `src/components/map/user-location-marker.tsx`                   |
 | Recenter-on-user button                                            | `src/components/map/center-on-user-button.tsx`                  |
 | Marker/route/ring colours (fixed light palette)                    | `src/components/map/marker-styles.ts`                           |
-| DTO → GeoJSON builders                                             | `src/utils/geojson.ts`                                          |
+| DTO → GeoJSON builders                                             | `src/utils/geo/geojson.ts`                                      |
 | **Fullscreen browse map** (clusters, facilities, filter, carousel) | `src/components/map/trail-markers-map.tsx`                      |
 | Browse-map screen (camera memory, carousel, filters)               | `src/app/(tabs)/(map)/index.tsx`                                |
-| Cluster tap decision (zoom vs open carousel)                       | `src/utils/cluster-action.ts`, `src/utils/cluster-zoom-band.ts` |
+| Cluster tap decision (zoom vs open carousel)                       | `src/components/map/cluster-action.ts`, `src/utils/map/cluster-zoom-band.ts` |
 | **Fullscreen follow view** (one route + live puck, shared)         | `src/components/map/route-follow-view.tsx`                      |
 | Follow view data path for a trail                                  | `src/components/map/trail-follow-screen.tsx`                    |
 | Follow view data path for a recorded / shared hike                 | `src/components/map/hike-follow-screen.tsx`                     |

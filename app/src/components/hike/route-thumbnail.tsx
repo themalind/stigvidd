@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS } from "@/constants/constants";
-import CoordinateParser from "@/utils/coordinate-parser";
-import { buildRouteThumbnail } from "@/utils/route-thumbnail";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
+import { buildRouteThumbnail } from "@/components/hike/build-route-thumbnail";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { memo, useMemo } from "react";
 import { StyleSheet, View } from "react-native";

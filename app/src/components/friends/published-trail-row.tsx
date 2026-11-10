@@ -9,8 +9,8 @@ import ImageThumbnail, { THUMBNAIL_SIZE } from "@/components/media/image-thumbna
 import MediaListRow from "@/components/media/media-list-row";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { FriendPublishedTrail } from "@/data/types";
-import { formatDate } from "@/utils/format-date";
-import { formatDistanceKm } from "@/utils/format-distance";
+import { formatDate } from "@/utils/format/format-date";
+import { formatDistanceKm } from "@/utils/format/format-distance";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";

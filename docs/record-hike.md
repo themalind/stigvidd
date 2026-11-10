@@ -17,7 +17,7 @@ _why_ the code does what it does so future changes don't quietly undo a fix.
 | Permission gate + screen chrome               | `src/app/(tabs)/(profile-stack)/user/create-hike.tsx`          |
 | Pre-start info dialog                         | `src/components/hike/recorder/recording-info-dialog.tsx`       |
 | Save form (name, trim, submit)                | `src/components/hike/recorder/save-hike-form.tsx`              |
-| Trim/duration recompute                       | `src/utils/trim-hike.ts`                                       |
+| Trim/duration recompute                       | `src/components/hike/trim-hike.ts`                             |
 
 ## Core data model
 

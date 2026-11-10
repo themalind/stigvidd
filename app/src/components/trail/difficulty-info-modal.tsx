@@ -10,7 +10,7 @@ import InfoDialog from "@/components/dialog/info-dialog";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { asTranslationKey } from "@/i18n";
 import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { useTranslation } from "react-i18next";
 
 interface Props {

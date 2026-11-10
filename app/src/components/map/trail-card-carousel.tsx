@@ -10,7 +10,7 @@ import { SCREEN_PADDING, SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/con
 import { TrailCard } from "@/data/types";
 import { useTrailCards } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { memo, useCallback, useEffect, useRef, useState } from "react";

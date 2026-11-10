@@ -12,7 +12,7 @@ import { closestByType, getAllByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { getDialog, hideDialog } from "@/services/dialog";
 import { renderWithProviders } from "@/test/render";
-import { resizeImage } from "@/utils/resizeImage";
+import { resizeImage } from "@/utils/image/resize-image";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -23,7 +23,7 @@ jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
 }));
-jest.mock("@/utils/resizeImage", () => ({ resizeImage: jest.fn() }));
+jest.mock("@/utils/image/resize-image", () => ({ resizeImage: jest.fn() }));
 
 const requestPermission = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
 const launchLibrary = ImagePicker.launchImageLibraryAsync as jest.Mock;

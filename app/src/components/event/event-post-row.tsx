@@ -8,7 +8,7 @@
 import OverflowMenu from "@/components/layout/overflow-menu";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { EventPost } from "@/data/types";
-import { formatPostTime } from "@/utils/event-time";
+import { formatPostTime } from "@/utils/event/event-time";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";

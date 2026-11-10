@@ -13,7 +13,7 @@ import SelectInput from "@/components/form/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { UpdateTrailObstacleRequest } from "@/data/types";
-import issueTypeParser from "@/utils/issue-type-parser";
+import issueTypeParser from "@/components/trail/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

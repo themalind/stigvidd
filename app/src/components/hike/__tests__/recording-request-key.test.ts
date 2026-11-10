@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { ActiveHike, Segment } from "@/data/types";
-import { recordingRequestKey } from "@/utils/recording-request-key";
+import { recordingRequestKey } from "@/components/hike/recording-request-key";
 
 function segment(pointCount: number, startTime: number): Segment {
   const coordinates = Array.from({ length: pointCount }, (_, i) => ({

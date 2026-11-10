@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS, MAX_PENDING_SUBMISSIONS } from "@/constants/constants";
-import { formatDate } from "@/utils/format-date";
+import { formatDate } from "@/utils/format/format-date";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";

@@ -9,7 +9,7 @@ import InfoButton from "@/components/display/info-button";
 import { InfoCard, InfoGrid, InfoItem, InfoValue } from "@/components/display/info-card";
 import { Trail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";

@@ -12,7 +12,7 @@ JPEG, which is why the bug showed up only on iOS.
 [add-review-images.tsx](../../app/src/components/review/add/add-review-images.tsx) used to reject
 any asset whose `mimeType` was not `image/jpeg`, and it did that **before** resizing. That check
 was never needed. The next step,
-[resizeImage](../../app/src/utils/resizeImage.ts), uses `expo-image-manipulator` with
+[resizeImage](../../app/src/utils/image/resize-image.ts), uses `expo-image-manipulator` with
 `SaveFormat.JPEG`, so every pick is re-encoded as JPEG. `createReview` then uploads it as
 `image/jpeg`. The API never sees the original format.
 

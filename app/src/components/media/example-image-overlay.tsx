@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { asTranslationKey } from "@/i18n";
-import { isMockImage } from "@/utils/is-mock-image";
+import { isMockImage } from "@/components/media/is-mock-image";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LayoutChangeEvent, StyleSheet, View } from "react-native";

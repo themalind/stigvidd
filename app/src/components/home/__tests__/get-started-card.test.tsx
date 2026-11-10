@@ -9,7 +9,7 @@ import GetStartedCard from "@/components/home/get-started-card";
 import { OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { getAllByType, getByType } from "@/test/composites";
 import { renderWithProviders } from "@/test/render";
-import { buildDecorativeRoute } from "@/utils/decorative-route";
+import { buildDecorativeRoute } from "@/utils/geo/decorative-route";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";

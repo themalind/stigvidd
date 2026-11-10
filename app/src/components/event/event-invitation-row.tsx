@@ -7,7 +7,7 @@
 
 import { BORDER_RADIUS } from "@/constants/constants";
 import { EventInvitation } from "@/data/types";
-import { formatEventDate, formatTimeRange } from "@/utils/event-time";
+import { formatEventDate, formatTimeRange } from "@/utils/event/event-time";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";

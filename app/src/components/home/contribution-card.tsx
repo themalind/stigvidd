@@ -8,7 +8,7 @@
 import LikeCount from "@/components/display/like-count";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailCard } from "@/data/types";
-import { formatDistanceKm } from "@/utils/format-distance";
+import { formatDistanceKm } from "@/utils/format/format-distance";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";

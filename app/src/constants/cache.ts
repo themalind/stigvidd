@@ -39,7 +39,7 @@ export const REVERSE_GEOCODE_STALE_TIME = 10 * 60 * 1000; // place name for a po
 // It can intermittently fall into a corrupt state where every tile request is
 // cancelled ("permanent error: Canceled") and the map stays blank. We cap its
 // size and reset it on each new build to neutralise that trigger — see
-// `app/src/utils/map-cache.ts`.
+// `app/src/utils/map/map-cache.ts`.
 export const MAP_AMBIENT_CACHE_MAX_BYTES = 100 * 1024 * 1024; // 100 MB, shared by the outdoor and satellite basemaps
 export const MAP_CACHE_BUILD_KEY = "@stigvidd/map_cache_build"; // AsyncStorage key: last build the cache was reset for
 

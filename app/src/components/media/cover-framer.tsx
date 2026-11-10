@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS } from "@/constants/constants";
-import { coverOverflow, focusAfterDrag, ImageSize } from "@/utils/cover-focus";
+import { coverOverflow, focusAfterDrag, ImageSize } from "@/components/media/cover-focus";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { ReactNode, useRef, useState } from "react";

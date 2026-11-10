@@ -14,7 +14,7 @@ import {
   DEFAULT_EVENT_FILTERS,
   EventFilters,
   toSearchParams,
-} from "@/utils/event-search";
+} from "@/utils/event/event-search";
 import { useMemo, useState } from "react";
 
 export const SEARCH_DEBOUNCE_MS = 300;

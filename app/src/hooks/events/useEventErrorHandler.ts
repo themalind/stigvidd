@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
-import { eventErrorKey } from "@/utils/event-errors";
+import { eventErrorKey } from "@/utils/event/event-errors";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useCallback } from "react";

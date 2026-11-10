@@ -12,7 +12,7 @@ import {
   DEFAULT_EVENT_FILTERS,
   EventFilters,
   toSearchParams,
-} from "@/utils/event-search";
+} from "@/utils/event/event-search";
 
 // Thursday 5 November 2026, mid-afternoon local time.
 const THURSDAY = new Date(2026, 10, 5, 15, 20);

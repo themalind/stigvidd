@@ -9,7 +9,7 @@ decisions that are easy to break.
 
 | Concern                                 | File                                                    |
 | --------------------------------------- | ------------------------------------------------------- |
-| Client pre-upload resize/compress       | `app/src/utils/resizeImage.ts`                          |
+| Client pre-upload resize/compress       | `app/src/utils/image/resize-image.ts`                    |
 | Orchestrates process → upload           | `backend/Core/Services/Media/MediaUploadService.cs`     |
 | ImageMagick processing                  | `backend/Core/Services/Media/ImageProcessingService.cs` |
 | Request DTO → processing options        | `backend/Core/Factories/ImageProcessingOptionsMapper.cs` |

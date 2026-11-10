@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { relativeDay } from "@/utils/relative-day";
+import { relativeDay } from "@/utils/format/relative-day";
 
 const now = new Date(2026, 7, 15, 9, 0);
 

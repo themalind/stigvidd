@@ -24,10 +24,10 @@ import {
   emptyEventForm,
   eventFormFromEvent,
   validateEventForm,
-} from "@/utils/event-form";
-import { formatDistanceKm } from "@/utils/format-distance";
+} from "@/utils/event/event-form";
+import { formatDistanceKm } from "@/utils/format/format-distance";
 import { guardedNavigate } from "@/utils/navigation";
-import { pickImages } from "@/utils/pick-images";
+import { pickImages } from "@/utils/image/pick-images";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";

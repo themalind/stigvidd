@@ -22,7 +22,7 @@ built on them.
 | Hike write + validation                  | `backend/Core/Services/HikeService.cs`                                                  |
 | PostGIS enablement + backfill migrations | `backend/Infrastructure/Migrations/*PostGIS*.cs`                                        |
 | NetTopologySuite provider config         | `backend/Core/ServiceCollectionExtensions.cs` (runtime), `backend/Infrastructure/Data/DesignTimeDbContextFactory.cs` (`dotnet ef`) |
-| Wire JSON → GeoJSON positions (client)   | `app/src/utils/coordinate-parser.ts`                                                    |
+| Wire JSON → GeoJSON positions (client)   | `app/src/utils/geo/coordinate-parser.ts`                                                |
 | Marker fetch (client)                    | `app/src/api/map-markers.ts`                                                            |
 
 ## Storage model

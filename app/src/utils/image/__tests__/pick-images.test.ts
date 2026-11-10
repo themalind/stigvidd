@@ -7,15 +7,15 @@
 
 import "@/i18n";
 import { getDialog, hideDialog } from "@/services/dialog";
-import { pickImages } from "@/utils/pick-images";
-import { resizeImage } from "@/utils/resizeImage";
+import { pickImages } from "@/utils/image/pick-images";
+import { resizeImage } from "@/utils/image/resize-image";
 import * as ImagePicker from "expo-image-picker";
 
 jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
 }));
-jest.mock("@/utils/resizeImage", () => ({ resizeImage: jest.fn() }));
+jest.mock("@/utils/image/resize-image", () => ({ resizeImage: jest.fn() }));
 
 const requestPermission = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
 const launchLibrary = ImagePicker.launchImageLibraryAsync as jest.Mock;

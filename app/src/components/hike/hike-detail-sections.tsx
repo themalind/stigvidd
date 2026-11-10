@@ -7,7 +7,7 @@
 
 import { InfoCard, InfoGrid, InfoItem, InfoLabel, InfoValue } from "@/components/display/info-card";
 import { BORDER_RADIUS } from "@/constants/constants";
-import FormattedTime from "@/utils/format-time-from-ms";
+import FormattedTime from "@/utils/format/format-time-from-ms";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { Divider, Icon, Text, useTheme } from "react-native-paper";

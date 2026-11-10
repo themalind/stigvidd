@@ -7,7 +7,7 @@
 
 import StatsHero, { HeroSatellite } from "@/components/display/stats-hero";
 import { SharedHike } from "@/data/types";
-import { formatDistanceKm } from "@/utils/format-distance";
+import { formatDistanceKm } from "@/utils/format/format-distance";
 import { summarizeSharedHikes } from "@/utils/hike-stats";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";

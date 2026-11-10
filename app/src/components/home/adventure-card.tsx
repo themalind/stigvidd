@@ -19,7 +19,7 @@ import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
 import { useRealUserLocation } from "@/hooks/useUserLocation";
 import { guardedNavigate } from "@/utils/navigation";
-import { pickRandomTrail } from "@/utils/pick-random-trail";
+import { pickRandomTrail } from "@/components/home/pick-random-trail";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";

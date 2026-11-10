@@ -22,7 +22,7 @@ import { CreateHikeSubmissionRequest, Hike } from "@/data/types";
 import { HIKE_SUBMISSIONS_QUERY_ROOT } from "@/hooks/hike/useMyHikeSubmissions";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { asTranslationKey } from "@/i18n";
-import CoordinateParser from "@/utils/coordinate-parser";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Image } from "expo-image";

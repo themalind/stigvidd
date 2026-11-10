@@ -10,12 +10,12 @@ import { useUserLocation } from "@/hooks/useUserLocation";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { FacilityType, hasFacilityType, MapMarkerFilter } from "@/data/types";
-import { type ClusterActionConfig, decideClusterAction } from "@/utils/cluster-action";
+import { type ClusterActionConfig, decideClusterAction } from "@/components/map/cluster-action";
 import {
   featureCollectionFromFacilities,
   featureCollectionFromMarkers,
   pointFeatureFromPosition,
-} from "@/utils/geojson";
+} from "@/utils/geo/geojson";
 import {
   Camera,
   type CameraRef,

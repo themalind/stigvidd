@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { openDirectionsToStart } from "@/utils/open-directions";
+import { openDirectionsToStart } from "@/utils/map/open-directions";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";

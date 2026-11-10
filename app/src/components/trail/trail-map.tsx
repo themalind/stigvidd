@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import { lineStringFromPositions } from "@/utils/geojson";
-import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
+import { lineStringFromPositions } from "@/utils/geo/geojson";
+import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useCallback, useMemo, useRef } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";

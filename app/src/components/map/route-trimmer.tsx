@@ -8,10 +8,10 @@
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { formatDistanceKm } from "@/utils/format-distance";
-import { lineStringFromPositions } from "@/utils/geojson";
-import getBoundsFromTrail from "@/utils/get-bounds-from-trail";
-import { haversineDistance } from "@/utils/haversine";
+import { formatDistanceKm } from "@/utils/format/format-distance";
+import { lineStringFromPositions } from "@/utils/geo/geojson";
+import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
+import { haversineDistance } from "@/utils/geo/haversine";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { Slider } from "@miblanchard/react-native-slider";
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";

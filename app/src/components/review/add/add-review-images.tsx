@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { pickImages } from "@/utils/pick-images";
+import { pickImages } from "@/utils/image/pick-images";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useSetAtom } from "jotai";

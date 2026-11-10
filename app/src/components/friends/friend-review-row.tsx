@@ -7,7 +7,7 @@
 
 import { Rating } from "@/components/review/rating";
 import { FriendReview } from "@/data/types";
-import { formatDate } from "@/utils/format-date";
+import { formatDate } from "@/utils/format/format-date";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";

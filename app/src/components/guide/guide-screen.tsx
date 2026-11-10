@@ -10,7 +10,7 @@ import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { asTranslationKey } from "@/i18n";
 import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

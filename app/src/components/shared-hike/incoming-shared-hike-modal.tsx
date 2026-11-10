@@ -8,8 +8,8 @@
 import { HikeInfoRows, HikeStatsCard } from "@/components/hike/hike-detail-sections";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { SharedHike } from "@/data/types";
-import CoordinateParser from "@/utils/coordinate-parser";
-import { formatDate } from "@/utils/format-date";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
+import { formatDate } from "@/utils/format/format-date";
 import { Fontisto } from "@expo/vector-icons";
 import ModalScrim from "@/components/dialog/modal-scrim";
 import { useMemo } from "react";

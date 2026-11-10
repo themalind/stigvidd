@@ -20,7 +20,7 @@ import PagerCarousel from "@/components/trail/pager-carousel";
 import { POPULAR_TRAILS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { guardedNavigate } from "@/utils/navigation";
-import { roundTo } from "@/utils/round-to";
+import { roundTo } from "@/utils/format/round-to";
 import { useLatestHike } from "@/hooks/hike/useLatestHike";
 import { useIsOnline } from "@/hooks/useIsOnline";
 import { useUserLocation } from "@/hooks/useUserLocation";

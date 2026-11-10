@@ -19,7 +19,7 @@ import TrailTitle from "@/components/trail/trail-title";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { Review } from "@/data/types";
-import CoordinateParser from "@/utils/coordinate-parser";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { userAtom } from "@/atoms/auth-atoms";
 import { guardedNavigate } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";

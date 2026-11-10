@@ -10,7 +10,7 @@ reported about 100 succeeded and 700 failed. Every failure was
 
 **Why it looks like something else.** A 404 on download reads as "the file was never
 there". It is easy to decide the `mock/*` placeholders are not on WebDAV at all, since
-[is-mock-image.ts](../../app/src/utils/is-mock-image.ts) says they "live on stigvidd.se", and
+[is-mock-image.ts](../../app/src/components/media/is-mock-image.ts) says they "live on stigvidd.se", and
 exclude them. That is wrong. The public URL is `PRESENTABLE_BASE_URL + ImageUrl`
 (`https://media.stigvidd.se/`), which is the same nginx `media` WebDAV server the API writes
 to (`WebDav__BaseUrl: http://media/`). The files were there until the batch deleted them. The
@@ -59,7 +59,7 @@ neither its source nor its result path, so "Retry failed" only 404s again until 
 restored to their old paths.
 
 **A placeholder must keep `mock` in its path.** The app shows its "Example image" badge only
-because the URL contains `mock` ([is-mock-image.ts](../../app/src/utils/is-mock-image.ts)).
+because the URL contains `mock` ([is-mock-image.ts](../../app/src/components/media/is-mock-image.ts)).
 A reprocessed file that lands in `trails/<guid>.webp` loses the badge, and after the shared-file
 fix that would happen to all ~110 rows on a placeholder at once. So the reprocess uploads the
 result into the source's own folder (`MediaReprocessItemProcessor.TargetDirectory`).

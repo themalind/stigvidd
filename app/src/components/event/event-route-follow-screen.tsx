@@ -7,7 +7,7 @@
 
 import RouteFollowView from "@/components/map/route-follow-view";
 import { useEvent } from "@/hooks/events/useEventQueries";
-import CoordinateParser from "@/utils/coordinate-parser";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";

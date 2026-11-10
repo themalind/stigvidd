@@ -8,7 +8,7 @@
 import FilterChip from "@/components/filter/filter-chip";
 import SearchField from "@/components/form/search-field";
 import { EventSearch } from "@/hooks/events/useEventSearch";
-import { EventWhen } from "@/utils/event-search";
+import { EventWhen } from "@/utils/event/event-search";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";

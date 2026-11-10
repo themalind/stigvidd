@@ -8,7 +8,7 @@
 import RouteFollowView from "@/components/map/route-follow-view";
 import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
 import { useTrailCard } from "@/hooks/useTrailCard";
-import CoordinateParser from "@/utils/coordinate-parser";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";

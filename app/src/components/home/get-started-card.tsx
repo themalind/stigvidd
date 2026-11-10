@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS, OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import { buildDecorativeRoute } from "@/utils/decorative-route";
+import { buildDecorativeRoute } from "@/utils/geo/decorative-route";
 import { guardedNavigate } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";

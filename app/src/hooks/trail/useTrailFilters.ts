@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { FilterOptions, LatLng } from "@/data/types";
-import { compareSv } from "@/utils/compare-sv";
+import { compareSv } from "@/utils/format/compare-sv";
 import { getDistance } from "geolib";
 import { useMemo, useState } from "react";
 

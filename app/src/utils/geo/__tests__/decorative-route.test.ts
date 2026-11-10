@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { buildDecorativeRoute } from "@/utils/decorative-route";
+import { buildDecorativeRoute } from "@/utils/geo/decorative-route";
 
 function pointsFrom(d: string): [number, number][] {
   return d

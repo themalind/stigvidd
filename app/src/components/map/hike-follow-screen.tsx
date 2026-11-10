@@ -8,7 +8,7 @@
 import { getHikeByIdentifier, hikeRouteQueryKey } from "@/api/hikes";
 import RouteFollowView from "@/components/map/route-follow-view";
 import { HIKE_GEOMETRY_STALE_TIME } from "@/constants/cache";
-import CoordinateParser from "@/utils/coordinate-parser";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";

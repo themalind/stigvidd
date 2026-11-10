@@ -16,7 +16,7 @@ import { CreateContentReportRequest, ReportedContentType } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { track } from "@/services/analytics";
-import reportReasonParser from "@/utils/report-reason-parser";
+import reportReasonParser from "@/components/report/report-reason-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

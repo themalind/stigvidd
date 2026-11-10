@@ -7,7 +7,7 @@
 
 import i18n from "@/i18n";
 import { showDialog } from "@/services/dialog";
-import { resizeImage } from "@/utils/resizeImage";
+import { resizeImage } from "@/utils/image/resize-image";
 import * as ImagePicker from "expo-image-picker";
 
 export async function pickImages({ limit }: { limit: number }): Promise<string[] | null> {

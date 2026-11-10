@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import HikeListRow from "@/components/hike/hike-list-row";
-import { SentShare } from "@/utils/outgoing-shares";
+import { SentShare } from "@/utils/share/outgoing-shares";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 

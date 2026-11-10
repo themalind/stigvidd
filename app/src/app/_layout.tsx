@@ -7,7 +7,7 @@
 
 import { pruneTrailCardCache } from "@/hooks/useTrailCard";
 import { initMapTiler } from "@/components/map/map-style";
-import { initMapCache } from "@/utils/map-cache";
+import { initMapCache } from "@/utils/map/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { basemapAtom, loadBasemap } from "@/atoms/basemap-atom";
 import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";

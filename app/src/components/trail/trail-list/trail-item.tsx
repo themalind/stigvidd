@@ -8,7 +8,7 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { memo } from "react";

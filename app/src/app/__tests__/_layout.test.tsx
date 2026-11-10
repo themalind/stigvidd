@@ -131,7 +131,7 @@ jest.mock("@/i18n", () => ({
 
 jest.mock("@/hooks/useTrailCard", () => ({ pruneTrailCardCache: () => mockPruneTrailCardCache() }));
 jest.mock("@/components/map/map-style", () => ({ initMapTiler: () => mockInitMapTiler() }));
-jest.mock("@/utils/map-cache", () => ({ initMapCache: () => mockInitMapCache() }));
+jest.mock("@/utils/map/map-cache", () => ({ initMapCache: () => mockInitMapCache() }));
 const { telemetryCalls } = jest.requireMock("@/services/telemetry");
 
 const USER = { id: "user-1" };

@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { SCREEN_PADDING } from "@/constants/constants";
-import { buildDecorativeRoute } from "@/utils/decorative-route";
+import { buildDecorativeRoute } from "@/utils/geo/decorative-route";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";

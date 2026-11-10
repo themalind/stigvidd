@@ -15,8 +15,8 @@ import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { LocationData } from "@/data/types";
 import { dismissRecordingInfo, shouldShowRecordingInfo } from "@/services/location-task";
 import { useLocationTracking } from "@/services/use-location-tracking";
-import { lineStringFromPositions } from "@/utils/geojson";
-import FormattedTime from "@/utils/format-time-from-ms";
+import { lineStringFromPositions } from "@/utils/geo/geojson";
+import FormattedTime from "@/utils/format/format-time-from-ms";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import {
   Camera,

@@ -8,7 +8,7 @@
 import DialogFrame from "@/components/dialog/dialog-frame";
 import PersonRow from "@/components/friends/person-row";
 import { ShareRecipient } from "@/data/types";
-import { formatDate } from "@/utils/format-date";
+import { formatDate } from "@/utils/format/format-date";
 import { useTranslation } from "react-i18next";
 
 interface Props {

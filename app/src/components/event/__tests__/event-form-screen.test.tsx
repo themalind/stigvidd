@@ -48,7 +48,7 @@ jest.mock("@/api/events", () => ({
 const mockSetImage = jest.fn();
 const mockDeleteImage = jest.fn();
 const mockPickImages = jest.fn();
-jest.mock("@/utils/pick-images", () => ({ pickImages: (...args: unknown[]) => mockPickImages(...args) }));
+jest.mock("@/utils/image/pick-images", () => ({ pickImages: (...args: unknown[]) => mockPickImages(...args) }));
 
 jest.mock("@/api/trails", () => ({
   getAllTrails: () =>

@@ -9,7 +9,7 @@ import RoutePreviewMap from "@/components/map/route-preview-map";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { HikingEvent } from "@/data/types";
 import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
-import CoordinateParser from "@/utils/coordinate-parser";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { useMemo } from "react";

@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { Segment } from "@/data/types";
-import { flattenSegments, recomputeTrimmedHike } from "@/utils/trim-hike";
+import { flattenSegments, recomputeTrimmedHike } from "@/components/hike/trim-hike";
 
 // Builds a segment from [lat, lng, timeStamp] tuples.
 function segment(points: [number, number, number][]): Segment {

@@ -13,7 +13,7 @@ import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Review } from "@/data/types";
 import { useDeleteReview } from "@/hooks/review/useDeleteReview";
-import { formatDate } from "@/utils/format-date";
+import { formatDate } from "@/utils/format/format-date";
 import { useAtom } from "jotai";
 import { Fragment, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";

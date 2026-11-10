@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { HikingEvent } from "@/data/types";
-import { MeetingPoint } from "@/utils/open-directions";
+import { MeetingPoint } from "@/utils/map/open-directions";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 

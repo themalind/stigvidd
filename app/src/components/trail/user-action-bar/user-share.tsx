@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { Trail } from "@/data/types";
-import { shareLinkUrl, shareMessage } from "@/utils/share-link";
+import { shareLinkUrl, shareMessage } from "@/utils/share/share-link";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";

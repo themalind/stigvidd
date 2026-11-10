@@ -7,7 +7,7 @@
 
 import BanContactText from "@/components/auth/ban-contact-text";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { formatDate } from "@/utils/format-date";
+import { formatDate } from "@/utils/format/format-date";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";

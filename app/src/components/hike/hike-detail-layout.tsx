@@ -11,8 +11,8 @@ import { HikeFact, HikeFactsCard, HikeInfo, HikeInfoCard } from "@/components/hi
 import RoutePreviewMap from "@/components/map/route-preview-map";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import CoordinateParser from "@/utils/coordinate-parser";
-import FormattedTime from "@/utils/format-time-from-ms";
+import CoordinateParser from "@/utils/geo/coordinate-parser";
+import FormattedTime from "@/utils/format/format-time-from-ms";
 import { ReactNode, startTransition, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Platform, ScrollView, StyleSheet, View } from "react-native";

@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS } from "@/constants/constants";
-import { formatDistanceKm } from "@/utils/format-distance";
+import { formatDistanceKm } from "@/utils/format/format-distance";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";

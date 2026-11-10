@@ -19,7 +19,7 @@ import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";
 import { EventPost } from "@/data/types";
 import { eventBoardKey, firstUnreadPostId, useEventBoard, useEventBoardMutations } from "@/hooks/events/useEventBoard";
 import { useEvent } from "@/hooks/events/useEventQueries";
-import { eventErrorCode } from "@/utils/event-errors";
+import { eventErrorCode } from "@/utils/event/event-errors";
 import { useKeyboardHeight } from "@/hooks/useKeyboardHeight";
 import { useBottomTabBarHeight } from "expo-router/js-tabs";
 import { useLocalSearchParams } from "expo-router";

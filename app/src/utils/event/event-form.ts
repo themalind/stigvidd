@@ -7,7 +7,7 @@
 
 import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";
 import { CreateEventRequest, EventVisibility, HikingEvent, UpdateEventRequest } from "@/data/types";
-import { sameDay } from "@/utils/event-time";
+import { sameDay } from "@/utils/event/event-time";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 // A picker drops seconds, so an unchanged time can read as moved. keep-comment: mirrors EventService.Moved

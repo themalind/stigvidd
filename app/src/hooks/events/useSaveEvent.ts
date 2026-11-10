@@ -9,7 +9,7 @@ import { createEvent, deleteEventImage, inviteToEvent, setEventImage, updateEven
 import { showSuccessAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { HikingEvent } from "@/data/types";
 import { useRetryKey } from "@/hooks/useRetryKey";
-import { EventFormValues, toCreateEventRequest, toUpdateEventRequest } from "@/utils/event-form";
+import { EventFormValues, toCreateEventRequest, toUpdateEventRequest } from "@/utils/event/event-form";
 import { useMutation } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";

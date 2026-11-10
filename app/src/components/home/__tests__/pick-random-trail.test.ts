@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { pickRandomTrail } from "@/utils/pick-random-trail";
+import { pickRandomTrail } from "@/components/home/pick-random-trail";
 
 const TRAILS = [{ identifier: "a" }, { identifier: "b" }, { identifier: "c" }];
 

@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { HikingEvent } from "@/data/types";
-import { shareLinkUrl, shareMessage } from "@/utils/share-link";
+import { shareLinkUrl, shareMessage } from "@/utils/share/share-link";
 import { useTranslation } from "react-i18next";
 import { IconButton } from "react-native-paper";
 

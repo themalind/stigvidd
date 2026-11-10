@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Icon, IconButton, Text, useTheme } from "react-native-paper";
 import { DatePickerModal, TimePickerModal } from "react-native-paper-dates";
-import { paperDatesLocale } from "@/utils/paper-dates-locale";
+import { paperDatesLocale } from "@/utils/format/paper-dates-locale";
 
 type Props = {
   label: string;

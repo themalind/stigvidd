@@ -12,7 +12,7 @@ import { SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailCard } from "@/hooks/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";

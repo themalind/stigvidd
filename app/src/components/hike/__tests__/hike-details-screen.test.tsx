@@ -12,7 +12,7 @@ import { MAX_PENDING_SUBMISSIONS, SURFACE_BORDER_RADIUS } from "@/constants/cons
 import { AppDefaultTheme } from "@/constants/theme";
 import { Hike } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
-import { formatDate } from "@/utils/format-date";
+import { formatDate } from "@/utils/format/format-date";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { View } from "react-native";
@@ -41,7 +41,7 @@ jest.mock("@/api/hikes", () => ({
   hikeRouteQueryKey: (identifier: string) => ["hike-route", identifier],
 }));
 
-jest.mock("@/utils/pick-images", () => ({ pickImages: (...args: unknown[]) => mockPickImages(...args) }));
+jest.mock("@/utils/image/pick-images", () => ({ pickImages: (...args: unknown[]) => mockPickImages(...args) }));
 
 const mockGetSubmissions = jest.fn();
 const mockCreateSubmission = jest.fn();

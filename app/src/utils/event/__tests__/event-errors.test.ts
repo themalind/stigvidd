@@ -14,7 +14,10 @@ import { EVENT_ERROR_CODES, eventErrorKey } from "../event-errors";
 
 describe("EVENT_ERROR_CODES", () => {
   it("lists exactly the backend's EventErrorCodes", () => {
-    const source = readFileSync(join(__dirname, "../../../../backend/Core/Services/Events/EventErrorCodes.cs"), "utf8");
+    const source = readFileSync(
+      join(__dirname, "../../../../../backend/Core/Services/Events/EventErrorCodes.cs"),
+      "utf8",
+    );
     const backend = [...source.matchAll(/public const string \w+ = "([^"]+)";/g)].map((match) => match[1]);
 
     expect(backend.length).toBeGreaterThan(0);

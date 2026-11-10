@@ -15,7 +15,7 @@ import {
   toCreateEventRequest,
   toUpdateEventRequest,
   validateEventForm,
-} from "@/utils/event-form";
+} from "@/utils/event/event-form";
 
 const NOW = new Date("2026-11-01T10:00:00Z");
 const HOUR = 60 * 60 * 1000;

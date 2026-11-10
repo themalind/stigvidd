@@ -7,8 +7,8 @@
 
 import { BORDER_RADIUS, EVENT_COVER_ASPECT } from "@/constants/constants";
 import { EventSummary } from "@/data/types";
-import { formatDistanceKm } from "@/utils/format-distance";
-import { formatTimeRange } from "@/utils/event-time";
+import { formatDistanceKm } from "@/utils/format/format-distance";
+import { formatTimeRange } from "@/utils/event/event-time";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { memo } from "react";

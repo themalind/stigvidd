@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { avatarColors, initials } from "@/utils/avatar-color";
+import { avatarColors, initials } from "@/components/friends/avatar-color";
 import { useMemo } from "react";
 import { Avatar, useTheme } from "react-native-paper";
 

@@ -7,7 +7,7 @@
 
 // App-owned geographic coordinate in the device/wire format ({ latitude, longitude }).
 // Used by GPS tracking, geolib distance and the hike-creation request payload.
-// Map rendering uses GeoJSON Position ([lng, lat]) instead — see utils/geojson.ts.
+// Map rendering uses GeoJSON Position ([lng, lat]) instead — see utils/geo/geojson.ts.
 export interface LatLng {
   latitude: number;
   longitude: number;

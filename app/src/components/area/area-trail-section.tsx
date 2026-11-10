@@ -9,7 +9,7 @@ import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { CityAreaTrail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
-import { getDifficultyIcon } from "@/utils/getDifficultyIcon";
+import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
