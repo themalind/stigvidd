@@ -87,3 +87,10 @@ a placeholder in [ci/build.env](../../ci/build.env) — required, because
 
 **A secret deleted from the working tree is not rotated.** Everything `ab97fb3` removed is
 still in the public GitHub history and has to be regenerated in Keycloak.
+
+## LinkTests inherit StigviddLinks/appsettings.json the same way
+
+`LinkServiceFactory` blanks scalar settings with `UseSetting(key, "")`, but an empty setting
+cannot clear a configuration **array**: once `AndroidSha256Fingerprints` held the real Play
+fingerprint, the "no fingerprint → 404" test went red. Arrays are replaced with
+`PostConfigure<AppLinksOptions>` in the factory; set one with `WithFingerprint("AA:BB")`.
