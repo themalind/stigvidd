@@ -68,52 +68,52 @@ export const AppDefaultTheme = merge(CombinedDefaultTheme, {
 
 export const AppDarkTheme = merge(CombinedDarkTheme, {
   colors: {
-    // Primär (orange accent — knappar, toggles, ikoner, fokuserade fält)
+    // Primary (orange accent: buttons, toggles, icons, focused fields)
     primary: "hsl(25, 95%, 55%)",
     onPrimary: "hsl(0, 0%, 8%)",
     primaryContainer: "hsl(25, 60%, 22%)",
     onPrimaryContainer: "hsl(25, 90%, 88%)",
 
-    // Sekundär (neutral grå — sekundära knappar, chips)
+    // Secondary (neutral grey: secondary buttons, chips)
     secondary: "hsl(0, 0%, 80%)",
     onSecondary: "hsl(0, 0%, 10%)",
     secondaryContainer: "hsl(0, 0%, 20%)",
     onSecondaryContainer: "hsl(0, 0%, 92%)",
 
-    // Tertiär (svagare orange-variant för subtilare accenter)
+    // Tertiary (softer orange for subtler accents)
     tertiary: "hsl(25, 70%, 70%)",
     onTertiary: "hsl(25, 80%, 12%)",
     tertiaryContainer: "hsl(25, 40%, 18%)",
     onTertiaryContainer: "hsl(25, 85%, 90%)",
 
-    // Varning & fel
+    // Warning & error
     warning: "hsl(35, 95%, 60%)",
     error: "hsl(0, 75%, 62%)",
     onError: "hsl(0, 0%, 100%)",
     errorContainer: "hsl(0, 35%, 20%)",
     onErrorContainer: "hsl(0, 90%, 90%)",
 
-    // Bakgrund & ytor (svart → mörkgrå-trappa)
+    // Background & surfaces (black → dark grey steps)
     background: "hsl(0, 0%, 4%)",
     onBackground: "hsl(0, 0%, 96%)",
-    surface: "hsl(0, 0%, 10%)", // modaler/kort, som "Lägg till lägerplats"
+    surface: "hsl(0, 0%, 10%)", // modals and cards
     onSurface: "hsl(0, 0%, 96%)",
-    surfaceVariant: "hsl(0, 0%, 16%)", // input-bakgrund, listrader
+    surfaceVariant: "hsl(0, 0%, 16%)", // input background, list rows
     onSurfaceVariant: "hsl(0, 0%, 75%)",
 
-    // Konturer (orange som i bilden — input-fältens kanter)
+    // Outlines (orange input borders)
     outline: "hsl(25, 90%, 55%)",
     outlineVariant: "hsl(0, 0%, 25%)",
 
     shadow: "rgb(0, 0, 0)",
     scrim: "rgb(0, 0, 0)",
 
-    // Inverterade ytor (t.ex. snackbar)
+    // Inverse surfaces (e.g. snackbar)
     inverseSurface: "hsl(0, 0%, 94%)",
     inverseOnSurface: "hsl(0, 0%, 12%)",
     inversePrimary: "hsl(25, 90%, 40%)",
 
-    // Elevation-trappa — mörkgrå med svag varm dragning
+    // Elevation steps: dark grey with a slight warm tint
     elevation: {
       level0: "transparent",
       level1: "hsl(0, 0%, 9%)",

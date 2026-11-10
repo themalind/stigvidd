@@ -18,7 +18,7 @@ import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("screen");
 
 interface ReviewImageProp {
-  setReviewImages?: (data: string[]) => void; // För att retunera bilderna till formuläret
+  setReviewImages?: (data: string[]) => void; // Hands the picked images back to the form.
 }
 
 export default function AddReviewImages({ setReviewImages }: ReviewImageProp) {

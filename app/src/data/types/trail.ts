@@ -66,7 +66,7 @@ export interface VisitorInformation {
   gettingThere: string;
   publicTransport: string;
   parking: string;
-  illumination: boolean; // byt till isIlluminated
+  illumination: boolean; // TODO: rename to isIlluminated
   illuminationText: string;
   maintainedBy: string;
   winterMaintenance: boolean;

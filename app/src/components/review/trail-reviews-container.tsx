@@ -48,9 +48,9 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     refetch,
   } = useInfiniteQuery({
     queryKey: ["reviews", trail.identifier, user?.id],
-    queryFn: ({ pageParam }) => getReviewsByTrailIdentifier(trail.identifier, pageParam, 5), // pageParam är vilken omgång av hämtningar
+    queryFn: ({ pageParam }) => getReviewsByTrailIdentifier(trail.identifier, pageParam, 5), // pageParam is the page number
     getNextPageParam: (lastPage, allPages) => (lastPage.hasMore ? allPages.length : undefined),
-    initialPageParam: 0, // Startparamvärde
+    initialPageParam: 0, // First page
     staleTime: REVIEWS_STALE_TIME,
   });
 

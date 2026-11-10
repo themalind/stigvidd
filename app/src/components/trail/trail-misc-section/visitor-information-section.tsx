@@ -17,7 +17,7 @@ interface Props {
 
 export default function VisitorInformationSection({ visitorInfo }: Props) {
   const theme = useTheme();
-  // Bara ifyllda fält blir rader, och avdelarna sitter mellan dem.
+  // Only filled-in fields become rows, with dividers between them.
   const rows = [
     { icon: "map-search-outline", text: visitorInfo.gettingThere },
     { icon: "bus", text: visitorInfo.publicTransport },

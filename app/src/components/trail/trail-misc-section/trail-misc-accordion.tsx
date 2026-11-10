@@ -24,7 +24,7 @@ export default function TrailMiscInfo({ trail, onOpenGuide }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const visitorInfo = trail.visitorInformation;
-  // Ett tomt VisitorInformation-objekt är fortfarande truthy — kolla innehållet.
+  // An empty VisitorInformation object is still truthy, so check its fields.
   const hasVisitorInfo = Boolean(
     visitorInfo &&
     (visitorInfo.gettingThere ||

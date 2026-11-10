@@ -49,7 +49,7 @@ export const userFavoritesAtom = atomWithQuery((get) => {
   };
 });
 
-// För att få tillgång till en global lista med "vill gå"
+// The signed-in user's "want to hike" list.
 export const userWishlistAtom = atomWithQuery((get) => {
   const user = get(userAtom);
 
@@ -63,8 +63,7 @@ export const userWishlistAtom = atomWithQuery((get) => {
   };
 });
 
-// Lägga till en ny i favorit-listan
-// Här används atomWithMutation för att man tex ska kunna komma åt isPending för att disabla knappen när en request sker.
+// Adds a trail to favourites; a mutation atom so the button can disable itself on isPending.
 export const addToFavoritesAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
   const uid = get(userAtom)?.id;
@@ -87,7 +86,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
         const alreadyExists = old.some((fav) => fav.identifier === trailIdentifier);
 
         if (alreadyExists) {
-          return old; // Gör ingenting om den redan är favorit
+          return old; // Already a favourite.
         }
 
         return [...old, { identifier: trailIdentifier } as UserFavoritesTrail];
@@ -109,7 +108,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
   };
 });
 
-// Lägga till en ny i "vill gå"-listan
+// Adds a trail to the "want to hike" list.
 export const addToWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
   const uid = get(userAtom)?.id;
@@ -123,16 +122,16 @@ export const addToWishlistAtom = atomWithMutation((get) => {
     onMutate: async (trailIdentifier: string) => {
       queryClient.cancelQueries({ queryKey: ["userWishlist", uid] });
 
-      // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
+      // Kept so onError can roll back.
       const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>(["userWishlist", uid]);
 
-      // Lägg till innan anropet är klart för att det ska se fräckt ut
+      // Shows the trail in the list before the request finishes.
       queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist", uid], (old) => {
         if (!old) return old;
         const alreadyExists = old.some((fav) => fav.identifier === trailIdentifier);
 
         if (alreadyExists) {
-          return old; // Gör ingenting om den redan är favorit
+          return old; // Already on the list.
         }
         return [...old, { identifier: trailIdentifier } as UserWishlistTrail];
       });
@@ -153,7 +152,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
   };
 });
 
-// Ta bort från lista med optimistiska uppdateringar
+// Removes a trail from the "want to hike" list with an optimistic update.
 // https://tanstack.com/query/v4/docs/framework/react/guides/optimistic-updates
 export const removeFromWishlistAtom = atomWithMutation((get) => {
   const queryClient = get(queryClientAtom);
@@ -165,16 +164,16 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
       return await removeUserWishlist(trailIdentifier);
     },
 
-    // Avbryt om det finns några pågående queries
     onMutate: async (trailIdentifier: string) => {
+      // Cancels refetches in flight so they cannot overwrite the optimistic list.
       await queryClient.cancelQueries({
         queryKey: ["userWishlist", uid],
       });
 
-      // Hämtar det som är sparat i cachen och sparar det i en egen variable ifall nåt går snett
+      // Kept so onError can roll back.
       const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>(["userWishlist", uid]);
 
-      // Filtera bort den som ska tas bort innan den tas bort för att det ska se fräckt ut
+      // Hides the trail before the request finishes.
       queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist", uid], (old) =>
         old?.filter((trail) => trail.identifier !== trailIdentifier),
       );
@@ -189,7 +188,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
       logger.error("Failed to remove trail from wishlist", { error: String(error) });
     },
     onSettled: () => {
-      // Hämta om på nytt
+      // Refetches the list from the server.
       queryClient.invalidateQueries({
         queryKey: ["userWishlist", uid],
       });
