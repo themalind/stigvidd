@@ -8,7 +8,7 @@
 import AdventureCard from "@/components/home/adventure-card";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
-import { UserLocation } from "@/hooks/useUserLocation";
+import { UserLocation } from "@/hooks/location/useUserLocation";
 import { getAllByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
@@ -27,12 +27,12 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
 }));
 
-jest.mock("@/hooks/useUserLocation", () => ({
+jest.mock("@/hooks/location/useUserLocation", () => ({
   useRealUserLocation: () => mockLocation,
 }));
 
 // The reveal has its own suite, and its card fetch is not this component's business.
-jest.mock("@/hooks/useTrailCard", () => ({
+jest.mock("@/hooks/trail/useTrailCard", () => ({
   useTrailCard: () => ({ card: null, isLoading: false }),
 }));
 

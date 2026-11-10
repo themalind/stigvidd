@@ -11,7 +11,7 @@
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import { AppDefaultTheme } from "@/constants/theme";
-import { USER_LOCATION_KEY } from "@/hooks/useUserLocation";
+import { USER_LOCATION_KEY } from "@/hooks/location/useUserLocation";
 import sv from "@/i18n/locales/sv.json";
 import { loadConsent, resetConsent, setConsent } from "@/services/consent";
 import { flushUntil } from "@/test/flush";

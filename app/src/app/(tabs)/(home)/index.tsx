@@ -23,7 +23,7 @@ import { guardedNavigate } from "@/utils/navigation";
 import { roundTo } from "@/utils/format/round-to";
 import { useLatestHike } from "@/hooks/hike/useLatestHike";
 import { useIsOnline } from "@/hooks/useIsOnline";
-import { useUserLocation } from "@/hooks/useUserLocation";
+import { useUserLocation } from "@/hooks/location/useUserLocation";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { router, useFocusEffect } from "expo-router";
 import React, { useRef } from "react";

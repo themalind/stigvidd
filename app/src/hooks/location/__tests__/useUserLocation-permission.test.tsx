@@ -12,7 +12,7 @@
 // useUserLocation-permission-granted.test.tsx. See docs/notes/android-permission-dialog-loop.md.
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { USER_LOCATION_KEY, useUserLocation } from "@/hooks/useUserLocation";
+import { USER_LOCATION_KEY, useUserLocation } from "@/hooks/location/useUserLocation";
 import { loadConsent, resetConsent, setConsent } from "@/services/consent";
 import { flushUntil } from "@/test/flush";
 import { act } from "@testing-library/react-native";

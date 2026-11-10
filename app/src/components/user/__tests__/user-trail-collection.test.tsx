@@ -21,7 +21,7 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn() },
 }));
 
-jest.mock("@/hooks/useUserLocation", () => ({
+jest.mock("@/hooks/location/useUserLocation", () => ({
   useRealUserLocation: () => mockUserLocation(),
 }));
 

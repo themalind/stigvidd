@@ -14,7 +14,7 @@ import TrailMarkersMap, { type MapHighlight } from "@/components/map/trail-marke
 import { SCREEN_PADDING } from "@/constants/constants";
 import { MapMarkerFilter } from "@/data/types";
 import { useIsOnline } from "@/hooks/useIsOnline";
-import { useUserLocation } from "@/hooks/useUserLocation";
+import { useUserLocation } from "@/hooks/location/useUserLocation";
 import { type ClusterZoomBand, clusterZoomBand, isZoomOutsideBand } from "@/utils/map/cluster-zoom-band";
 import { guardedNavigate } from "@/utils/navigation";
 import { type CameraRef, type InitialViewState, type ViewStateChangeEvent } from "@maplibre/maplibre-react-native";

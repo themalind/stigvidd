@@ -48,7 +48,7 @@ jest.mock("@/utils/navigation", () => ({ guardedNavigate: (fn: () => void) => fn
 jest.mock("@/hooks/useDebouncedValue", () => ({ useDebouncedValue: <T,>(value: T) => value }));
 
 let mockLocation: { latitude: number; longitude: number } | null = null;
-jest.mock("@/hooks/useUserLocation", () => ({ useRealUserLocation: () => mockLocation }));
+jest.mock("@/hooks/location/useUserLocation", () => ({ useRealUserLocation: () => mockLocation }));
 
 let mockSignedIn = true;
 jest.mock("@/components/auth/auth-provider", () => ({

@@ -7,7 +7,7 @@
 
 import { BORDER_RADIUS } from "@/constants/constants";
 import { APP_THEMES, AUTO_THEMES, type AppTheme, type ThemeChoice } from "@/constants/theme";
-import { useThemeChoice } from "@/hooks/useThemeChoice";
+import { useThemeChoice } from "@/hooks/theme/useThemeChoice";
 import ThemePreview from "@/components/settings/theme-preview";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";

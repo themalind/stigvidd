@@ -9,7 +9,7 @@ import TrailsScreen from "@/app/(tabs)/trails/index";
 import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
-import { UserLocation } from "@/hooks/useUserLocation";
+import { UserLocation } from "@/hooks/location/useUserLocation";
 import { getAllByType, getByType } from "@/test/composites";
 import { flushUntil, flushUntilGone } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
@@ -29,7 +29,7 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
 }));
 
-jest.mock("@/hooks/useUserLocation", () => ({
+jest.mock("@/hooks/location/useUserLocation", () => ({
   useRealUserLocation: () => mockLocation,
 }));
 

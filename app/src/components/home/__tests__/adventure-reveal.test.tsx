@@ -16,7 +16,7 @@ import { Image } from "expo-image";
 
 let mockCard: { card: TrailCard | null; isLoading: boolean };
 
-jest.mock("@/hooks/useTrailCard", () => ({
+jest.mock("@/hooks/trail/useTrailCard", () => ({
   useTrailCard: () => mockCard,
 }));
 

@@ -20,7 +20,7 @@ import { SharedHike } from "@/data/types";
 import { useBlockMutations } from "@/hooks/friends/useBlockMutations";
 import { useFriendMutations } from "@/hooks/friends/useFriendMutations";
 import { useSharedHikes } from "@/hooks/shared-hikes/useSharedHikes";
-import { useCanWrite } from "@/hooks/useCanWrite";
+import { useCanWrite } from "@/hooks/auth/useCanWrite";
 import { formatDate } from "@/utils/format/format-date";
 import { guardedNavigate } from "@/utils/navigation";
 import { relativeDay } from "@/utils/format/relative-day";

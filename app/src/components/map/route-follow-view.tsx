@@ -12,7 +12,7 @@ import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styl
 import StartMarker from "@/components/map/start-marker";
 import UserLocationMarker from "@/components/map/user-location-marker";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import { useLiveUserLocation } from "@/hooks/useLiveUserLocation";
+import { useLiveUserLocation } from "@/hooks/location/useLiveUserLocation";
 import { lineStringFromPositions } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
 import { MeetingPoint, openDirectionsToStart } from "@/utils/map/open-directions";

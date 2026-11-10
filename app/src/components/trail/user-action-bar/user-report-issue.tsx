@@ -13,7 +13,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import TrailObstacleForm from "../obstacle/trail-obstacle-form";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
-import { useCanWrite } from "@/hooks/useCanWrite";
+import { useCanWrite } from "@/hooks/auth/useCanWrite";
 
 interface Props {
   trailIdentifier: string;

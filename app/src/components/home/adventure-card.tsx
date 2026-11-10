@@ -17,7 +17,7 @@ import {
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
-import { useRealUserLocation } from "@/hooks/useUserLocation";
+import { useRealUserLocation } from "@/hooks/location/useUserLocation";
 import { guardedNavigate } from "@/utils/navigation";
 import { pickRandomTrail } from "@/components/home/pick-random-trail";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";

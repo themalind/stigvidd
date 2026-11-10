@@ -15,7 +15,7 @@ import { Dimensions } from "react-native";
 
 const mockUseTrailCards = jest.fn();
 
-jest.mock("@/hooks/useTrailCard", () => ({
+jest.mock("@/hooks/trail/useTrailCard", () => ({
   useTrailCards: (identifiers: string[]) => mockUseTrailCards(identifiers),
 }));
 

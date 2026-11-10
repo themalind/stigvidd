@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { useCanWrite } from "@/hooks/useCanWrite";
+import { useCanWrite } from "@/hooks/auth/useCanWrite";
 import { renderWithProviders } from "@/test/render";
 import { screen } from "@testing-library/react-native";
 import { Text } from "react-native";

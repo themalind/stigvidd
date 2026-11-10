@@ -20,7 +20,7 @@ import { useEventMutations } from "@/hooks/events/useEventMutations";
 import { useEventFeed, useMyEvents } from "@/hooks/events/useEventQueries";
 import { useEventSearch } from "@/hooks/events/useEventSearch";
 import FilterIconButton from "@/components/filter/filter-icon-button";
-import { useReturnHereAfterLogin } from "@/hooks/useReturnHereAfterLogin";
+import { useReturnHereAfterLogin } from "@/hooks/auth/useReturnHereAfterLogin";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { useAtomValue } from "jotai";

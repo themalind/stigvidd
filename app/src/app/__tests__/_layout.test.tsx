@@ -129,7 +129,7 @@ jest.mock("@/i18n", () => ({
   loadStoredLanguage: () => mockLoadStoredLanguage(),
 }));
 
-jest.mock("@/hooks/useTrailCard", () => ({ pruneTrailCardCache: () => mockPruneTrailCardCache() }));
+jest.mock("@/hooks/trail/useTrailCard", () => ({ pruneTrailCardCache: () => mockPruneTrailCardCache() }));
 jest.mock("@/components/map/map-style", () => ({ initMapTiler: () => mockInitMapTiler() }));
 jest.mock("@/utils/map/map-cache", () => ({ initMapCache: () => mockInitMapCache() }));
 const { telemetryCalls } = jest.requireMock("@/services/telemetry");

@@ -9,7 +9,7 @@ import MapScreen from "@/app/(tabs)/(map)/index";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { MapMarkerFilter } from "@/data/types";
-import { UserLocation } from "@/hooks/useUserLocation";
+import { UserLocation } from "@/hooks/location/useUserLocation";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
@@ -45,7 +45,7 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("@/hooks/useUserLocation", () => ({
+jest.mock("@/hooks/location/useUserLocation", () => ({
   useUserLocation: () => ({ data: mockLocation }),
 }));
 

@@ -24,7 +24,7 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { ReshareSharedHikeRequest, SharedHike } from "@/data/types";
 import { outgoingSharesQueryKey } from "@/hooks/shared-hikes/useOutgoingShares";
 import { sharedHikesQueryKey, useSharedHikes } from "@/hooks/shared-hikes/useSharedHikes";
-import { useCanWrite } from "@/hooks/useCanWrite";
+import { useCanWrite } from "@/hooks/auth/useCanWrite";
 import { track } from "@/services/analytics";
 import { formatDate } from "@/utils/format/format-date";
 import { guardedNavigate } from "@/utils/navigation";

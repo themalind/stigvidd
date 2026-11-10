@@ -28,8 +28,8 @@ separately in [`record-hike.md`](./record-hike.md).
 | **Fullscreen follow view** (one route + live puck, shared)         | `src/components/map/route-follow-view.tsx`                      |
 | Follow view data path for a trail                                  | `src/components/map/trail-follow-screen.tsx`                    |
 | Follow view data path for a recorded / shared hike                 | `src/components/map/hike-follow-screen.tsx`                     |
-| Live puck data source                                              | `src/hooks/useLiveUserLocation.ts`                              |
-| One-shot user location (open-on-user, recenter)                    | `src/hooks/useUserLocation.tsx`                                 |
+| Live puck data source                                              | `src/hooks/location/useLiveUserLocation.ts`                     |
+| One-shot user location (open-on-user, recenter)                    | `src/hooks/location/useUserLocation.tsx`                        |
 | **Embedded** trail-detail preview                                  | `src/components/trail/trail-map.tsx`                            |
 | Preview-as-button chrome ("show on map" badge + directions pill)   | `src/components/map/map-preview-overlay.tsx`                    |
 | **Embedded** record-hike map                                       | `src/components/hike/recorder/hike-recorder.tsx`                |

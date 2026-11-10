@@ -10,7 +10,7 @@ import LoadingIndicator from "@/components/status/loading-indicator";
 import LocationDisclosureDialog from "@/components/hike/recorder/location-disclosure-dialog";
 import RecordingInfoDialog from "@/components/hike/recorder/recording-info-dialog";
 import HikeRecorder from "@/components/hike/recorder/hike-recorder";
-import { USER_LOCATION_KEY } from "@/hooks/useUserLocation";
+import { USER_LOCATION_KEY } from "@/hooks/location/useUserLocation";
 import { logger } from "@/services/logger";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";

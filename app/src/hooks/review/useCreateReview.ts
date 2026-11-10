@@ -10,7 +10,7 @@ import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
-import { logger } from "../../services/logger";
+import { logger } from "@/services/logger";
 
 export function useCreateReview(onSuccess: () => void) {
   const { t } = useTranslation();

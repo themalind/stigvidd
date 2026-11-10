@@ -10,7 +10,7 @@ import { Rating } from "@/components/review/rating";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
 import { SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
-import { useTrailCard } from "@/hooks/useTrailCard";
+import { useTrailCard } from "@/hooks/trail/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialCommunityIcons } from "@expo/vector-icons";

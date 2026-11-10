@@ -9,7 +9,7 @@
 // reached; useUserLocation-permission.test.tsx owns that.
 
 import { START_COORDINATE_BORAS } from "@/constants/constants";
-import { USER_LOCATION_KEY, useRealUserLocation, useUserLocation } from "@/hooks/useUserLocation";
+import { USER_LOCATION_KEY, useRealUserLocation, useUserLocation } from "@/hooks/location/useUserLocation";
 import { flushUntil, settle } from "@/test/flush";
 import { staleTimeOf } from "@/test/query";
 import { renderWithProviders } from "@/test/render";

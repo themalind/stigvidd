@@ -30,7 +30,7 @@ import { recipientsOf } from "@/utils/share/outgoing-shares";
 import { useHikeImageMutations } from "@/hooks/hike/useHikeImageMutations";
 import { useMyHikeSubmissions } from "@/hooks/hike/useMyHikeSubmissions";
 import { myHikesQueryKey, useMyHikes } from "@/hooks/hike/useMyHikes";
-import { useCanWrite } from "@/hooks/useCanWrite";
+import { useCanWrite } from "@/hooks/auth/useCanWrite";
 import { track } from "@/services/analytics";
 import { formatDate } from "@/utils/format/format-date";
 import { guardedNavigate } from "@/utils/navigation";

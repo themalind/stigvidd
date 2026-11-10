@@ -7,7 +7,7 @@
 
 import { showWarningAtom } from "@/atoms/snackbar-atoms";
 import { AppDefaultTheme } from "@/constants/theme";
-import { USER_LOCATION_KEY, useUserLocation } from "@/hooks/useUserLocation";
+import { USER_LOCATION_KEY, useUserLocation } from "@/hooks/location/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { type CameraRef } from "@maplibre/maplibre-react-native";
 import { useQueryClient } from "@tanstack/react-query";

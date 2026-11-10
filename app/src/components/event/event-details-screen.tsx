@@ -16,7 +16,7 @@ import { BORDER_RADIUS, EVENT_COVER_ASPECT, SCREEN_PADDING } from "@/constants/c
 import { HikingEvent } from "@/data/types";
 import { useEventManageMutations, useEventParticipants } from "@/hooks/events/useEventManage";
 import { useEventMutations } from "@/hooks/events/useEventMutations";
-import { useReturnHereAfterLogin } from "@/hooks/useReturnHereAfterLogin";
+import { useReturnHereAfterLogin } from "@/hooks/auth/useReturnHereAfterLogin";
 import { formatEventDate, formatTimeRange } from "@/utils/event/event-time";
 import { formatDistanceKm } from "@/utils/format/format-distance";
 import { guardedNavigate } from "@/utils/navigation";

@@ -13,7 +13,7 @@ import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dial
 import ReportContentForm from "@/components/report/report-content-form";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
-import { useCanWrite } from "@/hooks/useCanWrite";
+import { useCanWrite } from "@/hooks/auth/useCanWrite";
 import { formatDate } from "@/utils/format/format-date";
 import issueTypeParser from "@/components/trail/issue-type-parser";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";

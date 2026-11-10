@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
-import { useCityName } from "@/hooks/useCityName";
-import { useWeather } from "@/hooks/useWeather";
+import { useCityName } from "@/hooks/location/useCityName";
+import { useWeather } from "@/hooks/location/useWeather";
 import { MaterialIcons } from "@expo/vector-icons";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useEffect, useState } from "react";

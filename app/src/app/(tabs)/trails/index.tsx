@@ -16,7 +16,7 @@ import TrailItem from "@/components/trail/trail-list/trail-item";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
-import { useRealUserLocation } from "@/hooks/useUserLocation";
+import { useRealUserLocation } from "@/hooks/location/useUserLocation";
 import { guardedNavigate } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { router } from "expo-router";

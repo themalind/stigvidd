@@ -8,7 +8,7 @@
 import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { SCREEN_PADDING, SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailCard } from "@/data/types";
-import { useTrailCards } from "@/hooks/useTrailCard";
+import { useTrailCards } from "@/hooks/trail/useTrailCard";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialIcons } from "@expo/vector-icons";

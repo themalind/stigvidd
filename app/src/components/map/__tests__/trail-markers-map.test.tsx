@@ -26,7 +26,7 @@ jest.mock("@/api/map-markers", () => ({
   getFacilityMarkers: () => mockGetFacilityMarkers(),
 }));
 
-jest.mock("@/hooks/useUserLocation", () => ({
+jest.mock("@/hooks/location/useUserLocation", () => ({
   useUserLocation: () => mockUseUserLocation(),
 }));
 

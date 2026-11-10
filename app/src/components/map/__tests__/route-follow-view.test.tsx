@@ -18,7 +18,7 @@ jest.mock("expo-router", () => ({
   useRouter: () => ({ back: mockBack, navigate: jest.fn() }),
 }));
 
-jest.mock("@/hooks/useLiveUserLocation", () => ({
+jest.mock("@/hooks/location/useLiveUserLocation", () => ({
   useLiveUserLocation: () => mockUseLiveUserLocation(),
 }));
 

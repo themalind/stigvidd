@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { useThemeChoice } from "@/hooks/useThemeChoice";
+import { useThemeChoice } from "@/hooks/theme/useThemeChoice";
 import { MaterialIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Image } from "expo-image";

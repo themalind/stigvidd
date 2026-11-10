@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getFacilityMarkers, getTrailMarkers } from "@/api/map-markers";
-import { useUserLocation } from "@/hooks/useUserLocation";
+import { useUserLocation } from "@/hooks/location/useUserLocation";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { FacilityType, hasFacilityType, MapMarkerFilter } from "@/data/types";

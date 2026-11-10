@@ -9,7 +9,7 @@ import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { SortOption, useTrailFilters } from "@/hooks/trail/useTrailFilters";
-import { useRealUserLocation } from "@/hooks/useUserLocation";
+import { useRealUserLocation } from "@/hooks/location/useUserLocation";
 import { classificationParser } from "@/utils/classification-parser";
 import { formatDistanceKm } from "@/utils/format/format-distance";
 import { getDifficultyIcon } from "@/components/display/difficulty-icon";

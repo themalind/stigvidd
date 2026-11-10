@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { pruneTrailCardCache } from "@/hooks/useTrailCard";
+import { pruneTrailCardCache } from "@/hooks/trail/useTrailCard";
 import { initMapTiler } from "@/components/map/map-style";
 import { initMapCache } from "@/utils/map/map-cache";
 import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
@@ -19,7 +19,7 @@ import { APP_ENVIRONMENT } from "@/utils/app-environment";
 import { GlobalSnackbar } from "@/components/status/global-snackbar";
 import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
-import { useUserTheme } from "@/hooks/useUserTheme";
+import { useUserTheme } from "@/hooks/theme/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
 import { initOnlineStatus } from "@/services/online-status";

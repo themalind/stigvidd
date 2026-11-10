@@ -16,8 +16,10 @@ const mockWeather = jest.fn();
 const mockCityName = jest.fn();
 
 // SMHI and the device geocoder are queries of their own; the banner owns how it dresses their answers.
-jest.mock("@/hooks/useWeather", () => ({ useWeather: (lat?: number, lon?: number) => mockWeather(lat, lon) }));
-jest.mock("@/hooks/useCityName", () => ({ useCityName: (lat?: number, lon?: number) => mockCityName(lat, lon) }));
+jest.mock("@/hooks/location/useWeather", () => ({ useWeather: (lat?: number, lon?: number) => mockWeather(lat, lon) }));
+jest.mock("@/hooks/location/useCityName", () => ({
+  useCityName: (lat?: number, lon?: number) => mockCityName(lat, lon),
+}));
 
 const LAT = 57.72;
 const LON = 12.94;

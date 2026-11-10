@@ -16,7 +16,7 @@ jest.mock("@/api/trails", () => ({
   getCoordinatesByTrailIdentifier: (...args: unknown[]) => mockGetCoordinates(...args),
 }));
 
-jest.mock("@/hooks/useTrailCard", () => ({
+jest.mock("@/hooks/trail/useTrailCard", () => ({
   useTrailCard: () => ({ card: { name: "Kvarnstigen" }, isLoading: false }),
 }));
 

@@ -73,7 +73,7 @@ jest.mock("@/api/friends", () => ({
 }));
 
 let mockWriteBlocked: "banned" | null = null;
-jest.mock("@/hooks/useCanWrite", () => ({
+jest.mock("@/hooks/auth/useCanWrite", () => ({
   useCanWrite: () => ({ canWrite: mockWriteBlocked === null, reason: mockWriteBlocked }),
 }));
 

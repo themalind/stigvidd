@@ -8,7 +8,7 @@
 import { showWarningAtom } from "@/atoms/snackbar-atoms";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
-import { useCanWrite } from "@/hooks/useCanWrite";
+import { useCanWrite } from "@/hooks/auth/useCanWrite";
 import AddReview from "@/components/review/add/add-review-modal";
 import { Trail } from "@/data/types";
 import { MaterialIcons } from "@expo/vector-icons";

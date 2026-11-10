@@ -10,7 +10,7 @@ import CreateHikeScreen from "@/app/(tabs)/(profile-stack)/user/create-hike";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
-import { USER_LOCATION_KEY } from "@/hooks/useUserLocation";
+import { USER_LOCATION_KEY } from "@/hooks/location/useUserLocation";
 import { getByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";

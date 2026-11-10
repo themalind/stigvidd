@@ -7,7 +7,7 @@
 
 import { EventSearchParams } from "@/data/types";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { useRealUserLocation } from "@/hooks/useUserLocation";
+import { useRealUserLocation } from "@/hooks/location/useUserLocation";
 import {
   activeFilterCount,
   changeFilters,

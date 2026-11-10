@@ -28,7 +28,7 @@ jest.mock("@/api/trails", () => ({
   getPopularTrails: (...args: unknown[]) => mockGetPopularTrails(...args),
 }));
 
-jest.mock("@/hooks/useUserLocation", () => ({
+jest.mock("@/hooks/location/useUserLocation", () => ({
   useUserLocation: () => mockLocation,
 }));
 
@@ -60,8 +60,8 @@ jest.mock("@/components/home/popular-contributions", () => {
 });
 
 // The banner's own two queries would reach the network; it has a suite of its own.
-jest.mock("@/hooks/useWeather", () => ({ useWeather: () => ({ data: undefined }) }));
-jest.mock("@/hooks/useCityName", () => ({ useCityName: () => ({ data: "Borås", isPending: false }) }));
+jest.mock("@/hooks/location/useWeather", () => ({ useWeather: () => ({ data: undefined }) }));
+jest.mock("@/hooks/location/useCityName", () => ({ useCityName: () => ({ data: "Borås", isPending: false }) }));
 
 jest.mock("expo-router", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports

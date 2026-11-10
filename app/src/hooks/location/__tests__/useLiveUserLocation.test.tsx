@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { LiveUserLocation, useLiveUserLocation } from "@/hooks/useLiveUserLocation";
+import { LiveUserLocation, useLiveUserLocation } from "@/hooks/location/useLiveUserLocation";
 import { MIN_DISTANCE } from "@/services/location-task";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
