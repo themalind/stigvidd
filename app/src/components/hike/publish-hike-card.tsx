@@ -10,7 +10,7 @@ import { formatDate } from "@/utils/format-date";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
-import SlimButton from "@/components/slim-button";
+import SlimButton from "@/components/display/slim-button";
 import { Icon, List, Text, useTheme } from "react-native-paper";
 
 interface Props {

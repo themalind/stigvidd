@@ -19,7 +19,7 @@ jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: false, logout: jest.fn() }),
 }));
 
-jest.mock("@/components/header", () => ({ __esModule: true, default: () => null }));
+jest.mock("@/components/layout/header", () => ({ __esModule: true, default: () => null }));
 
 jest.mock("@/atoms/friends-atoms", () => {
   const { atom } = jest.requireActual("jotai");

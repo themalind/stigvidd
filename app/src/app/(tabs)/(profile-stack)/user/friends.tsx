@@ -7,13 +7,13 @@
 
 import { getBlockedUsers, getOutgoingRequests } from "@/api/friends";
 import { friendsAtom, incomingRequestsAtom, userSearchAtomFamily } from "@/atoms/friends-atoms";
-import AlertDialog from "@/components/alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
-import BackButton from "@/components/back-button";
+import BackButton from "@/components/layout/back-button";
 import BlockUserDialog, { UserRef } from "@/components/friends/block-user-dialog";
 import FriendRequestCard from "@/components/friends/friend-request-card";
 import PersonRow from "@/components/friends/person-row";
-import ListSection from "@/components/list-section";
+import ListSection from "@/components/layout/list-section";
 import { BLOCKS_STALE_TIME, REQUESTS_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS, MIN_USER_SEARCH_LENGTH, SCREEN_PADDING } from "@/constants/constants";
 import { SharedHike } from "@/data/types";

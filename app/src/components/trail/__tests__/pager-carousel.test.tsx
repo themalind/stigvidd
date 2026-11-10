@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ExampleImageOverlay from "@/components/example-image-overlay";
+import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import PagerCarousel from "@/components/trail/pager-carousel";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDefaultTheme } from "@/constants/theme";

@@ -6,13 +6,13 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { isApiStatus } from "@/api/api-error";
-import AlertDialog from "@/components/alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import SignInPrompt from "@/components/auth/sign-in-prompt";
-import BackButton from "@/components/back-button";
-import CountedTextInput from "@/components/counted-text-input";
-import ErrorScreen from "@/components/error-screen";
-import LoadingIndicator from "@/components/loading-indicator";
+import BackButton from "@/components/layout/back-button";
+import CountedTextInput from "@/components/form/counted-text-input";
+import ErrorScreen from "@/components/status/error-screen";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import ReportContentForm from "@/components/report/report-content-form";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";

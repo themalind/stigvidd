@@ -7,9 +7,9 @@
 
 import { getAreas } from "@/api/areas";
 import AreaCard from "@/components/area/area-card";
-import BackButton from "@/components/back-button";
-import ErrorView from "@/components/error-view";
-import LoadingIndicator from "@/components/loading-indicator";
+import BackButton from "@/components/layout/back-button";
+import ErrorView from "@/components/status/error-view";
+import LoadingIndicator from "@/components/status/loading-indicator";
 
 import { CITY_AREAS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";

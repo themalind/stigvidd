@@ -7,7 +7,7 @@
 
 import { CARD_HEIGHT } from "@/components/home/latest-hike-card";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
-import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/section-panel";
+import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/layout/section-panel";
 import { useTranslation } from "react-i18next";
 import { StyleSheet } from "react-native";
 

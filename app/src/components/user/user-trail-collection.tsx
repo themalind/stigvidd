@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ExampleImageOverlay from "@/components/example-image-overlay";
+import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { SortOption, useTrailFilters } from "@/hooks/trail/useTrailFilters";
@@ -21,8 +21,8 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import BackButton from "../back-button";
-import ListHeaderActions from "../list-header-actions";
+import BackButton from "@/components/layout/back-button";
+import ListHeaderActions from "@/components/layout/list-header-actions";
 import { Rating } from "../review/rating";
 import { TrailFilterModal } from "../trail/trail-list/trail-filter-modal";
 

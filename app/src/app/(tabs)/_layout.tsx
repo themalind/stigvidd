@@ -7,9 +7,9 @@
 
 import { pendingEventInvitationsCountAtom } from "@/atoms/event-atoms";
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
-import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/count-badge";
-import Header from "@/components/header";
-import OfflineBanner from "@/components/offline-banner";
+import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/display/count-badge";
+import Header from "@/components/layout/header";
+import OfflineBanner from "@/components/status/offline-banner";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs, usePathname, useSegments } from "expo-router";
 import { useAtomValue } from "jotai";

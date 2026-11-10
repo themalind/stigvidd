@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ErrorView from "@/components/error-view";
+import ErrorView from "@/components/status/error-view";
 import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import MapFilterMenu from "@/components/map/map-filter-menu";

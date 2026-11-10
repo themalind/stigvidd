@@ -8,7 +8,7 @@
 import { asTranslationKey } from "@/i18n";
 import { AccountNotVerifiedError, InvalidCredentialsError } from "@/services/keycloak-auth";
 import PasswordInputField from "@/components/auth/password-input-field";
-import BackButton from "@/components/back-button";
+import BackButton from "@/components/layout/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";

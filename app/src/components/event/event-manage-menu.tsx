@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AlertDialog from "@/components/alert-dialog";
-import OverflowMenu from "@/components/overflow-menu";
+import AlertDialog from "@/components/dialog/alert-dialog";
+import OverflowMenu from "@/components/layout/overflow-menu";
 import ReportContentForm from "@/components/report/report-content-form";
 import { HikingEvent } from "@/data/types";
 import { useState } from "react";

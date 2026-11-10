@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import OverflowMenu from "@/components/overflow-menu";
+import OverflowMenu from "@/components/layout/overflow-menu";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { EventPost } from "@/data/types";
 import { formatPostTime } from "@/utils/event-time";

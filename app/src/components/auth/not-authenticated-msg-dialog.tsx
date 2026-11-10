@@ -7,7 +7,7 @@
 
 import { router } from "expo-router";
 import { useTranslation } from "react-i18next";
-import AlertDialog from "../alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 
 interface DialogProps {
   infoMessage: string;

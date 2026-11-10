@@ -9,9 +9,9 @@ import { createTrailObstacle, getObstacleIssueTypes } from "@/api/trail-obstacle
 import { asTranslationKey } from "@/i18n";
 import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
-import CountedTextInput from "@/components/counted-text-input";
-import ModalFormScrollView from "@/components/modal-form-scroll-view";
-import SelectInput from "@/components/select-input";
+import CountedTextInput from "@/components/form/counted-text-input";
+import ModalFormScrollView from "@/components/form/modal-form-scroll-view";
+import SelectInput from "@/components/form/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { useRetryKey } from "@/hooks/useRetryKey";

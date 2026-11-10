@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import InfoButton from "@/components/info-button";
-import { InfoCard, InfoGrid, InfoItem, InfoValue } from "@/components/info-card";
+import InfoButton from "@/components/display/info-button";
+import { InfoCard, InfoGrid, InfoItem, InfoValue } from "@/components/display/info-card";
 import { Trail } from "@/data/types";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/utils/getDifficultyIcon";

@@ -13,7 +13,7 @@ import RouteTrimmer, {
   trimIndices,
   trimmedPath,
 } from "@/components/map/route-trimmer";
-import SegmentedControl from "@/components/segmented-control";
+import SegmentedControl from "@/components/form/segmented-control";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import { useMyHikes } from "@/hooks/hike/useMyHikes";

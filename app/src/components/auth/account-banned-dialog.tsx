@@ -8,7 +8,7 @@
 import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
-import AlertDialog from "../alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import BanContactText from "./ban-contact-text";
 
 interface DialogProps {

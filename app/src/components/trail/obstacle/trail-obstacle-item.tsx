@@ -7,7 +7,7 @@
 
 import { addSolvedVote, deleteSolvedVote, deleteTrailObstacle } from "@/api/trail-obstacles";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
-import AlertDialog from "@/components/alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import ReportContentForm from "@/components/report/report-content-form";

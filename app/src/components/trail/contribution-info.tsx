@@ -7,7 +7,7 @@
 
 import DialogSection from "@/components/dialog/dialog-section";
 import InfoDialog from "@/components/dialog/info-dialog";
-import InfoButton from "@/components/info-button";
+import InfoButton from "@/components/display/info-button";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { ComponentProps, useState } from "react";
 import { useTranslation } from "react-i18next";

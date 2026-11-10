@@ -9,7 +9,7 @@ import { ApiError } from "@/api/api-error";
 import { resendVerification, verifyEmailCode } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
-import BackButton from "@/components/back-button";
+import BackButton from "@/components/layout/back-button";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router, useLocalSearchParams } from "expo-router";

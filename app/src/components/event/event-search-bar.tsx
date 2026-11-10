@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import FilterChip from "@/components/filter/filter-chip";
-import SearchField from "@/components/search-field";
+import SearchField from "@/components/form/search-field";
 import { EventSearch } from "@/hooks/events/useEventSearch";
 import { EventWhen } from "@/utils/event-search";
 import { useTranslation } from "react-i18next";

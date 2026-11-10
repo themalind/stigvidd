@@ -8,8 +8,8 @@
 import { createContentReport, getReportReasons } from "@/api/content-reports";
 import { ApiError } from "@/api/api-error";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
-import CountedTextInput from "@/components/counted-text-input";
-import SelectInput from "@/components/select-input";
+import CountedTextInput from "@/components/form/counted-text-input";
+import SelectInput from "@/components/form/select-input";
 import { REPORT_REASONS_STALE_TIME } from "@/constants/cache";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { CreateContentReportRequest, ReportedContentType } from "@/data/types";

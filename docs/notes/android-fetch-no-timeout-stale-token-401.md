@@ -8,7 +8,7 @@ then the screen was replaced again. Then it "suddenly worked". An iPhone on the 
 (the Android's hotspot) had no problems. The GPS track came out whole.
 
 **The screen was not the signed-out state.** "Inte inloggad" is `ErrorView` for an `ApiError` with
-status 401 (`app/src/components/error-view.tsx`). `userAtom` was still set, so the drawer showed
+status 401 (`app/src/components/status/error-view.tsx`). `userAtom` was still set, so the drawer showed
 "Logga ut". Name and e-mail come from `GET /users`, which also got 401.
 
 **Two mechanisms, both verified in the source:**

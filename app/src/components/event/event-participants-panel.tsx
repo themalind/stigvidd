@@ -5,10 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AlertDialog from "@/components/alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import EventRoleChip from "@/components/event/event-role-chip";
-import OverflowMenu from "@/components/overflow-menu";
-import SectionPanel from "@/components/section-panel";
+import OverflowMenu from "@/components/layout/overflow-menu";
+import SectionPanel from "@/components/layout/section-panel";
 import { EventInvitee, EventParticipant, EventParticipants, EventPermissions } from "@/data/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

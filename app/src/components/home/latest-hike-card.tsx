@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import RoutePreviewMap from "@/components/map/route-preview-map";
-import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/section-panel";
+import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/layout/section-panel";
 import { OVERLAY_TEXT_SHADOW } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import CoordinateParser from "@/utils/coordinate-parser";

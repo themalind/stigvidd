@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import Tag from "@/components/tag";
+import Tag from "@/components/display/tag";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";

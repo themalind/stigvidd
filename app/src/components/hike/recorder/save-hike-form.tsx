@@ -8,7 +8,7 @@
 import { createHike } from "@/api/hikes";
 import { isUnauthorized, withUnauthorizedRetry } from "@/api/unauthorized";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import CountedTextInput from "@/components/counted-text-input";
+import CountedTextInput from "@/components/form/counted-text-input";
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
 import { BORDER_RADIUS } from "@/constants/constants";

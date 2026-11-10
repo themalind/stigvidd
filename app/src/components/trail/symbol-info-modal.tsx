@@ -7,7 +7,7 @@
 
 import { DialogText } from "@/components/dialog/dialog-section";
 import InfoDialog from "@/components/dialog/info-dialog";
-import ExampleImageOverlay from "@/components/example-image-overlay";
+import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Image } from "expo-image";
 import { useTranslation } from "react-i18next";

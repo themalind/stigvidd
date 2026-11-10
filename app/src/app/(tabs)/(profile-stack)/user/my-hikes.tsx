@@ -5,12 +5,12 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/back-button";
-import ErrorView from "@/components/error-view";
+import BackButton from "@/components/layout/back-button";
+import ErrorView from "@/components/status/error-view";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
 import RouteThumbnail from "@/components/hike/route-thumbnail";
-import ListHeaderActions, { SortField } from "@/components/list-header-actions";
-import LoadingIndicator from "@/components/loading-indicator";
+import ListHeaderActions, { SortField } from "@/components/layout/list-header-actions";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import HikeStatsBanner from "@/components/user/hike-stats-banner";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Hike } from "@/data/types";

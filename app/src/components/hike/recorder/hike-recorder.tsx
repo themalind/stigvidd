@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AlertDialog from "@/components/alert-dialog";
-import LoadingIndicator from "@/components/loading-indicator";
+import AlertDialog from "@/components/dialog/alert-dialog";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import Map from "@/components/map/map";
 import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";

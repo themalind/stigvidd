@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { removeFromFavoritesAtom, userFavoritesAtom } from "@/atoms/user-atoms";
-import ErrorView from "@/components/error-view";
-import LoadingIndicator from "@/components/loading-indicator";
+import ErrorView from "@/components/status/error-view";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import UserTrailCollection from "@/components/user/user-trail-collection";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAtom } from "jotai";

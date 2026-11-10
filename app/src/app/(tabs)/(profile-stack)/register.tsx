@@ -9,7 +9,7 @@ import { ApiError } from "@/api/api-error";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import PasswordInputField from "@/components/auth/password-input-field";
-import BackButton from "@/components/back-button";
+import BackButton from "@/components/layout/back-button";
 import {
   BORDER_RADIUS,
   MIN_NICKNAME_LENGTH,

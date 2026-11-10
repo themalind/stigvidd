@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AlertDialog from "@/components/alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import ReportContentForm from "@/components/report/report-content-form";
 import { useAuth } from "@/components/auth/auth-provider";

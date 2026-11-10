@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ImageThumbnail, { THUMBNAIL_SIZE } from "@/components/image-thumbnail";
-import MediaListRow from "@/components/media-list-row";
+import ImageThumbnail, { THUMBNAIL_SIZE } from "@/components/media/image-thumbnail";
+import MediaListRow from "@/components/media/media-list-row";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { FriendPublishedTrail } from "@/data/types";
 import { formatDate } from "@/utils/format-date";

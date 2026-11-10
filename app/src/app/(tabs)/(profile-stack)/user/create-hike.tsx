@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/back-button";
-import LoadingIndicator from "@/components/loading-indicator";
+import BackButton from "@/components/layout/back-button";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import LocationDisclosureDialog from "@/components/hike/recorder/location-disclosure-dialog";
 import RecordingInfoDialog from "@/components/hike/recorder/recording-info-dialog";
 import HikeRecorder from "@/components/hike/recorder/hike-recorder";

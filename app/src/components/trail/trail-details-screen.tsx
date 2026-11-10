@@ -29,9 +29,9 @@ import { type ComponentRef, startTransition, useCallback, useEffect, useRef, use
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
-import BackButton from "../back-button";
-import ErrorView from "../error-view";
-import LoadingIndicator from "../loading-indicator";
+import BackButton from "@/components/layout/back-button";
+import ErrorView from "@/components/status/error-view";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import MapSkeleton from "../skeletons/map-skeleton";
 import TrailObstacleWarning from "./obstacle/trail-obstacle-warning";
 import TrailObstacleModal from "./obstacle/trail-obstacles-modal";

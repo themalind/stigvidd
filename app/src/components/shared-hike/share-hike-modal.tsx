@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ModalFormScrollView from "@/components/modal-form-scroll-view";
-import SlimButton from "@/components/slim-button";
+import ModalFormScrollView from "@/components/form/modal-form-scroll-view";
+import SlimButton from "@/components/display/slim-button";
 import FriendPicker from "@/components/shared-hike/friend-picker";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";

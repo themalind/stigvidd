@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import CountBadge from "@/components/count-badge";
+import CountBadge from "@/components/display/count-badge";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";

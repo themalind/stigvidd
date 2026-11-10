@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { Button, Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import { z } from "zod";
-import AlertDialog from "../alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import PasswordInputField from "./password-input-field";
 
 interface Props {

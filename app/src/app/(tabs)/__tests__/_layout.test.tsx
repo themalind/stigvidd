@@ -7,7 +7,7 @@
 
 import { pendingEventInvitationsCountAtom } from "@/atoms/event-atoms";
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
-import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/count-badge";
+import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/display/count-badge";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
@@ -42,7 +42,7 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("@/components/header", () => {
+jest.mock("@/components/layout/header", () => {
   const ReactActual = jest.requireActual("react");
   const { View } = jest.requireActual("react-native");
   return { __esModule: true, default: () => ReactActual.createElement(View, { testID: "app-header" }) };

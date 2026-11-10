@@ -7,12 +7,12 @@
 
 import { useAuth } from "@/components/auth/auth-provider";
 import SignInPrompt from "@/components/auth/sign-in-prompt";
-import CountedTextInput from "@/components/counted-text-input";
-import FieldErrorBadge from "@/components/field-error-badge";
-import DateTimeField from "@/components/date-time-field";
+import CountedTextInput from "@/components/form/counted-text-input";
+import FieldErrorBadge from "@/components/form/field-error-badge";
+import DateTimeField from "@/components/form/date-time-field";
 import PointPickerMap from "@/components/map/point-picker-map";
-import CoverFramer from "@/components/cover-framer";
-import SectionPanel from "@/components/section-panel";
+import CoverFramer from "@/components/media/cover-framer";
+import SectionPanel from "@/components/layout/section-panel";
 import { BORDER_RADIUS, EVENT_COVER_ASPECT, SCREEN_PADDING } from "@/constants/constants";
 import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";
 import { EventVisibility, HikingEvent } from "@/data/types";

@@ -8,11 +8,11 @@
 import { incomingEventInvitationsAtom } from "@/atoms/event-atoms";
 import { useAuth } from "@/components/auth/auth-provider";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
-import InlineError from "@/components/inline-error";
-import LoadingIndicator from "@/components/loading-indicator";
-import ScreenTitleBar from "@/components/screen-title-bar";
-import SectionPanel from "@/components/section-panel";
-import SegmentedControl from "@/components/segmented-control";
+import InlineError from "@/components/status/inline-error";
+import LoadingIndicator from "@/components/status/loading-indicator";
+import ScreenTitleBar from "@/components/layout/screen-title-bar";
+import SectionPanel from "@/components/layout/section-panel";
+import SegmentedControl from "@/components/form/segmented-control";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { EventSummary } from "@/data/types";

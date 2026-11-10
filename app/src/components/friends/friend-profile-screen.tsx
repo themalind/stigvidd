@@ -6,12 +6,12 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { friendsAtom } from "@/atoms/friends-atoms";
-import AlertDialog from "@/components/alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import EventCard from "@/components/event/event-card";
 import { openEvent, PROFILE_STACK_EVENT_ROUTES } from "@/components/event/event-routes";
 import { useOrganizerEvents } from "@/hooks/events/useEventQueries";
-import BackButton from "@/components/back-button";
-import ErrorView from "@/components/error-view";
+import BackButton from "@/components/layout/back-button";
+import ErrorView from "@/components/status/error-view";
 import BlockUserDialog, { UserRef } from "@/components/friends/block-user-dialog";
 import FriendNoteDialog from "@/components/friends/friend-note-dialog";
 import FriendNoteText from "@/components/friends/friend-note-text";
@@ -21,9 +21,9 @@ import PickHikeDialog from "@/components/friends/pick-hike-dialog";
 import PublishedTrailRow from "@/components/friends/published-trail-row";
 import TogetherCard from "@/components/friends/together-card";
 import UserAvatar from "@/components/friends/user-avatar";
-import ListSection from "@/components/list-section";
-import LoadingIndicator from "@/components/loading-indicator";
-import SegmentedControl from "@/components/segmented-control";
+import ListSection from "@/components/layout/list-section";
+import LoadingIndicator from "@/components/status/loading-indicator";
+import SegmentedControl from "@/components/form/segmented-control";
 import SentShareRow from "@/components/shared-hike/sent-share-row";
 import SharedHikeRow from "@/components/shared-hike/shared-hike-row";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";

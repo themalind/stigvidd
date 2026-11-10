@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import UserAvatar from "@/components/friends/user-avatar";
-import OverflowMenu from "@/components/overflow-menu";
-import SlimButton from "@/components/slim-button";
+import OverflowMenu from "@/components/layout/overflow-menu";
+import SlimButton from "@/components/display/slim-button";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { FriendRequest } from "@/data/types";
 import { formatDate } from "@/utils/format-date";

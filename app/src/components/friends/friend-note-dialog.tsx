@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import CountedTextInput from "@/components/counted-text-input";
+import CountedTextInput from "@/components/form/counted-text-input";
 import DialogFrame, { DialogAction } from "@/components/dialog/dialog-frame";
 import { FRIEND_NOTE_MAX_LENGTH } from "@/constants/constants";
 import { useState } from "react";

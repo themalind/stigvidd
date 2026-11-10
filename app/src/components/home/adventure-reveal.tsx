@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ExampleImageOverlay from "@/components/example-image-overlay";
+import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { Rating } from "@/components/review/rating";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
 import { SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";

@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import CountedTextInput from "@/components/counted-text-input";
-import InfoHeading from "@/components/info-heading";
+import CountedTextInput from "@/components/form/counted-text-input";
+import InfoHeading from "@/components/layout/info-heading";
 import { asTranslationKey } from "@/i18n";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useCreateReview } from "@/hooks/review/useCreateReview";

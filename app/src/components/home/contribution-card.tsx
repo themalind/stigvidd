@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import LikeCount from "@/components/like-count";
+import LikeCount from "@/components/display/like-count";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailCard } from "@/data/types";
 import { formatDistanceKm } from "@/utils/format-distance";

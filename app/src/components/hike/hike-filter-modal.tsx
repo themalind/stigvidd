@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SelectInput from "../select-input";
+import SelectInput from "@/components/form/select-input";
 
 interface HikeFilterModalProps {
   visible: boolean;

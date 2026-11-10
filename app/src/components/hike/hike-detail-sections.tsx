@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { InfoCard, InfoGrid, InfoItem, InfoLabel, InfoValue } from "@/components/info-card";
+import { InfoCard, InfoGrid, InfoItem, InfoLabel, InfoValue } from "@/components/display/info-card";
 import { BORDER_RADIUS } from "@/constants/constants";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { useTranslation } from "react-i18next";

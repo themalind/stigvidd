@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import RouteThumbnail from "@/components/hike/route-thumbnail";
-import ImageThumbnail from "@/components/image-thumbnail";
-import MediaListRow from "@/components/media-list-row";
+import ImageThumbnail from "@/components/media/image-thumbnail";
+import MediaListRow from "@/components/media/media-list-row";
 import { formatDate } from "@/utils/format-date";
 import FormattedTime from "@/utils/format-time-from-ms";
 import { useTheme } from "react-native-paper";

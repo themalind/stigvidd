@@ -8,7 +8,7 @@
 import { getPopularContributedTrails } from "@/api/trails";
 import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import ContributionCard from "@/components/home/contribution-card";
-import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/section-panel";
+import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/layout/section-panel";
 import ContributionInfo from "@/components/trail/contribution-info";
 import { guardedNavigate } from "@/utils/navigation";
 import { POPULAR_TRAILS_STALE_TIME } from "@/constants/cache";

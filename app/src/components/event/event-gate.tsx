@@ -6,8 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { isApiStatus } from "@/api/api-error";
-import ErrorScreen from "@/components/error-screen";
-import LoadingIndicator from "@/components/loading-indicator";
+import ErrorScreen from "@/components/status/error-screen";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import { HikingEvent } from "@/data/types";
 import { useEvent } from "@/hooks/events/useEventQueries";
 import { ReactNode } from "react";

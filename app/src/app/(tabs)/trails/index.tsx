@@ -6,11 +6,11 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
-import ErrorView from "@/components/error-view";
-import LoadingIndicator from "@/components/loading-indicator";
-import ScreenTitleBar from "@/components/screen-title-bar";
-import SearchField from "@/components/search-field";
-import SegmentedControl from "@/components/segmented-control";
+import ErrorView from "@/components/status/error-view";
+import LoadingIndicator from "@/components/status/loading-indicator";
+import ScreenTitleBar from "@/components/layout/screen-title-bar";
+import SearchField from "@/components/form/search-field";
+import SegmentedControl from "@/components/form/segmented-control";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
 import TrailItem from "@/components/trail/trail-list/trail-item";
 import { TrailShortInfoResponse } from "@/data/types";

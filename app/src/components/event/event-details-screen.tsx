@@ -6,12 +6,12 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { stigviddUserAtom } from "@/atoms/user-atoms";
-import AlertDialog from "@/components/alert-dialog";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
-import BackButton from "@/components/back-button";
-import NoticeBanner from "@/components/notice-banner";
-import SectionPanel from "@/components/section-panel";
+import BackButton from "@/components/layout/back-button";
+import NoticeBanner from "@/components/status/notice-banner";
+import SectionPanel from "@/components/layout/section-panel";
 import { BORDER_RADIUS, EVENT_COVER_ASPECT, SCREEN_PADDING } from "@/constants/constants";
 import { HikingEvent } from "@/data/types";
 import { useEventManageMutations, useEventParticipants } from "@/hooks/events/useEventManage";

@@ -7,11 +7,11 @@
 
 import { getIncomingSharedHike } from "@/api/shared-hikes";
 import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
-import BackButton from "@/components/back-button";
-import ErrorScreen from "@/components/error-screen";
+import BackButton from "@/components/layout/back-button";
+import ErrorScreen from "@/components/status/error-screen";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
-import ListHeaderActions, { SortField } from "@/components/list-header-actions";
-import LoadingIndicator from "@/components/loading-indicator";
+import ListHeaderActions, { SortField } from "@/components/layout/list-header-actions";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import IncomingSharedHikeModal from "@/components/shared-hike/incoming-shared-hike-modal";
 import SharedHikeRow from "@/components/shared-hike/shared-hike-row";
 import SharedHikeStatsBanner from "@/components/shared-hike/shared-hike-stats-banner";

@@ -15,7 +15,7 @@ import ModalScrim from "@/components/dialog/modal-scrim";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import SlimButton from "@/components/slim-button";
+import SlimButton from "@/components/display/slim-button";
 import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
 import RoutePreviewMap from "../map/route-preview-map";
 

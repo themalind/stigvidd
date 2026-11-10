@@ -7,12 +7,12 @@
 
 import { withdrawHikeSubmission } from "@/api/hike-submissions";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
-import AlertDialog from "@/components/alert-dialog";
-import BackButton from "@/components/back-button";
-import ErrorView from "@/components/error-view";
-import LikeCount from "@/components/like-count";
+import AlertDialog from "@/components/dialog/alert-dialog";
+import BackButton from "@/components/layout/back-button";
+import ErrorView from "@/components/status/error-view";
+import LikeCount from "@/components/display/like-count";
 import RouteThumbnail from "@/components/hike/route-thumbnail";
-import LoadingIndicator from "@/components/loading-indicator";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Hike, HikeSubmission, HikeSubmissionStatus } from "@/data/types";
 import { useMyHikes } from "@/hooks/hike/useMyHikes";

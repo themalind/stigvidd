@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/back-button";
+import BackButton from "@/components/layout/back-button";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { asTranslationKey } from "@/i18n";

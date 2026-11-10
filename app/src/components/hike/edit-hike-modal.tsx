@@ -5,9 +5,9 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import FormTextField from "@/components/form-text-field";
-import ModalFormScrollView from "@/components/modal-form-scroll-view";
-import SlimButton from "@/components/slim-button";
+import FormTextField from "@/components/form/form-text-field";
+import ModalFormScrollView from "@/components/form/modal-form-scroll-view";
+import SlimButton from "@/components/display/slim-button";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Hike } from "@/data/types";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";

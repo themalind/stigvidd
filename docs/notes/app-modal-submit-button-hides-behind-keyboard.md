@@ -13,7 +13,7 @@ Android only pans far enough to show the focused input, and anything below it st
 
 **Fix (JS only, no dev build):** [useModalKeyboardLift](../../app/src/hooks/useModalKeyboardLift.ts):
 `style={modalStyle}` on the Paper `Modal`, the card's `height`/`maxHeight` from the hook, fields in a
-[ModalFormScrollView](../../app/src/components/modal-form-scroll-view.tsx), button below it. A raw
+[ModalFormScrollView](../../app/src/components/form/modal-form-scroll-view.tsx), button below it. A raw
 `KeyboardAwareScrollView` there auto-scrolls on iOS as well, on top of the lift, and pushes the field up
 under the header out of sight (seen on the obstacle form 2026-10-23); the component turns that off on iOS. RN's Android `keyboardDidShow` height is `ime - systemBars`, so the hook
 adds the bottom inset there; iOS's height already includes it. Modals whose button is inside the

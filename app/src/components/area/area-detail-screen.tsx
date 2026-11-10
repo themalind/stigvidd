@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getAreaByIdentifier } from "@/api/areas";
-import ExampleImageOverlay from "@/components/example-image-overlay";
+import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { CITY_AREAS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { FacilityType, hasFacilityType } from "@/data/types";
@@ -20,8 +20,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
-import ErrorView from "../error-view";
-import LoadingIndicator from "../loading-indicator";
+import ErrorView from "@/components/status/error-view";
+import LoadingIndicator from "@/components/status/loading-indicator";
 import AreaTrailSection from "./area-trail-section";
 import FacilityCountRow from "./facility-count-row";
 import FacilitySection from "./facility-section";

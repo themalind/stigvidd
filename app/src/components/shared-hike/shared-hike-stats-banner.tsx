@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import StatsHero, { HeroSatellite } from "@/components/stats-hero";
+import StatsHero, { HeroSatellite } from "@/components/display/stats-hero";
 import { SharedHike } from "@/data/types";
 import { formatDistanceKm } from "@/utils/format-distance";
 import { summarizeSharedHikes } from "@/utils/hike-stats";

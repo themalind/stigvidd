@@ -8,8 +8,8 @@
 import { getObstacleIssueTypes, updateTrailObstacle } from "@/api/trail-obstacles";
 import { asTranslationKey } from "@/i18n";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
-import CountedTextInput from "@/components/counted-text-input";
-import SelectInput from "@/components/select-input";
+import CountedTextInput from "@/components/form/counted-text-input";
+import SelectInput from "@/components/form/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
 import { UpdateTrailObstacleRequest } from "@/data/types";

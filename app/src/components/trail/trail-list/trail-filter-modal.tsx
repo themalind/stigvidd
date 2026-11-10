@@ -8,7 +8,7 @@
 import FilterSheet, { FilterSection, filterSectionTitleStyle } from "@/components/filter/filter-sheet";
 import OptionGroup from "@/components/filter/option-group";
 import ReleasedSlider from "@/components/filter/released-slider";
-import SelectInput from "@/components/select-input";
+import SelectInput from "@/components/form/select-input";
 import { FilterOptions } from "@/data/types";
 import { SortOption } from "@/hooks/trail/useTrailFilters";
 import { classificationParser } from "@/utils/classification-parser";

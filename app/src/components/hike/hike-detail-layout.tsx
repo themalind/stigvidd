@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/back-button";
-import ErrorScreen from "@/components/error-screen";
+import BackButton from "@/components/layout/back-button";
+import ErrorScreen from "@/components/status/error-screen";
 import { HikeFact, HikeFactsCard, HikeInfo, HikeInfoCard } from "@/components/hike/hike-detail-sections";
 import RoutePreviewMap from "@/components/map/route-preview-map";
 import ShimmerBlock from "@/components/skeletons/shimmer-block";
