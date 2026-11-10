@@ -101,7 +101,7 @@ so that name cannot move without a new app build.
 >    admin logs in with the Direct Access Grant (a cross-origin `fetch` POST to the token
 >    endpoint, no redirect flow), so what breaks is CORS on that POST: a console error and
 >    a login that never completes. This lives only in the running Keycloak.
-> 2. The API's CORS origin list in `backend/StigviddAPI/Program.cs`, which no test covers.
+> 2. The API's CORS origin list in `backend/StigviddAPI/Extensions/CorsExtensions.cs`, which no test covers.
 >
 > See
 > [docs/notes/moving-the-admin-off-the-apex.md](docs/notes/moving-the-admin-off-the-apex.md).

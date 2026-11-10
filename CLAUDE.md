@@ -79,7 +79,7 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 
 - **Licence per area**: `app/` is MPL-2.0 (**never add Exhibit B**); everything else is AGPL-3.0-or-later. New
   files need a matching SPDX header (`The Stigvidd Authors`) or a `REUSE.toml` entry. Keep a `.cs` BOM first; LF.
-- **Hostnames**: the CORS list in `Program.cs` and Keycloak Web Origins are untested and outside the repo; all
+- **Hostnames**: the CORS list in `Extensions/CorsExtensions.cs` and Keycloak Web Origins are untested and outside the repo; all
   three `proxy/Caddyfile*` need every block ([note](docs/notes/moving-the-admin-off-the-apex.md)). A new service
   also needs proxy `depends_on`, `env.IMAGES` for main **and** staging in `Jenkinsfile`, and DEPLOYMENT.md's two
   tables. An apex-derived name (`www.`, `link.{$SITE_DOMAIN}`) needs no `.env` variable.

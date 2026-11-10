@@ -87,7 +87,7 @@ Full detail: [openapi-contract-snapshot](../../../docs/notes/openapi-contract-sn
 
 ## Step 3 — authorization, deliberately
 
-`[Authorize]` for "a signed-in user", and the `"Admin"` policy (registered in `Program.cs`
+`[Authorize]` for "a signed-in user", and the `"Admin"` policy (registered in `Extensions/AuthExtensions.cs`
 as `RequireRole(adminRole)`, with Keycloak realm roles mapped by
 `Authorization/KeycloakRealmRolesTransformation.cs`) for admin-only. An endpoint with no
 attribute is **anonymous** — decide that, do not default into it.

@@ -10,7 +10,7 @@ and three of the four couplings fail at runtime with nothing red beforehand.
 
 ## 1. The API's CORS origin list — in the repo, tested by nothing
 
-`backend/StigviddAPI/Program.cs` names the allowed browser origins literally:
+`backend/StigviddAPI/Extensions/CorsExtensions.cs` names the allowed browser origins literally:
 
 ```csharp
 policy.WithOrigins("https://stigvidd.se", "https://admin.stigvidd.se", "https://api.stigvidd.se")

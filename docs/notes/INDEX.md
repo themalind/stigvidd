@@ -476,7 +476,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
 - [Moving the admin off the apex touches four couplings, and only two are in this repo](moving-the-admin-off-the-apex.md) —
   the public site (`site/`) owns `${SITE_DOMAIN}` (the apex) and the admin (`web/`) moved to
   `${WEB_DOMAIN}` = `admin.stigvidd.se`. What breaks is not the split but the hostname: the
-  API's CORS `WithOrigins` list in `Program.cs` is literal and **no test covers it** (the
+  API's CORS `WithOrigins` list in `CorsExtensions.cs` is literal and **no test covers it** (the
   integration suite boots as Development, which reflects any origin, so the production branch
   runs nowhere); Keycloak's `stigvidd-admin` **Web Origins** exist only in the running
   Keycloak, since `keycloak/` has no realm export — and it is Web Origins, NOT redirect URIs,

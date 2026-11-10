@@ -24,7 +24,7 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
     /// </summary>
     public const string RolesHeader = "X-Test-Roles";
 
-    /// <summary>The role behind the "AdminOnly" policy. Mirrors the Program.cs fallback.</summary>
+    /// <summary>The role behind the "AdminOnly" policy. Mirrors the AuthExtensions fallback.</summary>
     public const string AdminRole = "stigvidd-admin";
 
     public TestAuthHandler(

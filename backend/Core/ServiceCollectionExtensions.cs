@@ -41,7 +41,7 @@ public static class ServiceCollectionExtensions
         // Transient: En ny instans skapas varje gång tjänsten begärs. Garbage collected när den inte längre används.
 
         // Repositories
-        // NOTE: IKeycloakUserClient (used by KeycloakAdminRepository) is registered in Program.cs
+        // NOTE: IKeycloakUserClient (used by KeycloakAdminRepository) is registered in KeycloakAdminClientExtensions
         // via AddKeycloakAdminHttpClient before AddStigVidd is called.
         services.AddTransient<IKeycloakAdminRepository, KeycloakAdminRepository>();
         services.AddTransient<ITrailRepository, TrailRepository>();

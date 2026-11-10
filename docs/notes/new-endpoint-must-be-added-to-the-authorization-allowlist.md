@@ -29,7 +29,7 @@ or dump `admin` directly.
 
 ## Why the list is worth the friction
 
-[`Program.cs`](../../backend/StigviddAPI/Program.cs) sets a `FallbackPolicy` requiring an
+[`AuthExtensions.cs`](../../backend/StigviddAPI/Extensions/AuthExtensions.cs) sets a `FallbackPolicy` requiring an
 authenticated user, so forgetting an attribute fails **closed** — safe. The danger is the
 opposite direction: `[AllowAnonymous]` written once and never reviewed again. These tests make
 widening the public surface an explicit, reviewable diff, which is exactly what you want from

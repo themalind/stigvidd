@@ -25,7 +25,7 @@ back missing, and which test that was is a race — hence a different failure se
 `ImplementationType` before the test host starts, with the comment "Their startup runs race
 SeedDatabase on the shared in-memory connection" right above it. That filter is **not**
 applied automatically to a new hosted service — it is a hand-maintained list, so it must be
-extended every time `Program.cs` gains one, or the new service silently reintroduces the
+extended every time `Extensions/BackgroundServiceExtensions.cs` gains one, or the new service silently reintroduces the
 exact race the comment is warning about.
 
 ## What to check when adding a new `BackgroundService`
@@ -34,7 +34,7 @@ If it does anything at startup (a recovery sweep, a first retention pass, anythi
 touches `IDbContextFactory<StigViddDbContext>` before the first request), add its
 `typeof(YourService)` to the `startupServices` filter in
 `Tests/IntegrationTests/WebApplicationFactory.cs` in the same edit that registers it in
-`Program.cs`. Confirm with a **full** `dotnet test` run (not a filtered one) two or three
+`Extensions/BackgroundServiceExtensions.cs`. Confirm with a **full** `dotnet test` run (not a filtered one) two or three
 times — a single green run proves nothing when the failure is a race across shared state.
 
 Related: [[in-memory-queue-in-front-of-a-database-journal]], whose write-then-signal/

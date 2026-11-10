@@ -20,7 +20,7 @@ failure mode of getting it subtly wrong is "every user gets silently logged out.
 | Access-token accessor for the API layer                | `app/src/api/users.ts` → `getUserToken`                                 |
 | API base URL                                           | `app/src/api/api-config.ts`                                             |
 | Realm-role → role-claim mapping (backend)               | `backend/StigviddAPI/Authorization/KeycloakRealmRolesTransformation.cs` |
-| `AdminOnly` policy + admin-only controllers (backend) | `backend/StigviddAPI/Program.cs`, `backend/StigviddAPI/Controllers/Admin/` |
+| `AdminOnly` policy + admin-only controllers (backend) | `backend/StigviddAPI/Extensions/AuthExtensions.cs`, `backend/StigviddAPI/Controllers/Admin/` |
 
 ## Why Direct Access Grant (password flow)
 

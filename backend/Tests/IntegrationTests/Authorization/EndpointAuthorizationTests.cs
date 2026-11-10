@@ -10,7 +10,7 @@ using StigviddAPI;
 namespace IntegrationTests.Authorization;
 
 /// <summary>
-/// Program.cs sets a FallbackPolicy so an endpoint without authorization metadata
+/// AuthExtensions sets a FallbackPolicy so an endpoint without authorization metadata
 /// requires a signed-in caller. These tests keep that from being undone by accident:
 /// the first pins the list of deliberately public endpoints, the second insists every
 /// other endpoint is gated by an attribute of its own instead of leaning on the
@@ -222,7 +222,7 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         // the set gated on the realm's only role. Pinning it means an attribute lost in
         // an edit shows up here rather than in production.
         //
-        // This literal has to track Program.cs's AddPolicy. If it does not, the filter
+        // This literal has to track AuthExtensions's AddPolicy. If it does not, the filter
         // matches nothing and the assertion below reports an empty collection, naming no
         // policy and no route — see
         // docs/notes/authorize-policy-names-are-unchecked-strings.md.

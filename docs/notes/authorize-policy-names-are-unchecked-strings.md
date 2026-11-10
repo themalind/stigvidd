@@ -39,7 +39,7 @@ lost their attributes; in fact only the string moved. See
 
 Renaming a policy is a **three-place** edit, and only the first is obvious:
 
-1. `options.AddPolicy("…")` in `Program.cs`;
+1. `options.AddPolicy("…")` in `Extensions/AuthExtensions.cs`;
 2. every `[Authorize(Policy = "…")]` — `grep -rn 'Policy = "' backend --include=*.cs`
    lists them all, and it must come back uniform;
 3. the `data.Policy == "…"` literal in `EndpointAuthorizationTests`.
