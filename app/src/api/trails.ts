@@ -14,233 +14,108 @@ import {
   TrailOverview,
   TrailShortInfoResponse,
 } from "@/data/types";
-import { imageFormPart } from "./image-form-part";
-import { ApiError } from "./api-error";
-import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
-import { getUserToken } from "./users";
-import { logger } from "@/services/logger";
+import { imageFormPart } from "./core/image-form-part";
+import { queryString, send, sendForJson } from "./core/request";
 
-export async function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
-  try {
-    const params = new URLSearchParams();
-
-    if (latitude !== undefined && longitude !== undefined) {
-      params.append("latitude", latitude.toString());
-      params.append("longitude", longitude.toString());
-    }
-    // Se över om vi ska ha någon API-nyckel här för att autentisera appen
-    // och för att undvika att någon kan spamma och döda servern?
-    const query = params.toString();
-    const url = `${BASE_URL}/trails/popular${query ? `?${query}` : ""}`;
-    const response = await apiFetch(url);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Failed to fetch popular trails", {
-      endpoint: "GET /trails/popular",
-      errorMessage: error instanceof Error ? String(error.cause ?? error.message) : String(error),
-    });
-    throw error;
-  }
+function position(latitude?: number, longitude?: number): string {
+  return latitude !== undefined && longitude !== undefined ? queryString({ latitude, longitude }) : "";
 }
 
-export async function getPopularContributedTrails(latitude?: number, longitude?: number): Promise<TrailCard[]> {
-  try {
-    const params = new URLSearchParams();
-
-    if (latitude !== undefined && longitude !== undefined) {
-      params.append("latitude", latitude.toString());
-      params.append("longitude", longitude.toString());
-    }
-
-    const query = params.toString();
-    const response = await apiFetch(`${BASE_URL}/trails/popular-contributions${query ? `?${query}` : ""}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Failed to fetch popular contributed trails", {
-      endpoint: "GET /trails/popular-contributions",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
+  return sendForJson({
+    name: "getPopularTrails",
+    path: `/trails/popular${position(latitude, longitude)}`,
+    endpoint: "/trails/popular",
+    auth: "none",
+  });
 }
 
-async function trailLikeRequest(identifier: string, method: "GET" | "PUT" | "DELETE"): Promise<TrailLike> {
-  const token = await getUserToken();
+export function getPopularContributedTrails(latitude?: number, longitude?: number): Promise<TrailCard[]> {
+  return sendForJson({
+    name: "getPopularContributedTrails",
+    path: `/trails/popular-contributions${position(latitude, longitude)}`,
+    endpoint: "/trails/popular-contributions",
+    auth: "none",
+  });
+}
 
-  if (!token) throw new Error("User not authenticated!");
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/trails/${identifier}/like`, {
-      method,
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`trailLike: HTTP error ${response.status}`, response.status);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Trail like request failed", {
-      endpoint: `${method} /trails/{identifier}/like`,
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+function trailLikeRequest(identifier: string, method: "GET" | "PUT" | "DELETE"): Promise<TrailLike> {
+  return sendForJson({
+    name: "trailLike",
+    method,
+    path: `/trails/${identifier}/like`,
+    endpoint: "/trails/{param}/like",
+  });
 }
 
 export const getTrailLike = (identifier: string) => trailLikeRequest(identifier, "GET");
 export const likeTrail = (identifier: string) => trailLikeRequest(identifier, "PUT");
 export const unlikeTrail = (identifier: string) => trailLikeRequest(identifier, "DELETE");
 
-export async function getAllTrails(): Promise<TrailShortInfoResponse[]> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/trails`);
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Failed to fetch all trails", {
-      endpoint: "GET /trails",
-      errorMessage: error instanceof Error ? String(error.cause ?? error.message) : String(error),
-    });
-    throw error;
-  }
+export function getAllTrails(): Promise<TrailShortInfoResponse[]> {
+  return sendForJson({ name: "getAllTrails", path: "/trails", endpoint: "/trails", auth: "none" });
 }
 
-export async function getTrailByIdentifier(identifier: string): Promise<Trail> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/trails/${identifier}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error ${response.status}`);
-    }
-    const json = await response.json();
-
-    return json;
-  } catch (error) {
-    logger.error("Failed to fetch trail by identifier", {
-      endpoint: "GET /trails/{identifier}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getTrailByIdentifier(identifier: string): Promise<Trail> {
+  return sendForJson({
+    name: "getTrailByIdentifier",
+    path: `/trails/${identifier}`,
+    endpoint: "/trails/{param}",
+    auth: "none",
+  });
 }
 
-export async function getTrailCard(identifier: string): Promise<TrailCard> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/trails/${identifier}/card`);
-
-    if (!response.ok) {
-      throw new Error(`getTrailCard: HTTP error ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Failed to fetch trail card", {
-      endpoint: "GET /trails/{identifier}/card",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getTrailCard(identifier: string): Promise<TrailCard> {
+  return sendForJson({
+    name: "getTrailCard",
+    path: `/trails/${identifier}/card`,
+    endpoint: "/trails/{param}/card",
+    auth: "none",
+  });
 }
 
-export async function getTrailCards(identifiers: string[]): Promise<TrailCard[]> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/trails/cards`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifiers }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`getTrailCards: HTTP error ${response.status}`);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Failed to fetch trail cards", { endpoint: "GET /trails/cards", errorMessage: String(error) });
-    throw error;
-  }
+export function getTrailCards(identifiers: string[]): Promise<TrailCard[]> {
+  return sendForJson({
+    name: "getTrailCards",
+    method: "POST",
+    path: "/trails/cards",
+    endpoint: "/trails/cards",
+    body: { identifiers },
+    auth: "none",
+  });
 }
 
-export async function getCoordinatesByTrailIdentifier(identifier: string): Promise<Coordinates> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/trails/${identifier}/coordinates`);
-
-    if (!response.ok) {
-      throw new Error(`getCordsTrailByIdentifier: HTTP error ${response.status}`);
-    }
-    const json = await response.json();
-
-    return json;
-  } catch (error) {
-    logger.error("Failed to fetch trail coordinates", {
-      endpoint: "GET /trails/{identifier}/coordinates",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getCoordinatesByTrailIdentifier(identifier: string): Promise<Coordinates> {
+  return sendForJson({
+    name: "getCoordinatesByTrailIdentifier",
+    path: `/trails/${identifier}/coordinates`,
+    endpoint: "/trails/{param}/coordinates",
+    auth: "none",
+  });
 }
 
 export async function addTrail(request: CreateTrailRequest): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) throw new Error("User not authenticated!");
-
-  const formData = new FormData();
+  const form = new FormData();
 
   request.images?.forEach((image) => {
-    formData.append("images", imageFormPart(image.imageUrl));
+    form.append("images", imageFormPart(image.imageUrl));
   });
 
-  formData.append("trailSymbolImage", imageFormPart(request.trailSymbolImage));
+  form.append("trailSymbolImage", imageFormPart(request.trailSymbolImage));
 
-  formData.append("name", request.name);
-  formData.append("trailLength", `${request.trailLength}`);
-  formData.append("classification", `${request.classification}`);
-  formData.append("accessibility", `${request.accessibility}`);
-  formData.append("accessibilityInfo", `${request.accessibilityInfo}`);
-  formData.append("trailSymbol", `${request.trailSymbol}`);
-  formData.append("description", `${request.description}`);
-  formData.append("fullDescription", `${request.fullDescription}`);
-  formData.append("coordinates", `${request.coordinates}`);
-  formData.append("tags", `${request.tags}`);
-  formData.append("isVerified", `${request.isVerified}`);
-  formData.append("city", `${request.city}`);
+  form.append("name", request.name);
+  form.append("trailLength", `${request.trailLength}`);
+  form.append("classification", `${request.classification}`);
+  form.append("accessibility", `${request.accessibility}`);
+  form.append("accessibilityInfo", `${request.accessibilityInfo}`);
+  form.append("trailSymbol", `${request.trailSymbol}`);
+  form.append("description", `${request.description}`);
+  form.append("fullDescription", `${request.fullDescription}`);
+  form.append("coordinates", `${request.coordinates}`);
+  form.append("tags", `${request.tags}`);
+  form.append("isVerified", `${request.isVerified}`);
+  form.append("city", `${request.city}`);
 
-  try {
-    const response = await apiFetch(
-      `${BASE_URL}/trails/create`,
-      {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-      UPLOAD_TIMEOUT_MS,
-    );
-
-    if (!response.ok) {
-      throw new ApiError(`addTrail: HTTP error ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Trail creation failed", { endpoint: "POST /trails", errorMessage: String(error) });
-    throw error;
-  }
+  await send({ name: "addTrail", method: "POST", path: "/trails/create", endpoint: "/trails/create", form });
+  return { success: true };
 }

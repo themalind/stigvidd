@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-jest.mock("@/api/api-config", () => ({
-  ...jest.requireActual("@/api/api-config"),
+jest.mock("@/api/core/api-config", () => ({
+  ...jest.requireActual("@/api/core/api-config"),
   BASE_URL: "http://test/api/v1",
 }));
 

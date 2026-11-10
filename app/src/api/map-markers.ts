@@ -6,43 +6,12 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { Facility, TrailMarkerResponse } from "@/data/types";
-import { apiFetch, BASE_URL } from "./api-config";
-import { logger } from "@/services/logger";
+import { sendForJson } from "./core/request";
 
-export async function getTrailMarkers(): Promise<TrailMarkerResponse[]> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/trails/markers`);
-
-    if (!response.ok) {
-      throw new Error(`getTrailMarkers: HTTP error ${response.status}`);
-    }
-    const json = await response.json();
-
-    return json;
-  } catch (error) {
-    logger.error("Get trail markers failed", {
-      endpoint: "GET /trails/markers",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getTrailMarkers(): Promise<TrailMarkerResponse[]> {
+  return sendForJson({ name: "getTrailMarkers", path: "/trails/markers", endpoint: "/trails/markers", auth: "none" });
 }
 
-export async function getFacilityMarkers(): Promise<Facility[]> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/facilities`);
-
-    if (!response.ok) {
-      throw new Error(`getFacilityMarkers: HTTP error ${response.status}`);
-    }
-    const json = await response.json();
-
-    return json;
-  } catch (error) {
-    logger.error("Get facility markers failed", {
-      endpoint: "GET /facilities",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getFacilityMarkers(): Promise<Facility[]> {
+  return sendForJson({ name: "getFacilityMarkers", path: "/facilities", endpoint: "/facilities", auth: "none" });
 }

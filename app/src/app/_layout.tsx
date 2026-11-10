@@ -12,7 +12,7 @@ import { loadUserTheme, userThemeAtom } from "@/atoms/user-theme-atom";
 import { basemapAtom, loadBasemap } from "@/atoms/basemap-atom";
 import { BannedWriteDialog } from "@/components/auth/banned-write-dialog";
 import { SessionRecovery } from "@/components/auth/session-recovery";
-import { createQueryClient } from "@/api/query-client";
+import { createQueryClient } from "@/api/core/query-client";
 import { DialogHost } from "@/components/dialog/dialog-host";
 import EnvironmentBadge from "@/components/status/environment-badge";
 import { APP_ENVIRONMENT } from "@/utils/app-environment";

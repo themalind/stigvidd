@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { ApiError } from "@/api/api-error";
+import { ApiError } from "@/api/core/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import SharedHikeDetailsScreen from "@/components/shared-hike/shared-hike-details-screen";
 import { SharedHike } from "@/data/types";

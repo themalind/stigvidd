@@ -8,8 +8,8 @@
 // Paths, methods, tokens and error shapes live in the table in endpoint-contract.test.ts.
 // This file asserts what each call hands back.
 
-jest.mock("@/api/api-config", () => ({
-  ...jest.requireActual("@/api/api-config"),
+jest.mock("@/api/core/api-config", () => ({
+  ...jest.requireActual("@/api/core/api-config"),
   BASE_URL: "http://test/api/v1",
 }));
 

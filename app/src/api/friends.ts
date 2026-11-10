@@ -13,404 +13,125 @@ import {
   OutgoingFriendRequest,
   SearchFriendResult,
 } from "@/data/types";
-import { apiFetch, BASE_URL } from "./api-config";
-import { ApiError } from "./api-error";
-import { getUserToken } from "./users";
-import { logger } from "@/services/logger";
+import { isApiStatus } from "./core/api-error";
+import { send, sendForJson } from "./core/request";
 
 export async function sendFriendRequest(receiverNickName: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/requests`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ receiverNickName }),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: sendFirendRequest: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Send friend request failed", {
-      endpoint: "POST /friends/requests",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "sendFriendRequest",
+    method: "POST",
+    path: "/friends/requests",
+    endpoint: "/friends/requests",
+    body: { receiverNickName },
+  });
+  return { success: true };
 }
 
 export async function acceptFriendRequest(requesterIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/requests/accept/${requesterIdentifier}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: acceptFriendRequest: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Accept friend request failed", {
-      endpoint: "PUT /friends/requests/accept/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "acceptFriendRequest",
+    method: "PUT",
+    path: `/friends/requests/accept/${requesterIdentifier}`,
+    endpoint: "/friends/requests/accept/{param}",
+  });
+  return { success: true };
 }
 
 export async function rejectFriendRequest(otherIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/reject/${otherIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: rejectFriendRequest: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Reject friend request failed", {
-      endpoint: "DELETE /friends/reject/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "rejectFriendRequest",
+    method: "DELETE",
+    path: `/friends/reject/${otherIdentifier}`,
+    endpoint: "/friends/reject/{param}",
+  });
+  return { success: true };
 }
 
-export async function getFriends(): Promise<FriendResponse[]> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getFriends: ${response.status}`, response.status);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Get friends failed", {
-      endpoint: "GET /friends",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getFriends(): Promise<FriendResponse[]> {
+  return sendForJson({ name: "getFriends", path: "/friends", endpoint: "/friends" });
 }
 
-export async function getFriendProfile(friendIdentifier: string): Promise<FriendProfile> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/${friendIdentifier}/profile`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getFriendProfile: ${response.status}`, response.status);
-    }
-
-    return response.json();
-  } catch (error) {
+export function getFriendProfile(friendIdentifier: string): Promise<FriendProfile> {
+  return sendForJson({
+    name: "getFriendProfile",
+    path: `/friends/${friendIdentifier}/profile`,
+    endpoint: "/friends/{param}/profile",
     // keep-comment: 404 is the backend's deliberate answer for a stranger or a block, not a failure
-    if (error instanceof ApiError && error.status === 404) throw error;
-    logger.error("Get friend profile failed", {
-      endpoint: "GET /friends/{param}/profile",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+    quietStatuses: [404],
+  });
 }
 
 export async function setFriendNote(friendIdentifier: string, note: string | null): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/${friendIdentifier}/note`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ note }),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: setFriendNote: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Set friend note failed", {
-      endpoint: "PUT /friends/{param}/note",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "setFriendNote",
+    method: "PUT",
+    path: `/friends/${friendIdentifier}/note`,
+    endpoint: "/friends/{param}/note",
+    body: { note },
+  });
+  return { success: true };
 }
 
-export async function getIncomingRequests(): Promise<FriendRequest[]> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/requests/incoming`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getIncomingRequests: ${response.status}`, response.status);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Get incoming requests failed", {
-      endpoint: "GET /friends/requests/incoming",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getIncomingRequests(): Promise<FriendRequest[]> {
+  return sendForJson({
+    name: "getIncomingRequests",
+    path: "/friends/requests/incoming",
+    endpoint: "/friends/requests/incoming",
+  });
 }
 
-export async function getOutgoingRequests(): Promise<OutgoingFriendRequest[]> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/requests/outgoing`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getOutgoingRequests: ${response.status}`, response.status);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Get outgoing requests failed", {
-      endpoint: "GET /friends/requests/outgoing",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getOutgoingRequests(): Promise<OutgoingFriendRequest[]> {
+  return sendForJson({
+    name: "getOutgoingRequests",
+    path: "/friends/requests/outgoing",
+    endpoint: "/friends/requests/outgoing",
+  });
 }
 
 export async function removeFriend(friendIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/${friendIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: removeFriend: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Remove friend failed", {
-      endpoint: "DELETE /friends/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "removeFriend",
+    method: "DELETE",
+    path: `/friends/${friendIdentifier}`,
+    endpoint: "/friends/{param}",
+  });
+  return { success: true };
 }
 
 export async function searchUsers(query: string): Promise<SearchFriendResult[]> {
   try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/users/search?username=${encodeURIComponent(query)}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+    return await sendForJson<SearchFriendResult[]>({
+      name: "searchUsers",
+      path: `/users/search?username=${encodeURIComponent(query)}`,
+      endpoint: "/users/search",
+      quietStatuses: [404],
     });
-
-    if (response.status === 404) return [];
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: searchUsers: ${response.status}`, response.status);
-    }
-
-    const result: SearchFriendResult[] = await response.json();
-    return result;
   } catch (error) {
-    logger.error("Search users failed", {
-      endpoint: "GET /users/search",
-      errorMessage: String(error),
-    });
+    if (isApiStatus(error, 404)) return [];
     throw error;
   }
 }
 
 export async function blockUser(otherIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: blockUser: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Block user failed", {
-      endpoint: "POST /friends/blocks/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "blockUser",
+    method: "POST",
+    path: `/friends/blocks/${otherIdentifier}`,
+    endpoint: "/friends/blocks/{param}",
+  });
+  return { success: true };
 }
 
 export async function unblockUser(otherIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/blocks/${otherIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: unblockUser: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Unblock user failed", {
-      endpoint: "DELETE /friends/blocks/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "unblockUser",
+    method: "DELETE",
+    path: `/friends/blocks/${otherIdentifier}`,
+    endpoint: "/friends/blocks/{param}",
+  });
+  return { success: true };
 }
 
-export async function getBlockedUsers(): Promise<BlockedUser[]> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/friends/blocks`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getBlockedUsers: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get blocked users failed", {
-      endpoint: "GET /friends/blocks",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getBlockedUsers(): Promise<BlockedUser[]> {
+  return sendForJson({ name: "getBlockedUsers", path: "/friends/blocks", endpoint: "/friends/blocks" });
 }

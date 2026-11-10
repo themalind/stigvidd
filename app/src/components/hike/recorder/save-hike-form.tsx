@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { createHike } from "@/api/hikes";
-import { isUnauthorized, withUnauthorizedRetry } from "@/api/unauthorized";
+import { isUnauthorized, withUnauthorizedRetry } from "@/api/core/unauthorized";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import CountedTextInput from "@/components/form/counted-text-input";
 import Map from "@/components/map/map";

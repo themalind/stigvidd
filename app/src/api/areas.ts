@@ -6,52 +6,17 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CityArea } from "@/data/types";
-import { apiFetch, BASE_URL } from "./api-config";
-import { ApiError } from "./api-error";
-import { logger } from "@/services/logger";
+import { sendForJson } from "./core/request";
 
-export async function getAreas(): Promise<CityArea[]> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/cityareas`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getAreas: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get areas failed", {
-      endpoint: "GET /cityareas",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getAreas(): Promise<CityArea[]> {
+  return sendForJson({ name: "getAreas", path: "/cityareas", endpoint: "/cityareas", auth: "none" });
 }
 
-export async function getAreaByIdentifier(areaIdentifier: string): Promise<CityArea> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/cityareas/${areaIdentifier}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getAreaByIdentifier: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get area by identifier failed", {
-      endpoint: "GET /cityareas/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getAreaByIdentifier(areaIdentifier: string): Promise<CityArea> {
+  return sendForJson({
+    name: "getAreaByIdentifier",
+    path: `/cityareas/${areaIdentifier}`,
+    endpoint: "/cityareas/{param}",
+    auth: "none",
+  });
 }

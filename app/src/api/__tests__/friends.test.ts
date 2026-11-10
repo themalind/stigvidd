@@ -5,22 +5,12 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-jest.mock("@/api/api-config", () => ({
-  ...jest.requireActual("@/api/api-config"),
+jest.mock("@/api/core/api-config", () => ({
+  ...jest.requireActual("@/api/core/api-config"),
   BASE_URL: "http://test/api/v1",
 }));
 
-jest.mock("@/api/users", () => ({
-  getUserToken: jest.fn(),
-  ApiError: class ApiError extends Error {
-    status?: number;
-    constructor(message: string, status?: number) {
-      super(message);
-      this.name = "ApiError";
-      this.status = status;
-    }
-  },
-}));
+jest.mock("@/api/users", () => ({ getUserToken: jest.fn() }));
 
 jest.mock("@/services/logger", () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
@@ -55,7 +45,7 @@ describe("getFriendProfile", () => {
   it("logs any other failure", async () => {
     mockFetch(500);
     await expect(getFriendProfile("id-anna")).rejects.toMatchObject({ status: 500 });
-    expect(logger.error).toHaveBeenCalledWith("Get friend profile failed", expect.anything());
+    expect(logger.error).toHaveBeenCalledWith("getFriendProfile failed", expect.anything());
   });
 });
 

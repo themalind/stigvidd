@@ -11,7 +11,7 @@ itself had succeeded.
 
 **Cause:** the mutation's `onSuccess` invalidated all of `["events"]` before the screen
 navigated away. The detail and participants queries still had mounted `useQuery` observers, so
-they refetched the deleted event at once and `sendAuthed` logged the 404.
+they refetched the deleted event at once and `send` (`app/src/api/core/request.ts`) logged the 404.
 
 **Why `removeQueries` looks right but is not:** removing the queries from the cache stops that
 one invalidation from finding them. But the mutation settling re-renders the screen, and the

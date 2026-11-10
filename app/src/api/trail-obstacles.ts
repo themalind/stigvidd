@@ -6,210 +6,77 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CreateTrailObstacleRequest, TrailObstacle, UpdateTrailObstacleRequest } from "@/data/types";
-import { logger } from "@/services/logger";
-import { apiFetch, BASE_URL } from "./api-config";
-import { ApiError } from "./api-error";
-import { getUserToken } from "./users";
+import { send, sendForJson } from "./core/request";
 
-export async function getTrailObstaclesByTrailIdentifier(trailIdentifier: string): Promise<TrailObstacle[]> {
-  try {
-    const token = await getUserToken();
-
-    const response = await apiFetch(`${BASE_URL}/trailobstacles/trail/${trailIdentifier}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getTrailObstaclesByTrailIdentifier:  ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get trail obstacles by trail identifier failed", {
-      endpoint: "GET /trailobstacles/trail/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getTrailObstaclesByTrailIdentifier(trailIdentifier: string): Promise<TrailObstacle[]> {
+  return sendForJson({
+    name: "getTrailObstaclesByTrailIdentifier",
+    path: `/trailobstacles/trail/${trailIdentifier}`,
+    endpoint: "/trailobstacles/trail/{param}",
+    auth: "optional",
+  });
 }
 
 export async function addSolvedVote(obstacleIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: addSolvedVote:  ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Add solved vote failed", {
-      endpoint: "POST /trailobstacles/solve/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "addSolvedVote",
+    method: "POST",
+    path: `/trailobstacles/solve/${obstacleIdentifier}`,
+    endpoint: "/trailobstacles/solve/{param}",
+  });
+  return { success: true };
 }
 
 export async function deleteSolvedVote(obstacleIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/trailobstacles/solve/${obstacleIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: deleteSolvedVote:  ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Delete solved vote failed", {
-      endpoint: "DELETE /trailobstacles/solve/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "deleteSolvedVote",
+    method: "DELETE",
+    path: `/trailobstacles/solve/${obstacleIdentifier}`,
+    endpoint: "/trailobstacles/solve/{param}",
+  });
+  return { success: true };
 }
 
 export async function createTrailObstacle(request: CreateTrailObstacleRequest): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/trailobstacles`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: createTrailObstacle:  ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Create trail obstacle failed", {
-      endpoint: "POST /trailobstacles",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "createTrailObstacle",
+    method: "POST",
+    path: "/trailobstacles",
+    endpoint: "/trailobstacles",
+    body: request,
+  });
+  return { success: true };
 }
 
 export async function updateTrailObstacle(
   obstacleIdentifier: string,
   request: UpdateTrailObstacleRequest,
 ): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/trailobstacles/${obstacleIdentifier}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: updateTrailObstacle: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Update trail obstacle failed", {
-      endpoint: "PUT /trailobstacles/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "updateTrailObstacle",
+    method: "PUT",
+    path: `/trailobstacles/${obstacleIdentifier}`,
+    endpoint: "/trailobstacles/{param}",
+    body: request,
+  });
+  return { success: true };
 }
 
-export async function getObstacleIssueTypes(): Promise<string[]> {
-  try {
-    const response = await apiFetch(`${BASE_URL}/trailobstacles/issue-types`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getObstacleIssueTypes:  ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get obstacle issue types failed", {
-      endpoint: "GET /trailobstacles/issue-types",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getObstacleIssueTypes(): Promise<string[]> {
+  return sendForJson({
+    name: "getObstacleIssueTypes",
+    path: "/trailobstacles/issue-types",
+    endpoint: "/trailobstacles/issue-types",
+    auth: "none",
+  });
 }
 
 export async function deleteTrailObstacle(trailObstacleIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-    const response = await apiFetch(`${BASE_URL}/trailobstacles/${trailObstacleIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: deleteTrailObstacle:  ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Delete trail obstacle failed", {
-      endpoint: "DELETE /trailobstacles/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "deleteTrailObstacle",
+    method: "DELETE",
+    path: `/trailobstacles/${trailObstacleIdentifier}`,
+    endpoint: "/trailobstacles/{param}",
+  });
+  return { success: true };
 }

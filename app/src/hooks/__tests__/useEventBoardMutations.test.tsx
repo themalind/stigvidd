@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { ApiError } from "@/api/api-error";
+import { ApiError } from "@/api/core/api-error";
 import { useEventBoardMutations } from "@/hooks/events/useEventBoard";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";

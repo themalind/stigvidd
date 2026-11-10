@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { apiErrorCode, problemStrings } from "@/api/api-error";
+import { apiErrorCode, problemStrings } from "@/api/core/api-error";
 import {
   cancelEvent,
   deleteEvent,

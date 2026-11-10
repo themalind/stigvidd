@@ -7,8 +7,8 @@
 
 import i18n from "@/i18n";
 import { RegisterData, UpdateUserResult } from "@/data/types";
-import { apiFetch, BASE_URL } from "./api-config";
-import { ApiError } from "./api-error";
+import { apiFetch, BASE_URL } from "./core/api-config";
+import { ApiError } from "./core/api-error";
 import { logger } from "@/services/logger";
 
 /** Reads the conflict code from a 409 body; an unrecognised body is a generic conflict. */

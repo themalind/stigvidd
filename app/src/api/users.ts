@@ -7,242 +7,62 @@
 
 import { User, UserFavoritesTrail, UserWishlistTrail } from "@/data/types";
 import { getValidAccessToken } from "@/services/keycloak-auth";
-import { apiFetch, BASE_URL } from "./api-config";
-import { ApiError } from "./api-error";
-import { logger } from "@/services/logger";
+import { send, sendForJson } from "./core/request";
 
 export async function getUserToken(): Promise<string | null> {
   return getValidAccessToken();
 }
 
-export async function getStigViddUser(): Promise<User> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/users`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get stig vidd user failed", {
-      endpoint: "GET /users",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getStigViddUser(): Promise<User> {
+  return sendForJson({ name: "getStigViddUser", path: "/users", endpoint: "/users" });
 }
 
-export async function getUserFavorites(): Promise<UserFavoritesTrail[]> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/users/favorites`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get user favorites failed", {
-      endpoint: "GET /users/favorites",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getUserFavorites(): Promise<UserFavoritesTrail[]> {
+  return sendForJson({ name: "getUserFavorites", path: "/users/favorites", endpoint: "/users/favorites" });
 }
 
-export async function getUserWishlist(): Promise<UserWishlistTrail[]> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/users/wishlist`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get user wishlist failed", {
-      endpoint: "GET /users/wishlist",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getUserWishlist(): Promise<UserWishlistTrail[]> {
+  return sendForJson({ name: "getUserWishlist", path: "/users/wishlist", endpoint: "/users/wishlist" });
 }
 
-export async function addToUserFavorite(trailIdentifier: string): Promise<UserFavoritesTrail> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/users/favorites`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      // Matchar request i backenden
-      body: JSON.stringify({
-        trailIdentifier,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Add to user favorite failed", {
-      endpoint: "POST /users/favorites",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function addToUserFavorite(trailIdentifier: string): Promise<UserFavoritesTrail> {
+  return sendForJson({
+    name: "addToUserFavorite",
+    method: "POST",
+    path: "/users/favorites",
+    endpoint: "/users/favorites",
+    body: { trailIdentifier },
+  });
 }
 
-export async function addToUserWishlist(trailIdentifier: string): Promise<UserFavoritesTrail> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/users/wishlist`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        trailIdentifier,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Add to user wishlist failed", {
-      endpoint: "POST /users/wishlist",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function addToUserWishlist(trailIdentifier: string): Promise<UserFavoritesTrail> {
+  return sendForJson({
+    name: "addToUserWishlist",
+    method: "POST",
+    path: "/users/wishlist",
+    endpoint: "/users/wishlist",
+    body: { trailIdentifier },
+  });
 }
 
 export async function removeUserFavorite(trailIdentifier: string): Promise<void> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/users/favorites/${trailIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-  } catch (error) {
-    logger.error("Remove user favorite failed", {
-      endpoint: "DELETE /users/favorites/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "removeUserFavorite",
+    method: "DELETE",
+    path: `/users/favorites/${trailIdentifier}`,
+    endpoint: "/users/favorites/{param}",
+  });
 }
 
 export async function deleteStigViddUser(): Promise<void> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  const response = await apiFetch(`${BASE_URL}/users/delete`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new ApiError(`HTTP error ${response.status}`, response.status);
-  }
+  await send({ name: "deleteStigViddUser", method: "DELETE", path: "/users/delete", endpoint: "/users/delete" });
 }
 
 export async function removeUserWishlist(trailIdentifier: string): Promise<void> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/users/wishlist/${trailIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-  } catch (error) {
-    logger.error("Remove user wishlist failed", {
-      endpoint: "DELETE /users/wishlist/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "removeUserWishlist",
+    method: "DELETE",
+    path: `/users/wishlist/${trailIdentifier}`,
+    endpoint: "/users/wishlist/{param}",
+  });
 }

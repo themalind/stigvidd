@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { ApiError } from "@/api/api-error";
+import { ApiError } from "@/api/core/api-error";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
 import VerifyEmailScreen from "../verify-email";

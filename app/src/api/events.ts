@@ -19,8 +19,8 @@ import {
   MyEventsQuery,
   UpdateEventRequest,
 } from "@/data/types";
-import { imageFormPart } from "./image-form-part";
-import { queryString as query, sendAuthed as send, sendAuthedForJson as sendForJson } from "./authed-request";
+import { imageFormPart } from "./core/image-form-part";
+import { queryString as query, send, sendForJson } from "./core/request";
 
 function eventPath(identifier: string): string {
   return `/events/${encodeURIComponent(identifier)}`;
@@ -32,7 +32,7 @@ export function getEvents(feed: EventFeedQuery = {}): Promise<EventPage> {
     method: "GET",
     path: `/events${query({ ...feed })}`,
     endpoint: "/events",
-    anonymousAllowed: true,
+    auth: "optional",
   });
 }
 
@@ -51,7 +51,7 @@ export function getEvent(identifier: string): Promise<HikingEvent> {
     method: "GET",
     path: eventPath(identifier),
     endpoint: "/events/{param}",
-    anonymousAllowed: true,
+    auth: "optional",
   });
 }
 

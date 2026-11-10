@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { createContentReport, getReportReasons } from "@/api/content-reports";
-import { ApiError } from "@/api/api-error";
+import { ApiError } from "@/api/core/api-error";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import CountedTextInput from "@/components/form/counted-text-input";
 import SelectInput from "@/components/form/select-input";

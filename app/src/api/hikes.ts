@@ -6,276 +6,78 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CreateHikeRequest, Hike, HikeImage, ShareHikeRequest, UpdateHikeRequest } from "@/data/types";
-import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
-import { imageFormPart } from "./image-form-part";
-import { getUserToken } from "./users";
-import { ApiError } from "./api-error";
-import { logger } from "@/services/logger";
+import { UPLOAD_TIMEOUT_MS } from "./core/api-config";
+import { imageFormPart } from "./core/image-form-part";
+import { send, sendForJson } from "./core/request";
 
 export async function createHike(request: CreateHikeRequest): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(
-      `${BASE_URL}/hikes`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...request,
-          coordinates: JSON.stringify(request.coordinates),
-        }),
-      },
-      UPLOAD_TIMEOUT_MS,
-    );
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: createHike: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Create hike failed", {
-      endpoint: "POST /hikes",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "createHike",
+    method: "POST",
+    path: "/hikes",
+    endpoint: "/hikes",
+    body: { ...request, coordinates: JSON.stringify(request.coordinates) },
+    timeoutMs: UPLOAD_TIMEOUT_MS,
+  });
+  return { success: true };
 }
 
-export async function updateHike(request: UpdateHikeRequest): Promise<Hike> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(
-      `${BASE_URL}/hikes/${request.hikeIdentifier}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(request),
-      },
-      UPLOAD_TIMEOUT_MS,
-    );
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: updateHike: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Update hike failed", {
-      endpoint: "PUT /hikes/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function updateHike(request: UpdateHikeRequest): Promise<Hike> {
+  return sendForJson({
+    name: "updateHike",
+    method: "PUT",
+    path: `/hikes/${request.hikeIdentifier}`,
+    endpoint: "/hikes/{param}",
+    body: request,
+    timeoutMs: UPLOAD_TIMEOUT_MS,
+  });
 }
 
-// Keyed on the hike alone. Only the raw coordinate JSON is cached under this key, and a
-// recorded walk's geometry never changes — unlike its gettingThere / parkingInfo /
-// description, which updateHike can rewrite. Keeping them on separate keys is what lets
-// the geometry hold a 24 h staleTime safely.
 export const hikeRouteQueryKey = (hikeIdentifier: string) => ["hike-route", hikeIdentifier] as const;
 
-// Readable by the hike's creator *and* by anyone it has been shared with — the API
-// authorises both (HikeService.GetHikeByIdentifierAsync), so the follow screen needs
-// only this one call whether you own the hike or a friend sent it to you.
-export async function getHikeByIdentifier(hikeIdentifier: string): Promise<Hike> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getHikeByIdentifier: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get hike by identifier failed", {
-      endpoint: "GET /hikes/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getHikeByIdentifier(hikeIdentifier: string): Promise<Hike> {
+  return sendForJson({ name: "getHikeByIdentifier", path: `/hikes/${hikeIdentifier}`, endpoint: "/hikes/{param}" });
 }
 
-export async function getAllHikesByUserId(userIdentifier: string): Promise<Hike[]> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-  try {
-    const response = await apiFetch(`${BASE_URL}/hikes?createdBy=${userIdentifier}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getAllHikesByUserId: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get all hikes by user id failed", {
-      endpoint: "GET /hikes",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getAllHikesByUserId(userIdentifier: string): Promise<Hike[]> {
+  return sendForJson({ name: "getAllHikesByUserId", path: `/hikes?createdBy=${userIdentifier}`, endpoint: "/hikes" });
 }
 
 export async function shareHike(request: ShareHikeRequest): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/hikeshares/share`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: shareHike: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Share hike failed", {
-      endpoint: "POST /hikeshares/share",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "shareHike",
+    method: "POST",
+    path: "/hikeshares/share",
+    endpoint: "/hikeshares/share",
+    body: request,
+  });
+  return { success: true };
 }
 
 export async function deleteHike(hikeIdentifier: string): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/hikes/${hikeIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: deleteHike: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Delete hike failed", {
-      endpoint: "DELETE /hikes/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({ name: "deleteHike", method: "DELETE", path: `/hikes/${hikeIdentifier}`, endpoint: "/hikes/{param}" });
+  return { success: true };
 }
 
-export async function uploadHikeImage(hikeIdentifier: string, uri: string): Promise<HikeImage> {
-  const token = await getUserToken();
+export function uploadHikeImage(hikeIdentifier: string, uri: string): Promise<HikeImage> {
+  const form = new FormData();
+  form.append("image", imageFormPart(uri));
 
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  const formData = new FormData();
-  formData.append("image", imageFormPart(uri));
-
-  try {
-    const response = await apiFetch(
-      `${BASE_URL}/hikes/${hikeIdentifier}/images`,
-      {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-      UPLOAD_TIMEOUT_MS,
-    );
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: uploadHikeImage: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Upload hike image failed", {
-      endpoint: "POST /hikes/{param}/images",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  return sendForJson({
+    name: "uploadHikeImage",
+    method: "POST",
+    path: `/hikes/${hikeIdentifier}/images`,
+    endpoint: "/hikes/{param}/images",
+    form,
+  });
 }
 
 export async function deleteHikeImage(hikeIdentifier: string, imageIdentifier: string): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/hikes/${hikeIdentifier}/images/${imageIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: deleteHikeImage: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Delete hike image failed", {
-      endpoint: "DELETE /hikes/{param}/images/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "deleteHikeImage",
+    method: "DELETE",
+    path: `/hikes/${hikeIdentifier}/images/${imageIdentifier}`,
+    endpoint: "/hikes/{param}/images/{param}",
+  });
+  return { success: true };
 }

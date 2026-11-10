@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { ApiError } from "@/api/api-error";
+import { ApiError } from "@/api/core/api-error";
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import HikeDetailsScreen, { HikeFollowRoute } from "@/components/hike/hike-details-screen";
 import { MAX_PENDING_SUBMISSIONS, SURFACE_BORDER_RADIUS } from "@/constants/constants";

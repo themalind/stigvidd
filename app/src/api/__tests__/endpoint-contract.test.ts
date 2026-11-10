@@ -9,8 +9,8 @@
 // so the wire contract of all of them is asserted from one table here. Behaviour that is
 // specific to an endpoint (pagination, multipart bodies) stays in the per-module suites.
 
-jest.mock("@/api/api-config", () => ({
-  ...jest.requireActual("@/api/api-config"),
+jest.mock("@/api/core/api-config", () => ({
+  ...jest.requireActual("@/api/core/api-config"),
   BASE_URL: "http://test/api/v1",
 }));
 
@@ -24,7 +24,7 @@ jest.mock("@/services/keycloak-auth", () => ({ getValidAccessToken: jest.fn() })
 
 import { getValidAccessToken } from "@/services/keycloak-auth";
 import { File } from "expo-file-system";
-import { ApiError, problemStrings } from "../api-error";
+import { ApiError, problemStrings } from "../core/api-error";
 import { getAreaByIdentifier, getAreas } from "../areas";
 import {
   acceptFriendRequest,
@@ -150,9 +150,6 @@ interface Endpoint {
   method: string;
   path: string;
   auth: Auth;
-  // What a non-2xx response throws. The public GETs on trails/ and map-markers throw a
-  // plain Error, so the status is lost; the rest carry it on an ApiError.
-  carriesStatus: boolean;
   body?: unknown;
 }
 
@@ -219,14 +216,13 @@ const createSubmissionRequest = {
 
 const endpoints: Endpoint[] = [
   // areas
-  { name: "getAreas", call: () => getAreas(), method: "GET", path: "/cityareas", auth: "none", carriesStatus: true },
+  { name: "getAreas", call: () => getAreas(), method: "GET", path: "/cityareas", auth: "none" },
   {
     name: "getAreaByIdentifier",
     call: () => getAreaByIdentifier("a1"),
     method: "GET",
     path: "/cityareas/a1",
     auth: "none",
-    carriesStatus: true,
   },
 
   // map markers
@@ -236,7 +232,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails/markers",
     auth: "none",
-    carriesStatus: false,
   },
   {
     name: "getFacilityMarkers",
@@ -244,7 +239,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/facilities",
     auth: "none",
-    carriesStatus: false,
   },
 
   // notifications
@@ -254,7 +248,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/notifications/tokens",
     auth: "required",
-    carriesStatus: true,
     body: { expoToken: "ExponentPushToken[abc]", platform: "ios" },
   },
   {
@@ -263,7 +256,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/notifications/tokens/ExponentPushToken%5Babc%5D",
     auth: "required",
-    carriesStatus: true,
   },
 
   // reviews
@@ -273,7 +265,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/reviews/trail/t1?page=2&limit=5",
     auth: "optional",
-    carriesStatus: true,
   },
   {
     name: "hasReviewedTrail",
@@ -281,7 +272,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/reviews/trail/t1/mine",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "createReview",
@@ -289,7 +279,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/reviews/create",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "deleteReview",
@@ -297,7 +286,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/reviews/r1",
     auth: "required",
-    carriesStatus: true,
   },
 
   // trail obstacles
@@ -307,7 +295,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trailobstacles/trail/t1",
     auth: "optional",
-    carriesStatus: true,
   },
   {
     name: "addSolvedVote",
@@ -315,7 +302,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/trailobstacles/solve/o1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "deleteSolvedVote",
@@ -323,7 +309,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/trailobstacles/solve/o1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "createTrailObstacle",
@@ -331,7 +316,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/trailobstacles",
     auth: "required",
-    carriesStatus: true,
     body: obstacleRequest,
   },
   {
@@ -340,7 +324,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/trailobstacles/o1",
     auth: "required",
-    carriesStatus: true,
     body: { description: "Röjt", issueType: "Hinder" },
   },
   {
@@ -349,7 +332,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trailobstacles/issue-types",
     auth: "none",
-    carriesStatus: true,
   },
   {
     name: "deleteTrailObstacle",
@@ -357,7 +339,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/trailobstacles/o1",
     auth: "required",
-    carriesStatus: true,
   },
 
   // users
@@ -367,7 +348,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/users",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getUserFavorites",
@@ -375,7 +355,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/users/favorites",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getUserWishlist",
@@ -383,7 +362,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/users/wishlist",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "addToUserFavorite",
@@ -391,7 +369,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/users/favorites",
     auth: "required",
-    carriesStatus: true,
     body: { trailIdentifier: "t1" },
   },
   {
@@ -400,7 +377,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/users/wishlist",
     auth: "required",
-    carriesStatus: true,
     body: { trailIdentifier: "t1" },
   },
   {
@@ -409,7 +385,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/users/favorites/t1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "removeUserWishlist",
@@ -417,7 +392,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/users/wishlist/t1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "deleteStigViddUser",
@@ -425,7 +399,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/users/delete",
     auth: "required",
-    carriesStatus: true,
   },
 
   // trails
@@ -435,7 +408,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails/popular",
     auth: "none",
-    carriesStatus: false,
   },
   {
     name: "getPopularContributedTrails",
@@ -443,7 +415,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails/popular-contributions",
     auth: "none",
-    carriesStatus: false,
   },
   {
     name: "getTrailLike",
@@ -451,7 +422,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails/t1/like",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "likeTrail",
@@ -459,7 +429,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/trails/t1/like",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "unlikeTrail",
@@ -467,7 +436,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/trails/t1/like",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "createHikeSubmission",
@@ -475,7 +443,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/hikesubmissions",
     auth: "required",
-    carriesStatus: true,
     body: createSubmissionRequest,
   },
   {
@@ -484,7 +451,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/hikesubmissions",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "withdrawHikeSubmission",
@@ -492,7 +458,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/hikesubmissions/s1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getAllTrails",
@@ -500,7 +465,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails",
     auth: "none",
-    carriesStatus: false,
   },
   {
     name: "getTrailByIdentifier",
@@ -508,7 +472,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails/t1",
     auth: "none",
-    carriesStatus: false,
   },
   {
     name: "getTrailCard",
@@ -516,7 +479,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails/t1/card",
     auth: "none",
-    carriesStatus: false,
   },
   {
     name: "getTrailCards",
@@ -524,7 +486,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/trails/cards",
     auth: "none",
-    carriesStatus: false,
     body: { identifiers: ["a", "b"] },
   },
   {
@@ -533,7 +494,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/trails/t1/coordinates",
     auth: "none",
-    carriesStatus: false,
   },
 
   // hikes
@@ -543,7 +503,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/hikes",
     auth: "required",
-    carriesStatus: true,
     // The coordinate array travels as a JSON string, not as nested JSON.
     body: { ...createHikeRequest, coordinates: JSON.stringify(createHikeRequest.coordinates) },
   },
@@ -553,7 +512,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/hikes/h1",
     auth: "required",
-    carriesStatus: true,
     body: updateHikeRequest,
   },
   {
@@ -562,7 +520,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/hikes/h1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getAllHikesByUserId",
@@ -570,7 +527,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/hikes?createdBy=u1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "shareHike",
@@ -578,7 +534,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/hikeshares/share",
     auth: "required",
-    carriesStatus: true,
     body: shareHikeRequest,
   },
   {
@@ -587,7 +542,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/hikes/h1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "uploadHikeImage",
@@ -595,7 +549,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/hikes/h1/images",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "deleteHikeImage",
@@ -603,7 +556,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/hikes/h1/images/img1",
     auth: "required",
-    carriesStatus: true,
   },
 
   // shared hikes
@@ -613,7 +565,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/hikesharerecipient",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getOutgoingSharedHikes",
@@ -621,7 +572,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/hikeshares/outgoing",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getIncomingSharedHikes",
@@ -629,7 +579,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/hikesharerecipient/incoming",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getIncomingSharedHike",
@@ -637,7 +586,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/hikesharerecipient/incoming/h1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "reshareHike",
@@ -645,7 +593,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/hikesharerecipient/re-share",
     auth: "required",
-    carriesStatus: true,
     body: reshareRequest,
   },
   {
@@ -654,7 +601,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/hikesharerecipient/accept/h1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "rejectSharedHike",
@@ -662,7 +608,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/hikesharerecipient/reject/h1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "removeSharedHike",
@@ -670,7 +615,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/hikesharerecipient/h1",
     auth: "required",
-    carriesStatus: true,
   },
 
   // friends
@@ -680,7 +624,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/friends/requests",
     auth: "required",
-    carriesStatus: true,
     body: { receiverNickName: "stigvandraren" },
   },
   {
@@ -689,7 +632,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/friends/requests/accept/u1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "rejectFriendRequest",
@@ -697,7 +639,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/friends/reject/u1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getFriends",
@@ -705,7 +646,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/friends",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getIncomingRequests",
@@ -713,7 +653,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/friends/requests/incoming",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getOutgoingRequests",
@@ -721,7 +660,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/friends/requests/outgoing",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "removeFriend",
@@ -729,7 +667,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/friends/u1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getFriendProfile",
@@ -737,7 +674,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/friends/u1/profile",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "setFriendNote",
@@ -745,7 +681,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/friends/u1/note",
     auth: "required",
-    carriesStatus: true,
     body: { note: "Kusin" },
   },
   {
@@ -754,7 +689,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/users/search?username=anna%20banan",
     auth: "required",
-    carriesStatus: true,
   },
 
   {
@@ -763,7 +697,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/events?lat=57.72&lon=12.94&radiusKm=25&cursor=a%2Bb%2Fc",
     auth: "optional",
-    carriesStatus: true,
   },
   {
     name: "getMyEvents",
@@ -771,7 +704,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/events/mine?past=true",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getEvent",
@@ -779,7 +711,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/events/e1",
     auth: "optional",
-    carriesStatus: true,
   },
   {
     name: "createEvent",
@@ -787,7 +718,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events",
     auth: "required",
-    carriesStatus: true,
     body: createEventRequest,
   },
   {
@@ -796,7 +726,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/events/e1",
     auth: "required",
-    carriesStatus: true,
     body: updateEventRequest,
   },
   {
@@ -805,7 +734,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events/e1/cancel",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "deleteEvent",
@@ -813,7 +741,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/e1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "joinEvent",
@@ -821,7 +748,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events/e1/join",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "leaveEvent",
@@ -829,7 +755,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/e1/leave",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "markEventInterested",
@@ -837,7 +762,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events/e1/interested",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "unmarkEventInterested",
@@ -845,7 +769,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/e1/interested",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getEventParticipants",
@@ -853,7 +776,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/events/e1/participants",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "removeEventParticipant",
@@ -861,7 +783,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/e1/participants/u1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "setEventParticipantRole",
@@ -869,7 +790,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/events/e1/participants/u1/role",
     auth: "required",
-    carriesStatus: true,
     body: { role: "CoHost" },
   },
   {
@@ -878,7 +798,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/events/e1/mute",
     auth: "required",
-    carriesStatus: true,
     body: { muted: true },
   },
   {
@@ -887,7 +806,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events/e1/invite",
     auth: "required",
-    carriesStatus: true,
     body: { nickNames: ["stigvandraren"] },
   },
   {
@@ -896,7 +814,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/e1/invitations/u1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getEventInvitations",
@@ -904,7 +821,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/events/invitations",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "acceptEventInvitation",
@@ -912,7 +828,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events/invitations/e1/accept",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "declineEventInvitation",
@@ -920,7 +835,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/invitations/e1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "getEventPosts",
@@ -928,7 +842,6 @@ const endpoints: Endpoint[] = [
     method: "GET",
     path: "/events/e1/posts?cursor=c1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "createEventPost",
@@ -936,7 +849,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events/e1/posts",
     auth: "required",
-    carriesStatus: true,
     body: { body: "Vi ses vid parkeringen", clientRequestId: "44444444-4444-4444-8444-444444444444" },
   },
   {
@@ -945,7 +857,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/events/e1/posts/read",
     auth: "required",
-    carriesStatus: true,
     body: { readUpTo: "2026-11-01T09:00:00.000Z" },
   },
   {
@@ -954,7 +865,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/events/posts/p1",
     auth: "required",
-    carriesStatus: true,
     body: { body: "Ändrad tid" },
   },
   {
@@ -963,7 +873,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/posts/p1",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "setEventPostPinned",
@@ -971,7 +880,6 @@ const endpoints: Endpoint[] = [
     method: "PUT",
     path: "/events/posts/p1/pin",
     auth: "required",
-    carriesStatus: true,
     body: { pinned: true },
   },
   {
@@ -980,7 +888,6 @@ const endpoints: Endpoint[] = [
     method: "POST",
     path: "/events/e1/image",
     auth: "required",
-    carriesStatus: true,
   },
   {
     name: "deleteEventImage",
@@ -988,7 +895,6 @@ const endpoints: Endpoint[] = [
     method: "DELETE",
     path: "/events/e1/image",
     auth: "required",
-    carriesStatus: true,
   },
 ];
 
@@ -1090,15 +996,13 @@ describe("api endpoint contract", () => {
       await expect(endpoint.call()).rejects.toThrow();
     });
 
-    if (endpoint.carriesStatus) {
-      // The 409 branches in the wishlist/favourite buttons read error.status, so a plain
-      // Error here would silently degrade "already in list" into a generic failure.
-      it("throws an ApiError carrying the status", async () => {
-        mockFetch(false, 409);
-        await expect(endpoint.call()).rejects.toMatchObject({ status: 409 });
-        await expect(endpoint.call()).rejects.toBeInstanceOf(ApiError);
-      });
-    }
+    // The 409 branches in the wishlist/favourite buttons read error.status, so a plain
+    // Error here would silently degrade "already in list" into a generic failure.
+    it("throws an ApiError carrying the status", async () => {
+      mockFetch(false, 409);
+      await expect(endpoint.call()).rejects.toMatchObject({ status: 409 });
+      await expect(endpoint.call()).rejects.toBeInstanceOf(ApiError);
+    });
 
     if (endpoint.body !== undefined) {
       it("sends the documented JSON body", async () => {

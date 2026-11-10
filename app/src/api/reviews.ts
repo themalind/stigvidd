@@ -6,142 +6,51 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
-import { imageFormPart } from "./image-form-part";
-import { apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
-import { getUserToken } from "./users";
-import { ApiError } from "./api-error";
-import { logger } from "@/services/logger";
+import { imageFormPart } from "./core/image-form-part";
+import { queryString, send, sendForJson } from "./core/request";
 
-export async function getReviewsByTrailIdentifier(
+export function getReviewsByTrailIdentifier(
   trailIdentifier: string,
   page: number,
   limit: number,
 ): Promise<PagedReviewResponse> {
-  try {
-    const token = await getUserToken();
-
-    const response = await apiFetch(`${BASE_URL}/reviews/trail/${trailIdentifier}?page=${page}&limit=${limit}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getReviewsByTrailIdentifier:  ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Get reviews by trail identifier failed", {
-      endpoint: "GET /reviews/trail/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  return sendForJson({
+    name: "getReviewsByTrailIdentifier",
+    path: `/reviews/trail/${trailIdentifier}${queryString({ page, limit })}`,
+    endpoint: "/reviews/trail/{param}",
+    auth: "optional",
+  });
 }
 
-export async function hasReviewedTrail(trailIdentifier: string): Promise<boolean> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/reviews/trail/${trailIdentifier}/mine`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: hasReviewedTrail: ${response.status}`, response.status);
-    }
-
-    return await response.json();
-  } catch (error) {
-    logger.error("Has reviewed trail failed", {
-      endpoint: "GET /reviews/trail/{param}/mine",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function hasReviewedTrail(trailIdentifier: string): Promise<boolean> {
+  return sendForJson({
+    name: "hasReviewedTrail",
+    path: `/reviews/trail/${trailIdentifier}/mine`,
+    endpoint: "/reviews/trail/{param}/mine",
+  });
 }
 
 export async function createReview(request: CreateReviewRequest): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  const formData = new FormData();
+  const form = new FormData();
 
   request.imageUris?.forEach((uri) => {
-    formData.append("images", imageFormPart(uri));
+    form.append("images", imageFormPart(uri));
   });
 
-  formData.append("trailIdentifier", request.trailIdentifier);
-  formData.append("trailReview", request.review);
-  formData.append("rating", `${request.rating}`);
+  form.append("trailIdentifier", request.trailIdentifier);
+  form.append("trailReview", request.review);
+  form.append("rating", `${request.rating}`);
 
-  try {
-    const response = await apiFetch(
-      `${BASE_URL}/reviews/create`,
-      {
-        method: "POST",
-        body: formData,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      },
-      UPLOAD_TIMEOUT_MS,
-    );
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Create review failed", {
-      endpoint: "POST /reviews/create",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({ name: "createReview", method: "POST", path: "/reviews/create", endpoint: "/reviews/create", form });
+  return { success: true };
 }
 
 export async function deleteReview(reviewIdentifier: string): Promise<{ success: boolean }> {
-  const token = await getUserToken();
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
-
-  try {
-    const response = await apiFetch(`${BASE_URL}/reviews/${reviewIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Delete review failed", {
-      endpoint: "DELETE /reviews/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "deleteReview",
+    method: "DELETE",
+    path: `/reviews/${reviewIdentifier}`,
+    endpoint: "/reviews/{param}",
+  });
+  return { success: true };
 }

@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { ApiError } from "@/api/api-error";
-import { retryUnlessAuthFailure, withUnauthorizedRetry } from "@/api/unauthorized";
+import { ApiError } from "@/api/core/api-error";
+import { retryUnlessAuthFailure, withUnauthorizedRetry } from "@/api/core/unauthorized";
 import { handleUnauthorized, SessionUnavailableError } from "@/services/keycloak-auth";
 import { onlineManager } from "@tanstack/react-query";
 

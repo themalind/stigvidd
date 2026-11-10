@@ -5,8 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-jest.mock("@/api/api-config", () => ({
-  ...jest.requireActual("@/api/api-config"),
+jest.mock("@/api/core/api-config", () => ({
+  ...jest.requireActual("@/api/core/api-config"),
   BASE_URL: "http://test/api/v1",
 }));
 
@@ -19,7 +19,7 @@ jest.mock("@/services/logger", () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
 }));
 
-import { ApiError } from "../api-error";
+import { ApiError } from "../core/api-error";
 import { registerAccount, resendVerification, userPasswordReset, verifyEmailCode } from "../auth";
 import { RegisterData } from "@/data/types";
 import { logger } from "@/services/logger";

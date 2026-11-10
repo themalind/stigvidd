@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { ApiError } from "@/api/api-error";
+import { ApiError } from "@/api/core/api-error";
 import { showErrorAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { addToWishlistAtom, removeFromWishlistAtom, userWishlistAtom } from "@/atoms/user-atoms";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";

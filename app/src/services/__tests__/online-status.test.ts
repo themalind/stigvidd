@@ -7,7 +7,7 @@
 
 import NetInfo, { NetInfoState } from "@react-native-community/netinfo";
 import { MutationObserver, onlineManager, QueryClient, QueryObserver } from "@tanstack/react-query";
-import { createQueryClient } from "@/api/query-client";
+import { createQueryClient } from "@/api/core/query-client";
 import { flushUntil } from "@/test/flush";
 import { initOnlineStatus } from "../online-status";
 

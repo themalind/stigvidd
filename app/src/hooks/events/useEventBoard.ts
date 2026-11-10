@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { isApiStatus } from "@/api/api-error";
+import { isApiStatus } from "@/api/core/api-error";
 import {
   createEventPost,
   deleteEventPost,
@@ -15,7 +15,7 @@ import {
   setEventPostPinned,
   updateEventPost,
 } from "@/api/events";
-import { retryUnlessAuthFailure } from "@/api/unauthorized";
+import { retryUnlessAuthFailure } from "@/api/core/unauthorized";
 import { userAtom } from "@/atoms/auth-atoms";
 import { EVENT_BOARD_STALE_TIME } from "@/constants/cache";
 import { EventBoard, EventPage, EventPost, HikingEvent } from "@/data/types";

@@ -6,244 +6,73 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { IncomingSharedHike, OutgoingSharedHike, ReshareSharedHikeRequest, SharedHike } from "@/data/types";
-import { apiFetch, BASE_URL } from "./api-config";
-import { getUserToken } from "./users";
-import { ApiError } from "./api-error";
-import { logger } from "@/services/logger";
+import { send, sendForJson } from "./core/request";
 
-export async function getSharedHikes(): Promise<SharedHike[]> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikesharerecipient`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getSharedHikes: ${response.status}`, response.status);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Get shared hikes failed", {
-      endpoint: "GET /hikesharerecipient",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getSharedHikes(): Promise<SharedHike[]> {
+  return sendForJson({ name: "getSharedHikes", path: "/hikesharerecipient", endpoint: "/hikesharerecipient" });
 }
 
-export async function getOutgoingSharedHikes(): Promise<OutgoingSharedHike[]> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikeshares/outgoing`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getOutgoingSharedHikes: ${response.status}`, response.status);
-    }
-
-    return response.json();
-  } catch (error) {
-    logger.error("Get outgoing shared hikes failed", {
-      endpoint: "GET /hikeshares/outgoing",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getOutgoingSharedHikes(): Promise<OutgoingSharedHike[]> {
+  return sendForJson({
+    name: "getOutgoingSharedHikes",
+    path: "/hikeshares/outgoing",
+    endpoint: "/hikeshares/outgoing",
+  });
 }
 
 export async function reshareHike(request: ReshareSharedHikeRequest): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/re-share`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: reshareHike: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Reshare hike failed", {
-      endpoint: "POST /hikesharerecipient/re-share",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "reshareHike",
+    method: "POST",
+    path: "/hikesharerecipient/re-share",
+    endpoint: "/hikesharerecipient/re-share",
+    body: request,
+  });
+  return { success: true };
 }
 
 export async function removeSharedHike(hikeIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/${hikeIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: removeSharedHike: ${response.status}`, response.status);
-    }
-
-    return { success: true };
-  } catch (error) {
-    logger.error("Remove shared hike failed", {
-      endpoint: "DELETE /hikesharerecipient/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "removeSharedHike",
+    method: "DELETE",
+    path: `/hikesharerecipient/${hikeIdentifier}`,
+    endpoint: "/hikesharerecipient/{param}",
+  });
+  return { success: true };
 }
 
-export async function getIncomingSharedHike(hikeIdentifier: string): Promise<SharedHike> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/incoming/${hikeIdentifier}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getIncomingSharedHike: ${response.status}`, response.status);
-    }
-    return await response.json();
-  } catch (error) {
-    logger.error("Get incoming shared hike failed", {
-      endpoint: "GET /hikesharerecipient/incoming/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getIncomingSharedHike(hikeIdentifier: string): Promise<SharedHike> {
+  return sendForJson({
+    name: "getIncomingSharedHike",
+    path: `/hikesharerecipient/incoming/${hikeIdentifier}`,
+    endpoint: "/hikesharerecipient/incoming/{param}",
+  });
 }
 
-export async function getIncomingSharedHikes(): Promise<IncomingSharedHike[]> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/incoming`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: getIncomingSharedHikes: ${response.status}`, response.status);
-    }
-    return await response.json();
-  } catch (error) {
-    logger.error("Get incoming shared hikes failed", {
-      endpoint: "GET /hikesharerecipient/incoming",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+export function getIncomingSharedHikes(): Promise<IncomingSharedHike[]> {
+  return sendForJson({
+    name: "getIncomingSharedHikes",
+    path: "/hikesharerecipient/incoming",
+    endpoint: "/hikesharerecipient/incoming",
+  });
 }
 
 export async function acceptSharedHike(hikeIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/accept/${hikeIdentifier}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: acceptSharedHike: ${response.status}`, response.status);
-    }
-    return { success: true };
-  } catch (error) {
-    logger.error("Accept shared hike failed", {
-      endpoint: "PUT /hikesharerecipient/accept/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "acceptSharedHike",
+    method: "PUT",
+    path: `/hikesharerecipient/accept/${hikeIdentifier}`,
+    endpoint: "/hikesharerecipient/accept/{param}",
+  });
+  return { success: true };
 }
 
 export async function rejectSharedHike(hikeIdentifier: string): Promise<{ success: boolean }> {
-  try {
-    const token = await getUserToken();
-
-    if (!token) {
-      throw new Error("User not authenticated");
-    }
-
-    const response = await apiFetch(`${BASE_URL}/hikesharerecipient/reject/${hikeIdentifier}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new ApiError(`HTTP error: rejectSharedHike: ${response.status}`, response.status);
-    }
-    return { success: true };
-  } catch (error) {
-    logger.error("Reject shared hike failed", {
-      endpoint: "DELETE /hikesharerecipient/reject/{param}",
-      errorMessage: String(error),
-    });
-    throw error;
-  }
+  await send({
+    name: "rejectSharedHike",
+    method: "DELETE",
+    path: `/hikesharerecipient/reject/${hikeIdentifier}`,
+    endpoint: "/hikesharerecipient/reject/{param}",
+  });
+  return { success: true };
 }

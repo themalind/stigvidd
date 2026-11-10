@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { apiErrorCode } from "@/api/api-error";
+import { apiErrorCode } from "@/api/core/api-error";
 
 // The backend's EventErrorCodes; event-errors.test.ts fails when the two drift. keep-comment: a contract across areas
 export const EVENT_ERROR_CODES = [

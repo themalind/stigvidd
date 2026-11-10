@@ -9,8 +9,8 @@
 // from the table in endpoint-contract.test.ts. What is left is what that table cannot say:
 // what each call hands back.
 
-jest.mock("@/api/api-config", () => ({
-  ...jest.requireActual("@/api/api-config"),
+jest.mock("@/api/core/api-config", () => ({
+  ...jest.requireActual("@/api/core/api-config"),
   BASE_URL: "http://test/api/v1",
 }));
 

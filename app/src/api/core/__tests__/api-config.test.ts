@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { API_REQUEST_TIMEOUT_MS, apiFetch } from "@/api/api-config";
+import { API_REQUEST_TIMEOUT_MS, apiFetch } from "@/api/core/api-config";
 
 afterEach(() => {
   jest.useRealTimers();
