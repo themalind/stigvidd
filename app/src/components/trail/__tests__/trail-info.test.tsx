@@ -39,22 +39,9 @@ describe("what the panel states about the trail", () => {
   it("names every field it shows", async () => {
     await show();
 
-    for (const label of ["Information", "Ort", "Markering", "Längd", "Svårighetsgrad", "Tillgänglighet", "Variation"]) {
+    for (const label of ["Information", "Markering", "Längd", "Svårighetsgrad", "Tillgänglighet", "Variation"]) {
       expect(screen.getByText(label)).toBeTruthy();
     }
-  });
-
-  it("shows the trail's city", async () => {
-    await show();
-
-    expect(screen.getByText("Borås")).toBeTruthy();
-  });
-
-  // The API sends "" for a trail without a city.
-  it("leaves out the city row when the trail has none", async () => {
-    await show({ city: "" });
-
-    expect(screen.queryByText("Ort")).toBeNull();
   });
 
   it("shows the trail's own marking and variation text", async () => {

@@ -15,6 +15,7 @@ import TrailDescription from "@/components/trail/trail-description";
 import TrailContributionBar from "@/components/trail/trail-contribution-bar";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
+import TrailTitle from "@/components/trail/trail-title";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { Review } from "@/data/types";
@@ -136,7 +137,7 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
       <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
         <View style={s.header}>
           <BackButton />
-          <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{trail?.name}</Text>
+          <TrailTitle name={trail?.name} city={trail?.city} />
         </View>
         <View style={s.content}>
           <View style={s.imageContainer}>
@@ -210,10 +211,6 @@ const s = StyleSheet.create({
   content: {
     paddingHorizontal: 12,
     gap: 15,
-  },
-  sectionTitle: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 15,
   },
   backToTop: {
     alignSelf: "center",
