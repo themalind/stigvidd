@@ -65,6 +65,13 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
         {!!trail.accessibilityInfo?.trim() && (
           <InfoItem label={t("trail.variation")} value={trail.accessibilityInfo} fullWidth />
         )}
+        {!!trail.city?.trim() && (
+          // Bottom-right corner: an empty left column, then the city.
+          <View style={s.cornerRow}>
+            <View style={s.cornerSpacer} />
+            <InfoItem label={t("trail.city")} value={trail.city} />
+          </View>
+        )}
       </InfoGrid>
       {hasSymbolImage && (
         <SymbolInfoModal
@@ -89,5 +96,14 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
+  },
+  cornerRow: {
+    flexBasis: "100%",
+    flexDirection: "row",
+    gap: 16,
+  },
+  cornerSpacer: {
+    flexBasis: "45%",
+    flexGrow: 1,
   },
 });
