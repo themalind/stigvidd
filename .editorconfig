@@ -19,3 +19,21 @@ insert_final_newline = false
 # is invisible to it - guard-test-cancellation-token.mjs covers that half.
 [backend/Tests/**.cs]
 dotnet_diagnostic.xUnit1051.severity = error
+
+# Structure rules for all backend C#; docs/conventions/backend.md explains each one.
+# MA0048 only runs in the non-test projects (Directory.Build.props adds the analyzer there).
+[backend/**.cs]
+dotnet_style_namespace_match_folder = true
+dotnet_diagnostic.IDE0130.severity = error
+csharp_style_namespace_declarations = file_scoped
+dotnet_diagnostic.IDE0161.severity = error
+csharp_style_expression_bodied_methods = false
+dotnet_diagnostic.IDE0022.severity = error
+dotnet_diagnostic.MA0048.severity = error
+
+# EF writes these files, and a migration's file name starts with its timestamp.
+[backend/Infrastructure/Migrations/**.cs]
+dotnet_diagnostic.IDE0130.severity = none
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.IDE0022.severity = none
+dotnet_diagnostic.MA0048.severity = none

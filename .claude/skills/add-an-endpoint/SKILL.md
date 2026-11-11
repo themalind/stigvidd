@@ -15,13 +15,17 @@ without saying so.
 StigviddAPI/Controllers/XsController.cs     [ApiController], [Route("api/v1/[controller]")], : StigViddController
 WebDataContracts/RequestModels/X/           the request DTO
 WebDataContracts/ResponseModels/X/          the response DTO — this is the WIRE CONTRACT
-Core/Interfaces/Services/IXService.cs
-Core/Services/XService.cs                   returns Result<T> / RepositoryResult<T>
-Core/Interfaces/Repositories/IXRepository.cs
-Core/Repositories/XRepository.cs            EF queries; ordering and scoring live HERE
-Core/Factories/XResponseFactory.cs          entity -> response
-Core/Validators/X/XRequestValidator.cs      FluentValidation
+Core/Interfaces/Services/<Domain>/IXService.cs        (its records/enums in Models/ beside it)
+Core/Services/<Domain>/XService.cs                    returns Result<T> / RepositoryResult<T>
+Core/Interfaces/Repositories/<Domain>/IXRepository.cs (its projections in Models/ beside it)
+Core/Repositories/<Domain>/XRepository.cs             EF queries; ordering and scoring live HERE
+Core/Factories/<Domain>/XResponseFactory.cs           entity -> response
+Core/Validators/<Domain>/XRequestValidator.cs         FluentValidation
 ```
+
+One type per file, namespace = folder, block-bodied methods: the build refuses anything else.
+`Tests/UnitTests/ArchitectureTests` fails on a misplaced type, an unknown `<Domain>` or a layer
+reaching past its neighbour. See [docs/conventions/backend.md](../../../docs/conventions/backend.md).
 
 Conventions worth matching rather than reinventing: every async method takes
 `CancellationToken ctoken` as its last parameter; controllers stay thin and translate a

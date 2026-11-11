@@ -4,12 +4,17 @@
 generated client (`web/`, admin.stigvidd.se), static public site (`site/`, the apex). **Nothing checks
 another area's work.** Must work on Windows, Gentoo and Debian 13.
 
+**Structure is locked.** Read `docs/conventions/<area>.md` (backend, web, app, site) before adding a
+file, folder or import across folders. Backend: build errors (IDE0130 namespace = folder, IDE0161,
+IDE0022 block bodies, MA0048 one type per file) and `Tests/UnitTests/ArchitectureTests`. Web, app and
+site: eslint import boundaries. Change a wrong rule and its enforcer together; never add a silent exception.
+
 ## Green, per area
 
 ```text
 backend  cd backend && dotnet build && ConnectionStrings__StigVidd="DataSource=:memory:" dotnet test --no-build
 web      cd web && npm run lint && npm run generate:api && git diff --exit-code -- src/api/generated && npm test && npm run build
-site     cd site && npm run build
+site     cd site && npm run lint && npm run build
 app      cd app && npm run format:check && npm run lint && npm test -- --watchAll=false --silent && npx tsc --noEmit
 harness  node scripts/check-hooks.mjs          # after touching .claude/
 updates  node --test scripts/update-checks.test.mjs   # report: node scripts/check-updates.mjs [--verbose|--strict]
@@ -45,6 +50,7 @@ editable while unapplied. Migrations: `cd backend && dotnet ef migrations add <N
 ```text
 StigviddAPI/Controllers/  thin; admin ones in Admin/ with [Authorize(Policy = "AdminOnly")]
 WebDataContracts/         DTOs = the contract
+Core/Interfaces/          {Repositories,Services}/<Domain>/ interfaces only; their records, enums and filters in Models/ below
 Core/Services/            logic, returns Result / RepositoryResult
 Core/Repositories/        EF queries, incl. ordering/scoring (take a `selector`)
 Core/Factories/           entity -> response

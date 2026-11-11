@@ -1,7 +1,16 @@
 <Project>
   <PropertyGroup>
     <WarningsAsErrors>nullable</WarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <MeziantouAnalysisMode>None</MeziantouAnalysisMode>
   </PropertyGroup>
+
+  <ItemGroup Condition="!$(MSBuildProjectName.EndsWith('Tests'))">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.324">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
   <!-- Licence and copyright, compiled into every assembly's metadata so a built
        DLL carries the same answer the source tree does. The backend is AGPL:
