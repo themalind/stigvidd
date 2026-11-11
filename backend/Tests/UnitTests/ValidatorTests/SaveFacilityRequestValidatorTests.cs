@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.Facility;
+using Core.Validators.Trails;
 using WebDataContracts.RequestModels.Facility;
 
 namespace UnitTests.ValidatorTests;

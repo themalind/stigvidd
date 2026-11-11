@@ -17,8 +17,8 @@ to make that one irreversible step safe.
 | Report form (app) | `app/src/components/report/report-content-form.tsx`, opened from `review-section.tsx` and `trail-obstacle-item.tsx` |
 | Public endpoints | `backend/StigviddAPI/Controllers/ContentReportsController.cs` |
 | Admin endpoints | `backend/StigviddAPI/Controllers/Admin/AdminContentReportsController.cs` |
-| Rules: cap, hide decision, decide | `backend/Core/Services/ContentReportService.cs` |
-| Hide / restore / delete, account deletion | `backend/Core/Repositories/ContentReportRepository.cs` |
+| Rules: cap, hide decision, decide | `backend/Core/Services/Reporting/ContentReportService.cs` |
+| Hide / restore / delete, account deletion | `backend/Core/Repositories/Reporting/ContentReportRepository.cs` |
 | The report row | `backend/Infrastructure/Data/Entities/ContentReport.cs` |
 | The hidden-content filter | `backend/Infrastructure/Data/StigViddDbContext.cs` (`HasQueryFilter("Moderation", …)`) |
 | Moderation page (web) | `web/src/app/routes/moderation.tsx` |

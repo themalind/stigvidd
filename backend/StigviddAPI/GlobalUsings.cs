@@ -1,11 +1,35 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+global using Core.Factories.Media;
+global using Core.Factories.Trails;
+global using Core.Interfaces.Repositories.Account;
+global using Core.Interfaces.Repositories.CityAreas;
+global using Core.Interfaces.Repositories.DomainEvents;
+global using Core.Interfaces.Repositories.Events;
+global using Core.Interfaces.Repositories.Friends;
+global using Core.Interfaces.Repositories.HikeShares;
+global using Core.Interfaces.Repositories.Hikes;
+global using Core.Interfaces.Repositories.Mail;
+global using Core.Interfaces.Repositories.Media;
+global using Core.Interfaces.Repositories.Push;
+global using Core.Interfaces.Repositories.Reporting;
+global using Core.Interfaces.Repositories.TrailImport;
+global using Core.Interfaces.Repositories.Trails;
+global using Core.Interfaces.Services.Account;
+global using Core.Interfaces.Services.Account.Models;
+global using Core.Interfaces.Services.CityAreas;
 global using Core.Interfaces.Services.DataTransfer;
+global using Core.Interfaces.Services.Events;
+global using Core.Interfaces.Services.Friends;
 global using Core.Interfaces.Services.HikeShares;
+global using Core.Interfaces.Services.Hikes;
 global using Core.Interfaces.Services.Mail;
 global using Core.Interfaces.Services.Media;
+global using Core.Interfaces.Services.Push;
+global using Core.Interfaces.Services.Reporting;
 global using Core.Interfaces.Services.TrailImport;
+global using Core.Interfaces.Services.Trails;
 global using Core.Results;
 global using Core.Services.DataTransfer;
 global using Core.Services.HikeShares;

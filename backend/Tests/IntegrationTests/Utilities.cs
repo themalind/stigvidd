@@ -20,8 +20,10 @@ public static class Utilities
     // every other geometry in the schema. No arguments still yields an EMPTY LineString (a
     // valid path with no points) — SpatiaLite takes one into a LINESTRING/4326 column,
     // because the SRID lives in the blob header independently of the point count.
-    public static LineString GeoPath(params (double Longitude, double Latitude)[] points) =>
-        GeoPointFactory.FromLonLatPath(points.Select(p => new Coordinate(p.Longitude, p.Latitude)));
+    public static LineString GeoPath(params (double Longitude, double Latitude)[] points)
+    {
+        return GeoPointFactory.FromLonLatPath(points.Select(p => new Coordinate(p.Longitude, p.Latitude)));
+    }
 
     /// <summary>
     /// Initializes the database with seed data for unit tests.

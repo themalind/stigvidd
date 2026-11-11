@@ -106,11 +106,13 @@ public class BannedUserWriteTests : IClassFixture<StigViddWebApplicationFactory<
         allowed.Should().BeEquivalentTo(ApprovedWritesWhileBanned.OrderBy(route => route, StringComparer.Ordinal));
     }
 
-    private IEnumerable<RouteEndpoint> Endpoints() =>
-        _factory.Services
+    private IEnumerable<RouteEndpoint> Endpoints()
+    {
+        return _factory.Services
             .GetRequiredService<IEnumerable<EndpointDataSource>>()
             .SelectMany(source => source.Endpoints)
             .OfType<RouteEndpoint>();
+    }
 
     // GET-only endpoints are never the filter's business, so a mark on one says nothing.
     private static bool IsReadOnly(RouteEndpoint endpoint)

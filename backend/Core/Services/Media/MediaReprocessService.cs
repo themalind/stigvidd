@@ -1,7 +1,6 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Microsoft.Extensions.Logging;
@@ -232,8 +231,9 @@ public class MediaReprocessService : IMediaReprocessService
         return Result.Ok(ToSummary(counts.Value));
     }
 
-    private static MediaReprocessJobSummaryResponse ToSummary(MediaReprocessJobCounts counts) =>
-        MediaReprocessJobSummaryResponse.Create(
+    private static MediaReprocessJobSummaryResponse ToSummary(MediaReprocessJobCounts counts)
+    {
+        return MediaReprocessJobSummaryResponse.Create(
             counts.Identifier,
             counts.TotalCount,
             counts.PendingCount,
@@ -243,4 +243,5 @@ public class MediaReprocessService : IMediaReprocessService
             counts.CancelledCount,
             counts.CreatedAt,
             counts.LastUpdatedAt);
+    }
 }

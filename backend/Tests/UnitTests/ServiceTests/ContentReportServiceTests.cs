@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -25,16 +24,21 @@ public class ContentReportServiceTests
     private const int AuthorUserId = 22;
     private const int ReviewId = 5;
 
-    private static ReportableContent VisibleReview(string? snapshot = "Content", int? authorUserId = AuthorUserId) =>
-        new(ReviewId, ReviewIdentifier, authorUserId, "Author", 1, "trail-identifier", snapshot, ModerationState.Visible);
-
-    private static CreateContentReportRequest ValidRequest() => new()
+    private static ReportableContent VisibleReview(string? snapshot = "Content", int? authorUserId = AuthorUserId)
     {
-        ContentType = nameof(ReportedContentType.Review),
-        ContentIdentifier = ReviewIdentifier,
-        Reason = nameof(ReportReason.Offensive),
-        ReporterNote = "Not okay",
-    };
+        return new(ReviewId, ReviewIdentifier, authorUserId, "Author", 1, "trail-identifier", snapshot, ModerationState.Visible);
+    }
+
+    private static CreateContentReportRequest ValidRequest()
+    {
+        return new()
+        {
+            ContentType = nameof(ReportedContentType.Review),
+            ContentIdentifier = ReviewIdentifier,
+            Reason = nameof(ReportReason.Offensive),
+            ReporterNote = "Not okay",
+        };
+    }
 
     private static Mock<IConfiguration> Config(int cap = 5, int dismissedThreshold = 3, int snapshotMaxLength = 2000)
     {
@@ -383,7 +387,9 @@ public class ContentReportServiceTests
 
     private static ContentReport StoredReport(
         ReportStatus status = ReportStatus.Pending,
-        ReportedContentType contentType = ReportedContentType.Review) => new()
+        ReportedContentType contentType = ReportedContentType.Review)
+    {
+        return new()
         {
             Identifier = ReportIdentifier,
             ContentType = contentType,
@@ -397,13 +403,16 @@ public class ContentReportServiceTests
             Status = status,
             HideOutcome = ReportHideOutcome.Hidden,
         };
+    }
 
     private static readonly DateTime BarredAt = new(2026, 3, 4, 10, 0, 0, DateTimeKind.Utc);
 
-    private static ContentReportSummary StoredSummary(ReportStatus status = ReportStatus.Pending) =>
-        new(ReportIdentifier, ReportedContentType.Review, ReviewIdentifier, "trail-identifier",
+    private static ContentReportSummary StoredSummary(ReportStatus status = ReportStatus.Pending)
+    {
+        return new(ReportIdentifier, ReportedContentType.Review, ReviewIdentifier, "trail-identifier",
             ReportReason.Offensive, null, status, ReportHideOutcome.Hidden,
             "Reporter", "Author", "author-identifier", null, "Content", true, null, null, null, DateTime.UtcNow);
+    }
 
     private static Mock<IContentReportRepository> DecidableRepository(
         ReportStatus current = ReportStatus.Pending,
@@ -432,7 +441,10 @@ public class ContentReportServiceTests
         return repo;
     }
 
-    private static DecideContentReportRequest Decide(string decision) => new() { Decision = decision };
+    private static DecideContentReportRequest Decide(string decision)
+    {
+        return new() { Decision = decision };
+    }
 
     [Fact]
     public async Task Decide_WhenTheDecisionIsNeitherDismissNorUphold_ReturnsBadRequest()
@@ -661,8 +673,10 @@ public class ContentReportServiceTests
 
     // --- The statistics tabs ---
 
-    private static ReporterStatistic Reporter(int dismissed, int userId = 1) =>
-        new(userId, $"Reporter{userId}", dismissed + 2, 1, dismissed, 1, new DateTime(2026, 5, 4, 0, 0, 0, DateTimeKind.Utc));
+    private static ReporterStatistic Reporter(int dismissed, int userId = 1)
+    {
+        return new(userId, $"Reporter{userId}", dismissed + 2, 1, dismissed, 1, new DateTime(2026, 5, 4, 0, 0, 0, DateTimeKind.Utc));
+    }
 
     private static Mock<IContentReportRepository> ReportersReturning(params ReporterStatistic[] rows)
     {

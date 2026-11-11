@@ -7,8 +7,6 @@ using Infrastructure.Enums;
 
 namespace Core.Services.Events;
 
-public sealed record LoadedEvent(int ViewerId, EventDetail Detail, EventMembership Membership, bool ShowOrganizer, int[] HiddenUserIds);
-
 // Loads an event with the caller's membership and applies the visibility rules every event action starts with. keep-comment: one entry point for EventService and EventParticipationService
 public class EventLoader
 {

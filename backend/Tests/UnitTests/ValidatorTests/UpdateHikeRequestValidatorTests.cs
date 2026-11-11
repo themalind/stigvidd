@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Validators.Hike;
+using Core.Validators.Hikes;
 using AwesomeAssertions;
 using WebDataContracts.RequestModels.Hike;
 

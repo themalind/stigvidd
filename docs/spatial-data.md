@@ -18,10 +18,10 @@ built on them.
 | Point ⇄ lat/long decimals                | `backend/Core/Spatial/GeoPointFactory.cs`                                                |
 | Geometry column config (typmod + SRID)   | `backend/Infrastructure/Data/StigViddDbContext.cs`                                      |
 | Geometry → wire JSON                     | `backend/Core/Spatial/GeoPathSerializer.cs`                                              |
-| Trail read/write + spatial ranking       | `backend/Core/Services/TrailService.cs`, `backend/Core/Repositories/TrailRepository.cs` |
-| Hike write + validation                  | `backend/Core/Services/HikeService.cs`                                                  |
+| Trail read/write + spatial ranking       | `backend/Core/Services/Trails/TrailService.cs`, `backend/Core/Repositories/Trails/TrailRepository.cs` |
+| Hike write + validation                  | `backend/Core/Services/Hikes/HikeService.cs`                                                          |
 | PostGIS enablement + backfill migrations | `backend/Infrastructure/Migrations/*PostGIS*.cs`                                        |
-| NetTopologySuite provider config         | `backend/Core/ServiceCollectionExtensions.cs` (runtime), `backend/Infrastructure/Data/DesignTimeDbContextFactory.cs` (`dotnet ef`) |
+| NetTopologySuite provider config         | `backend/Core/ServiceCollectionExtensions.cs` (runtime), `backend/Infrastructure/Data/StigViddDbContextFactory.cs` (`dotnet ef`) |
 | Wire JSON → GeoJSON positions (client)   | `app/src/utils/geo/coordinate-parser.ts`                                                |
 | Marker fetch (client)                    | `app/src/api/map-markers.ts`                                                            |
 

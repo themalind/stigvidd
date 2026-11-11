@@ -62,7 +62,7 @@ It only ever makes a test render **more** often than production would, so it can
 correctness bug — only the render-count optimisation, which nothing here asserts. Verified by
 flipping it on and off across the whole app suite: 111 suites / 1879 tests pass either way,
 and the probe in
-[`useUserLocation-permission.test.tsx`](../../app/src/hooks/__tests__/useUserLocation-permission.test.tsx)
+[`useUserLocation-permission.test.tsx`](../../app/src/hooks/location/__tests__/useUserLocation-permission.test.tsx)
 fails without it and passes with it.
 
 Three other escapes, if the default is ever not wanted:

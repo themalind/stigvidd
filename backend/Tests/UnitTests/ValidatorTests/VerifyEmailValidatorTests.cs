@@ -11,8 +11,10 @@ public class VerifyEmailValidatorTests
 {
     private readonly VerifyEmailValidator _validator = new();
 
-    private static VerifyEmailRequest Request(string email = "vandrare@example.local", string code = "123456") =>
-        new() { Email = email, Code = code };
+    private static VerifyEmailRequest Request(string email = "vandrare@example.local", string code = "123456")
+    {
+        return new() { Email = email, Code = code };
+    }
 
     [Fact]
     public void Validate_WithAnAddressAndSixDigits_Passes()

@@ -1,0 +1,39 @@
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using FluentValidation;
+using WebDataContracts.RequestModels.TrailObstacle;
+
+namespace Core.Validators.Trails;
+
+public class TrailObstacleRequestValidator : AbstractValidator<TrailObstacleRequest>
+{
+    public TrailObstacleRequestValidator()
+    {
+        RuleFor(trailObstacleRequest => trailObstacleRequest.Description)
+            .NotEmpty()
+            .WithMessage("Description can not be empty")
+            .MinimumLength(15)
+            .MaximumLength(500);
+        RuleFor(trailObstacleRequest => trailObstacleRequest.IssueType)
+            .NotEmpty()
+            .WithMessage("IssueType can not be empty");
+        RuleFor(trailObstacleRequest => trailObstacleRequest.TrailIdentifier)
+            .NotEmpty().WithMessage("TrailObstacleIdentifier is required.")
+            .Length(36).WithMessage("TrailObstacleIdentifier must be at least 36 characters long.");
+        RuleFor(trailObstacleRequest => trailObstacleRequest.IncidentLongitude)
+            .InclusiveBetween(-180, 180).WithMessage("Longitude must be between -180 and 180.")
+            .When(x => x.IncidentLongitude.HasValue);
+        RuleFor(trailObstacleRequest => trailObstacleRequest.IncidentLatitude)
+            .InclusiveBetween(-90, 90).WithMessage("Latitude must be between -90 and 90.")
+            .When(x => x.IncidentLatitude.HasValue);
+        // Stored as a single Point, so a half pair is not a location the entity can hold.
+        RuleFor(trailObstacleRequest => trailObstacleRequest.IncidentLatitude)
+            .Must((request, _) => request.IncidentLatitude.HasValue == request.IncidentLongitude.HasValue)
+            .WithMessage("IncidentLatitude and IncidentLongitude must be supplied together.");
+    }
+}
+
+// WGS84 standard:
+//  - Longitude: -180 to +180 (west to east of the prime meridian)
+//  - Latitude: -90 to +90 (south pole to north pole)

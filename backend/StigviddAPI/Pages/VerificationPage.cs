@@ -32,8 +32,9 @@ internal static class VerificationPage
 
     // $$""" so that the CSS keeps its own single braces: with one $ every '{' would open an
     // interpolation hole. Holes are therefore {{expr}}, and no literal '{{' or '}}' may appear.
-    private static string Page(string heading, string body, bool ok) =>
-        $$"""
+    private static string Page(string heading, string body, bool ok)
+    {
+        return $$"""
         <!doctype html>
         <html lang="sv">
         <head>
@@ -76,4 +77,5 @@ internal static class VerificationPage
         </body>
         </html>
         """;
+    }
 }

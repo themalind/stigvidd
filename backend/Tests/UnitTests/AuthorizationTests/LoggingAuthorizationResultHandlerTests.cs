@@ -44,8 +44,10 @@ public class LoggingAuthorizationResultHandlerTests
         return (context, authentication);
     }
 
-    private static AuthorizationPolicy AdminPolicy() =>
-        new AuthorizationPolicyBuilder().RequireRole(AdminRole).Build();
+    private static AuthorizationPolicy AdminPolicy()
+    {
+        return new AuthorizationPolicyBuilder().RequireRole(AdminRole).Build();
+    }
 
     [Fact]
     public async Task Forbidden_LogsWhoWasDeniedWhereAndWhy()

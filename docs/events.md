@@ -185,13 +185,13 @@ deleted, so staging never replays production's work, and an anonymised export ha
 
 ## Testing
 
-`Tests/UnitTests/Events` covers the processor, the registry, the signal, the dispatch loop and the
+`Tests/UnitTests/DomainEvents` covers the processor, the registry, the signal, the dispatch loop and the
 publisher; `Tests/UnitTests/RepositoryTests/DomainEventRepositoryTests` covers claiming, backoff,
 the settled rule and the concurrency token. The InMemory provider cannot interleave two writers, so
 the race is staged by hand: a `SaveChangesInterceptor` flips the row through a second context at the
 moment the first one saves.
 
-`Tests/IntegrationTests/Events` publishes through the real container on SQLite, runs one processor
+`Tests/IntegrationTests/DomainEvents` publishes through the real container on SQLite, runs one processor
 pass, and exercises the purge, which uses `ExecuteDelete` and so cannot run in the unit suite.
 
 The dispatcher and retention service are removed from the integration test host, like every other
@@ -203,8 +203,8 @@ service must be added to the exclusion list in `WebApplicationFactory.cs` in the
 | | |
 | --- | --- |
 | `Infrastructure/Data/Entities/DomainEventRecord.cs` | the table |
-| `Core/Events/` | contracts, registry, serializer, signal, publisher, processor, dispatch loop |
-| `Core/Repositories/DomainEventRepository.cs` | claiming, marking, purge |
+| `Core/DomainEvents/` | contracts, registry, serializer, signal, publisher, processor, dispatch loop |
+| `Core/Repositories/DomainEvents/DomainEventRepository.cs` | claiming, marking, purge |
 | `StigviddAPI/BackgroundServices/DomainEventDispatcher.cs` | the hosted loop |
 | `StigviddAPI/BackgroundServices/DomainEventRetentionService.cs` | the retention sweep |
 | `Core/Services/DataTransfer/DataAnonymizer.cs` | empties the table in exports, drops pending rows on import |

@@ -38,11 +38,15 @@ public class BlockVisibilityRepositoryTests : TestBase
     private const int OwnerOfTheResharedHikeUserId = 3;
     private const int UnrelatedSharerUserId = 4;
 
-    private static ReviewRepository BuildReviewRepo(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<ReviewRepository>.Instance);
+    private static ReviewRepository BuildReviewRepo(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<ReviewRepository>.Instance);
+    }
 
-    private static TrailObstacleRepository BuildObstacleRepo(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<TrailObstacleRepository>.Instance, new ConfigurationBuilder().Build());
+    private static TrailObstacleRepository BuildObstacleRepo(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<TrailObstacleRepository>.Instance, new ConfigurationBuilder().Build());
+    }
 
     [Fact]
     public async Task Reviews_WithNothingBlocked_AreAllThere()

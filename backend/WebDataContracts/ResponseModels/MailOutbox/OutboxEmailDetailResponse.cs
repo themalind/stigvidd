@@ -18,8 +18,11 @@ public class OutboxEmailDetailResponse
 {
     public required OutboxEmailSummaryResponse Email { get; set; }
 
-    public static OutboxEmailDetailResponse Create(OutboxEmailSummaryResponse email) => new()
+    public static OutboxEmailDetailResponse Create(OutboxEmailSummaryResponse email)
     {
-        Email = email,
-    };
+        return new()
+        {
+            Email = email,
+        };
+    }
 }

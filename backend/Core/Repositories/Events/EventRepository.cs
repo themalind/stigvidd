@@ -363,7 +363,7 @@ public class EventRepository : IEventRepository
         }
     }
 
-    public async Task<RepositoryResult<UpdatedEvent>> UpdateAsync(string identifier, int editedByUserId, Action<Event> apply, CancellationToken ctoken)
+    public async Task<RepositoryResult<EventUpdate>> UpdateAsync(string identifier, int editedByUserId, Action<Event> apply, CancellationToken ctoken)
     {
         try
         {
@@ -373,7 +373,7 @@ public class EventRepository : IEventRepository
             var eventId = await IdOfAsync(context, identifier, ctoken);
 
             if (eventId is null)
-                return RepositoryResult<UpdatedEvent>.NotFound();
+                return RepositoryResult<EventUpdate>.NotFound();
 
             await EventCounts.LockAsync(context, eventId.Value, ctoken);
 
@@ -382,32 +382,32 @@ public class EventRepository : IEventRepository
                 .FirstOrDefaultAsync(e => e.Id == eventId.Value, ctoken);
 
             if (existing is null)
-                return RepositoryResult<UpdatedEvent>.NotFound();
+                return RepositoryResult<EventUpdate>.NotFound();
 
             if (existing.Status == EventStatus.Cancelled)
-                return RepositoryResult<UpdatedEvent>.Conflict();
+                return RepositoryResult<EventUpdate>.Conflict();
 
             apply(existing);
 
             // Read under the row lock, so no join can land between this check and the save. keep-comment: the race this closes
             if (existing.MaxParticipants < existing.ParticipantCount)
-                return RepositoryResult<UpdatedEvent>.Conflict();
+                return RepositoryResult<EventUpdate>.Conflict();
 
             existing.LastUpdatedAt = DateTime.UtcNow;
             await context.SaveChangesAsync(ctoken);
             var notify = await EventAudience.ToNotifyAsync(context, existing.Id, editedByUserId, ctoken);
             await transaction.CommitAsync(ctoken);
 
-            return RepositoryResult<UpdatedEvent>.Success(new UpdatedEvent(notify));
+            return RepositoryResult<EventUpdate>.Success(new EventUpdate(notify));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "EventRepository: UpdateAsync -> Something went wrong when updating event {Identifier}.", identifier);
-            return RepositoryResult<UpdatedEvent>.Error();
+            return RepositoryResult<EventUpdate>.Error();
         }
     }
 
-    public async Task<RepositoryResult<CancelledEvent>> CancelAsync(string identifier, int cancelledByUserId, DateTime now, CancellationToken ctoken)
+    public async Task<RepositoryResult<EventCancellation>> CancelAsync(string identifier, int cancelledByUserId, DateTime now, CancellationToken ctoken)
     {
         try
         {
@@ -417,7 +417,7 @@ public class EventRepository : IEventRepository
             var eventId = await IdOfAsync(context, identifier, ctoken);
 
             if (eventId is null)
-                return RepositoryResult<CancelledEvent>.NotFound();
+                return RepositoryResult<EventCancellation>.NotFound();
 
             // Locked before the participants are read, so a join committing meanwhile still hears of the cancel. keep-comment: the race the lock closes
             await EventCounts.LockAsync(context, eventId.Value, ctoken);
@@ -428,10 +428,10 @@ public class EventRepository : IEventRepository
                 .FirstOrDefaultAsync(e => e.Id == eventId.Value, ctoken);
 
             if (existing is null)
-                return RepositoryResult<CancelledEvent>.NotFound();
+                return RepositoryResult<EventCancellation>.NotFound();
 
             if (existing.Status == EventStatus.Cancelled)
-                return RepositoryResult<CancelledEvent>.Conflict();
+                return RepositoryResult<EventCancellation>.Conflict();
 
             existing.Status = EventStatus.Cancelled;
             existing.CancelledAt = now;
@@ -443,16 +443,16 @@ public class EventRepository : IEventRepository
             await context.SaveChangesAsync(ctoken);
             await transaction.CommitAsync(ctoken);
 
-            return RepositoryResult<CancelledEvent>.Success(new CancelledEvent(existing.Title, existing.StartsAt, notify));
+            return RepositoryResult<EventCancellation>.Success(new EventCancellation(existing.Title, existing.StartsAt, notify));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "EventRepository: CancelAsync -> Something went wrong when cancelling event {Identifier}.", identifier);
-            return RepositoryResult<CancelledEvent>.Error();
+            return RepositoryResult<EventCancellation>.Error();
         }
     }
 
-    public async Task<RepositoryResult<DeletedEvent>> DeleteAsync(string identifier, int deletedByUserId, DateTime now, CancellationToken ctoken)
+    public async Task<RepositoryResult<EventDeletion>> DeleteAsync(string identifier, int deletedByUserId, DateTime now, CancellationToken ctoken)
     {
         try
         {
@@ -462,7 +462,7 @@ public class EventRepository : IEventRepository
             var eventId = await IdOfAsync(context, identifier, ctoken);
 
             if (eventId is null)
-                return RepositoryResult<DeletedEvent>.NotFound();
+                return RepositoryResult<EventDeletion>.NotFound();
 
             // Locked before the participants are read, so a join committing meanwhile still hears of the delete. keep-comment: the race the lock closes
             await EventCounts.LockAsync(context, eventId.Value, ctoken);
@@ -470,7 +470,7 @@ public class EventRepository : IEventRepository
             var deleted = await EventRemoval.RemoveAsync(context, e => e.Id == eventId.Value, deletedByUserId, now, ctoken);
 
             if (deleted is null)
-                return RepositoryResult<DeletedEvent>.NotFound();
+                return RepositoryResult<EventDeletion>.NotFound();
 
             await context.SaveChangesAsync(ctoken);
 
@@ -479,12 +479,12 @@ public class EventRepository : IEventRepository
 
             await transaction.CommitAsync(ctoken);
 
-            return RepositoryResult<DeletedEvent>.Success(deleted);
+            return RepositoryResult<EventDeletion>.Success(deleted);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "EventRepository: DeleteAsync -> Something went wrong when deleting event {Identifier}.", identifier);
-            return RepositoryResult<DeletedEvent>.Error();
+            return RepositoryResult<EventDeletion>.Error();
         }
     }
 

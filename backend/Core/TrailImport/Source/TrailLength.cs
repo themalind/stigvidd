@@ -104,8 +104,13 @@ public static class TrailLength
         return 2 * EarthRadiusMetres * Math.Asin(Math.Sqrt(h));
     }
 
-    private static double ToRadians(double degrees) => degrees * Math.PI / 180;
+    private static double ToRadians(double degrees)
+    {
+        return degrees * Math.PI / 180;
+    }
 
-    private static decimal Round(decimal kilometres) =>
-        Math.Round(kilometres, 2, MidpointRounding.AwayFromZero);
+    private static decimal Round(decimal kilometres)
+    {
+        return Math.Round(kilometres, 2, MidpointRounding.AwayFromZero);
+    }
 }

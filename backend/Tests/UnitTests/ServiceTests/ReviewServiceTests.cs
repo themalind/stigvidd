@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Telemetry;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
@@ -48,11 +47,13 @@ public class ReviewServiceTests
             metrics ?? new StigviddMetrics());
     }
 
-    private static PagedResult<ReviewResponse> StubPage(int count = 2) =>
-        new(Enumerable.Range(0, count)
+    private static PagedResult<ReviewResponse> StubPage(int count = 2)
+    {
+        return new(Enumerable.Range(0, count)
                 .Select(i => ReviewResponse.Create($"r{i}", "text", 4M, "Nick", DateTime.UtcNow, Utilities.Identifiers.Trail7, Utilities.Identifiers.User, null))
                 .ToList(),
             0, false, count);
+    }
 
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenSuccess_ReturnsReviews()

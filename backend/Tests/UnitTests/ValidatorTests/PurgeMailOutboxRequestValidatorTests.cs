@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.MailOutbox;
+using Core.Validators.Mail;
 using WebDataContracts.RequestModels.MailOutbox;
 
 namespace UnitTests.ValidatorTests;

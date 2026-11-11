@@ -8,16 +8,19 @@ namespace LinkTests;
 
 public class EventPageTests
 {
-    private static object Event(string title = "Kvällsvandring") => new
+    private static object Event(string title = "Kvällsvandring")
     {
-        identifier = "event-1",
-        title,
-        startsAt = new DateTime(2026, 11, 5, 16, 30, 0, DateTimeKind.Utc),
-        placeName = "Rya åsar",
-        participantCount = 3,
-        maxParticipants = 8,
-        imageUrl = "https://media.example.test/e.webp",
-    };
+        return new
+        {
+            identifier = "event-1",
+            title,
+            startsAt = new DateTime(2026, 11, 5, 16, 30, 0, DateTimeKind.Utc),
+            placeName = "Rya åsar",
+            participantCount = 3,
+            maxParticipants = 8,
+            imageUrl = "https://media.example.test/e.webp",
+        };
+    }
 
     private static async Task<(HttpResponseMessage Response, string Html)> GetAsync(LinkServiceFactory factory, string path)
     {

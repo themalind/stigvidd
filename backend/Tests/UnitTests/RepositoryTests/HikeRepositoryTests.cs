@@ -301,12 +301,14 @@ public class HikeRepositoryTests : TestBase
             hike.UserId = null;
     }
 
-    private static void SeedHikeImages(StigViddDbContext db) =>
+    private static void SeedHikeImages(StigViddDbContext db)
+    {
         db.HikeImages.AddRange(
             new HikeImage { HikeId = 1, ImageUrl = "hikes/hike1-a.jpeg" },
             new HikeImage { HikeId = 2, ImageUrl = "hikes/hike2-a.jpeg" },
             new HikeImage { HikeId = 6, ImageUrl = "hikes/hike6-a.jpeg" },
             new HikeImage { HikeId = 6, ImageUrl = "hikes/hike6-b.jpeg" });
+    }
 
     [Fact]
     public async Task DeleteHike_ShouldRemoveFromDatabase()

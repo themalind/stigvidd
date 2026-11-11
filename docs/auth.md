@@ -14,9 +14,9 @@ failure mode of getting it subtly wrong is "every user gets silently logged out.
 | Auth state + actions (login/register/logout/delete)    | `app/src/components/auth/auth-provider.tsx`                             |
 | Auth atoms (`userAtom`, `authLoadingAtom`)             | `app/src/atoms/auth-atoms.ts`                                           |
 | Account provisioning + password reset + verification   | `app/src/api/auth.ts`                                                   |
-| Email verification (backend)                           | `backend/Core/Services/EmailVerificationService.cs`                     |
-| Password reset (backend)                              | `backend/Core/Services/PasswordResetService.cs`                         |
-| The gate itself: create disabled, enable on verify     | `backend/Core/Repositories/KeycloakAdminRepository.cs`                  |
+| Email verification (backend)                           | `backend/Core/Services/Account/EmailVerificationService.cs`             |
+| Password reset (backend)                              | `backend/Core/Services/Account/PasswordResetService.cs`                 |
+| The gate itself: create disabled, enable on verify     | `backend/Core/Repositories/Account/KeycloakAdminRepository.cs`          |
 | Access-token accessor for the API layer                | `app/src/api/users.ts` → `getUserToken`                                 |
 | API base URL                                           | `app/src/api/api-config.ts`                                             |
 | Realm-role → role-claim mapping (backend)               | `backend/StigviddAPI/Authorization/KeycloakRealmRolesTransformation.cs` |

@@ -51,8 +51,10 @@ public class AdminUsersController : StigViddController
     }
 
     // Identity.Name needs a "name" claim Keycloak only issues when the profile carries one.
-    private string CurrentModerator() =>
-        User.FindFirst("preferred_username")?.Value
+    private string CurrentModerator()
+    {
+        return User.FindFirst("preferred_username")?.Value
         ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
         ?? "unknown";
+    }
 }

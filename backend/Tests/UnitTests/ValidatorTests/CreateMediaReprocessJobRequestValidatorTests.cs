@@ -13,11 +13,14 @@ public class CreateMediaReprocessJobRequestValidatorTests
     private readonly CreateMediaReprocessJobRequestValidator _validator = new();
 
     private static CreateMediaReprocessJobRequest MakeRequest(
-        IReadOnlyCollection<string>? identifiers = null, ImageProcessingOptionsRequest? options = null) => new()
+        IReadOnlyCollection<string>? identifiers = null, ImageProcessingOptionsRequest? options = null)
     {
-        MediaIdentifiers = identifiers ?? ["media-1"],
-        Options = options ?? new ImageProcessingOptionsRequest { MaxWidth = 800 },
-    };
+        return new()
+        {
+            MediaIdentifiers = identifiers ?? ["media-1"],
+            Options = options ?? new ImageProcessingOptionsRequest { MaxWidth = 800 },
+        };
+    }
 
     [Fact]
     public void AnEmptyIdentifierList_IsRejected()

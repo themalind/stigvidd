@@ -20,14 +20,17 @@ public class EmailVerificationServiceTests
     private const int UserId = 7;
     private const string BaseUrl = "https://api.test.local";
 
-    private static User TestUser(DateTime? verifiedAt = null) => new()
+    private static User TestUser(DateTime? verifiedAt = null)
     {
-        Id = UserId,
-        Email = Email,
-        NickName = NickName,
-        SubjectId = SubjectId,
-        EmailVerifiedAt = verifiedAt,
-    };
+        return new()
+        {
+            Id = UserId,
+            Email = Email,
+            NickName = NickName,
+            SubjectId = SubjectId,
+            EmailVerifiedAt = verifiedAt,
+        };
+    }
 
     /// <summary>A bare mock returns a null Result, which is not a state the real service can
     /// meet, so every mock these tests build starts from a succeeding baseline.</summary>
@@ -207,8 +210,10 @@ public class EmailVerificationServiceTests
         return (stored, url, code);
     }
 
-    private static string TokenFromUrl(string url) =>
-        Uri.UnescapeDataString(url[(url.IndexOf("token=", StringComparison.Ordinal) + "token=".Length)..]);
+    private static string TokenFromUrl(string url)
+    {
+        return Uri.UnescapeDataString(url[(url.IndexOf("token=", StringComparison.Ordinal) + "token=".Length)..]);
+    }
 
     [Fact]
     public async Task VerifyByTokenAsync_WithTheIssuedToken_VerifiesAndEnablesTheKeycloakUser()

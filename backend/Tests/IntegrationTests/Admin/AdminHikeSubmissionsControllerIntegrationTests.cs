@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.HikeSubmission;
+using Core.Validators.Hikes;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
@@ -382,8 +382,10 @@ public class AdminHikeSubmissionsControllerIntegrationTests : IClassFixture<Stig
         return client;
     }
 
-    private async Task<string> SeedPendingSubmissionAsync(params HikeSubmissionImage[] images) =>
-        await SeedPendingSubmissionAsync(null, images);
+    private async Task<string> SeedPendingSubmissionAsync(params HikeSubmissionImage[] images)
+    {
+        return await SeedPendingSubmissionAsync(null, images);
+    }
 
     private async Task<string> SeedPendingSubmissionAsync(LineString? path, params HikeSubmissionImage[] images)
     {
@@ -399,8 +401,9 @@ public class AdminHikeSubmissionsControllerIntegrationTests : IClassFixture<Stig
         return identifier;
     }
 
-    private static HikeSubmission Pending(string identifier, int? hikeId) =>
-        new()
+    private static HikeSubmission Pending(string identifier, int? hikeId)
+    {
+        return new()
         {
             Identifier = identifier,
             SourceHikeId = hikeId,
@@ -417,4 +420,5 @@ public class AdminHikeSubmissionsControllerIntegrationTests : IClassFixture<Stig
             TransferAcceptedAt = DateTime.UtcNow,
             ConsentTextId = 1,
         };
+    }
 }

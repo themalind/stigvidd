@@ -358,7 +358,7 @@ moment the page opened. See
 | `Core/Services/Mail/MailOutboxQueue.cs` | the `Channel<int>` trigger |
 | `Core/Services/Mail/SmtpMailSender.cs` | MailKit; STARTTLS on 587 |
 | `Core/Services/Mail/LoggingMailSender.cs` | the no-op used when `Smtp:Host` is absent |
-| `Core/Repositories/MailOutboxRepository.cs` | claim, mark, release, recover, the backoff, the retention predicates and the erasure |
+| `Core/Repositories/Mail/MailOutboxRepository.cs` | claim, mark, release, recover, the backoff, the retention predicates and the erasure |
 | `StigviddAPI/BackgroundServices/MailOutboxDispatcher.cs` | the drain loop and the startup sweep |
 | `StigviddAPI/BackgroundServices/MailOutboxRetentionService.cs` | the retention run: clear settled bodies, then delete past-window rows |
 | `Core/Services/Mail/MailOutboxAdminService.cs` | the admin read/retry/cancel/purge, and the body route's redaction refusal |

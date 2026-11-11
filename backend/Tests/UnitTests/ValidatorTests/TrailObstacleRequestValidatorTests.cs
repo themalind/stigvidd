@@ -1,7 +1,7 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Validators.TrailObstacle;
+using Core.Validators.Trails;
 using AwesomeAssertions;
 using WebDataContracts.RequestModels.TrailObstacle;
 
@@ -11,12 +11,15 @@ public class TrailObstacleRequestValidatorTests
 {
     private readonly TrailObstacleRequestValidator _validator = new();
 
-    private static TrailObstacleRequest ValidRequest() => new()
+    private static TrailObstacleRequest ValidRequest()
     {
-        TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
-        Description = "Stort träd blockerar stigen.",
-        IssueType = "FallenTree"
-    };
+        return new()
+        {
+            TrailIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c",
+            Description = "Stort träd blockerar stigen.",
+            IssueType = "FallenTree"
+        };
+    }
 
     [Fact]
     public void Validate_WithValidData_ShouldPass()

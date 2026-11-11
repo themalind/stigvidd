@@ -15,8 +15,10 @@ namespace UnitTests.TrailImportTests.Source;
 /// </summary>
 public class TrailLengthTests
 {
-    private static LineString Line(params (double X, double Y)[] points) =>
-        new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    private static LineString Line(params (double X, double Y)[] points)
+    {
+        return new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    }
 
     [Theory]
     [InlineData("2,5 km", 2.5)]

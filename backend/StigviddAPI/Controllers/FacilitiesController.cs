@@ -6,46 +6,45 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.ResponseModels.Facility;
 
-namespace StigviddAPI.Controllers
+namespace StigviddAPI.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+public class FacilitiesController : StigViddController
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    public class FacilitiesController : StigViddController
+    private readonly IFacilityService _facilityService;
+
+    public FacilitiesController(IFacilityService facilityService)
     {
-        private readonly IFacilityService _facilityService;
+        _facilityService = facilityService;
+    }
 
-        public FacilitiesController(IFacilityService facilityService)
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyCollection<FacilityResponse>>> GetAll(CancellationToken ctoken)
+    {
+        var result = await _facilityService.GetAllAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
         {
-            _facilityService = facilityService;
+            return ToActionResult(result.Message);
         }
 
-        [AllowAnonymous]
-        [HttpGet]
-        public async Task<ActionResult<IReadOnlyCollection<FacilityResponse>>> GetAll(CancellationToken ctoken)
+        return Ok(result.Value);
+    }
+
+    [AllowAnonymous]
+    [HttpGet]
+    [Route("{identifier}")]
+    public async Task<ActionResult<FacilityResponse>> GetByIdentifier([FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var result = await _facilityService.GetByIdentifierAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
         {
-            var result = await _facilityService.GetAllAsync(ctoken);
-
-            if (!result.Success && result.Message != null)
-            {
-                return ToActionResult(result.Message);
-            }
-
-            return Ok(result.Value);
+            return ToActionResult(result.Message);
         }
 
-        [AllowAnonymous]
-        [HttpGet]
-        [Route("{identifier}")]
-        public async Task<ActionResult<FacilityResponse>> GetByIdentifier([FromRoute] string identifier, CancellationToken ctoken)
-        {
-            var result = await _facilityService.GetByIdentifierAsync(identifier, ctoken);
-
-            if (!result.Success && result.Message != null)
-            {
-                return ToActionResult(result.Message);
-            }
-
-            return Ok(result.Value);
-        }
+        return Ok(result.Value);
     }
 }

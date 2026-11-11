@@ -22,6 +22,8 @@ public static class MediaOwnerTypes
         return All.FirstOrDefault(known => string.Equals(known, trimmed, StringComparison.OrdinalIgnoreCase));
     }
 
-    public static bool IsKnown(string? value) =>
-        string.IsNullOrWhiteSpace(value) || Canonical(value) is not null;
+    public static bool IsKnown(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) || Canonical(value) is not null;
+    }
 }

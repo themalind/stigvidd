@@ -9,9 +9,9 @@
 //
 // Two things it mirrors, and must keep mirroring:
 //
-//   backend/Core/Services/MailTemplateRenderer.cs   the {{Placeholder}} grammar and the
+//   backend/Core/Services/Mail/MailTemplateRenderer.cs   the {{Placeholder}} grammar and the keep-comment: path to the rule this file mirrors
 //                                                   case-insensitive matching
-//   backend/Core/Validators/MailTemplate/           the length caps
+//   backend/Core/Validators/Mail/                   the length caps keep-comment: path to the rule this file mirrors
 //
 // A mail body is not HTML we wrote. It is HTML an operator may have hand-written as SQL on
 // the host, and the one outcome worse than having no editor is an editor that silently

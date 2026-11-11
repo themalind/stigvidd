@@ -34,8 +34,10 @@ public class DeleteUserPublishedTrailTests : IClassFixture<StigViddWebApplicatio
             .Returns(Task.CompletedTask);
     }
 
-    private StigViddDbContext Db() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private StigViddDbContext Db()
+    {
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     private HttpClient Client(bool admin = false)
     {
@@ -46,8 +48,9 @@ public class DeleteUserPublishedTrailTests : IClassFixture<StigViddWebApplicatio
         return client;
     }
 
-    private static HikeSubmission Submission(string identifier) =>
-        new()
+    private static HikeSubmission Submission(string identifier)
+    {
+        return new()
         {
             Identifier = identifier,
             UserId = VandrarVennenId,
@@ -62,6 +65,7 @@ public class DeleteUserPublishedTrailTests : IClassFixture<StigViddWebApplicatio
             TransferAcceptedAt = DateTime.UtcNow,
             ConsentTextId = 1,
         };
+    }
 
     [Fact]
     public async Task DeleteUser_KeepsThePublishedTrailAndOthersLikesButDropsTheCreditTheirLikesAndSubmissions()

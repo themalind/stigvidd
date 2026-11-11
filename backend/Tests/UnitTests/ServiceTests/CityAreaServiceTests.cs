@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using System.Linq.Expressions;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Services;
 using AwesomeAssertions;
@@ -24,11 +23,15 @@ public class CityAreaServiceTests
         return new CityAreaResponseFactory(cfg.Object);
     }
 
-    private static CityAreaService Build(Mock<ICityAreaRepository>? repo = null) =>
-        new((repo ?? new Mock<ICityAreaRepository>()).Object, BuildFactory());
+    private static CityAreaService Build(Mock<ICityAreaRepository>? repo = null)
+    {
+        return new((repo ?? new Mock<ICityAreaRepository>()).Object, BuildFactory());
+    }
 
-    private static CityAreaProjection MakeCityArea() =>
-        new(CityAreaIdentifier, "Dalsjöfors", "Öster om Borås", null, null, null, [], []);
+    private static CityAreaProjection MakeCityArea()
+    {
+        return new(CityAreaIdentifier, "Dalsjöfors", "Öster om Borås", null, null, null, [], []);
+    }
 
     [Fact]
     public async Task GetAllAsync_WhenCityAreasExist_ReturnsAll()

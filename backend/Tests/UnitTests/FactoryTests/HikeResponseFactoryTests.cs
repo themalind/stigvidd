@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
@@ -10,7 +9,10 @@ namespace UnitTests.FactoryTests;
 
 public class HikeResponseFactoryTests
 {
-    private static HikeResponseFactory BuildFactory() => UnitTests.Utilities.Stubs.HikeResponseFactory();
+    private static HikeResponseFactory BuildFactory()
+    {
+        return UnitTests.Utilities.Stubs.HikeResponseFactory();
+    }
 
     [Fact]
     public void Create_MapsAllFieldsCorrectly()

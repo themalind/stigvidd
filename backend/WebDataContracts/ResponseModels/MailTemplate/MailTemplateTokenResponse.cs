@@ -28,8 +28,9 @@ public class MailTemplateTokenResponse
     public required bool IsUsed { get; set; }
 
     public static MailTemplateTokenResponse Create(
-        string name, string label, string description, string sampleValue, bool isUsed) =>
-        new()
+        string name, string label, string description, string sampleValue, bool isUsed)
+    {
+        return new()
         {
             Name = name,
             Label = label,
@@ -37,4 +38,5 @@ public class MailTemplateTokenResponse
             SampleValue = sampleValue,
             IsUsed = isUsed,
         };
+    }
 }

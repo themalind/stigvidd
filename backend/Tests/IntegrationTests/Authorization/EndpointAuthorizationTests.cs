@@ -236,11 +236,13 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         admin.Should().BeEquivalentTo(ApprovedAdminEndpoints);
     }
 
-    private IEnumerable<RouteEndpoint> Endpoints() =>
-        _factory.Services
+    private IEnumerable<RouteEndpoint> Endpoints()
+    {
+        return _factory.Services
             .GetRequiredService<IEnumerable<EndpointDataSource>>()
             .SelectMany(source => source.Endpoints)
             .OfType<RouteEndpoint>();
+    }
 
     private static string Describe(RouteEndpoint endpoint)
     {

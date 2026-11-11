@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.Trail;
+using Core.Validators.Trails;
 using WebDataContracts.RequestModels.Trail;
 
 namespace UnitTests.ValidatorTests;
@@ -11,7 +11,10 @@ public class UpdateVisitorInformationRequestValidatorTests
 {
     private readonly UpdateVisitorInformationRequestValidator _validator = new();
 
-    private static UpdateVisitorInformationRequest EmptyRequest() => new();
+    private static UpdateVisitorInformationRequest EmptyRequest()
+    {
+        return new();
+    }
 
     // --- All null (no fields provided) ---
 

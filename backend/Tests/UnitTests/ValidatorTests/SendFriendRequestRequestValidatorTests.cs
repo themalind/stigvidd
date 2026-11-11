@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Validators.Friend;
+using Core.Validators.Friends;
 using AwesomeAssertions;
 using WebDataContracts.RequestModels.Friend;
 
@@ -11,10 +11,13 @@ public class SendFriendRequestRequestValidatorTests
 {
     private readonly SendFriendRequestRequestValidator _validator = new();
 
-    private static SendFriendRequestRequest ValidRequest() => new()
+    private static SendFriendRequestRequest ValidRequest()
     {
-        ReceiverNickName = "Gandalf"
-    };
+        return new()
+        {
+            ReceiverNickName = "Gandalf"
+        };
+    }
 
     [Fact]
     public void Validate_WithValidData_ShouldPass()

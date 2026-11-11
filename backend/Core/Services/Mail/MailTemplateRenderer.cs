@@ -45,12 +45,14 @@ public partial class MailTemplateRenderer : IMailTemplateRenderer
         return Result.Ok(new RenderedMail(safeSubject, bodyHtml.Value!, bodyText.Value!));
     }
 
-    public IReadOnlyCollection<string> ExtractPlaceholders(string template) =>
-        PlaceholderRegex()
+    public IReadOnlyCollection<string> ExtractPlaceholders(string template)
+    {
+        return PlaceholderRegex()
             .Matches(template)
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
 
     private static Result<string> Substitute(
         string template, Dictionary<string, string?> model, bool encodeHtml)

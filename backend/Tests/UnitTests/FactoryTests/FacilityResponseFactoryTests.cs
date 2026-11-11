@@ -1,7 +1,6 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
@@ -10,19 +9,25 @@ namespace UnitTests.FactoryTests;
 
 public class FacilityResponseFactoryTests
 {
-    private static FacilityResponseFactory BuildFactory() => new();
-
-    private static Facility BaseFacility() => new()
+    private static FacilityResponseFactory BuildFactory()
     {
-        Identifier = "facility-id",
-        Name = "Test Firepit",
-        FacilityType = FacilityType.FirePit,
-        IsAccessible = true,
-        Coordinates = GeoPointFactory.FromLonLat(12.80, 57.62),
-        Location = "Söder om Borås",
-        Description = "En trevlig grillplats vid sjön.",
-        Url = "https://boras.se/grillplats"
-    };
+        return new();
+    }
+
+    private static Facility BaseFacility()
+    {
+        return new()
+        {
+            Identifier = "facility-id",
+            Name = "Test Firepit",
+            FacilityType = FacilityType.FirePit,
+            IsAccessible = true,
+            Coordinates = GeoPointFactory.FromLonLat(12.80, 57.62),
+            Location = "Söder om Borås",
+            Description = "En trevlig grillplats vid sjön.",
+            Url = "https://boras.se/grillplats"
+        };
+    }
 
     [Fact]
     public void Create_Single_MapsAllFieldsCorrectly()

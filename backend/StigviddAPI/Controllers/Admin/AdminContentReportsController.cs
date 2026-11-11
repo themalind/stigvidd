@@ -133,13 +133,19 @@ public class AdminContentReportsController : StigViddController
 
     /// <summary>The enum names the admin filters are built from.</summary>
     [HttpGet("vocabulary")]
-    public ActionResult GetVocabulary() => Ok(new
+    public ActionResult GetVocabulary()
     {
-        contentTypes = Enum.GetNames<ReportedContentType>(),
-        hideOutcomes = Enum.GetNames<ReportHideOutcome>(),
-        reasons = Enum.GetNames<ReportReason>(),
-        statuses = Enum.GetNames<ReportStatus>(),
-    });
+        return Ok(new
+        {
+            contentTypes = Enum.GetNames<ReportedContentType>(),
+            hideOutcomes = Enum.GetNames<ReportHideOutcome>(),
+            reasons = Enum.GetNames<ReportReason>(),
+            statuses = Enum.GetNames<ReportStatus>(),
+        });
+    }
 
-    private string CurrentUser() => User.Identity?.Name ?? "unknown";
+    private string CurrentUser()
+    {
+        return User.Identity?.Name ?? "unknown";
+    }
 }

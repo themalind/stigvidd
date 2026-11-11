@@ -101,8 +101,10 @@ public class AccountControllerTests : IClassFixture<StigViddWebApplicationFactor
         return db.OutboxEmails.Count(e => e.ToAddress == email && e.TemplateKey == "welcome");
     }
 
-    private StigViddDbContext Db() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private StigViddDbContext Db()
+    {
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     /// <summary>The mail body is the only place the raw token and code exist, exactly as it is
     /// for a real user -- the database holds only their hashes.</summary>

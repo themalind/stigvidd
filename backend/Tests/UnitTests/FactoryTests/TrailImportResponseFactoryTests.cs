@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Factories;
 using Infrastructure.Data.Entities;
 using NetTopologySuite.Geometries;
 
@@ -14,14 +13,17 @@ public class TrailImportResponseFactoryTests
     private static readonly LineString Line = GeoPointFactory.FromLonLatPath(
         [new Coordinate(20.40, 63.72), new Coordinate(20.40, 63.73)]);
 
-    private static TrailImportProposal Proposal(string properties) => new()
+    private static TrailImportProposal Proposal(string properties)
     {
-        ExternalId = string.Empty,
-        FeatureName = "Lövölandets led",
-        GeometryFingerprint = "fp",
-        FeatureProperties = properties,
-        FeatureGeometry = Line,
-    };
+        return new()
+        {
+            ExternalId = string.Empty,
+            FeatureName = "Lövölandets led",
+            GeometryFingerprint = "fp",
+            FeatureProperties = properties,
+            FeatureGeometry = Line,
+        };
+    }
 
     [Fact]
     public void Create_ForUmeasLangdInMetres_ShouldStateItInKilometres()

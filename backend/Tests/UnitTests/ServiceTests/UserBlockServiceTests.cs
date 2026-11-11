@@ -39,9 +39,11 @@ public class UserBlockServiceTests
         return new UserBlockService(blockRepo.Object, userRepo.Object, NullLogger<UserBlockService>.Instance);
     }
 
-    private static void Healthy(Mock<IUserBlockRepository> mock) =>
+    private static void Healthy(Mock<IUserBlockRepository> mock)
+    {
         mock.Setup(r => r.BlockAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult.Success());
+    }
 
     // Recording the block is the only write.
     [Fact]

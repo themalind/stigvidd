@@ -1,0 +1,140 @@
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Core.Interfaces.Repositories;
+using Infrastructure.Data;
+using Infrastructure.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace Core.Repositories.Push;
+
+public class UserPushTokenRepository : IUserPushTokenRepository
+{
+    private readonly IDbContextFactory<StigViddDbContext> _dbContextFactory;
+    private readonly ILogger<UserPushTokenRepository> _logger;
+
+    public UserPushTokenRepository(IDbContextFactory<StigViddDbContext> dbContextFactory, ILogger<UserPushTokenRepository> logger)
+    {
+        _dbContextFactory = dbContextFactory;
+        _logger = logger;
+    }
+
+    public async Task<RepositoryResult<UserPushToken?>> GetByTokenAndUserAsync(string expoToken, int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var token = await context.UserPushTokens
+                .FirstOrDefaultAsync(t => t.ExpoToken == expoToken && t.UserId == userId, ctoken);
+
+            return RepositoryResult<UserPushToken?>.Success(token);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving a push token for user {UserId}", userId);
+            return RepositoryResult<UserPushToken?>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> DeleteByTokenAsync(string expoToken, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var token = await context.UserPushTokens
+                .FirstOrDefaultAsync(t => t.ExpoToken == expoToken, ctoken);
+
+            if (token == null)
+            {
+                return RepositoryResult.Error();
+            }
+
+            context.UserPushTokens.Remove(token);
+            await context.SaveChangesAsync(ctoken);
+
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting a push token");
+            return RepositoryResult.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<IEnumerable<UserPushToken>>> GetTokensForUserAsync(int userId, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var tokens = await context.UserPushTokens
+                .Where(t => t.UserId == userId)
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IEnumerable<UserPushToken>>.Success(tokens);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving push tokens for user {UserId}", userId);
+            return RepositoryResult<IEnumerable<UserPushToken>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<IReadOnlyCollection<UserPushToken>>> GetTokensForUsersAsync(IReadOnlyCollection<int> userIds, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var tokens = await context.UserPushTokens
+                .Where(t => userIds.Contains(t.UserId))
+                .ToListAsync(ctoken);
+
+            return RepositoryResult<IReadOnlyCollection<UserPushToken>>.Success(tokens);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving push tokens for {Count} users", userIds.Count);
+            return RepositoryResult<IReadOnlyCollection<UserPushToken>>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult> UpsertAsync(int userId, string expoToken, string platform, CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var token = await context.UserPushTokens
+                .FirstOrDefaultAsync(t => t.ExpoToken == expoToken, ctoken);
+
+            if (token == null)
+            {
+                // Create new token
+                token = new UserPushToken
+                {
+                    ExpoToken = expoToken,
+                    UserId = userId,
+                    Platform = platform
+                };
+                context.UserPushTokens.Add(token);
+            }
+            else
+            {
+                // Update existing token
+                token.Platform = platform;
+            }
+
+            await context.SaveChangesAsync(ctoken);
+            return RepositoryResult.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error upserting a push token for user {UserId}", userId);
+            return RepositoryResult.Error();
+        }
+    }    
+}

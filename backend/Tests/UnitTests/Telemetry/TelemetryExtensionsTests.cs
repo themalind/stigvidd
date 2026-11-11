@@ -22,12 +22,17 @@ namespace UnitTests.Telemetry;
 /// </summary>
 public class TelemetryExtensionsTests
 {
-    private static IConfiguration Configuration(params (string Key, string Value)[] settings) =>
-        new ConfigurationBuilder()
+    private static IConfiguration Configuration(params (string Key, string Value)[] settings)
+    {
+        return new ConfigurationBuilder()
             .AddInMemoryCollection(settings.Select(s => new KeyValuePair<string, string?>(s.Key, s.Value)))
             .Build();
+    }
 
-    private static string Base64(string value) => Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+    private static string Base64(string value)
+    {
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(value));
+    }
 
     [Fact]
     public void BuildAuthHeader_WithAnIngestionToken_ShouldPassItThroughWithoutReEncodingIt()

@@ -84,8 +84,9 @@ internal static class ResetPasswordPage
         string? body,
         bool ok,
         string? bodyHtml = null,
-        string? mark = null) =>
-        $$"""
+        string? mark = null)
+    {
+        return $$"""
         <!doctype html>
         <html lang="sv">
         <head>
@@ -146,4 +147,5 @@ internal static class ResetPasswordPage
         </body>
         </html>
         """;
+    }
 }

@@ -26,5 +26,5 @@ elsewhere.
 **Rule.** A collection navigation that any `selector` projects must be `ICollection<T>`, and
 only an integration test (real EF provider) proves the projection compiles.
 
-See [HikeResponseFactory.cs](../../backend/Core/Factories/HikeResponseFactory.cs) and
+See [HikeResponseFactory.cs](../../backend/Core/Factories/Hikes/HikeResponseFactory.cs) and
 [Hike.cs](../../backend/Infrastructure/Data/Entities/Hike.cs).

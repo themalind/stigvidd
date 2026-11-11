@@ -10,5 +10,8 @@ public static class FacilityTypes
       | FacilityType.SwimmingArea | FacilityType.NatureReserve;
 
     // keep-comment: true for any non-empty combination of known flags
-    public static bool IsKnown(int value) => value != 0 && ((FacilityType)value & ~Known) == 0;
+    public static bool IsKnown(int value)
+    {
+        return value != 0 && ((FacilityType)value & ~Known) == 0;
+    }
 }

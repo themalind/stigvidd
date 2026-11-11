@@ -11,12 +11,15 @@ public class DataTransferPreflightTests
     private const string Known = "20261003135859_WelcomeMailSentAfterVerification";
     private static readonly string[] KnownMigrations = ["20260101000000_Initial", Known];
 
-    private static DataTransferManifest Manifest(int? version = null, string? migration = Known, bool anonymized = false) => new()
+    private static DataTransferManifest Manifest(int? version = null, string? migration = Known, bool anonymized = false)
     {
-        FormatVersion = version ?? DataTransferManifest.CurrentFormatVersion,
-        LatestMigration = migration,
-        Anonymized = anonymized,
-    };
+        return new()
+        {
+            FormatVersion = version ?? DataTransferManifest.CurrentFormatVersion,
+            LatestMigration = migration,
+            Anonymized = anonymized,
+        };
+    }
 
     [Fact]
     public void Plan_RefusesAnOtherFormatVersion()

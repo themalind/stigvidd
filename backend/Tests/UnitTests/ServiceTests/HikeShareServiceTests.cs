@@ -50,11 +50,15 @@ public class HikeShareServiceTests
         return userRepoMock;
     }
 
-    private static SentHikeShareRecipient Recipient(string nickName, DateTime sharedAt) =>
-        new() { Identifier = $"id-{nickName}", NickName = nickName, SharedAt = sharedAt };
+    private static SentHikeShareRecipient Recipient(string nickName, DateTime sharedAt)
+    {
+        return new() { Identifier = $"id-{nickName}", NickName = nickName, SharedAt = sharedAt };
+    }
 
-    private static SentHikeShare Sent(string name, params SentHikeShareRecipient[] recipients) =>
-        new() { HikeIdentifier = $"hike-{name}", HikeName = name, GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)), Recipients = [.. recipients] };
+    private static SentHikeShare Sent(string name, params SentHikeShareRecipient[] recipients)
+    {
+        return new() { HikeIdentifier = $"hike-{name}", HikeName = name, GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)), Recipients = [.. recipients] };
+    }
 
     private static Mock<IHikeShareRepository> SentShares(params SentHikeShare[] hikes)
     {

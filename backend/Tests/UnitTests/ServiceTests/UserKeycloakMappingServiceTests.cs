@@ -17,21 +17,26 @@ public class UserKeycloakMappingServiceTests
     private readonly Mock<IUserKeycloakMappingRepository> _repository = new();
     private readonly Mock<IKeycloakAdminRepository> _keycloak = new();
 
-    private UserKeycloakMappingService Service(bool sharedServices = true) =>
-        new(
+    private UserKeycloakMappingService Service(bool sharedServices = true)
+    {
+        return new(
             _repository.Object,
             _keycloak.Object,
             new ConfigurationBuilder()
                 .AddInMemoryCollection(new Dictionary<string, string?> { ["DataTransfer:SharedServices"] = sharedServices.ToString() })
                 .Build(),
             NullLogger<UserKeycloakMappingService>.Instance);
+    }
 
-    private static SaveUserMappingRequest Request() => new()
+    private static SaveUserMappingRequest Request()
     {
-        KeycloakSubjectId = "staging-sub",
-        NickName = "StagingPerson",
-        Email = "staging.person@example.local",
-    };
+        return new()
+        {
+            KeycloakSubjectId = "staging-sub",
+            NickName = "StagingPerson",
+            Email = "staging.person@example.local",
+        };
+    }
 
     [Fact]
     public async Task Save_WhenKeycloakHasNoSuchUser_ReturnsNotFoundAndSavesNothing()

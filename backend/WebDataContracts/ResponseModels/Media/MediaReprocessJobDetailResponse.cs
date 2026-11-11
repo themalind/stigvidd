@@ -9,9 +9,12 @@ public class MediaReprocessJobDetailResponse
     public required IReadOnlyCollection<MediaReprocessItemResponse> Items { get; set; }
 
     public static MediaReprocessJobDetailResponse Create(
-        MediaReprocessJobSummaryResponse job, IReadOnlyCollection<MediaReprocessItemResponse> items) => new()
+        MediaReprocessJobSummaryResponse job, IReadOnlyCollection<MediaReprocessItemResponse> items)
     {
-        Job = job,
-        Items = items,
-    };
+        return new()
+        {
+            Job = job,
+            Items = items,
+        };
+    }
 }

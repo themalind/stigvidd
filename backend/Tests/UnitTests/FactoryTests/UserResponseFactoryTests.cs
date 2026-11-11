@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
@@ -19,15 +18,18 @@ public class UserResponseFactoryTests
         return new UserResponseFactory(cfg.Object);
     }
 
-    private static User BaseUser() => new()
+    private static User BaseUser()
     {
-        Identifier = "user-id",
-        NickName = "Nick",
-        Email = "nick@test.com",
-        SubjectId = "uid",
-        MyWishList = null,
-        MyFavorites = null
-    };
+        return new()
+        {
+            Identifier = "user-id",
+            NickName = "Nick",
+            Email = "nick@test.com",
+            SubjectId = "uid",
+            MyWishList = null,
+            MyFavorites = null
+        };
+    }
 
     [Fact]
     public void Create_WhenWishlistHasTrailImages_ImageUrlsHaveBaseUrlPrepended()

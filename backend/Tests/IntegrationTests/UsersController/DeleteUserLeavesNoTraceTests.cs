@@ -36,8 +36,10 @@ public class DeleteUserLeavesNoTraceTests : IClassFixture<StigViddWebApplication
             .Returns(Task.CompletedTask);
     }
 
-    private StigViddDbContext Db() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private StigViddDbContext Db()
+    {
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     [Fact]
     public async Task DeleteUser_WithEverythingAUserCanHave_LeavesNoTraceOfThemInAnyTable()

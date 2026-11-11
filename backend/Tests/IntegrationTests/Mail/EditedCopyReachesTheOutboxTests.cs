@@ -75,8 +75,10 @@ public class EditedCopyReachesTheOutboxTests : IClassFixture<StigViddWebApplicat
         db.SaveChanges();
     }
 
-    private static StigViddDbContext Db(IServiceScope scope) =>
-        scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private static StigViddDbContext Db(IServiceScope scope)
+    {
+        return scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     private HttpClient AdminClient()
     {

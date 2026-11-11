@@ -13,8 +13,9 @@ public class TrailContributionLikeRepositoryTests : TestBase
     private const string ContributedIdentifier = "con-1a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
     private const string CuratedIdentifier = "cur-1a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
 
-    private static TrailRepository Build() =>
-        new(
+    private static TrailRepository Build()
+    {
+        return new(
             CreateSeededFactory(db =>
             {
                 db.Trails.Add(new Trail
@@ -36,6 +37,7 @@ public class TrailContributionLikeRepositoryTests : TestBase
                 });
             }),
             NullLogger<TrailRepository>.Instance);
+    }
 
     [Fact]
     public async Task Like_IsIdempotentAndUnlikeRemovesIt()

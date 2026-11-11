@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,21 +20,18 @@ namespace StigviddAPI.Controllers;
 [AllowAnonymous]
 public class AccountController : StigViddController
 {
-    private readonly IKeycloakAdminRepository _keycloakAdminRepository;
-    private readonly IUserService _userService;
+    private readonly IAccountRegistrationService _accountRegistrationService;
     private readonly IEmailVerificationService _emailVerificationService;
     private readonly IPasswordResetService _passwordResetService;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
-        IKeycloakAdminRepository keycloakAdminRepository,
-        IUserService userService,
+        IAccountRegistrationService accountRegistrationService,
         IEmailVerificationService emailVerificationService,
         IPasswordResetService passwordResetService,
         ILogger<AccountController> logger)
     {
-        _keycloakAdminRepository = keycloakAdminRepository;
-        _userService = userService;
+        _accountRegistrationService = accountRegistrationService;
         _emailVerificationService = emailVerificationService;
         _passwordResetService = passwordResetService;
         _logger = logger;
@@ -58,98 +54,19 @@ public class AccountController : StigViddController
         [FromBody] RegisterRequest request,
         CancellationToken ctoken)
     {
-        // Checked before provisioning, so a taken nickname leaves no Keycloak user to roll back.
-        var nickNameCheck = await _userService.CheckForUsername(request.NickName, ctoken);
+        var result = await _accountRegistrationService.RegisterAsync(
+            request.Email, request.NickName, request.Password, RequestBaseUrl(), ctoken);
 
-        if (!nickNameCheck.Success)
-            return nickNameCheck.Message != null ? ToActionResult(nickNameCheck.Message) : StatusCode(500);
+        if (result.Outcome == AccountRegistrationOutcome.EmailTaken)
+            return Conflict(EmailTakenCode);
 
-        if (nickNameCheck.Value?.Exists == true)
+        if (result.Outcome == AccountRegistrationOutcome.NickNameTaken)
             return Conflict(NickNameTakenCode);
 
-        string subjectId;
-        try
-        {
-            subjectId = await _keycloakAdminRepository.CreateUserAsync(request.Email, request.NickName, request.Password, ctoken);
-        }
-        catch (KeycloakUserConflictException)
-        {
-            _logger.LogInformation("AccountController: Register -> refused, the email address is already registered.");
-            return Conflict(EmailTakenCode);
-        }
+        if (result.Outcome == AccountRegistrationOutcome.Created && result.User is not null)
+            return Created($"{result.User.Identifier}", result.User);
 
-        var result = await _userService.CreateUserAsync(request.Email, request.NickName, subjectId, ctoken);
-
-        if (!result.Success)
-        {
-            // Roll back the Keycloak user so a failed DB insert doesn't leave an orphaned account.
-            try
-            {
-                await _keycloakAdminRepository.DeleteUserAsync(subjectId, ctoken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to roll back Keycloak user {SubjectId} after DB create failure.", subjectId);
-            }
-
-            // The nickname was free before provisioning, so a conflict here is a lost race.
-            if (result.Message?.StatusCode == StatusCodes.Status409Conflict)
-                return Conflict(NickNameTakenCode);
-
-            if (result.Message != null)
-                return ToActionResult(result.Message);
-
-            return StatusCode(500);
-        }
-
-        if (result.Value is null)
-            return StatusCode(500);
-
-        // The account exists but is disabled until this mail is acted on, so a failure to send
-        // it leaves a user who can never log in and whose email and nickname are both taken.
-        // Roll the whole registration back and let them try again.
-        var userId = await _userService.GetUserIdByIdentifierAsync(result.Value.Identifier, ctoken);
-
-        var verification = userId.Success
-            ? await _emailVerificationService.IssueAndSendAsync(
-                userId.Value, request.Email, request.NickName, RequestBaseUrl(), ctoken)
-            : Result.Fail(new Message(500, "Could not resolve the new user."));
-
-        if (!verification.Success)
-        {
-            await RollBackRegistrationAsync(result.Value.Identifier, subjectId, ctoken);
-            return StatusCode(500);
-        }
-
-        _logger.LogInformation("AccountController: Register -> created account {SubjectId}.", subjectId);
-
-        return Created($"{result.Value.Identifier}", result.Value);
-    }
-
-    /// <summary>
-    /// Undoes a registration in both systems. Best effort by definition: it runs because
-    /// something has already gone wrong, and there is nothing useful to tell the caller if a
-    /// step of the cleanup fails too.
-    /// </summary>
-    private async Task RollBackRegistrationAsync(string userIdentifier, string subjectId, CancellationToken ctoken)
-    {
-        try
-        {
-            await _userService.DeleteUserAsync(userIdentifier, ctoken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to roll back StigVidd user {UserIdentifier} after a failed verification send.", userIdentifier);
-        }
-
-        try
-        {
-            await _keycloakAdminRepository.DeleteUserAsync(subjectId, ctoken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to roll back Keycloak user {SubjectId} after a failed verification send.", subjectId);
-        }
+        return result.Failure != null ? ToActionResult(result.Failure) : StatusCode(500);
     }
 
     /// <summary>
@@ -157,7 +74,10 @@ public class AccountController : StigViddController
     /// not configured. Behind the proxy the forwarded headers have already been applied, so
     /// this is the address the user actually reached.
     /// </summary>
-    private string RequestBaseUrl() => $"{Request.Scheme}://{Request.Host}";
+    private string RequestBaseUrl()
+    {
+        return $"{Request.Scheme}://{Request.Host}";
+    }
 
     /// <summary>
     /// Queues a StigVidd password-reset mail carrying a one-time link. Always returns 204 — it

@@ -7,15 +7,6 @@ using System.Globalization;
 
 namespace Core.Services.Push;
 
-// StartsAt is the new start when it moved, else null. keep-comment: an empty change sends no push
-public sealed record EventChange(DateTime? StartsAt, bool EndsAt, bool Place)
-{
-    public bool Any()
-    {
-        return StartsAt is not null || EndsAt || Place;
-    }
-}
-
 public static class EventPushes
 {
     private static readonly CultureInfo Swedish = CultureInfo.GetCultureInfo("sv-SE");

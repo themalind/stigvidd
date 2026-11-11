@@ -53,7 +53,7 @@ and any plan you get approved.
   No test applies a migration, so checking one means a real PostgreSQL; when the stack is not
   available (no `.env`, or podman-compose) that is one container plus
   `dotnet ef database update --project Infrastructure --connection "..."` — `--connection`
-  rather than a user secret, which `DesignTimeDbContextFactory` reads and the integration
+  rather than a user secret, which `StigViddDbContextFactory` reads and the integration
   suite inherits. The tag must be the pinned `postgis/postgis:17-3.5`: any other major dies
   inside `20260523120007_PostGIS` with `42601: syntax error at or near "COLUMNS"`, naming a
   months-old migration you did not touch. Also here: a `migrationBuilder.Sql` **backfill is

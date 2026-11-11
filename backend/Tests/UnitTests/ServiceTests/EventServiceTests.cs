@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Repositories;
@@ -513,7 +512,7 @@ public class EventServiceTests : TestBase
                 else
                     stored.ParticipantCount = 3;
                 await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-                return RepositoryResult<UpdatedEvent>.Conflict();
+                return RepositoryResult<EventUpdate>.Conflict();
             });
         var request = UpdateOf(EventRepositoryTests.NewEvent(1, organizerId: 1));
         request.MaxParticipants = 2;

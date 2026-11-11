@@ -36,8 +36,10 @@ public class AdminUserServiceTests
         };
     }
 
-    private static AdminUserService Build(Mock<IUserRepository> userRepo, ILogger<AdminUserService>? logger = null, IPushQueue? pushQueue = null) =>
-        new(userRepo.Object, pushQueue ?? new Mock<IPushQueue>().Object, logger ?? new Mock<ILogger<AdminUserService>>().Object);
+    private static AdminUserService Build(Mock<IUserRepository> userRepo, ILogger<AdminUserService>? logger = null, IPushQueue? pushQueue = null)
+    {
+        return new(userRepo.Object, pushQueue ?? new Mock<IPushQueue>().Object, logger ?? new Mock<ILogger<AdminUserService>>().Object);
+    }
 
     [Fact]
     public async Task BanAsync_EnqueuesTheHandOverPushesAfterTheBan()

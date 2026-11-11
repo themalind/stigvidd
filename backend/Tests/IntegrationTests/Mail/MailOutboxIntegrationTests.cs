@@ -55,11 +55,15 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
         db.SaveChanges();
     }
 
-    private IMailOutboxService Outbox(IServiceScope scope) =>
-        scope.ServiceProvider.GetRequiredService<IMailOutboxService>();
+    private IMailOutboxService Outbox(IServiceScope scope)
+    {
+        return scope.ServiceProvider.GetRequiredService<IMailOutboxService>();
+    }
 
-    private static StigViddDbContext Db(IServiceScope scope) =>
-        scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private static StigViddDbContext Db(IServiceScope scope)
+    {
+        return scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     [Fact]
     public async Task EnqueueAsync_WritesAPendingRowWithTheTemplateAlreadyRendered()
@@ -140,7 +144,7 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
         // Arrange - the duplicate-signal path, end to end against a real database. A mail
         // that is claimed twice is a mail that is sent twice.
         using var scope = _factory.Services.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<Core.Interfaces.Repositories.IMailOutboxRepository>();
+        var repository = scope.ServiceProvider.GetRequiredService<IMailOutboxRepository>();
         var model = new Dictionary<string, string?> { ["NickName"] = "Ralf" };
 
         var enqueued = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, TestContext.Current.CancellationToken);
@@ -165,7 +169,7 @@ public class MailOutboxIntegrationTests : IClassFixture<StigViddWebApplicationFa
         // Arrange - exactly what MailOutboxDispatcher does on start. The row was claimed and
         // the process died; nothing in memory remembers it.
         using var scope = _factory.Services.CreateScope();
-        var repository = scope.ServiceProvider.GetRequiredService<Core.Interfaces.Repositories.IMailOutboxRepository>();
+        var repository = scope.ServiceProvider.GetRequiredService<IMailOutboxRepository>();
         var model = new Dictionary<string, string?> { ["NickName"] = "Ralf" };
 
         var enqueued = await Outbox(scope).EnqueueAsync(TemplateKey, Recipient, model, TestContext.Current.CancellationToken);

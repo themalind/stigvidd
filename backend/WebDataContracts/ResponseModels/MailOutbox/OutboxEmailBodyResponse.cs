@@ -24,10 +24,13 @@ public class OutboxEmailBodyResponse
     public required string BodyText { get; set; }
 
     public static OutboxEmailBodyResponse Create(
-        string identifier, string bodyHtml, string bodyText) => new()
+        string identifier, string bodyHtml, string bodyText)
+    {
+        return new()
         {
             Identifier = identifier,
             BodyHtml = bodyHtml,
             BodyText = bodyText,
         };
+    }
 }

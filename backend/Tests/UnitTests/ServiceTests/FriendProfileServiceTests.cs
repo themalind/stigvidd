@@ -3,7 +3,6 @@
 
 using System.Linq.Expressions;
 using AwesomeAssertions;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Services;
 using Infrastructure.Data.Entities;

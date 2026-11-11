@@ -4,7 +4,6 @@
 using Core.TrailImport.Apply;
 using Core.TrailImport.Review;
 using Core.TrailImport.Source;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -34,34 +33,47 @@ public class TrailImportServiceTests
     private readonly Mock<ITrailImportFileStore> _fileStore = new();
     private readonly Mock<ITrailImportAnalysisQueue> _queue = new();
 
-    private TrailImportService CreateService() =>
-        new(_repository.Object, _fileStore.Object, _queue.Object, new TrailImportResponseFactory(),
-            NullLogger<TrailImportService>.Instance);
-
-    private static TrailImportSession Session(ImportSessionStatus status, string? storedPath = null) => new()
+    private TrailImportService CreateService()
     {
-        Id = SessionId,
-        Source = "boras-stad",
-        FileName = "spar_leder.json",
-        FileHash = new string('a', 64),
-        StoredPath = storedPath ?? "/tmp/does-not-exist.geojson",
-        Status = status,
-    };
+        return new(_repository.Object, _fileStore.Object, _queue.Object, new TrailImportResponseFactory(),
+            NullLogger<TrailImportService>.Instance);
+    }
 
-    private void SessionIs(ImportSessionStatus status, string? storedPath = null) =>
+    private static TrailImportSession Session(ImportSessionStatus status, string? storedPath = null)
+    {
+        return new()
+        {
+            Id = SessionId,
+            Source = "boras-stad",
+            FileName = "spar_leder.json",
+            FileHash = new string('a', 64),
+            StoredPath = storedPath ?? "/tmp/does-not-exist.geojson",
+            Status = status,
+        };
+    }
+
+    private void SessionIs(ImportSessionStatus status, string? storedPath = null)
+    {
         _repository.Setup(r => r.GetSessionAsync(SessionId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<TrailImportSession>.Success(Session(status, storedPath)));
+    }
 
-    private void DecisionsAtRisk(int count) =>
+    private void DecisionsAtRisk(int count)
+    {
         _repository.Setup(r => r.GetDiscardableDecisionCountAsync(SessionId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<int>.Success(count));
+    }
 
-    private void ProposalsCheckOutAs(int found, int withoutSuggestion) =>
+    private void ProposalsCheckOutAs(int found, int withoutSuggestion)
+    {
         _repository.Setup(r => r.CheckProposalsAsync(SessionId, It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ProposalIdCheck>.Success(new ProposalIdCheck(found, withoutSuggestion)));
+    }
 
-    private static Stream Content(string text = "{\"type\":\"FeatureCollection\"}") =>
-        new MemoryStream(Encoding.UTF8.GetBytes(text));
+    private static Stream Content(string text = "{\"type\":\"FeatureCollection\"}")
+    {
+        return new MemoryStream(Encoding.UTF8.GetBytes(text));
+    }
 
     [Fact]
     public async Task CreateSessionAsync_ForAFileThatIsNotGeoJson_ShouldRejectItBeforeWritingAnything()
@@ -568,14 +580,22 @@ public class TrailImportServiceTests
     private static ApplyPlanRow Row(
         int id, ProposalDecision decision, int? targetTrailId = null, string? trailName = null,
         MatchConfidence confidence = MatchConfidence.Unmatched,
-        TrailSourceLinkRole role = TrailSourceLinkRole.Segment, double coverage = 0) =>
-        new(id, $"feature {id}", id.ToString(), new string('f', 64), decision, role, confidence,
+        TrailSourceLinkRole role = TrailSourceLinkRole.Segment, double coverage = 0)
+    {
+        return new(id, $"feature {id}", id.ToString(), new string('f', 64), decision, role, confidence,
             coverage, targetTrailId, trailName, null, null);
+    }
 
-    private void PlanIs(params ApplyPlanRow[] rows) => PlanIs(rows, [], []);
+    private void PlanIs(params ApplyPlanRow[] rows)
+    {
+        PlanIs(rows, [], []);
+    }
 
-    private static LineString Line() => GeoPointFactory.FromLonLatPath(
+    private static LineString Line()
+    {
+        return GeoPointFactory.FromLonLatPath(
         [new Coordinate(12.9, 57.7), new Coordinate(12.91, 57.71)]);
+    }
 
     private void PlanIs(ApplyPlanRow[] rows, int[] withExistingSegment, int[] withBaseline)
     {

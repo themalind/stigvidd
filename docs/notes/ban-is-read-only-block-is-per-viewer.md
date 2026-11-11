@@ -63,13 +63,13 @@ Everything therefore happens on the **blocker's** reads, seven of them:
 
 | what | where |
 | --- | --- |
-| leaves a blocked author out of a trail's reviews | `Core/Repositories/ReviewRepository.cs` |
-| leaves a blocked reporter out of a trail's obstacles | `Core/Repositories/TrailObstacleRepository.cs` |
-| leaves a blocked voter's solved vote out of an obstacle | `Core/Factories/TrailObstaclesResponseFactory.cs` — not the repository, see below |
-| leaves a blocked person out of friend search | `Core/Repositories/UserRepository.cs` |
-| leaves them out of the friends list | `Core/Repositories/FriendRepository.cs` |
+| leaves a blocked author out of a trail's reviews | `Core/Repositories/Trails/ReviewRepository.cs` |
+| leaves a blocked reporter out of a trail's obstacles | `Core/Repositories/Trails/TrailObstacleRepository.cs` |
+| leaves a blocked voter's solved vote out of an obstacle | `Core/Factories/Trails/TrailObstaclesResponseFactory.cs` — not the repository, see below |
+| leaves a blocked person out of friend search | `Core/Repositories/Account/UserRepository.cs` |
+| leaves them out of the friends list | `Core/Repositories/Friends/FriendRepository.cs` |
 | leaves their friend request out of the incoming and outgoing lists | same |
-| leaves a walk they shared out of the shared lists | `Core/Repositories/HikeShareRecipientRepository.cs` |
+| leaves a walk they shared out of the shared lists | `Core/Repositories/HikeShares/HikeShareRecipientRepository.cs` |
 
 That last one checks the **sharer** only, not the hike's owner (`NotFromHiddenUser`): a walk a
 mutual friend reshares arrives in that friend's name, so it is theirs to send, and the push for

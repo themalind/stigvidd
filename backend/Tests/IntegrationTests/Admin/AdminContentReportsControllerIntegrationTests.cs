@@ -71,9 +71,11 @@ public class AdminContentReportsControllerIntegrationTests : IClassFixture<StigV
 
     // limit=0 means Take(0) further down, so the paging has to be explicit or the list comes
     // back empty whatever is in it.
-    private Task<PagedReviewResponse?> PublicReviewsAsync() =>
-        _factory.CreateClient().GetFromJsonAsync<PagedReviewResponse>(
+    private Task<PagedReviewResponse?> PublicReviewsAsync()
+    {
+        return _factory.CreateClient().GetFromJsonAsync<PagedReviewResponse>(
             $"/api/v1/Reviews/trail/{TivedenIdentifier}?page=0&limit=20", TestContext.Current.CancellationToken);
+    }
 
     [Fact]
     public async Task Queue_IsClosedToASignedInNonAdmin()

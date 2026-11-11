@@ -27,7 +27,10 @@ public class TrailImportFileStoreTests : IDisposable
         return new TrailImportFileStore(configuration, NullLogger<TrailImportFileStore>.Instance);
     }
 
-    private static MemoryStream Content(string text) => new(Encoding.UTF8.GetBytes(text));
+    private static MemoryStream Content(string text)
+    {
+        return new(Encoding.UTF8.GetBytes(text));
+    }
 
     [Fact]
     public async Task SaveAsync_ShouldWriteTheFileAndReportItsHashAndSize()

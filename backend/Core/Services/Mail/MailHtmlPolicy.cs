@@ -160,13 +160,17 @@ public static partial class MailHtmlPolicy
         Add(violations, seen, $"The {attributeName.ToLowerInvariant()} on <{tagName.ToLowerInvariant()}> must be an absolute http(s), mailto:, tel: or cid: URL, or a placeholder. Found: {Shorten(cleaned)}");
     }
 
-    private static string Unquote(string raw) =>
-        raw.Length >= 2 && (raw[0] == '"' || raw[0] == '\'') && raw[^1] == raw[0]
+    private static string Unquote(string raw)
+    {
+        return raw.Length >= 2 && (raw[0] == '"' || raw[0] == '\'') && raw[^1] == raw[0]
             ? raw[1..^1]
             : raw;
+    }
 
-    private static string Shorten(string value) =>
-        value.Length <= 60 ? value : value[..60] + "…";
+    private static string Shorten(string value)
+    {
+        return value.Length <= 60 ? value : value[..60] + "…";
+    }
 
     // The same mistake repeated forty times is one thing to fix, and a 40-line validation
     // message is one nobody reads -- so violations are deduplicated and capped. The cap also

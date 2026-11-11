@@ -55,8 +55,10 @@ public class HikeShareRecipientControllerTests : IClassFixture<StigViddWebApplic
     }
 
     // NaturElskaren sends a friend request to the target user, who then accepts it.
-    private Task EstablishFriendshipWithNaturElskaren(string targetUid, string targetNickName) =>
-        EstablishFriendship(NaturElskarenUid, NaturElskarenIdentifier, targetUid, targetNickName);
+    private Task EstablishFriendshipWithNaturElskaren(string targetUid, string targetNickName)
+    {
+        return EstablishFriendship(NaturElskarenUid, NaturElskarenIdentifier, targetUid, targetNickName);
+    }
 
     // The requester sends a friend request to the target user, who then accepts it.
     private async Task EstablishFriendship(string requesterUid, string requesterIdentifier, string targetUid, string targetNickName)

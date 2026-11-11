@@ -22,13 +22,18 @@ public class ApplyPlannerTests
 
     private static string Properties(
         string klassning = "Lätt", string tillganglighet = "NEJ",
-        string tillgText = "flack grusväg", string sparmarkering = "Blå") =>
-        $$"""
+        string tillgText = "flack grusväg", string sparmarkering = "Blå")
+    {
+        return $$"""
         {"klassning":"{{klassning}}","tillganglighet":"{{tillganglighet}}","tillg_text":"{{tillgText}}","sparmarkering":"{{sparmarkering}}"}
         """;
+    }
 
-    private static LineString Line(double offset = 0) => GeoPointFactory.FromLonLatPath(
+    private static LineString Line(double offset = 0)
+    {
+        return GeoPointFactory.FromLonLatPath(
         [new Coordinate(12.9 + offset, 57.7), new Coordinate(12.91 + offset, 57.71)]);
+    }
 
     private static ApplyFeature Feature(
         ProposalDecision decision = ProposalDecision.Accept,
@@ -39,28 +44,34 @@ public class ApplyPlannerTests
         int? targetTrailId = TrailId,
         string? decidedName = null,
         decimal? decidedLengthKm = null,
-        LineString? geometry = null) =>
-        new(proposalId, "4456", "Dannike motionsspår", fingerprint, properties ?? Properties(),
+        LineString? geometry = null)
+    {
+        return new(proposalId, "4456", "Dannike motionsspår", fingerprint, properties ?? Properties(),
             geometry ?? Line(), decision, role, MatchConfidence.High, targetTrailId,
             decidedName, decidedLengthKm);
+    }
 
     private static ApplyTarget Target(
         string name = "Dannike", int classification = 1, bool accessibility = false,
-        string accessibilityInfo = "flack grusväg", string trailSymbol = "Blå") =>
-        new(TrailId, name, classification, accessibility, accessibilityInfo, trailSymbol, Line());
+        string accessibilityInfo = "flack grusväg", string trailSymbol = "Blå")
+    {
+        return new(TrailId, name, classification, accessibility, accessibilityInfo, trailSymbol, Line());
+    }
 
     private static ApplyInput Input(
         IEnumerable<ApplyFeature> features,
         ApplyTarget? target = null,
         string? baselineSnapshot = null,
-        bool trailHasBaseline = true) =>
-        new(
+        bool trailHasBaseline = true)
+    {
+        return new(
             [.. features],
             new Dictionary<int, ApplyTarget> { [TrailId] = target ?? Target() },
             baselineSnapshot is null
                 ? new Dictionary<string, ApplyBaseline>()
                 : new Dictionary<string, ApplyBaseline> { [Fingerprint] = new(9, TrailId, baselineSnapshot) },
             trailHasBaseline ? new HashSet<int> { TrailId } : []);
+    }
 
     [Fact]
     public void Plan_OnTheFirstSync_ShouldWriteNoSourceOwnedFieldOnAnExistingTrail()

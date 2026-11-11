@@ -22,17 +22,21 @@ public class HikeShareDistributorTests
         Mock<IUserRepository> userRepo,
         Mock<IFriendRepository>? friendRepo = null,
         Mock<IHikeShareRepository>? shareRepo = null,
-        Mock<IPushQueue>? push = null) =>
-        new(
+        Mock<IPushQueue>? push = null)
+    {
+        return new(
             userRepo.Object,
             (friendRepo ?? Friends()).Object,
             (shareRepo ?? ShareRepo()).Object,
             (push ?? Push()).Object,
             NullLogger<HikeShareDistributor>.Instance);
+    }
 
-    internal static void FriendNamed(Mock<IUserRepository> userRepo, string nickName, int id) =>
+    internal static void FriendNamed(Mock<IUserRepository> userRepo, string nickName, int id)
+    {
         userRepo.Setup(r => r.GetUserByNickNameAsync(nickName, It.IsAny<Expression<Func<User, ReceiverProjection>>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<ReceiverProjection>.Success(new ReceiverProjection(id)));
+    }
 
     internal static Mock<IFriendRepository> Friends(bool areFriends = true)
     {
@@ -57,21 +61,26 @@ public class HikeShareDistributorTests
         return new Mock<IPushQueue>();
     }
 
-    private static Hike OwnedHike() => new()
+    private static Hike OwnedHike()
     {
-        Id = 10,
-        Identifier = "hike-identifier",
-        Name = "Test",
-        CreatedBy = "owner-identifier",
-        UserId = OwnerId,
-        GeoPath = Utilities.GeoPath(),
-        HikeLength = 10,
-        Duration = 3600,
-        CreatedByNickName = "owner-nickname",
-    };
+        return new()
+        {
+            Id = 10,
+            Identifier = "hike-identifier",
+            Name = "Test",
+            CreatedBy = "owner-identifier",
+            UserId = OwnerId,
+            GeoPath = Utilities.GeoPath(),
+            HikeLength = 10,
+            Duration = 3600,
+            CreatedByNickName = "owner-nickname",
+        };
+    }
 
-    private static Task<Result<int>> Distribute(HikeShareDistributor distributor, IReadOnlyCollection<string> names, bool allowResharing = false) =>
-        distributor.DistributeAsync(SenderId, SenderNickName, OwnedHike(), names, allowResharing, TestContext.Current.CancellationToken);
+    private static Task<Result<int>> Distribute(HikeShareDistributor distributor, IReadOnlyCollection<string> names, bool allowResharing = false)
+    {
+        return distributor.DistributeAsync(SenderId, SenderNickName, OwnedHike(), names, allowResharing, TestContext.Current.CancellationToken);
+    }
 
     private static void VerifyNothingShared(Mock<IHikeShareRepository> shareRepo, Mock<IPushQueue> push)
     {

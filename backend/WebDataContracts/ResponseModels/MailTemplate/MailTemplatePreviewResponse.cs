@@ -15,6 +15,8 @@ public class MailTemplatePreviewResponse
 
     public required string BodyText { get; set; }
 
-    public static MailTemplatePreviewResponse Create(string subject, string bodyHtml, string bodyText) =>
-        new() { Subject = subject, BodyHtml = bodyHtml, BodyText = bodyText };
+    public static MailTemplatePreviewResponse Create(string subject, string bodyHtml, string bodyText)
+    {
+        return new() { Subject = subject, BodyHtml = bodyHtml, BodyText = bodyText };
+    }
 }

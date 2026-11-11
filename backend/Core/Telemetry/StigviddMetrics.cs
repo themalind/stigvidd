@@ -115,53 +115,68 @@ public sealed class StigviddMetrics : IDisposable
     /// Takes no trail and no user, and that is the point: which trail a given person saved is a
     /// location inference about that person, and this lands in a stream kept for two years.
     /// </summary>
-    public void RecordCollectionChange(string list, string operation, string outcome) =>
+    public void RecordCollectionChange(string list, string operation, string outcome)
+    {
         _trailFavoritesChanged.Add(
             1,
             new KeyValuePair<string, object?>(MetricTags.Keys.List, list),
             new KeyValuePair<string, object?>(MetricTags.Keys.Operation, operation),
             new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
+    }
 
     /// <summary>A review was written or deleted.</summary>
-    public void RecordReviewChange(string operation, string outcome) =>
+    public void RecordReviewChange(string operation, string outcome)
+    {
         _reviewCreated.Add(
             1,
             new KeyValuePair<string, object?>(MetricTags.Keys.Operation, operation),
             new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
+    }
 
     /// <summary>
     /// The rating a written review carried. Recorded only on success, and only as a
     /// MEASUREMENT — a rating as an attribute would be a five-way split of every other
     /// dimension for no gain.
     /// </summary>
-    public void RecordReviewRating(decimal rating) => _reviewRating.Record((double)rating);
+    public void RecordReviewRating(decimal rating)
+    {
+        _reviewRating.Record((double)rating);
+    }
 
     /// <summary>A hike photo was added or removed. Takes no hike and no user.</summary>
-    public void RecordHikeImageChange(string operation, string outcome) =>
+    public void RecordHikeImageChange(string operation, string outcome)
+    {
         _hikeImageChanged.Add(
             1,
             new KeyValuePair<string, object?>(MetricTags.Keys.Operation, operation),
             new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
+    }
 
     /// <summary>A share or reshare was attempted. Takes no hike, sender or recipient.</summary>
-    public void RecordHikeShare(string kind, string outcome) =>
+    public void RecordHikeShare(string kind, string outcome)
+    {
         _hikeShareCreated.Add(
             1,
             new KeyValuePair<string, object?>(MetricTags.Keys.Kind, kind),
             new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
+    }
 
     /// <summary>How many new recipients a successful share reached; zero when everyone already had it.</summary>
-    public void RecordHikeShareRecipients(string kind, int newRecipients) =>
+    public void RecordHikeShareRecipients(string kind, int newRecipients)
+    {
         _hikeShareRecipients.Record(
             newRecipients,
             new KeyValuePair<string, object?>(MetricTags.Keys.Kind, kind));
+    }
 
     /// <summary>A content report was submitted. Takes no content, reporter or author.</summary>
-    public void RecordContentReport(string contentType, string outcome) =>
+    public void RecordContentReport(string contentType, string outcome)
+    {
         _contentReportCreated.Add(
             1,
             new KeyValuePair<string, object?>(MetricTags.Keys.ContentType, contentType),
             new KeyValuePair<string, object?>(MetricTags.Keys.Outcome, outcome));
+    }
 
     public void Dispose()
     {

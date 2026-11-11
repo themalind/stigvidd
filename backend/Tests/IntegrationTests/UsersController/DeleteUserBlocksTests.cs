@@ -34,8 +34,10 @@ public class DeleteUserBlocksTests : IClassFixture<StigViddWebApplicationFactory
             .Returns(Task.CompletedTask);
     }
 
-    private StigViddDbContext Db() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private StigViddDbContext Db()
+    {
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     private async Task SeedBlocksAroundVandrarVennenAsync()
     {

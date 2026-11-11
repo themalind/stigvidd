@@ -5,7 +5,6 @@ using Core.TrailImport.Apply;
 using Core.TrailImport.Matching;
 using Core.TrailImport.Review;
 using Core.TrailImport.Source;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
@@ -428,8 +427,10 @@ public class TrailImportService : ITrailImportService
         return Result.Ok();
     }
 
-    private static int ClampPageSize(int pageSize) =>
-        pageSize <= 0 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+    private static int ClampPageSize(int pageSize)
+    {
+        return pageSize <= 0 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+    }
 
     private static bool TryParseFilter<T>(string? value, out T? parsed) where T : struct, Enum
     {
@@ -590,31 +591,39 @@ public class TrailImportService : ITrailImportService
 
     // Existing trails the decisions attach a link to, counted once each. The apply may
     // change none of them and still be the run that linked them.
-    private static int LinkedTrails(ApplyInput input) => input.Features
+    private static int LinkedTrails(ApplyInput input)
+    {
+        return input.Features
         .Where(f => f.Decision is ProposalDecision.Accept or ProposalDecision.Relink
             && f.TargetTrailId is not null)
         .Select(f => f.TargetTrailId!.Value)
         .Distinct()
         .Count();
+    }
 
     // Why the session cannot be applied, or null when it can.
-    private static string? BlockedReason(ImportSessionStatus status, int decided) => status switch
+    private static string? BlockedReason(ImportSessionStatus status, int decided)
     {
-        ImportSessionStatus.AwaitingReview when decided == 0 => "No proposal has been decided yet.",
-        ImportSessionStatus.AwaitingReview => null,
-        ImportSessionStatus.Applied => "This session has already been applied.",
-        ImportSessionStatus.Applying => "This session is being applied.",
-        _ => "Only a session awaiting review can be applied.",
-    };
+        return status switch
+        {
+            ImportSessionStatus.AwaitingReview when decided == 0 => "No proposal has been decided yet.",
+            ImportSessionStatus.AwaitingReview => null,
+            ImportSessionStatus.Applied => "This session has already been applied.",
+            ImportSessionStatus.Applying => "This session is being applied.",
+            _ => "Only a session awaiting review can be applied.",
+        };
+    }
 
-
-    private static Result<T> SessionFailure<T>(RepositoryResultStatus status, int sessionId) =>
-        status == RepositoryResultStatus.NotFound
+    private static Result<T> SessionFailure<T>(RepositoryResultStatus status, int sessionId)
+    {
+        return status == RepositoryResultStatus.NotFound
             ? Result.Fail<T>(new Message((int)HttpStatusCode.NotFound, $"Session {sessionId} was not found."))
             : Result.Fail<T>(new Message((int)HttpStatusCode.InternalServerError, "The session could not be read."));
+    }
 
-    private static TrailImportProposalResponse Response(ProposalSummary summary) =>
-        TrailImportProposalResponse.Create(
+    private static TrailImportProposalResponse Response(ProposalSummary summary)
+    {
+        return TrailImportProposalResponse.Create(
             summary.Id,
             summary.ExternalId,
             summary.FeatureName,
@@ -636,4 +645,5 @@ public class TrailImportService : ITrailImportService
             summary.Note,
             summary.DecidedName,
             summary.DecidedLengthKm);
+    }
 }

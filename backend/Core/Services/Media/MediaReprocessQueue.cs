@@ -13,8 +13,13 @@ public class MediaReprocessQueue : IMediaReprocessQueue
         SingleReader = true,
     });
 
-    public void Enqueue(int itemId) => _ids.Writer.TryWrite(itemId);
+    public void Enqueue(int itemId)
+    {
+        _ids.Writer.TryWrite(itemId);
+    }
 
-    public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken) =>
-        _ids.Reader.ReadAllAsync(ctoken);
+    public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken)
+    {
+        return _ids.Reader.ReadAllAsync(ctoken);
+    }
 }

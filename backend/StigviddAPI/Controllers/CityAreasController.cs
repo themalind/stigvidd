@@ -6,45 +6,44 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDataContracts.ResponseModels.CityArea;
 
-namespace StigviddAPI.Controllers
+namespace StigviddAPI.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+[AllowAnonymous]
+public class CityAreasController : StigViddController
 {
-    [ApiController]
-    [Route("api/v1/[controller]")]
-    [AllowAnonymous]
-    public class CityAreasController : StigViddController
+    private readonly ICityAreaService _cityAreaService;
+
+    public CityAreasController(ICityAreaService cityAreaService)
     {
-        private readonly ICityAreaService _cityAreaService;
+        _cityAreaService = cityAreaService;
+    }
 
-        public CityAreasController(ICityAreaService cityAreaService)
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyCollection<CityAreaResponse>>> GetAll(CancellationToken ctoken)
+    {
+        var result = await _cityAreaService.GetAllAsync(ctoken);
+
+        if (!result.Success && result.Message != null)
         {
-            _cityAreaService = cityAreaService;
+            return ToActionResult(result.Message);
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IReadOnlyCollection<CityAreaResponse>>> GetAll(CancellationToken ctoken)
+        return Ok(result.Value);
+    }
+
+    [HttpGet]
+    [Route("{identifier}")]
+    public async Task<ActionResult<CityAreaResponse>> GetByIdentifier([FromRoute] string identifier, CancellationToken ctoken)
+    {
+        var result = await _cityAreaService.GetByIdentifierAsync(identifier, ctoken);
+
+        if (!result.Success && result.Message != null)
         {
-            var result = await _cityAreaService.GetAllAsync(ctoken);
-
-            if (!result.Success && result.Message != null)
-            {
-                return ToActionResult(result.Message);
-            }
-
-            return Ok(result.Value);
+            return ToActionResult(result.Message);
         }
 
-        [HttpGet]
-        [Route("{identifier}")]
-        public async Task<ActionResult<CityAreaResponse>> GetByIdentifier([FromRoute] string identifier, CancellationToken ctoken)
-        {
-            var result = await _cityAreaService.GetByIdentifierAsync(identifier, ctoken);
-
-            if (!result.Success && result.Message != null)
-            {
-                return ToActionResult(result.Message);
-            }
-
-            return Ok(result.Value);
-        }
+        return Ok(result.Value);
     }
 }

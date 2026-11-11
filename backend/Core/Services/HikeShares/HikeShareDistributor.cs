@@ -110,5 +110,8 @@ public class HikeShareDistributor
         return Result.Ok(newRecipients.Count);
     }
 
-    private static Message RecipientNotFound() => new(404, "Recipient not found among your friends.");
+    private static Message RecipientNotFound()
+    {
+        return new(404, "Recipient not found among your friends.");
+    }
 }

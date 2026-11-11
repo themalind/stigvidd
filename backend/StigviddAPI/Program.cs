@@ -4,7 +4,7 @@
 using System.Globalization;
 using System.Text.Json;
 using Core;
-using Core.Validators.User;
+using Core.Validators.Account;
 using FluentValidation;
 using Infrastructure;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;

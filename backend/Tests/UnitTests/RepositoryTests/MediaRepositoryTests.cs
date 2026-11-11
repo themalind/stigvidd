@@ -47,13 +47,17 @@ public class MediaRepositoryTests : TestBase
         int width = 1000,
         int height = 800,
         long sizeBytes = 5000,
-        DateTime? createdAt = null) =>
-        new(identifier, imageUrl, width, height, sizeBytes,
+        DateTime? createdAt = null)
+    {
+        return new(identifier, imageUrl, width, height, sizeBytes,
             createdAt ?? new DateTime(2026, 3, 12, 0, 0, 0, DateTimeKind.Utc));
+    }
 
     private static IReadOnlyCollection<FakeImage> Matching(
-        MediaFilter filter, params FakeImage[] items) =>
-        items.AsQueryable().Where(MediaRepository.Matches<FakeImage>(filter)).ToList();
+        MediaFilter filter, params FakeImage[] items)
+    {
+        return items.AsQueryable().Where(MediaRepository.Matches<FakeImage>(filter)).ToList();
+    }
 
     [Fact]
     public async Task GetMediaPagedAsync_ReturnsTrailFacilityAndSymbolMedia()

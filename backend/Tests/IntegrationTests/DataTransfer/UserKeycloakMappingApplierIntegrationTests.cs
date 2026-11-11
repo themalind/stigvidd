@@ -23,17 +23,22 @@ public class UserKeycloakMappingApplierIntegrationTests : IClassFixture<StigVidd
         _factory.SeedDatabase();
     }
 
-    private StigViddDbContext NewContext() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
-
-    private static UserKeycloakMapping MappingFor(int userId, string nickName = "StagingPerson", string subjectId = "staging-sub") => new()
+    private StigViddDbContext NewContext()
     {
-        PackageUserId = userId,
-        KeycloakSubjectId = subjectId,
-        KeycloakUsername = "staging.person@example.local",
-        NickName = nickName,
-        Email = "staging.person@example.local",
-    };
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
+
+    private static UserKeycloakMapping MappingFor(int userId, string nickName = "StagingPerson", string subjectId = "staging-sub")
+    {
+        return new()
+        {
+            PackageUserId = userId,
+            KeycloakSubjectId = subjectId,
+            KeycloakUsername = "staging.person@example.local",
+            NickName = nickName,
+            Email = "staging.person@example.local",
+        };
+    }
 
     private async Task<int> AnonymizedUserIdAsync()
     {

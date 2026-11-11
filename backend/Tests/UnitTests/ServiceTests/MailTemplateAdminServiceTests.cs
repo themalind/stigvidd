@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Services;
 using Infrastructure.Data.Entities;
@@ -26,15 +25,18 @@ public class MailTemplateAdminServiceTests
 {
     private const string Identifier = "c4b9e7a1-6d52-4f83-9b0e-2a7c8d1f5e46";
 
-    private static MailTemplate VerifyEmail() => new()
+    private static MailTemplate VerifyEmail()
     {
-        Identifier = Identifier,
-        Key = "verify-email",
-        Language = "sv",
-        Subject = "Bekräfta din e-postadress",
-        BodyHtml = "<p>Hej {{NickName}},</p><p><a href=\"{{VerificationUrl}}\">Bekräfta</a></p><p>{{VerificationCode}}</p>",
-        BodyText = "Hej {{NickName}}, {{VerificationUrl}} {{VerificationCode}}",
-    };
+        return new()
+        {
+            Identifier = Identifier,
+            Key = "verify-email",
+            Language = "sv",
+            Subject = "Bekräfta din e-postadress",
+            BodyHtml = "<p>Hej {{NickName}},</p><p><a href=\"{{VerificationUrl}}\">Bekräfta</a></p><p>{{VerificationCode}}</p>",
+            BodyText = "Hej {{NickName}}, {{VerificationUrl}} {{VerificationCode}}",
+        };
+    }
 
     private static Mock<IMailTemplateRepository> RepoWith(MailTemplate template)
     {
@@ -70,8 +72,10 @@ public class MailTemplateAdminServiceTests
             NullLogger<MailTemplateAdminService>.Instance);
     }
 
-    private static UpdateMailTemplateRequest Update(string subject, string html, string text) =>
-        new() { Subject = subject, BodyHtml = html, BodyText = text };
+    private static UpdateMailTemplateRequest Update(string subject, string html, string text)
+    {
+        return new() { Subject = subject, BodyHtml = html, BodyText = text };
+    }
 
     [Fact]
     public async Task Update_WhenTheCopyUsesAPlaceholderTheCallerDoesNotSupply_IsRefusedAndNamesIt()

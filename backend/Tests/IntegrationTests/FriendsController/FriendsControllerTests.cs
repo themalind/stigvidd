@@ -446,8 +446,10 @@ public class FriendsControllerTests : IClassFixture<StigViddWebApplicationFactor
         return (friends ?? []).Single(f => f.NickName == nickName);
     }
 
-    private static Task<HttpResponseMessage> PutNoteAsync(HttpClient client, string friendIdentifier, string? note) =>
-        client.PutAsJsonAsync($"{BASE_URL}/{friendIdentifier}/note", new SetFriendNoteRequest { Note = note }, TestContext.Current.CancellationToken);
+    private static Task<HttpResponseMessage> PutNoteAsync(HttpClient client, string friendIdentifier, string? note)
+    {
+        return client.PutAsJsonAsync($"{BASE_URL}/{friendIdentifier}/note", new SetFriendNoteRequest { Note = note }, TestContext.Current.CancellationToken);
+    }
 
     [Fact]
     public async Task SetFriendNote_Unauthenticated_ReturnsUnauthorized()

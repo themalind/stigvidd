@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
@@ -173,7 +172,9 @@ public class MailTemplateAdminService : IMailTemplateAdminService
             rendered.Value!.Subject, rendered.Value.BodyHtml, rendered.Value.BodyText));
     }
 
-    private static Result<T> NotFound<T>(string identifier) =>
-        Result.Fail<T>(new Message(
+    private static Result<T> NotFound<T>(string identifier)
+    {
+        return Result.Fail<T>(new Message(
             (int)HttpStatusCode.NotFound, $"No mail template found with identifier '{identifier}'."));
+    }
 }

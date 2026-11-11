@@ -42,7 +42,9 @@ public abstract class TestBase
         return mock.Object;
     }
 
-    protected static Task<RepositoryResult<DeletedAccount>> DeleteAccountAsync(IDbContextFactory<StigViddDbContext> factory, string userIdentifier) =>
-        new AccountDeletionRepository(factory, Mock.Of<IKeycloakAdminRepository>(), Utilities.ReportHandlers(), [new EventAccountDeletionStep()], NullLogger<AccountDeletionRepository>.Instance)
+    protected static Task<RepositoryResult<DeletedAccount>> DeleteAccountAsync(IDbContextFactory<StigViddDbContext> factory, string userIdentifier)
+    {
+        return new AccountDeletionRepository(factory, Mock.Of<IKeycloakAdminRepository>(), Utilities.ReportHandlers(), [new EventAccountDeletionStep()], NullLogger<AccountDeletionRepository>.Instance)
             .DeleteAccountAsync(userIdentifier, TestContext.Current.CancellationToken);
+    }
 }

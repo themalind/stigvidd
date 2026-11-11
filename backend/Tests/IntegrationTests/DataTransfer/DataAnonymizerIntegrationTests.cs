@@ -27,8 +27,10 @@ public class DataAnonymizerIntegrationTests : IClassFixture<StigViddWebApplicati
         _factory.SeedDatabase();
     }
 
-    private StigViddDbContext NewContext() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private StigViddDbContext NewContext()
+    {
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     private int SeedPersonalData()
     {

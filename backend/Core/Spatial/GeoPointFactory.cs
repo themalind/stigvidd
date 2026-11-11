@@ -22,19 +22,25 @@ public static class GeoPointFactory
     /// A WGS84 point, or null when either ordinate is missing — a half pair is not a location.
     /// Requests are rejected before this by the both-or-neither validator rules.
     /// </summary>
-    public static Point? FromLonLat(decimal? longitude, decimal? latitude) =>
-        longitude.HasValue && latitude.HasValue
+    public static Point? FromLonLat(decimal? longitude, decimal? latitude)
+    {
+        return longitude.HasValue && latitude.HasValue
             ? FromLonLat((double)longitude.Value, (double)latitude.Value)
             : null;
+    }
 
     /// <inheritdoc cref="FromLonLat(decimal?, decimal?)"/>
-    public static Point? FromLonLat(double? longitude, double? latitude) =>
-        longitude.HasValue && latitude.HasValue
+    public static Point? FromLonLat(double? longitude, double? latitude)
+    {
+        return longitude.HasValue && latitude.HasValue
             ? FromLonLat(longitude.Value, latitude.Value)
             : null;
+    }
 
-    public static Point FromLonLat(double longitude, double latitude) =>
-        Wgs84Factory.CreatePoint(new Coordinate(longitude, latitude));
+    public static Point FromLonLat(double longitude, double latitude)
+    {
+        return Wgs84Factory.CreatePoint(new Coordinate(longitude, latitude));
+    }
 
     /// <summary>
     /// A WGS84 path over (longitude, latitude) coordinates. Total by design: it builds the
@@ -45,8 +51,10 @@ public static class GeoPointFactory
     /// propagate, because every caller already decides what a degenerate path means — the
     /// services return 400, and the importers skip the feature.
     /// </summary>
-    public static LineString FromLonLatPath(IEnumerable<Coordinate> lonLatCoordinates) =>
-        Wgs84Factory.CreateLineString([.. lonLatCoordinates]);
+    public static LineString FromLonLatPath(IEnumerable<Coordinate> lonLatCoordinates)
+    {
+        return Wgs84Factory.CreateLineString([.. lonLatCoordinates]);
+    }
 
     public static Geometry FromLonLatEnvelope(Envelope lonLatEnvelope)
     {
@@ -54,8 +62,14 @@ public static class GeoPointFactory
     }
 
     /// <summary>Latitude of a stored point, as the API contracts express it.</summary>
-    public static decimal? ToLatitude(Point? point) => point is null ? null : (decimal)point.Y;
+    public static decimal? ToLatitude(Point? point)
+    {
+        return point is null ? null : (decimal)point.Y;
+    }
 
     /// <summary>Longitude of a stored point, as the API contracts express it.</summary>
-    public static decimal? ToLongitude(Point? point) => point is null ? null : (decimal)point.X;
+    public static decimal? ToLongitude(Point? point)
+    {
+        return point is null ? null : (decimal)point.X;
+    }
 }

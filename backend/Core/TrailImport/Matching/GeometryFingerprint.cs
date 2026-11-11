@@ -68,7 +68,10 @@ public static class GeometryFingerprint
         return x != 0 ? x : Round(left.Y).CompareTo(Round(right.Y));
     }
 
-    private static double Round(double value) => Math.Round(value, Decimals, MidpointRounding.AwayFromZero);
+    private static double Round(double value)
+    {
+        return Math.Round(value, Decimals, MidpointRounding.AwayFromZero);
+    }
 
     // Writes the rounded ordinate as UTF-8 and reports how many bytes it took. "F7" and
     // the invariant culture are what make the digest reproducible: a Swedish culture

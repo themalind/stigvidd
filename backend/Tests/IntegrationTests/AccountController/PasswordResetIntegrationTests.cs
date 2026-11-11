@@ -81,8 +81,10 @@ public class PasswordResetIntegrationTests : IClassFixture<StigViddWebApplicatio
         db.SaveChanges();
     }
 
-    private StigViddDbContext Db() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private StigViddDbContext Db()
+    {
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     /// <summary>Asks for a reset and returns the raw token out of the mail that was queued.</summary>
     private async Task<string> RequestResetAsync(string email = SeededEmail)
@@ -105,13 +107,15 @@ public class PasswordResetIntegrationTests : IClassFixture<StigViddWebApplicatio
         return Uri.UnescapeDataString(token);
     }
 
-    private static FormUrlEncodedContent ResetForm(string token, string password, string? confirm = null) =>
-        new(new Dictionary<string, string>
+    private static FormUrlEncodedContent ResetForm(string token, string password, string? confirm = null)
+    {
+        return new(new Dictionary<string, string>
         {
             ["token"] = token,
             ["newPassword"] = password,
             ["confirmPassword"] = confirm ?? password,
         });
+    }
 
     [Fact]
     public async Task ForgotPassword_ForAKnownEmail_QueuesOneMailCarryingTheLink()

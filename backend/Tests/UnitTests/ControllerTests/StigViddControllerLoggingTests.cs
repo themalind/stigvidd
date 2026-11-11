@@ -14,7 +14,10 @@ public class StigViddControllerLoggingTests
 {
     private sealed class ProbeController : StigViddController
     {
-        public ActionResult Map(Message message) => ToActionResult(message);
+        public ActionResult Map(Message message)
+        {
+            return ToActionResult(message);
+        }
     }
 
     private static (ProbeController Controller, RecordingLogger<StigViddController> Logger) WithLogger()

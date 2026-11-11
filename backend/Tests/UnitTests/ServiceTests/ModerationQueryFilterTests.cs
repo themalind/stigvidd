@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Repositories;
 using Core.Services;
 using AwesomeAssertions;
@@ -23,20 +22,23 @@ public class ModerationQueryFilterTests : TestBase
 {
     private const string TrailIdentifier = "mod-1a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
 
-    private static Trail TrailWithTwoReviews(ModerationState stateOfTheOne) => new()
+    private static Trail TrailWithTwoReviews(ModerationState stateOfTheOne)
     {
-        Identifier = TrailIdentifier,
-        Name = "Moderationsleden",
-        TrailLength = 5M,
-        IsVerified = true,
-        City = "City",
-        GeoPath = Utilities.GeoPath((12.80, 57.62), (12.81, 57.63)),
-        Reviews =
+        return new()
+        {
+            Identifier = TrailIdentifier,
+            Name = "Moderationsleden",
+            TrailLength = 5M,
+            IsVerified = true,
+            City = "City",
+            GeoPath = Utilities.GeoPath((12.80, 57.62), (12.81, 57.63)),
+            Reviews =
         [
             new Review { Identifier = "mod-rev-5", Rating = 5M, UserId = 1 },
             new Review { Identifier = "mod-rev-1", Rating = 1M, UserId = 1, ModerationState = stateOfTheOne },
         ],
-    };
+        };
+    }
 
     private static TrailService BuildService(ModerationState stateOfTheOne)
     {
@@ -114,16 +116,19 @@ public class ModerationQueryFilterTests : TestBase
     private const string HighTrailIdentifier = "mod-high-2b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
     private const string LowTrailIdentifier = "mod-low-3c3d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f";
 
-    private static Trail RankingTrail(string identifier, decimal rating, ModerationState state) => new()
+    private static Trail RankingTrail(string identifier, decimal rating, ModerationState state)
     {
-        Identifier = identifier,
-        Name = identifier,
-        TrailLength = 5M,
-        IsVerified = true,
-        City = "City",
-        GeoPath = Utilities.GeoPath((12.80, 57.62), (12.81, 57.63)),
-        Reviews = [new Review { Identifier = $"rev-{identifier}", Rating = rating, UserId = 1, ModerationState = state }],
-    };
+        return new()
+        {
+            Identifier = identifier,
+            Name = identifier,
+            TrailLength = 5M,
+            IsVerified = true,
+            City = "City",
+            GeoPath = Utilities.GeoPath((12.80, 57.62), (12.81, 57.63)),
+            Reviews = [new Review { Identifier = $"rev-{identifier}", Rating = rating, UserId = 1, ModerationState = state }],
+        };
+    }
 
     private static TrailService BuildRankingService(ModerationState stateOfTheHighReview)
     {

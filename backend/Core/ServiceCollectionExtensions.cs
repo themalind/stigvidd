@@ -1,8 +1,7 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Events;
-using Core.Factories;
+using Core.DomainEvents;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Repositories;
@@ -129,6 +128,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IMailOutboxService, MailOutboxService>();
         services.AddTransient<IEmailVerificationService, EmailVerificationService>();
         services.AddTransient<IPasswordResetService, PasswordResetService>();
+        services.AddTransient<IAccountRegistrationService, AccountRegistrationService>();
         services.AddTransient<IWelcomeMailService, WelcomeMailService>();
 
         // The admin editor. The catalogue is the declared set of placeholders per

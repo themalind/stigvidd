@@ -59,9 +59,12 @@ public sealed class LocalMetricProjection
         return new LocalMetricProjection((area.MinX + area.MaxX) / 2, (area.MinY + area.MaxY) / 2);
     }
 
-    public Coordinate Project(Coordinate coordinate) => new(
+    public Coordinate Project(Coordinate coordinate)
+    {
+        return new(
         (coordinate.X - _originLongitude) * _metresPerDegreeLongitude,
         (coordinate.Y - _originLatitude) * _metresPerDegreeLatitude);
+    }
 
     public double MetresTo(Coordinate coordinate)
     {

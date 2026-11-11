@@ -22,8 +22,10 @@ public class MediaServiceTests
         return new MediaService((repo ?? new Mock<IMediaRepository>()).Object, cfg.Object);
     }
 
-    private static MediaItemProjection MakeProjection() =>
-        new(1, ImageIdentifier, "trails/tiveden.jpg", "Alt", "Caption", 800, 600, 12345, new DateTime(2026, 3, 12, 0, 0, 0, DateTimeKind.Utc), "Trail", "trail-id", "Tiveden");
+    private static MediaItemProjection MakeProjection()
+    {
+        return new(1, ImageIdentifier, "trails/tiveden.jpg", "Alt", "Caption", 800, 600, 12345, new DateTime(2026, 3, 12, 0, 0, 0, DateTimeKind.Utc), "Trail", "trail-id", "Tiveden");
+    }
 
     [Fact]
     public async Task GetMediaAsync_WhenMediaExists_ReturnsWithPresentableUrl()

@@ -23,22 +23,25 @@ public class TrailRepositoryTests : TestBase
         string identifier,
         decimal? rating = null,
         double startLongitude = 12.80,
-        double startLatitude = 57.62) => new()
+        double startLatitude = 57.62)
     {
-        Identifier = identifier,
-        Name = identifier,
-        TrailLength = 5M,
-        IsVerified = true,
-        City = "City",
-        GeoPath = GeoPointFactory.FromLonLatPath(
+        return new()
+        {
+            Identifier = identifier,
+            Name = identifier,
+            TrailLength = 5M,
+            IsVerified = true,
+            City = "City",
+            GeoPath = GeoPointFactory.FromLonLatPath(
             [
                 new Coordinate(startLongitude, startLatitude),
                 new Coordinate(startLongitude + 0.01, startLatitude + 0.01),
             ]),
-        Reviews = rating.HasValue
+            Reviews = rating.HasValue
             ? [new Review { Identifier = $"rev-{identifier}", Rating = rating.Value, UserId = 1 }]
             : null,
-    };
+        };
+    }
 
     [Fact]
     public async Task GetTrailIdByIdentifier_WhenFound_ReturnsId()
@@ -778,8 +781,9 @@ public class TrailRepositoryTests : TestBase
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-    private static Trail Contributed(string name, bool showName, bool verified = true, DateTime? publishedAt = null, params (string Url, int Order)[] images) =>
-        new()
+    private static Trail Contributed(string name, bool showName, bool verified = true, DateTime? publishedAt = null, params (string Url, int Order)[] images)
+    {
+        return new()
         {
             Identifier = $"trail-{name}",
             Name = name,
@@ -795,6 +799,7 @@ public class TrailRepositoryTests : TestBase
             },
             TrailImages = [.. images.Select(i => new TrailImage { Identifier = $"img-{i.Url}", ImageUrl = i.Url, SortOrder = i.Order })],
         };
+    }
 
     [Fact]
     public async Task GetTrailsCreditedToUserAsync_ListsOnlyVerifiedTrailsTheUserPutTheirNameTo()

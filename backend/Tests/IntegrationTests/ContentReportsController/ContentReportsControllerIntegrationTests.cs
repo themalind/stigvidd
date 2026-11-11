@@ -57,13 +57,16 @@ public class ContentReportsControllerIntegrationTests : IClassFixture<StigViddWe
         return client;
     }
 
-    private static CreateContentReportRequest ReportOf(string reviewIdentifier) => new()
+    private static CreateContentReportRequest ReportOf(string reviewIdentifier)
     {
-        ContentType = nameof(ReportedContentType.Review),
-        ContentIdentifier = reviewIdentifier,
-        Reason = nameof(ReportReason.Offensive),
-        ReporterNote = "Not okay",
-    };
+        return new()
+        {
+            ContentType = nameof(ReportedContentType.Review),
+            ContentIdentifier = reviewIdentifier,
+            Reason = nameof(ReportReason.Offensive),
+            ReporterNote = "Not okay",
+        };
+    }
 
     [Fact]
     public async Task Report_ReturnsCreatedAndTakesTheReviewOutOfThePublicList()
@@ -268,12 +271,15 @@ public class ContentReportsControllerIntegrationTests : IClassFixture<StigViddWe
         return image.Identifier;
     }
 
-    private static CreateContentReportRequest HikeImageReportOf(string imageIdentifier) => new()
+    private static CreateContentReportRequest HikeImageReportOf(string imageIdentifier)
     {
-        ContentType = nameof(ReportedContentType.HikeImage),
-        ContentIdentifier = imageIdentifier,
-        Reason = nameof(ReportReason.Offensive),
-    };
+        return new()
+        {
+            ContentType = nameof(ReportedContentType.HikeImage),
+            ContentIdentifier = imageIdentifier,
+            Reason = nameof(ReportReason.Offensive),
+        };
+    }
 
     [Fact]
     public async Task Report_HikeImageFromARecipient_TakesItOutOfTheirSharedHike()

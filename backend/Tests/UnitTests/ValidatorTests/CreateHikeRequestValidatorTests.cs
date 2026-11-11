@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Validators.Hike;
+using Core.Validators.Hikes;
 using AwesomeAssertions;
 using WebDataContracts.RequestModels.Hike;
 
@@ -11,13 +11,16 @@ public class CreateHikeRequestValidatorTests
 {
     private readonly CreateHikeRequestValidator _validator = new();
 
-    private static CreateHikeRequest ValidRequest() => new()
+    private static CreateHikeRequest ValidRequest()
     {
-        Name = "Sommarleden",
-        HikeLength = 5.0m,
-        Duration = 90,
-        Coordinates = "59.3293,18.0686",
-    };
+        return new()
+        {
+            Name = "Sommarleden",
+            HikeLength = 5.0m,
+            Duration = 90,
+            Coordinates = "59.3293,18.0686",
+        };
+    }
 
     // --- Name ---
 

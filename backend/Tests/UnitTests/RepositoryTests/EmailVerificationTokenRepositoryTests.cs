@@ -16,16 +16,19 @@ public class EmailVerificationTokenRepositoryTests : TestBase
     private const int SeededUserId = 1;
     private const string SeededEmail = "natur@example.local";
 
-    private static EmailVerificationTokenRepository Build(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<EmailVerificationTokenRepository>.Instance);
+    private static EmailVerificationTokenRepository Build(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<EmailVerificationTokenRepository>.Instance);
+    }
 
     private static EmailVerificationToken MakeToken(
         int id,
         string tokenHash,
         DateTime? consumedAt = null,
         DateTime? createdAt = null,
-        int attempts = 0) =>
-        new()
+        int attempts = 0)
+    {
+        return new()
         {
             Id = id,
             Identifier = $"verification-{id}",
@@ -38,9 +41,12 @@ public class EmailVerificationTokenRepositoryTests : TestBase
             CreatedAt = createdAt ?? DateTime.UtcNow,
             LastUpdatedAt = createdAt ?? DateTime.UtcNow,
         };
+    }
 
-    private static Action<StigViddDbContext> Seed(params EmailVerificationToken[] tokens) =>
-        db => db.EmailVerificationTokens.AddRange(tokens);
+    private static Action<StigViddDbContext> Seed(params EmailVerificationToken[] tokens)
+    {
+        return db => db.EmailVerificationTokens.AddRange(tokens);
+    }
 
     [Fact]
     public async Task GetUserByEmailAsync_MatchesRegardlessOfCase()

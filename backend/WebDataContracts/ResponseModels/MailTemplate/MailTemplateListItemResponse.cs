@@ -42,8 +42,9 @@ public class MailTemplateListItemResponse
         DateTime lastUpdatedAt,
         bool isKnown,
         int unknownTokenCount,
-        int missingTokenCount) =>
-        new()
+        int missingTokenCount)
+    {
+        return new()
         {
             Identifier = identifier,
             Key = key,
@@ -55,4 +56,5 @@ public class MailTemplateListItemResponse
             UnknownTokenCount = unknownTokenCount,
             MissingTokenCount = missingTokenCount,
         };
+    }
 }

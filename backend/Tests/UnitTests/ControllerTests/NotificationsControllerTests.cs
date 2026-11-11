@@ -48,11 +48,14 @@ public class NotificationsControllerTests
         return mock;
     }
 
-    private static RegisterPushTokenRequest ValidRegisterRequest() => new()
+    private static RegisterPushTokenRequest ValidRegisterRequest()
     {
-        ExpoToken = "ExponentPushToken[xxxxxx]",
-        Platform = "ios"
-    };
+        return new()
+        {
+            ExpoToken = "ExponentPushToken[xxxxxx]",
+            Platform = "ios"
+        };
+    }
 
     // RegisterTokenAsync
 

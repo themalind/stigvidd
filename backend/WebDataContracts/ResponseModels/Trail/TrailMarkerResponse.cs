@@ -18,8 +18,9 @@ public class TrailMarkerResponse
         bool isAccessible,
         decimal? startLatitude,
         decimal? startLongitude,
-        bool isContribution = false) =>
-        new()
+        bool isContribution = false)
+    {
+        return new()
         {
             Identifier = identifier,
             Name = name,
@@ -28,4 +29,5 @@ public class TrailMarkerResponse
             StartLongitude = startLongitude,
             IsContribution = isContribution,
         };
+    }
 }

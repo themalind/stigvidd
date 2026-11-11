@@ -12,7 +12,7 @@ decisions that are easy to break.
 | Client pre-upload resize/compress       | `app/src/utils/image/resize-image.ts`                    |
 | Orchestrates process → upload           | `backend/Core/Services/Media/MediaUploadService.cs`     |
 | ImageMagick processing                  | `backend/Core/Services/Media/ImageProcessingService.cs` |
-| Request DTO → processing options        | `backend/Core/Factories/ImageProcessingOptionsMapper.cs` |
+| Request DTO → processing options        | `backend/Core/Factories/Media/ImageProcessingOptionsMapper.cs` |
 | WebDAV storage (upload/delete/download) | `backend/Core/Services/Media/WebDavService.cs`          |
 | Media records + presentable URLs        | `backend/Core/Services/Media/MediaService.cs`           |
 | Upload endpoints (trail/facility/symbol) | `backend/StigviddAPI/Controllers/Admin/AdminTrailsController.cs`, `AdminFacilitiesController.cs` |

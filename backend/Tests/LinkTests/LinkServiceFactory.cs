@@ -51,6 +51,8 @@ public class LinkServiceFactory : WebApplicationFactory<Program>
         });
     }
 
-    public HttpClient CreateNonRedirectingClient() =>
-        CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+    public HttpClient CreateNonRedirectingClient()
+    {
+        return CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+    }
 }

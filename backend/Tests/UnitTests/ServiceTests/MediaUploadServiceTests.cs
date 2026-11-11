@@ -13,18 +13,23 @@ public class MediaUploadServiceTests
 {
     private static MediaUploadService Build(
         Mock<IImageProcessingService> processing,
-        Mock<IWebDavService> webDav) =>
-        new(processing.Object, webDav.Object, new Mock<ILogger<MediaUploadService>>().Object);
-
-    private static ProcessedImage MakeProcessed() => new()
+        Mock<IWebDavService> webDav)
     {
-        Stream = new MemoryStream([0x01, 0x02]),
-        Extension = "webp",
-        ContentType = "image/webp",
-        Width = 800,
-        Height = 600,
-        SizeBytes = 4321
-    };
+        return new(processing.Object, webDav.Object, new Mock<ILogger<MediaUploadService>>().Object);
+    }
+
+    private static ProcessedImage MakeProcessed()
+    {
+        return new()
+        {
+            Stream = new MemoryStream([0x01, 0x02]),
+            Extension = "webp",
+            ContentType = "image/webp",
+            Width = 800,
+            Height = 600,
+            SizeBytes = 4321
+        };
+    }
 
     [Fact]
     public async Task ProcessAndUploadAsync_WhenValid_ReturnsUploadedMediaWithProcessedDimensions()

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Factories;
 using Core.Interfaces.Services;
 using Core.Repositories;
 using Core.Repositories.Events;

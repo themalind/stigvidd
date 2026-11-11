@@ -9,13 +9,17 @@ namespace UnitTests.ServiceTests;
 
 public class MailTemplateRendererTests
 {
-    private static MailTemplateRenderer Build() => new();
+    private static MailTemplateRenderer Build()
+    {
+        return new();
+    }
 
     private static MailTemplate MakeTemplate(
         string subject = "Hej {{NickName}}",
         string html = "<p>Hej {{NickName}}</p>",
-        string text = "Hej {{NickName}}") =>
-        new()
+        string text = "Hej {{NickName}}")
+    {
+        return new()
         {
             Key = "welcome",
             Language = "sv",
@@ -23,6 +27,7 @@ public class MailTemplateRendererTests
             BodyHtml = html,
             BodyText = text,
         };
+    }
 
     [Fact]
     public void Render_WhenModelHasEveryPlaceholder_SubstitutesAllThreeParts()

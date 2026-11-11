@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.UserMapping;
+using Core.Validators.DataTransfer;
 using WebDataContracts.RequestModels.UserMapping;
 
 namespace UnitTests.ValidatorTests;
@@ -11,12 +11,15 @@ public class SaveUserMappingRequestValidatorTests
 {
     private readonly SaveUserMappingRequestValidator _validator = new();
 
-    private static SaveUserMappingRequest Valid() => new()
+    private static SaveUserMappingRequest Valid()
     {
-        KeycloakSubjectId = "staging-sub",
-        NickName = "Vandrar",
-        Email = "vandrar@example.com",
-    };
+        return new()
+        {
+            KeycloakSubjectId = "staging-sub",
+            NickName = "Vandrar",
+            Email = "vandrar@example.com",
+        };
+    }
 
     [Fact]
     public void Validate_WithValidData_ShouldPass()

@@ -44,16 +44,19 @@ public static class JwtBearerFailureLogging
             exception.GetType().Name);
     }
 
-    public static string? Classify(Exception exception) => exception switch
+    public static string? Classify(Exception exception)
     {
-        AggregateException { InnerExceptions.Count: 1 } aggregate => Classify(aggregate.InnerExceptions[0]),
-        SecurityTokenExpiredException => null,
-        SecurityTokenNotYetValidException => "not-yet-valid",
-        SecurityTokenInvalidIssuerException => "issuer",
-        SecurityTokenInvalidAudienceException => "audience",
-        SecurityTokenSignatureKeyNotFoundException => "signing-key",
-        SecurityTokenInvalidSignatureException => "signature",
-        SecurityTokenMalformedException => "malformed",
-        _ => "other",
-    };
+        return exception switch
+        {
+            AggregateException { InnerExceptions.Count: 1 } aggregate => Classify(aggregate.InnerExceptions[0]),
+            SecurityTokenExpiredException => null,
+            SecurityTokenNotYetValidException => "not-yet-valid",
+            SecurityTokenInvalidIssuerException => "issuer",
+            SecurityTokenInvalidAudienceException => "audience",
+            SecurityTokenSignatureKeyNotFoundException => "signing-key",
+            SecurityTokenInvalidSignatureException => "signature",
+            SecurityTokenMalformedException => "malformed",
+            _ => "other",
+        };
+    }
 }

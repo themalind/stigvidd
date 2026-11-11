@@ -59,13 +59,17 @@ public class MediaReprocessItemProcessorTests
             .ReturnsAsync(Result.Ok(true));
     }
 
-    private MediaReprocessItemProcessor Build() =>
-        new(_reprocess.Object, _media.Object, _imaging.Object, _webDav.Object, NullLogger<MediaReprocessItemProcessor>.Instance);
+    private MediaReprocessItemProcessor Build()
+    {
+        return new(_reprocess.Object, _media.Object, _imaging.Object, _webDav.Object, NullLogger<MediaReprocessItemProcessor>.Instance);
+    }
 
-    private void SucceedsWith(bool stillReferenced) =>
+    private void SucceedsWith(bool stillReferenced)
+    {
         _reprocess.Setup(r => r.MarkSucceededAsync(
                 ItemId, SourcePath, NewPath, 800, 600, 2, It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<MediaReprocessSuccess>.Success(new MediaReprocessSuccess(3, stillReferenced)));
+    }
 
     [Fact]
     public async Task ProcessAsync_PassesTheOldPathToTheSuccess_AndDeletesTheOldFileOnceNothingUsesIt()

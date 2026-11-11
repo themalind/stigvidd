@@ -82,13 +82,16 @@ public class MailTemplatesControllerIntegrationTests : IClassFixture<StigViddWeb
         return client;
     }
 
-    private static UpdateMailTemplateRequest ValidUpdate() => new()
+    private static UpdateMailTemplateRequest ValidUpdate()
     {
-        Subject = "Bekräfta din e-postadress",
-        BodyHtml = "<p>Hej {{NickName}},</p><p><a href=\"{{VerificationUrl}}\">Bekräfta</a></p><p>{{VerificationCode}}</p>",
-        BodyText = "Hej {{NickName}}, {{VerificationUrl}} {{VerificationCode}}",
-        Description = "Skickas vid registrering.",
-    };
+        return new()
+        {
+            Subject = "Bekräfta din e-postadress",
+            BodyHtml = "<p>Hej {{NickName}},</p><p><a href=\"{{VerificationUrl}}\">Bekräfta</a></p><p>{{VerificationCode}}</p>",
+            BodyText = "Hej {{NickName}}, {{VerificationUrl}} {{VerificationCode}}",
+            Description = "Skickas vid registrering.",
+        };
+    }
 
     [Fact]
     public async Task GetAll_WhenUnauthenticated_ShouldReturnUnauthorized()

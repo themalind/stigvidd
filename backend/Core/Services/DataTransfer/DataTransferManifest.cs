@@ -34,5 +34,8 @@ public record DataTransferManifest
         }
     }
 
-    public byte[] ToJson() => JsonSerializer.SerializeToUtf8Bytes(this, Json);
+    public byte[] ToJson()
+    {
+        return JsonSerializer.SerializeToUtf8Bytes(this, Json);
+    }
 }

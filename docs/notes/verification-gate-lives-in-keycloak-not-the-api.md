@@ -11,7 +11,7 @@ library and no round trip through StigVidd. A login never reaches a controller, 
 endpoint nobody calls on the way in.
 
 So the enforcement is two lines in
-[`KeycloakAdminRepository.CreateUserAsync`](../../backend/Core/Repositories/KeycloakAdminRepository.cs):
+[`KeycloakAdminRepository.CreateUserAsync`](../../backend/Core/Repositories/Account/KeycloakAdminRepository.cs):
 
 ```csharp
 Enabled = false,

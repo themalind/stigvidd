@@ -13,13 +13,16 @@ namespace Core.Telemetry;
 /// </summary>
 public static class MetricOutcome
 {
-    public static string From(RepositoryResultStatus status) => status switch
+    public static string From(RepositoryResultStatus status)
     {
-        RepositoryResultStatus.Success => MetricTags.Values.OutcomeSuccess,
-        RepositoryResultStatus.NotFound => MetricTags.Values.OutcomeNotFound,
-        RepositoryResultStatus.Conflict => MetricTags.Values.OutcomeConflict,
-        _ => MetricTags.Values.OutcomeError,
-    };
+        return status switch
+        {
+            RepositoryResultStatus.Success => MetricTags.Values.OutcomeSuccess,
+            RepositoryResultStatus.NotFound => MetricTags.Values.OutcomeNotFound,
+            RepositoryResultStatus.Conflict => MetricTags.Values.OutcomeConflict,
+            _ => MetricTags.Values.OutcomeError,
+        };
+    }
 
     /// <summary>
     /// Derives the outcome from the HTTP status a failed <see cref="Result"/> carries.

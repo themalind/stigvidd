@@ -21,7 +21,10 @@ public class AdminController(IDataTransferService dataTransfer, ILogger<AdminCon
     private readonly ILogger<AdminController> _logger = logger;
 
     [HttpGet("transfer-info")]
-    public ActionResult<DataTransferInfoResponse> GetTransferInfo() => Ok(_dataTransfer.GetInfo());
+    public ActionResult<DataTransferInfoResponse> GetTransferInfo()
+    {
+        return Ok(_dataTransfer.GetInfo());
+    }
 
     /// <summary>Streams a full migration archive (database + media + Keycloak).</summary>
     [HttpGet("export")]

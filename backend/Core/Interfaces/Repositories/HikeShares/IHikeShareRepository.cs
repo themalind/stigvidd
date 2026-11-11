@@ -1,0 +1,15 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Infrastructure.Data.Entities;
+
+namespace Core.Interfaces.Repositories.HikeShares;
+
+public interface IHikeShareRepository
+{
+    // ByUser = you are the owner who shared.
+    Task<RepositoryResult<int>> GetHikeShareCountAsync(string identifier, string hikeIdentifier, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<SentHikeShare>>> GetHikesSharedByUserAsync(int senderId, CancellationToken ctoken);
+    Task<RepositoryResult<bool>> IsAlreadySharedAsync(int hikeId, int sharedWithId, CancellationToken ctoken);
+    Task<RepositoryResult> ShareHikesAsync(IReadOnlyCollection<HikeShare> hikeShares, CancellationToken ctoken);
+}

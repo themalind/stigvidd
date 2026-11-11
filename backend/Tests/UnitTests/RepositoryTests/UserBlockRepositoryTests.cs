@@ -16,8 +16,10 @@ public class UserBlockRepositoryTests : TestBase
     private const int BlockedUserId = 2;
     private const int ThirdUserId = 3;
 
-    private static UserBlockRepository Build(Microsoft.EntityFrameworkCore.IDbContextFactory<Infrastructure.Data.StigViddDbContext> factory) =>
-        new(factory, NullLogger<UserBlockRepository>.Instance);
+    private static UserBlockRepository Build(Microsoft.EntityFrameworkCore.IDbContextFactory<Infrastructure.Data.StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<UserBlockRepository>.Instance);
+    }
 
     [Fact]
     public async Task BlockAsync_RecordsTheBlock()

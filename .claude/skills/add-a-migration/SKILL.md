@@ -16,7 +16,7 @@ dotnet ef migrations add <Name> --project Infrastructure
 `--project Infrastructure` is **required**. Without it, `dotnet ef` from `backend/` exits
 with "No project was found. Change the current working directory or use the --project
 option." — measured in this tree. No `--startup-project` is needed:
-[`Infrastructure/Data/DesignTimeDbContextFactory.cs`](../../../backend/Infrastructure/Data/DesignTimeDbContextFactory.cs)
+[`Infrastructure/Data/StigViddDbContextFactory.cs`](../../../backend/Infrastructure/Data/StigViddDbContextFactory.cs)
 supplies the context, and it reads the connection string from Infrastructure's **user
 secrets** (`UserSecretsId` is in `Infrastructure.csproj`). `migrations add` does not
 connect, so a missing secret does not matter there; `database update` does.
@@ -103,7 +103,7 @@ holds anything outbound, plus count assertions in `DataAnonymizerIntegrationTest
 [anonymizer-emptiedtables-is-only-an-exemption](../../../docs/notes/anonymizer-emptiedtables-is-only-an-exemption-the-delete-is-written-separately.md).
 
 A new reportable content type also goes in `ReportedContentType` (next free value, never
-renumber) and in every `switch` in `Core/Repositories/ContentReportRepository.cs`.
+renumber) and in every `switch` in `Core/Repositories/Reporting/ContentReportRepository.cs`.
 
 ## Geometry columns
 

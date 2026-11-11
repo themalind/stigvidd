@@ -68,14 +68,19 @@ internal sealed class RecordedMetrics : IDisposable
         get { lock (_gate) { return [.. _measurements]; } }
     }
 
-    public IReadOnlyList<RecordedMeasurement> For(string instrumentName) =>
-        [.. Measurements.Where(m => m.InstrumentName == instrumentName)];
+    public IReadOnlyList<RecordedMeasurement> For(string instrumentName)
+    {
+        return [.. Measurements.Where(m => m.InstrumentName == instrumentName)];
+    }
 
     /// <summary>
     /// Polls every observable instrument once. Gauges are only read when the exporter collects,
     /// so without this a gauge test would be waiting on an export interval that never comes.
     /// </summary>
-    public void RecordObservable() => _listener.RecordObservableInstruments();
+    public void RecordObservable()
+    {
+        _listener.RecordObservableInstruments();
+    }
 
     private void Record<T>(
         Instrument instrument,
@@ -100,5 +105,8 @@ internal sealed class RecordedMetrics : IDisposable
         }
     }
 
-    public void Dispose() => _listener.Dispose();
+    public void Dispose()
+    {
+        _listener.Dispose();
+    }
 }

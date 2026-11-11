@@ -22,13 +22,16 @@ public class PasswordResetServiceTests
     private const string BaseUrl = "https://api.test.local";
     private const string NewPassword = "ett-nytt-losenord";
 
-    private static User TestUser() => new()
+    private static User TestUser()
     {
-        Id = UserId,
-        Email = Email,
-        NickName = NickName,
-        SubjectId = SubjectId,
-    };
+        return new()
+        {
+            Id = UserId,
+            Email = Email,
+            NickName = NickName,
+            SubjectId = SubjectId,
+        };
+    }
 
     /// <summary>A bare mock returns a null Result, which is not a state the real service can
     /// meet, so every mock these tests build starts from a succeeding baseline.</summary>
@@ -99,14 +102,17 @@ public class PasswordResetServiceTests
     }
 
     /// <summary>A live row whose hash matches whatever the service looked up.</summary>
-    private static PasswordResetToken LiveToken() => new()
+    private static PasswordResetToken LiveToken()
     {
-        Id = TokenId,
-        UserId = UserId,
-        TokenHash = "irrelevant-the-mock-matches-any-hash",
-        ExpiresAt = DateTime.UtcNow.AddHours(1),
-        User = TestUser(),
-    };
+        return new()
+        {
+            Id = TokenId,
+            UserId = UserId,
+            TokenHash = "irrelevant-the-mock-matches-any-hash",
+            ExpiresAt = DateTime.UtcNow.AddHours(1),
+            User = TestUser(),
+        };
+    }
 
     private static Mock<IPasswordResetTokenRepository> TokensReturning(PasswordResetToken? token)
     {

@@ -13,14 +13,20 @@ public class StubApiHandler : HttpMessageHandler
 
     public List<Uri> Requests { get; } = [];
 
-    public void Returns(object body) =>
+    public void Returns(object body)
+    {
         _respond = _ => new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(body) };
+    }
 
-    public void Returns(HttpStatusCode status) =>
+    public void Returns(HttpStatusCode status)
+    {
         _respond = _ => new HttpResponseMessage(status);
+    }
 
-    public void Throws(Exception exception) =>
+    public void Throws(Exception exception)
+    {
         _respond = _ => throw exception;
+    }
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

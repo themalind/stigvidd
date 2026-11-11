@@ -30,5 +30,5 @@ void queryClient.invalidateQueries({
 
 Those queries are dropped by gcTime once the screen unmounts. Code:
 [useEventManage.ts](../../app/src/hooks/events/useEventManage.ts) (`deleteMutation`). Test, which
-fails with a blanket invalidation: [useEventManage.test.tsx](../../app/src/hooks/__tests__/useEventManage.test.tsx).
+fails with a blanket invalidation: [useEventManage.test.tsx](../../app/src/hooks/events/__tests__/useEventManage.test.tsx).
 The same applies to any delete issued from the screen that shows the deleted thing.

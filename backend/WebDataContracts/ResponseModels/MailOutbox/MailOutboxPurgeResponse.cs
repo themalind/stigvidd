@@ -13,10 +13,13 @@ public class MailOutboxPurgeResponse
     public required int OlderThanDays { get; set; }
     public required DateTime CutoffUtc { get; set; }
 
-    public static MailOutboxPurgeResponse Create(int deleted, int olderThanDays, DateTime cutoffUtc) => new()
+    public static MailOutboxPurgeResponse Create(int deleted, int olderThanDays, DateTime cutoffUtc)
     {
-        Deleted = deleted,
-        OlderThanDays = olderThanDays,
-        CutoffUtc = cutoffUtc,
-    };
+        return new()
+        {
+            Deleted = deleted,
+            OlderThanDays = olderThanDays,
+            CutoffUtc = cutoffUtc,
+        };
+    }
 }

@@ -12,8 +12,8 @@ retry/cleanup logic, on both the client and the server.
 | Client register/unregister + payload→route maps | `app/src/services/notifications.ts`                          |
 | Client token API calls                          | `app/src/api/notifications.ts`                               |
 | Foreground receive + tap navigation             | `app/src/app/_layout.tsx`                                    |
-| Backend send/register/unregister via Expo       | `backend/Core/Services/ExpoPushService.cs`                   |
-| Token persistence                               | `backend/Core/Repositories/UserPushTokenRepository.cs`       |
+| Backend send/register/unregister via Expo       | `backend/Core/Services/Push/ExpoPushService.cs`              |
+| Token persistence                               | `backend/Core/Repositories/Push/UserPushTokenRepository.cs`  |
 | HTTP endpoints                                  | `backend/StigviddAPI/Controllers/NotificationsController.cs` |
 
 ## The pipeline at a glance

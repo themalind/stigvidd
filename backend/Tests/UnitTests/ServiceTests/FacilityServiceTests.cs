@@ -1,7 +1,6 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -52,14 +51,17 @@ public class FacilityServiceTests
         };
     }
 
-    private static Facility MakeFacility() => new()
+    private static Facility MakeFacility()
     {
-        Identifier = FacilityIdentifier,
-        Name = "Grillplats Tiveden",
-        FacilityType = FacilityType.FirePit,
-        IsAccessible = true,
-        Coordinates = GeoPointFactory.FromLonLat(14.5, 58.9)
-    };
+        return new()
+        {
+            Identifier = FacilityIdentifier,
+            Name = "Grillplats Tiveden",
+            FacilityType = FacilityType.FirePit,
+            IsAccessible = true,
+            Coordinates = GeoPointFactory.FromLonLat(14.5, 58.9)
+        };
+    }
 
     [Fact]
     public async Task CreateFacilityAsync_WhenValid_ReturnsSuccess()

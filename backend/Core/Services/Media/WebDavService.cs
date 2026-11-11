@@ -79,9 +79,11 @@ public class WebDavService : IWebDavService
     }
 
     // Connection-level failures (reset/refused/timeout) are worth retrying; anything else is not.
-    private static bool IsTransient(Exception ex) =>
-        ex is HttpRequestException or IOException or SocketException
+    private static bool IsTransient(Exception ex)
+    {
+        return ex is HttpRequestException or IOException or SocketException
         || ex.InnerException is HttpRequestException or IOException or SocketException;
+    }
 
     public async Task<Result<bool>> DeleteFileAsync(string relativePath)
     {

@@ -11,8 +11,10 @@ public class TrailContributionRankingTests
 {
     private static readonly DateTime Now = new(2026, 10, 15, 12, 0, 0, DateTimeKind.Utc);
 
-    private static TrailContributionRanking Ranking(Dictionary<string, string?>? settings = null) =>
-        new(new ConfigurationBuilder().AddInMemoryCollection(settings ?? []).Build());
+    private static TrailContributionRanking Ranking(Dictionary<string, string?>? settings = null)
+    {
+        return new(new ConfigurationBuilder().AddInMemoryCollection(settings ?? []).Build());
+    }
 
     // keep-comment: Göteborg centre; Borås is about 55 km east, Kungsbacka about 25 km south, Kiruna about 1200 km north
     private const double GothenburgLatitude = 57.7089;

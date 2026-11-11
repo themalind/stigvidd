@@ -16,7 +16,9 @@ public class MailOutboxCountsResponse
     public required int Total { get; set; }
 
     public static MailOutboxCountsResponse Create(
-        int pending, int sending, int sent, int failed, int cancelled) => new()
+        int pending, int sending, int sent, int failed, int cancelled)
+    {
+        return new()
         {
             Pending = pending,
             Sending = sending,
@@ -25,4 +27,5 @@ public class MailOutboxCountsResponse
             Cancelled = cancelled,
             Total = pending + sending + sent + failed + cancelled,
         };
+    }
 }

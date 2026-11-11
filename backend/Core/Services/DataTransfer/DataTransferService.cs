@@ -54,13 +54,16 @@ public class DataTransferService : IDataTransferService
         _sharedServices = configuration.GetValue<bool>("DataTransfer:SharedServices");
     }
 
-    public DataTransferInfoResponse GetInfo() => new()
+    public DataTransferInfoResponse GetInfo()
     {
-        SharedServices = _sharedServices,
-        ExportIncludesKeycloak = !_sharedServices,
-        ImportRestoresKeycloak = !_sharedServices,
-        ImportClearsOutbound = _sharedServices,
-    };
+        return new()
+        {
+            SharedServices = _sharedServices,
+            ExportIncludesKeycloak = !_sharedServices,
+            ImportRestoresKeycloak = !_sharedServices,
+            ImportClearsOutbound = _sharedServices,
+        };
+    }
 
     public async Task<Stream> CreateExportAsync(bool anonymize, CancellationToken ctoken)
     {
@@ -464,15 +467,17 @@ public class DataTransferService : IDataTransferService
     }
 
     private Task PgDumpAsync(NpgsqlConnectionStringBuilder conn, string database, string outFile, CancellationToken ctoken)
-        => RunPgToolAsync("pg_dump",
-            [
-                .. ConnectionArgs(conn),
+    {
+        return RunPgToolAsync("pg_dump",
+                [
+                    .. ConnectionArgs(conn),
                 "--format=custom", "--no-owner", "--no-privileges",
                 // spatial_ref_sys is repopulated by CREATE EXTENSION postgis on restore; dumping its data would collide with those rows. keep-comment: restore collision
                 "--exclude-table-data=public.spatial_ref_sys",
                 "--file", outFile, database,
             ],
-            conn.Password, ctoken);
+                conn.Password, ctoken);
+    }
 
     private async Task<bool> TryPgDumpAsync(NpgsqlConnectionStringBuilder conn, string database, string outFile, CancellationToken ctoken)
     {
@@ -505,15 +510,19 @@ public class DataTransferService : IDataTransferService
         await command.ExecuteNonQueryAsync(ctoken);
     }
 
-    private static string Database(NpgsqlConnectionStringBuilder conn) =>
-        conn.Database ?? throw new InvalidOperationException("Connection string 'StigVidd' names no database.");
+    private static string Database(NpgsqlConnectionStringBuilder conn)
+    {
+        return conn.Database ?? throw new InvalidOperationException("Connection string 'StigVidd' names no database.");
+    }
 
-    private static string[] ConnectionArgs(NpgsqlConnectionStringBuilder conn) =>
-    [
+    private static string[] ConnectionArgs(NpgsqlConnectionStringBuilder conn)
+    {
+        return [
         "-h", conn.Host ?? throw new InvalidOperationException("Connection string 'StigVidd' names no host."),
         "-p", conn.Port.ToString(),
         "-U", conn.Username ?? throw new InvalidOperationException("Connection string 'StigVidd' names no user."),
     ];
+    }
 
     private static async Task RunPgToolAsync(string tool, string[] args, string? password, CancellationToken ctoken)
     {

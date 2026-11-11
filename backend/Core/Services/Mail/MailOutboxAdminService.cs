@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Enums;
@@ -177,14 +176,20 @@ public class MailOutboxAdminService : IMailOutboxAdminService
         return Result.Ok(MailOutboxPurgeResponse.Create(result.Value, request.OlderThanDays, cutoff));
     }
 
-    private static Result<T> NotFound<T>() =>
-        Result.Fail<T>(new Message(404, "No such mail."));
+    private static Result<T> NotFound<T>()
+    {
+        return Result.Fail<T>(new Message(404, "No such mail."));
+    }
 
-    private static Result<T> BadFilter<T>(string name, string[] allowed) =>
-        Result.Fail<T>(new Message(400, $"Unknown {name}. Use one of: {string.Join(", ", allowed)}."));
+    private static Result<T> BadFilter<T>(string name, string[] allowed)
+    {
+        return Result.Fail<T>(new Message(400, $"Unknown {name}. Use one of: {string.Join(", ", allowed)}."));
+    }
 
-    private static int ClampPageSize(int pageSize) =>
-        pageSize <= 0 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+    private static int ClampPageSize(int pageSize)
+    {
+        return pageSize <= 0 ? DefaultPageSize : Math.Min(pageSize, MaxPageSize);
+    }
 
     private static bool TryParseStatus(string? value, out OutboxEmailStatus? parsed)
     {

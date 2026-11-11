@@ -1,9 +1,9 @@
 # Raw SQL passes on the SQLite test provider and still needs one run against real PostgreSQL
 
-`Core/Repositories/HikeShareInsert.cs` writes hike shares with a hand-built
+`Core/Repositories/HikeShares/HikeShareInsert.cs` writes hike shares with a hand-built
 `INSERT ... ON CONFLICT DO NOTHING`, so a concurrent share of the same recipient keeps the
 existing row instead of failing the batch. Every automated test of it runs on SQLite:
-[HikeShareRepositoryIntegrationTests.cs](../../backend/Tests/IntegrationTests/HikeSharesController/HikeShareRepositoryIntegrationTests.cs)
+[HikeShareRepositoryIntegrationTests.cs](../../backend/Tests/IntegrationTests/Repositories/HikeShareRepositoryIntegrationTests.cs)
 uses the in-memory connection string like the rest of the suite. SQLite accepts the same
 `ON CONFLICT` syntax, so green there says nothing about quoting, the `dbo` schema, parameter
 types or `timestamp with time zone` on the production database.

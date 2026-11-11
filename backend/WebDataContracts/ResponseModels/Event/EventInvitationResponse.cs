@@ -12,11 +12,3 @@ public class EventInvitationResponse
 
     public DateTime InvitedAt { get; set; }
 }
-
-public class EventInviteeResponse
-{
-    public required string UserIdentifier { get; set; }
-    public required string NickName { get; set; }
-    public string? InvitedByNickName { get; set; }
-    public DateTime InvitedAt { get; set; }
-}

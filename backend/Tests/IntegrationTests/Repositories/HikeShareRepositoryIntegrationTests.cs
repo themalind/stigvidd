@@ -30,9 +30,11 @@ public class HikeShareRepositoryIntegrationTests : IClassFixture<StigViddWebAppl
         _factory.SeedDatabase();
     }
 
-    private static (IHikeShareRepository Repo, IDbContextFactory<StigViddDbContext> Db) Resolve(IServiceScope scope) =>
-        (scope.ServiceProvider.GetRequiredService<IHikeShareRepository>(),
+    private static (IHikeShareRepository Repo, IDbContextFactory<StigViddDbContext> Db) Resolve(IServiceScope scope)
+    {
+        return (scope.ServiceProvider.GetRequiredService<IHikeShareRepository>(),
          scope.ServiceProvider.GetRequiredService<IDbContextFactory<StigViddDbContext>>());
+    }
 
     [Fact]
     public async Task ShareHikesAsync_InsertsEveryRowWithItsValues()

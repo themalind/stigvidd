@@ -19,15 +19,18 @@ public class ContentReportRepositoryTests : TestBase
     private const string ReporterUserIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
     private const string AuthorUserIdentifier = "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d";
 
-    private static Review Review(string identifier, ModerationState state) => new()
+    private static Review Review(string identifier, ModerationState state)
     {
-        Identifier = identifier,
-        TrailReview = "Text",
-        Rating = 3M,
-        TrailId = 1,
-        UserId = 1,
-        ModerationState = state,
-    };
+        return new()
+        {
+            Identifier = identifier,
+            TrailReview = "Text",
+            Rating = 3M,
+            TrailId = 1,
+            UserId = 1,
+            ModerationState = state,
+        };
+    }
 
     private static ContentReportRepository Build(IDbContextFactory<StigViddDbContext> factory)
     {
@@ -209,7 +212,9 @@ public class ContentReportRepositoryTests : TestBase
         string contentIdentifier,
         int? authorUserId = 1,
         ReportStatus status = ReportStatus.Pending,
-        DateTime? createdAt = null) => new()
+        DateTime? createdAt = null)
+    {
+        return new()
         {
             ContentType = ReportedContentType.Review,
             ContentId = contentId,
@@ -224,6 +229,7 @@ public class ContentReportRepositoryTests : TestBase
             HideOutcome = ReportHideOutcome.Hidden,
             CreatedAt = createdAt ?? DateTime.UtcNow,
         };
+    }
 
     // --- Applying a decision ---
 
@@ -231,8 +237,9 @@ public class ContentReportRepositoryTests : TestBase
     private const string ObstacleWithVotesIdentifier = "ob3c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e"; // obstacle 3, three votes
 
     private static IDbContextFactory<StigViddDbContext> FactoryWithReportsOn(
-        ReportedContentType contentType, int contentId, int reporterCount, ModerationState state) =>
-        CreateSeededFactory(db =>
+        ReportedContentType contentType, int contentId, int reporterCount, ModerationState state)
+    {
+        return CreateSeededFactory(db =>
         {
             Hide(db, contentType, contentId, state);
 
@@ -252,6 +259,7 @@ public class ContentReportRepositoryTests : TestBase
                     HideOutcome = ReportHideOutcome.Hidden,
                 });
         });
+    }
 
     private static void Hide(StigViddDbContext db, ReportedContentType contentType, int contentId, ModerationState state)
     {
@@ -589,7 +597,9 @@ public class ContentReportRepositoryTests : TestBase
         int contentId = 1,
         ReportedContentType contentType = ReportedContentType.Review,
         DateTime? createdAt = null,
-        string? authorNickNameSnapshot = "Author") => new()
+        string? authorNickNameSnapshot = "Author")
+    {
+        return new()
         {
             Identifier = Guid.NewGuid().ToString(),
             ContentType = contentType,
@@ -604,6 +614,7 @@ public class ContentReportRepositoryTests : TestBase
             HideOutcome = ReportHideOutcome.Hidden,
             CreatedAt = createdAt ?? DateTime.UtcNow,
         };
+    }
 
     [Fact]
     public async Task GetReporterStatistics_CountsEveryStatusAndNamesTheReporter()
@@ -916,17 +927,21 @@ public class ContentReportRepositoryTests : TestBase
     private const string HikeImageIdentifier = "hike-img-5a6b7c8d-9e0f-4a1b-8c2d-3e4f5a6b7c8d";
     private const string HikeImagePath = "hikes/report-me.jpg";
 
-    private static HikeImage HikeImageRow(ModerationState state = ModerationState.Visible) => new()
+    private static HikeImage HikeImageRow(ModerationState state = ModerationState.Visible)
     {
-        Id = HikeImageId,
-        Identifier = HikeImageIdentifier,
-        HikeId = 1,
-        ImageUrl = HikeImagePath,
-        ModerationState = state,
-    };
+        return new()
+        {
+            Id = HikeImageId,
+            Identifier = HikeImageIdentifier,
+            HikeId = 1,
+            ImageUrl = HikeImagePath,
+            ModerationState = state,
+        };
+    }
 
-    private static IDbContextFactory<StigViddDbContext> FactoryWithHikeImageReport(ModerationState state, Action<StigViddDbContext>? extra = null) =>
-        CreateSeededFactory(db =>
+    private static IDbContextFactory<StigViddDbContext> FactoryWithHikeImageReport(ModerationState state, Action<StigViddDbContext>? extra = null)
+    {
+        return CreateSeededFactory(db =>
         {
             db.HikeImages.Add(HikeImageRow(state));
             db.ContentReports.Add(new ContentReport
@@ -944,6 +959,7 @@ public class ContentReportRepositoryTests : TestBase
             });
             extra?.Invoke(db);
         });
+    }
 
     [Fact]
     public async Task GetReportableContent_HikeImage_ForAnAcceptedRecipient_ReturnsTheOwnerAndThePath()

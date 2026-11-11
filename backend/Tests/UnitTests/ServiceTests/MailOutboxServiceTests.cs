@@ -23,25 +23,35 @@ public class MailOutboxServiceTests
     {
         public List<int> Enqueued { get; } = [];
 
-        public void Enqueue(int outboxEmailId) => Enqueued.Add(outboxEmailId);
+        public void Enqueue(int outboxEmailId)
+        {
+            Enqueued.Add(outboxEmailId);
+        }
 
-        public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken) =>
+        public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken)
+        {
             throw new NotSupportedException();
+        }
     }
 
-    private static MailTemplate MakeTemplate(string language = "sv") => new()
+    private static MailTemplate MakeTemplate(string language = "sv")
     {
-        Key = "welcome",
-        Language = language,
-        Subject = "Hej {{NickName}}",
-        BodyHtml = "<p>Hej {{NickName}}</p>",
-        BodyText = "Hej {{NickName}}",
-    };
+        return new()
+        {
+            Key = "welcome",
+            Language = language,
+            Subject = "Hej {{NickName}}",
+            BodyHtml = "<p>Hej {{NickName}}</p>",
+            BodyText = "Hej {{NickName}}",
+        };
+    }
 
-    private static IConfiguration MakeConfiguration(string defaultLanguage = "sv") =>
-        new ConfigurationBuilder()
+    private static IConfiguration MakeConfiguration(string defaultLanguage = "sv")
+    {
+        return new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["MailOutbox:DefaultLanguage"] = defaultLanguage })
             .Build();
+    }
 
     private static MailOutboxService Build(
         Mock<IMailTemplateRepository>? templates = null,
@@ -83,8 +93,10 @@ public class MailOutboxServiceTests
         return repo;
     }
 
-    private static Dictionary<string, string?> Model(string nickName = "Ralf") =>
-        new() { ["NickName"] = nickName };
+    private static Dictionary<string, string?> Model(string nickName = "Ralf")
+    {
+        return new() { ["NickName"] = nickName };
+    }
 
     [Fact]
     public async Task EnqueueAsync_WhenEverythingIsValid_WritesARenderedPendingRow()

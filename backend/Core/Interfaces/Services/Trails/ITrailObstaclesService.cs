@@ -1,0 +1,16 @@
+// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using WebDataContracts.ResponseModels.TrailObstacle;
+
+namespace Core.Interfaces.Services.Trails;
+
+public interface ITrailObstaclesService
+{
+    Task<Result<IReadOnlyCollection<TrailObstacleResponse>>> GetTrailObstaclesByTrailIdentifierAsync(string identifier, string? viewerIdentifier, CancellationToken ctoken);
+    Task<Result<TrailObstacleResponse?>> AddTrailObstacle(string userIdentifier, string trailIdentifier, string description, string issueType, decimal? longitude, decimal? latitude, Guid? clientRequestId, CancellationToken ctoken);
+    Task<Result> AddSolvedVoteAsync(string userIdentifier, string trailObstacleIdentifier, CancellationToken ctoken);
+    Task<Result> UpdateTrailObstacleAsync(string userIdentifier, string trailObstacleIdentifier, string? description, string? issueType, CancellationToken ctoken);
+    Task<Result> DeleteSolvedVoteByUserIdentifierAsync(string userIdentifier, string trailObstacleIdentifier, CancellationToken ctoken);
+    Task<Result> DeleteTrailObstacleAsync(string userIdentifier, string trailObstacleIdentifier, CancellationToken ctoken);
+}

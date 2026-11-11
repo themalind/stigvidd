@@ -55,14 +55,17 @@ public class AdminTrailsControllerIntegrationTests : IClassFixture<StigViddWebAp
         return client;
     }
 
-    private static UpdateTrailRequest ValidUpdateRequest(string name = "Uppdaterat ledsnamn") => new()
+    private static UpdateTrailRequest ValidUpdateRequest(string name = "Uppdaterat ledsnamn")
     {
-        Name = name,
-        TrailLength = 9.5m,
-        Classification = 2,
-        Accessibility = true,
-        City = "Viskafors",
-    };
+        return new()
+        {
+            Name = name,
+            TrailLength = 9.5m,
+            Classification = 2,
+            Accessibility = true,
+            City = "Viskafors",
+        };
+    }
 
     private static MultipartFormDataContent BuildUpload(string fieldName, uint width = 200, uint height = 150)
     {

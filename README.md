@@ -204,7 +204,7 @@ stigvidd/
 
    The connection string is set a second time here on purpose: `Infrastructure` and `StigviddAPI`
    have separate `UserSecretsId` values, and the design-time factory
-   (`Infrastructure/Data/DesignTimeDbContextFactory.cs`) reads the former.
+   (`Infrastructure/Data/StigViddDbContextFactory.cs`) reads the former.
 
 5. Run the API:
    ```bash

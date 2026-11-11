@@ -26,14 +26,17 @@ public class MediaReprocessItemResponse
         MediaReprocessItemStatus status,
         string? lastError,
         DateTime createdAt,
-        DateTime lastUpdatedAt) => new()
+        DateTime lastUpdatedAt)
     {
-        Identifier = identifier,
-        MediaIdentifier = mediaIdentifier,
-        OwnerType = ownerType,
-        Status = status,
-        LastError = lastError,
-        CreatedAt = createdAt,
-        LastUpdatedAt = lastUpdatedAt,
-    };
+        return new()
+        {
+            Identifier = identifier,
+            MediaIdentifier = mediaIdentifier,
+            OwnerType = ownerType,
+            Status = status,
+            LastError = lastError,
+            CreatedAt = createdAt,
+            LastUpdatedAt = lastUpdatedAt,
+        };
+    }
 }

@@ -14,11 +14,3 @@ public class EventParticipantsResponse
     // Pending invitations, null like Participants; the app leaves these out of the invite picker and revokes from here. keep-comment: why the list is here
     public IReadOnlyCollection<EventInviteeResponse>? Invited { get; set; }
 }
-
-public class EventParticipantResponse
-{
-    public required string UserIdentifier { get; set; }
-    public required string NickName { get; set; }
-    public required string Role { get; set; }
-    public DateTime JoinedAt { get; set; }
-}

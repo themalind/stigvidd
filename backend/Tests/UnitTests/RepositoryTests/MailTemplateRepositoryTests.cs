@@ -12,11 +12,14 @@ namespace UnitTests.RepositoryTests;
 
 public class MailTemplateRepositoryTests : TestBase
 {
-    private static MailTemplateRepository Build(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<MailTemplateRepository>.Instance);
+    private static MailTemplateRepository Build(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<MailTemplateRepository>.Instance);
+    }
 
-    private static MailTemplate MakeTemplate(int id, string key, string language) =>
-        new()
+    private static MailTemplate MakeTemplate(int id, string key, string language)
+    {
+        return new()
         {
             Id = id,
             Identifier = $"template-{id}",
@@ -28,6 +31,7 @@ public class MailTemplateRepositoryTests : TestBase
             CreatedAt = Utilities.SeedDates.Created,
             LastUpdatedAt = Utilities.SeedDates.Updated,
         };
+    }
 
     private static readonly Action<StigViddDbContext> SeedTemplates = db =>
         db.MailTemplates.AddRange(

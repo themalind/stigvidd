@@ -17,10 +17,15 @@ public class GeometryComparisonTests
     private const double Tolerance = 15;
 
     // A degree of latitude is about 111 372 m at these latitudes.
-    private static double Metres(double metres) => metres / 111372.0;
+    private static double Metres(double metres)
+    {
+        return metres / 111372.0;
+    }
 
-    private static LineString Line(params (double X, double Y)[] points) =>
-        new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    private static LineString Line(params (double X, double Y)[] points)
+    {
+        return new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    }
 
     private static LineString Straight(double startY, double endY, double x = 12.85, int points = 2)
     {

@@ -17,7 +17,7 @@ cd backend && dotnet ef database update --project Infrastructure \
   --connection "Host=localhost;Port=55433;Database=stigvidd;Username=postgres;Password=pw"
 ```
 
-`--connection` matters too: `DesignTimeDbContextFactory` otherwise reads Infrastructure's **user
+`--connection` matters too: `StigViddDbContextFactory` otherwise reads Infrastructure's **user
 secrets**, which on most boxes point at something you did not mean to migrate. It also writes
 nothing to the machine, which the user-secrets route does — and the integration suite inherits
 that same store, so a value left there changes the suite's behaviour on your box and nowhere

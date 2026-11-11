@@ -9,10 +9,13 @@ namespace UnitTests.FactoryTests;
 
 public class ContentReportResponseFactoryTests
 {
-    private static ContentReportSummary Summary(ReportedContentType contentType, string? snapshot) => new(
+    private static ContentReportSummary Summary(ReportedContentType contentType, string? snapshot)
+    {
+        return new(
         "report-1", contentType, "content-1", null, ReportReason.Offensive, null, ReportStatus.Pending,
         ReportHideOutcome.Hidden, "Reporter", "Author", "author-1", null, snapshot, true, null, null, null,
         DateTime.UtcNow);
+    }
 
     [Fact]
     public void Create_ForAHikeImage_GivesTheSnapshotAsAnAbsoluteImageUrl()

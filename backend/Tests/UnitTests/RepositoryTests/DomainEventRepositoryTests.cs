@@ -16,8 +16,10 @@ namespace UnitTests.RepositoryTests;
 
 public class DomainEventRepositoryTests : TestBase
 {
-    private static DomainEventRepository Build(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<DomainEventRepository>.Instance);
+    private static DomainEventRepository Build(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<DomainEventRepository>.Instance);
+    }
 
     private static DomainEventRecord MakeRecord(
         int id,
@@ -25,8 +27,9 @@ public class DomainEventRepositoryTests : TestBase
         DateTime? nextAttemptAt = null,
         int attempts = 0,
         DateTime? settledAt = null,
-        string? completedHandlers = null) =>
-        new()
+        string? completedHandlers = null)
+    {
+        return new()
         {
             Id = id,
             Identifier = $"event-{id}",
@@ -40,9 +43,12 @@ public class DomainEventRepositoryTests : TestBase
             CreatedAt = Utilities.SeedDates.Created,
             LastUpdatedAt = Utilities.SeedDates.Updated,
         };
+    }
 
-    private static Action<StigViddDbContext> Seed(params DomainEventRecord[] records) =>
-        db => db.DomainEvents.AddRange(records);
+    private static Action<StigViddDbContext> Seed(params DomainEventRecord[] records)
+    {
+        return db => db.DomainEvents.AddRange(records);
+    }
 
     private static T Ok<T>(RepositoryResult<T> result)
     {

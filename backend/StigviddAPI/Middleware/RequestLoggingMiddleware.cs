@@ -33,16 +33,22 @@ public class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggi
             (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds);
     }
 
-    public static string? RouteTemplate(HttpContext context) =>
-        (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText;
+    public static string? RouteTemplate(HttpContext context)
+    {
+        return (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText;
+    }
 
-    public static string? SubjectId(ClaimsPrincipal user) =>
-        user.Identity?.IsAuthenticated == true
+    public static string? SubjectId(ClaimsPrincipal user)
+    {
+        return user.Identity?.IsAuthenticated == true
             ? user.FindFirst(ClaimTypes.NameIdentifier)?.Value
             : null;
+    }
 
-    public static bool IsProbePath(PathString path) =>
-        path.StartsWithSegments("/healthz") || path.StartsWithSegments("/readyz");
+    public static bool IsProbePath(PathString path)
+    {
+        return path.StartsWithSegments("/healthz") || path.StartsWithSegments("/readyz");
+    }
 
     private IDisposable? BeginRequestScope(string? endpoint, string? subjectId)
     {
@@ -57,6 +63,8 @@ public class RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggi
         return state.Count == 0 ? null : logger.BeginScope(state);
     }
 
-    private static bool IsUnlogged(HttpRequest request) =>
-        HttpMethods.IsOptions(request.Method) || IsProbePath(request.Path);
+    private static bool IsUnlogged(HttpRequest request)
+    {
+        return HttpMethods.IsOptions(request.Method) || IsProbePath(request.Path);
+    }
 }

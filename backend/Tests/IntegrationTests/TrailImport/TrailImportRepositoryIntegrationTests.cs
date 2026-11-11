@@ -33,21 +33,24 @@ public class TrailImportRepositoryIntegrationTests : IClassFixture<StigViddWebAp
         _factory.SeedDatabase();
     }
 
-    private static TrailImportProposal Proposal(int index) => new()
+    private static TrailImportProposal Proposal(int index)
     {
-        ExternalId = index.ToString(),
-        FeatureName = $"Feature {index}",
-        GeometryFingerprint = index.ToString("x64"),
-        // SRID 4326 via GeoPointFactory, like the seeded trails — SpatiaLite enforces the
-        // column's SRID on insert, so an SRID-0 line here would be rejected.
-        FeatureGeometry = GeoPointFactory.FromLonLatPath(
+        return new()
+        {
+            ExternalId = index.ToString(),
+            FeatureName = $"Feature {index}",
+            GeometryFingerprint = index.ToString("x64"),
+            // SRID 4326 via GeoPointFactory, like the seeded trails — SpatiaLite enforces the
+            // column's SRID on insert, so an SRID-0 line here would be rejected.
+            FeatureGeometry = GeoPointFactory.FromLonLatPath(
         [
             new Coordinate(12.805, 57.621 + index / 1000.0),
             new Coordinate(12.806, 57.622 + index / 1000.0),
         ]),
-        Confidence = MatchConfidence.Unmatched,
-        Decision = ProposalDecision.Pending,
-    };
+            Confidence = MatchConfidence.Unmatched,
+            Decision = ProposalDecision.Pending,
+        };
+    }
 
     private static int CreateSession(StigViddDbContext context, string fileName,
         ImportSessionStatus status = ImportSessionStatus.Uploaded)
@@ -228,13 +231,16 @@ public class TrailImportRepositoryIntegrationTests : IClassFixture<StigViddWebAp
         result.Value.Should().NotContain([linked, otherSource]);
     }
 
-    private static TrailSourceLink Link(string source, string fingerprint, TrailSourceLinkRole role) => new()
+    private static TrailSourceLink Link(string source, string fingerprint, TrailSourceLinkRole role)
     {
-        Source = source,
-        GeometryFingerprint = fingerprint,
-        Role = role,
-        Confidence = MatchConfidence.Unmatched,
-        ConfirmedByHuman = true,
-        LastSeenAt = DateTime.UtcNow,
-    };
+        return new()
+        {
+            Source = source,
+            GeometryFingerprint = fingerprint,
+            Role = role,
+            Confidence = MatchConfidence.Unmatched,
+            ConfirmedByHuman = true,
+            LastSeenAt = DateTime.UtcNow,
+        };
+    }
 }

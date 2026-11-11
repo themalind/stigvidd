@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Validators.Trail;
+using Core.Validators.Trails;
 using AwesomeAssertions;
 using WebDataContracts.RequestModels.Trail;
 
@@ -13,10 +13,13 @@ public class GetTrailCardsRequestValidatorTests
 
     private readonly GetTrailCardsRequestValidator _validator = new();
 
-    private static GetTrailCardsRequest ValidRequest() => new()
+    private static GetTrailCardsRequest ValidRequest()
     {
-        Identifiers = ["trail-1", "trail-2"]
-    };
+        return new()
+        {
+            Identifiers = ["trail-1", "trail-2"]
+        };
+    }
 
     [Fact]
     public void Validate_WithValidData_ShouldPass()

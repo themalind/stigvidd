@@ -14,12 +14,15 @@ namespace UnitTests.RepositoryTests;
 
 public class MediaReprocessRepositoryTests : TestBase
 {
-    private static MediaReprocessRepository Build(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<MediaReprocessRepository>.Instance);
+    private static MediaReprocessRepository Build(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<MediaReprocessRepository>.Instance);
+    }
 
     private static MediaReprocessItem MakeItem(
-        int id, int jobId, string mediaIdentifier, string ownerType, MediaReprocessItemStatus status = MediaReprocessItemStatus.Pending) =>
-        new()
+        int id, int jobId, string mediaIdentifier, string ownerType, MediaReprocessItemStatus status = MediaReprocessItemStatus.Pending)
+    {
+        return new()
         {
             Id = id,
             JobId = jobId,
@@ -30,9 +33,11 @@ public class MediaReprocessRepositoryTests : TestBase
             CreatedAt = Utilities.SeedDates.Created,
             LastUpdatedAt = Utilities.SeedDates.Updated,
         };
+    }
 
-    private static MediaReprocessJob MakeJob(int id, DateTime? createdAt = null, params MediaReprocessItem[] items) =>
-        new()
+    private static MediaReprocessJob MakeJob(int id, DateTime? createdAt = null, params MediaReprocessItem[] items)
+    {
+        return new()
         {
             Id = id,
             Identifier = $"job-{id}",
@@ -41,6 +46,7 @@ public class MediaReprocessRepositoryTests : TestBase
             LastUpdatedAt = Utilities.SeedDates.Updated,
             Items = items,
         };
+    }
 
     [Fact]
     public async Task CreateJobAsync_CreatesOneItemPerTarget_AllPending()
@@ -323,8 +329,10 @@ public class MediaReprocessRepositoryTests : TestBase
             .Should().BeEmpty();
     }
 
-    private static TrailImage MakeTrailImage(int id, string identifier, string imageUrl) =>
-        new() { Id = id, Identifier = identifier, ImageUrl = imageUrl, TrailId = 1, Width = 4000, Height = 3000, SizeBytes = 5_000_000 };
+    private static TrailImage MakeTrailImage(int id, string identifier, string imageUrl)
+    {
+        return new() { Id = id, Identifier = identifier, ImageUrl = imageUrl, TrailId = 1, Width = 4000, Height = 3000, SizeBytes = 5_000_000 };
+    }
 
     [Fact]
     public async Task MarkSucceededAsync_RepointsEveryRowSharingTheOldFile_AndSettlesTheirPendingItems()

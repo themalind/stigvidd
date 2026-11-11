@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Validators.Trail;
+using Core.Validators.Trails;
 using AwesomeAssertions;
 using WebDataContracts.RequestModels.Trail;
 
@@ -11,15 +11,18 @@ public class CreateTrailRequestValidatorTests
 {
     private readonly CreateTrailRequestValidator _validator = new();
 
-    private static CreateTrailRequest ValidRequest() => new()
+    private static CreateTrailRequest ValidRequest()
     {
-        Name = "Tiveden",
-        TrailLength = 9.5M,
-        Classification = 2,
-        Description = "En fin led genom skogen.",
-        City = "Tiveden",
-        Coordinates = "[]"
-    };
+        return new()
+        {
+            Name = "Tiveden",
+            TrailLength = 9.5M,
+            Classification = 2,
+            Description = "En fin led genom skogen.",
+            City = "Tiveden",
+            Coordinates = "[]"
+        };
+    }
 
     [Fact]
     public void Validate_WithValidData_ShouldPass()

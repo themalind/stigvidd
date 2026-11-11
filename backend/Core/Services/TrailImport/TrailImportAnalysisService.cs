@@ -139,40 +139,46 @@ public class TrailImportAnalysisService : ITrailImportAnalysisService
         return proposals;
     }
 
-    private static TrailImportProposal FromMatch(SourceFeature feature, TrailMatch match) => new()
+    private static TrailImportProposal FromMatch(SourceFeature feature, TrailMatch match)
     {
-        ExternalId = feature.ExternalId,
-        FeatureName = feature.Name,
-        GeometryFingerprint = match.FeatureFingerprint,
-        FeatureProperties = feature.Properties,
-        FeatureGeometry = feature.Geometry,
-        SuggestedTrailId = match.TrailId,
-        NearestTrailId = match.NearestTrailId,
-        Confidence = match.Confidence,
-        CoverageForward = match.CoverageForward,
-        CoverageBackward = match.CoverageBackward,
-        HausdorffMeters = match.HausdorffMetres,
-        MatchReason = match.Reason,
-        Decision = ProposalDecision.Pending,
-    };
+        return new()
+        {
+            ExternalId = feature.ExternalId,
+            FeatureName = feature.Name,
+            GeometryFingerprint = match.FeatureFingerprint,
+            FeatureProperties = feature.Properties,
+            FeatureGeometry = feature.Geometry,
+            SuggestedTrailId = match.TrailId,
+            NearestTrailId = match.NearestTrailId,
+            Confidence = match.Confidence,
+            CoverageForward = match.CoverageForward,
+            CoverageBackward = match.CoverageBackward,
+            HausdorffMeters = match.HausdorffMetres,
+            MatchReason = match.Reason,
+            Decision = ProposalDecision.Pending,
+        };
+    }
 
     // A feature a reviewer has already excluded comes back decided rather than as an empty
     // row. No trail is compared: an excluded feature has none, and the point is that the
     // decision survives every later export of the same geometry.
-    private static TrailImportProposal AlreadyExcluded(SourceFeature feature, string fingerprint) => new()
+    private static TrailImportProposal AlreadyExcluded(SourceFeature feature, string fingerprint)
     {
-        ExternalId = feature.ExternalId,
-        FeatureName = feature.Name,
-        GeometryFingerprint = fingerprint,
-        FeatureProperties = feature.Properties,
-        FeatureGeometry = feature.Geometry,
-        Confidence = MatchConfidence.Unmatched,
-        MatchReason = "excluded in an earlier import",
-        Decision = ProposalDecision.Exclude,
-        DecidedRole = TrailSourceLinkRole.Excluded,
-        DecidedBy = ExcludedBy,
-        DecidedAt = DateTime.UtcNow,
-    };
+        return new()
+        {
+            ExternalId = feature.ExternalId,
+            FeatureName = feature.Name,
+            GeometryFingerprint = fingerprint,
+            FeatureProperties = feature.Properties,
+            FeatureGeometry = feature.Geometry,
+            Confidence = MatchConfidence.Unmatched,
+            MatchReason = "excluded in an earlier import",
+            Decision = ProposalDecision.Exclude,
+            DecidedRole = TrailSourceLinkRole.Excluded,
+            DecidedBy = ExcludedBy,
+            DecidedAt = DateTime.UtcNow,
+        };
+    }
 
     private async Task FailAsync(TrailImportSession session, string message, CancellationToken ctoken)
     {

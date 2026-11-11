@@ -120,5 +120,8 @@ public class AdminHikeSubmissionsController : StigViddController
         return NoContent();
     }
 
-    private string CurrentUser() => User.Identity?.Name ?? "unknown";
+    private string CurrentUser()
+    {
+        return User.Identity?.Name ?? "unknown";
+    }
 }

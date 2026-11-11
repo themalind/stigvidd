@@ -19,8 +19,23 @@ public class RepositoryResult<T>
         Status = status;
     }
 
-    public static RepositoryResult<T> Success(T value) => new(value, RepositoryResultStatus.Success);
-    public static RepositoryResult<T> NotFound() => new(default, RepositoryResultStatus.NotFound);
-    public static RepositoryResult<T> Conflict() => new(default, RepositoryResultStatus.Conflict);
-    public static RepositoryResult<T> Error() => new(default, RepositoryResultStatus.Error);
+    public static RepositoryResult<T> Success(T value)
+    {
+        return new(value, RepositoryResultStatus.Success);
+    }
+
+    public static RepositoryResult<T> NotFound()
+    {
+        return new(default, RepositoryResultStatus.NotFound);
+    }
+
+    public static RepositoryResult<T> Conflict()
+    {
+        return new(default, RepositoryResultStatus.Conflict);
+    }
+
+    public static RepositoryResult<T> Error()
+    {
+        return new(default, RepositoryResultStatus.Error);
+    }
 }

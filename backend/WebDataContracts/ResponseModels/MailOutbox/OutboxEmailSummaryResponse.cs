@@ -52,7 +52,9 @@ public class OutboxEmailSummaryResponse
         DateTime? settledAt,
         DateTime? redactedAt,
         DateTime createdAt,
-        DateTime lastUpdatedAt) => new()
+        DateTime lastUpdatedAt)
+    {
+        return new()
         {
             Identifier = identifier,
             ToAddress = toAddress,
@@ -69,4 +71,5 @@ public class OutboxEmailSummaryResponse
             CreatedAt = createdAt,
             LastUpdatedAt = lastUpdatedAt,
         };
+    }
 }

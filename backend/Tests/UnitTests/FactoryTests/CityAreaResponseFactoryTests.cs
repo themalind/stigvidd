@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Services;
 using AwesomeAssertions;
 using Infrastructure.Enums;
@@ -21,7 +20,9 @@ public class CityAreaResponseFactoryTests
         return new CityAreaResponseFactory(cfg.Object);
     }
 
-    private static CityAreaProjection AreaWithLinks() => new(
+    private static CityAreaProjection AreaWithLinks()
+    {
+        return new(
         "area-dalsjofors",
         "Dalsjöfors",
         "Öster om Borås",
@@ -39,6 +40,7 @@ public class CityAreaResponseFactoryTests
                 "trail-tiveden", "Tiveden", 9.5M, 2, "En vandringsled genom skogen.",
                 4.5M, new CityAreaTrailImageProjection("img-tiveden", "tiveden.jpg"))
         ]);
+    }
 
     [Fact]
     public void Create_Single_MapsAllFieldsFacilitiesAndTrails()

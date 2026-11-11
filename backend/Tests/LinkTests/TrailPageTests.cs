@@ -8,15 +8,18 @@ namespace LinkTests;
 
 public class TrailPageTests
 {
-    private static object Trail(string name = "Sjöleden", object[]? images = null) => new
+    private static object Trail(string name = "Sjöleden", object[]? images = null)
     {
-        identifier = "trail-1",
-        name,
-        trailLength = 4.2m,
-        city = "Borås",
-        description = "En lugn runda längs sjön.",
-        trailImagesResponse = images ?? [new { identifier = "img-1", imageUrl = "https://media.example.test/a.webp", altText = "Sjön" }],
-    };
+        return new
+        {
+            identifier = "trail-1",
+            name,
+            trailLength = 4.2m,
+            city = "Borås",
+            description = "En lugn runda längs sjön.",
+            trailImagesResponse = images ?? [new { identifier = "img-1", imageUrl = "https://media.example.test/a.webp", altText = "Sjön" }],
+        };
+    }
 
     private static async Task<(HttpResponseMessage Response, string Html)> GetAsync(LinkServiceFactory factory, string path)
     {
@@ -119,10 +122,13 @@ public class TrailPageTests
     private const string IphoneUserAgent =
         "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1";
 
-    private static LinkServiceFactory StoreFactory(string playStoreUrl = "") => new LinkServiceFactory()
+    private static LinkServiceFactory StoreFactory(string playStoreUrl = "")
+    {
+        return new LinkServiceFactory()
         .With("AppLinks:AppStoreUrl", "https://apps.apple.com/se/app/id123")
         .With("AppLinks:PlayStoreUrl", playStoreUrl)
         .With("AppLinks:AndroidTestUrl", "https://example.test/#hamta");
+    }
 
     private static async Task<string> GetAsAsync(LinkServiceFactory factory, string path, string userAgent)
     {

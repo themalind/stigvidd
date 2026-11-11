@@ -15,12 +15,16 @@ public class UserPushTokenRepositoryTests : TestBase
     private const string ExistingToken = "ExponentPushToken[existing-token]";
     private const int ExistingUserId = 1;
 
-    private static IDbContextFactory<StigViddDbContext> CreateSeededFactoryWithTokens() =>
-        CreateSeededFactory(ctx => ctx.UserPushTokens.Add(
+    private static IDbContextFactory<StigViddDbContext> CreateSeededFactoryWithTokens()
+    {
+        return CreateSeededFactory(ctx => ctx.UserPushTokens.Add(
             new UserPushToken { UserId = ExistingUserId, ExpoToken = ExistingToken, Platform = "android" }));
+    }
 
-    private static UserPushTokenRepository BuildRepo(IDbContextFactory<StigViddDbContext>? factory = null) =>
-        new(factory ?? CreateSeededFactory(), NullLogger<UserPushTokenRepository>.Instance);
+    private static UserPushTokenRepository BuildRepo(IDbContextFactory<StigViddDbContext>? factory = null)
+    {
+        return new(factory ?? CreateSeededFactory(), NullLogger<UserPushTokenRepository>.Instance);
+    }
 
     [Fact]
     public async Task GetByTokenAndUserAsync_WhenFound_ReturnsSuccessWithToken()

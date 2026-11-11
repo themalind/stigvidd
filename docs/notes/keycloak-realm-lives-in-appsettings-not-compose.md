@@ -29,7 +29,7 @@ from *different* places than their names suggest:
 | consumer | reads |
 | --- | --- |
 | [`AuthExtensions.cs`](../../backend/StigviddAPI/Extensions/AuthExtensions.cs) `AddKeycloakWebApiAuthentication(configuration)` | binds the whole **`Keycloak`** section — this is what validates incoming tokens |
-| [`KeycloakAdminRepository.cs:26`](../../backend/Core/Repositories/KeycloakAdminRepository.cs#L26) | `configuration["Keycloak:realm"]` — the **`Keycloak`** section too, *not* `KeycloakAdminClient`'s, despite being the admin client |
+| [`KeycloakAdminRepository.cs:26`](../../backend/Core/Repositories/Account/KeycloakAdminRepository.cs#L26) | `configuration["Keycloak:realm"]` — the **`Keycloak`** section too, *not* `KeycloakAdminClient`'s, despite being the admin client |
 | `KeycloakAdminClientExtensions.cs` `GetKeycloakOptions<KeycloakAdminClientOptions>("KeycloakAdminClient")` | the `KeycloakAdminClient` section, for the token endpoint |
 
 So the admin repository builds its realm-scoped Admin API URLs from `Keycloak:realm` while

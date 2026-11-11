@@ -68,8 +68,10 @@ public class DomainEventRetentionService : BackgroundService
         }
     }
 
-    private static int ReadPositive(IConfiguration configuration, string key, int fallback) =>
-        int.TryParse(configuration[key], out var configured) && configured > 0 ? configured : fallback;
+    private static int ReadPositive(IConfiguration configuration, string key, int fallback)
+    {
+        return int.TryParse(configuration[key], out var configured) && configured > 0 ? configured : fallback;
+    }
 
     private static async Task<bool> WaitForNextTickAsync(PeriodicTimer timer, CancellationToken stoppingToken)
     {

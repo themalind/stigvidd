@@ -7,11 +7,15 @@ namespace Core.Spatial;
 
 public static class PathMetrics
 {
-    public static double LengthMetres(LineString path) =>
-        path.NumPoints < 2 ? 0.0 : Projected(path).Length;
+    public static double LengthMetres(LineString path)
+    {
+        return path.NumPoints < 2 ? 0.0 : Projected(path).Length;
+    }
 
-    public static decimal LengthKm(LineString path) =>
-        Math.Round((decimal)LengthMetres(path) / 1000m, 2);
+    public static decimal LengthKm(LineString path)
+    {
+        return Math.Round((decimal)LengthMetres(path) / 1000m, 2);
+    }
 
     // keep-comment: a GPS jump shows up as one long segment, e.g. a straight line across a lake
     public static double LongestGapMetres(LineString path)
@@ -28,6 +32,8 @@ public static class PathMetrics
         return longest;
     }
 
-    private static LineString Projected(LineString path) =>
-        LocalMetricProjection.CentredOn(path.EnvelopeInternal).Project(path);
+    private static LineString Projected(LineString path)
+    {
+        return LocalMetricProjection.CentredOn(path.EnvelopeInternal).Project(path);
+    }
 }

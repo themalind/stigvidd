@@ -97,14 +97,18 @@ public class TrailsController : StigViddController
 
     [Authorize]
     [HttpPut("{identifier}/like")]
-    public Task<ActionResult<TrailLikeResponse>> LikeTrail(string identifier, CancellationToken ctoken) =>
-        SetTrailLikeAsync(identifier, true, ctoken);
+    public Task<ActionResult<TrailLikeResponse>> LikeTrail(string identifier, CancellationToken ctoken)
+    {
+        return SetTrailLikeAsync(identifier, true, ctoken);
+    }
 
     [Authorize]
     [AllowWhenBanned]
     [HttpDelete("{identifier}/like")]
-    public Task<ActionResult<TrailLikeResponse>> UnlikeTrail(string identifier, CancellationToken ctoken) =>
-        SetTrailLikeAsync(identifier, false, ctoken);
+    public Task<ActionResult<TrailLikeResponse>> UnlikeTrail(string identifier, CancellationToken ctoken)
+    {
+        return SetTrailLikeAsync(identifier, false, ctoken);
+    }
 
     private async Task<ActionResult<TrailLikeResponse>> SetTrailLikeAsync(string identifier, bool liked, CancellationToken ctoken)
     {

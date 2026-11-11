@@ -71,6 +71,8 @@ public class MailTemplateCatalog : IMailTemplateCatalog
 
     // Keys are matched the way the renderer matches placeholders, so a caller writing
     // "Verify-Email" against "verify-email" is not a puzzle.
-    public MailTemplateDefinition? Find(string key) =>
-        Definitions.FirstOrDefault(d => string.Equals(d.Key, key, StringComparison.OrdinalIgnoreCase));
+    public MailTemplateDefinition? Find(string key)
+    {
+        return Definitions.FirstOrDefault(d => string.Equals(d.Key, key, StringComparison.OrdinalIgnoreCase));
+    }
 }

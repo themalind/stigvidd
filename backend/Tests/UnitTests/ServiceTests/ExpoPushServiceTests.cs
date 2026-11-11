@@ -27,14 +27,18 @@ public class ExpoPushServiceTests
         }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-            => Task.FromResult(new HttpResponseMessage(_statusCode)
+        {
+            return Task.FromResult(new HttpResponseMessage(_statusCode)
             {
                 Content = new StringContent(_jsonBody, Encoding.UTF8, "application/json")
             });
+        }
     }
 
     private static HttpClient CreateHttpClient(HttpStatusCode statusCode = HttpStatusCode.OK, string jsonBody = """{"data": []}""")
-        => new(new FakeHttpMessageHandler(statusCode, jsonBody)) { BaseAddress = new Uri("https://exp.host/") };
+    {
+        return new(new FakeHttpMessageHandler(statusCode, jsonBody)) { BaseAddress = new Uri("https://exp.host/") };
+    }
 
     private static ExpoPushService Build(
         Mock<IUserPushTokenRepository>? tokenRepoMock = null,
@@ -60,8 +64,10 @@ public class ExpoPushServiceTests
         );
     }
 
-    private static IEnumerable<UserPushToken> SingleToken(string token = "ExponentPushToken[test]") =>
-        [new UserPushToken { UserId = 1, ExpoToken = token, Platform = "ios" }];
+    private static IEnumerable<UserPushToken> SingleToken(string token = "ExponentPushToken[test]")
+    {
+        return [new UserPushToken { UserId = 1, ExpoToken = token, Platform = "ios" }];
+    }
 
     // RegisterTokenAsync
 
@@ -420,7 +426,10 @@ public class ExpoPushServiceTests
         }
     }
 
-    private static UserPushToken Token(int userId, string token) => new() { UserId = userId, ExpoToken = token, Platform = "ios" };
+    private static UserPushToken Token(int userId, string token)
+    {
+        return new() { UserId = userId, ExpoToken = token, Platform = "ios" };
+    }
 
     private static Mock<IUserPushTokenRepository> TokensFor(params UserPushToken[] tokens)
     {

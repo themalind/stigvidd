@@ -1,7 +1,6 @@
 ﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Infrastructure.Data;
@@ -25,8 +24,10 @@ public static class Utilities
     // every other geometry in the schema. No arguments still yields an EMPTY LineString (a
     // valid path with no points) — SpatiaLite takes one into a LINESTRING/4326 column,
     // because the SRID lives in the blob header independently of the point count.
-    public static LineString GeoPath(params (double Longitude, double Latitude)[] points) =>
-        GeoPointFactory.FromLonLatPath(points.Select(p => new Coordinate(p.Longitude, p.Latitude)));
+    public static LineString GeoPath(params (double Longitude, double Latitude)[] points)
+    {
+        return GeoPointFactory.FromLonLatPath(points.Select(p => new Coordinate(p.Longitude, p.Latitude)));
+    }
 
     public static void InitializeDbForTests(StigViddDbContext db)
     {
@@ -640,70 +641,87 @@ public static class Utilities
 
     public static class Stubs
     {
-        public static Hike Hike() => new()
+        public static Hike Hike()
         {
-            Id = 1,
-            Identifier = Identifiers.Hike1,
-            Name = "TestHike1",
-            HikeLength = 10,
-            Duration = 3600000,
-            GeoPath = GeoPath(),
-            CreatedBy = Identifiers.User,
-            UserId = 1,
-            CreatedByNickName = "Nick"
-        };
+            return new()
+            {
+                Id = 1,
+                Identifier = Identifiers.Hike1,
+                Name = "TestHike1",
+                HikeLength = 10,
+                Duration = 3600000,
+                GeoPath = GeoPath(),
+                CreatedBy = Identifiers.User,
+                UserId = 1,
+                CreatedByNickName = "Nick"
+            };
+        }
 
-        public static Trail Trail() => new()
+        public static Trail Trail()
         {
-            Id = 4,
-            Identifier = Identifiers.Trail4,
-            Name = "Vildmarksleden Årås",
-            TrailLength = 8.5M,
-            Classification = 2,
-            Accessibility = true,
-            IsVerified = true,
-            City = "Arås",
-            GeoPath = GeoPointFactory.FromLonLatPath(
+            return new()
+            {
+                Id = 4,
+                Identifier = Identifiers.Trail4,
+                Name = "Vildmarksleden Årås",
+                TrailLength = 8.5M,
+                Classification = 2,
+                Accessibility = true,
+                IsVerified = true,
+                City = "Arås",
+                GeoPath = GeoPointFactory.FromLonLatPath(
                 [new Coordinate(12.80, 57.62), new Coordinate(12.81, 57.63)]),
-        };
+            };
+        }
 
-        public static Review Review(bool withImages = false) => new()
+        public static Review Review(bool withImages = false)
         {
-            Id = 1,
-            Identifier = Identifiers.Review5,
-            TrailReview = "Great trail",
-            Rating = 4.0M,
-            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
-            Trail = new Trail { Id = 7, Identifier = Identifiers.Trail7, Name = "Nässehult", TrailLength = 5M },
-            CreatedAt = DateTime.UtcNow,
-            ReviewImages = withImages
+            return new()
+            {
+                Id = 1,
+                Identifier = Identifiers.Review5,
+                TrailReview = "Great trail",
+                Rating = 4.0M,
+                User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
+                Trail = new Trail { Id = 7, Identifier = Identifiers.Trail7, Name = "Nässehult", TrailLength = 5M },
+                CreatedAt = DateTime.UtcNow,
+                ReviewImages = withImages
                 ? [new ReviewImage { Id = 1, Identifier = "img-1", ImageUrl = "reviews/img.jpg" }]
                 : []
-        };
+            };
+        }
 
-        public static TrailObstacle Obstacle(List<TrailObstacleSolvedVote>? votes = null) => new()
+        public static TrailObstacle Obstacle(List<TrailObstacleSolvedVote>? votes = null)
         {
-            Id = 1,
-            Identifier = Identifiers.Obstacle1,
-            Description = "Fallen tree",
-            IssueType = TrailIssueType.FallenTree,
-            TrailId = 1,
-            UserId = 1,
-            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
-            SolvedVotes = votes ?? []
-        };
+            return new()
+            {
+                Id = 1,
+                Identifier = Identifiers.Obstacle1,
+                Description = "Fallen tree",
+                IssueType = TrailIssueType.FallenTree,
+                TrailId = 1,
+                UserId = 1,
+                User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
+                SolvedVotes = votes ?? []
+            };
+        }
 
-        public static TrailObstacleSolvedVote Vote() => new()
+        public static TrailObstacleSolvedVote Vote()
         {
-            Id = 1,
-            Identifier = "vote-1",
-            TrailObstacleId = 1,
-            UserId = 1,
-            User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" }
-        };
+            return new()
+            {
+                Id = 1,
+                Identifier = "vote-1",
+                TrailObstacleId = 1,
+                UserId = 1,
+                User = new User { Id = 1, Identifier = Identifiers.User, NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" }
+            };
+        }
 
-        public static UserResponseModel UserResponse() =>
-            UserResponseModel.Create(Identifiers.User, "Nick", "nick@test.com", null, null);
+        public static UserResponseModel UserResponse()
+        {
+            return UserResponseModel.Create(Identifiers.User, "Nick", "nick@test.com", null, null);
+        }
 
         public static IFormFile FakeFile(string name = "test.jpg")
         {

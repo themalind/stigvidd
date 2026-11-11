@@ -11,7 +11,10 @@ public class MediaLibraryQueryValidatorTests
 {
     private readonly MediaLibraryQueryValidator _validator = new();
 
-    private static MediaLibraryQuery Query() => new();
+    private static MediaLibraryQuery Query()
+    {
+        return new();
+    }
 
     [Fact]
     public void TheDefaultQuery_IsAccepted()

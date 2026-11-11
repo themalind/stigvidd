@@ -172,16 +172,19 @@ public class FacilityRepositoryTests : TestBase
         verify.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
 
-    private static FacilityImage MakeImage(string identifier, string url = "facilities/img.jpg") => new()
+    private static FacilityImage MakeImage(string identifier, string url = "facilities/img.jpg")
     {
-        Identifier = identifier,
-        ImageUrl = url,
-        Width = 800,
-        Height = 600,
-        SizeBytes = 12345,
-        CreatedAt = DateTime.UtcNow,
-        LastUpdatedAt = DateTime.UtcNow
-    };
+        return new()
+        {
+            Identifier = identifier,
+            ImageUrl = url,
+            Width = 800,
+            Height = 600,
+            SizeBytes = 12345,
+            CreatedAt = DateTime.UtcNow,
+            LastUpdatedAt = DateTime.UtcNow
+        };
+    }
 
     [Fact]
     public async Task AddFacilityImagesAsync_WhenFacilityExists_PersistsImagesLinkedToFacility()

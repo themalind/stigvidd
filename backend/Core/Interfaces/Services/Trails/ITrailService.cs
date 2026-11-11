@@ -1,0 +1,33 @@
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Microsoft.AspNetCore.Http;
+using WebDataContracts.RequestModels.Trail;
+using WebDataContracts.ResponseModels.Trail;
+
+namespace Core.Interfaces.Services.Trails;
+
+public interface ITrailService
+{
+    Task<Result<int>> GetTrailIdByIdentifierAsync(string identifier, CancellationToken ctoken);
+    Task<Result<TrailResponse?>> GetTrailByIdentifierWithoutCoordinatesAsync(string identifier, CancellationToken ctoken);
+    Task<Result<CoordinatesResponse?>> GetCoordinatesByTrailIdentifierAsync(string identifier, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailOverviewResponse?>>> GetPopularTrailOverviewsAsync(double? userLatitude, double? userLongitude, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailMarkerResponse>>> GetAllTrailMarkersAsync(CancellationToken ctoken);
+    Task<Result<TrailCardResponse?>> GetTrailCardByIdentifierAsync(string identifier, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetTrailCardsByIdentifiersAsync(IReadOnlyCollection<string> identifiers, CancellationToken ctoken);
+    Task<Result<TrailResponse?>> AddTrailAsync(CreateTrailRequest request, IFormFile trailSymbolImage, IFormFileCollection TrailImageUrls, string userIdentifier, CancellationToken ctoken);
+    Task<Result<TrailResponse?>> UpdateTrailAsync(UpdateTrailRequest request, string trailIdentifier, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailShortInfoResponse>>> GetAllTrailsWithBasicInfoAsync(CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailImageResponse>>> AddTrailImagesAsync(string trailIdentifier, IFormFileCollection images, ImageProcessingOptions options, CancellationToken ctoken);
+    Task<Result<string>> SetTrailSymbolAsync(string trailIdentifier, IFormFile symbol, ImageProcessingOptions options, CancellationToken ctoken);
+    Task<Result> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<AdminTrailListItemResponse>>> GetAllTrailsForAdminAsync(CancellationToken ctoken);
+    Task<Result<TrailResponse?>> GetTrailForAdminAsync(string identifier, CancellationToken ctoken);
+    Task<Result<AdminTrailPathResponse>> GetTrailPathForAdminAsync(string identifier, CancellationToken ctoken);
+    Task<Result> SetTrailVerifiedAsync(string identifier, bool isVerified, CancellationToken ctoken);
+    Task<Result<IReadOnlyCollection<TrailCardResponse>>> GetPopularContributedTrailsAsync(double? userLatitude, double? userLongitude, CancellationToken ctoken);
+    Task<Result<TrailLikeResponse>> GetTrailLikeAsync(string trailIdentifier, string userIdentifier, CancellationToken ctoken);
+    Task<Result<TrailLikeResponse>> SetTrailLikeAsync(string trailIdentifier, string userIdentifier, bool liked, CancellationToken ctoken);
+}
+

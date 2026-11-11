@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
@@ -19,20 +18,23 @@ public class TrailResponseFactoryTests
         return new TrailResponseFactory(cfg.Object);
     }
 
-    private static Trail BaseTrail() => new()
+    private static Trail BaseTrail()
     {
-        Id = 1,
-        Identifier = "test-trail-id",
-        Name = "Test Trail",
-        TrailLength = 5.0M,
-        Classification = 2,
-        Accessibility = false,
-        IsVerified = true,
-        City = "TestCity",
-        CreatedAt = DateTime.UtcNow,
-        LastUpdatedAt = DateTime.UtcNow,
-        TrailImages = []
-    };
+        return new()
+        {
+            Id = 1,
+            Identifier = "test-trail-id",
+            Name = "Test Trail",
+            TrailLength = 5.0M,
+            Classification = 2,
+            Accessibility = false,
+            IsVerified = true,
+            City = "TestCity",
+            CreatedAt = DateTime.UtcNow,
+            LastUpdatedAt = DateTime.UtcNow,
+            TrailImages = []
+        };
+    }
 
     [Fact]
     public void Create_WhenTrailHasASymbol_PrependsTheBaseUrlToTheStoredPath()

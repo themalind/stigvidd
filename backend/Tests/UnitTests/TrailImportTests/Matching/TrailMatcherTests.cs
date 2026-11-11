@@ -21,12 +21,20 @@ public class TrailMatcherTests
         return new LineString([.. Enumerable.Range(0, points).Select(i => new Coordinate(x, startY + i * step))]);
     }
 
-    private static TrailCandidate Candidate(int id, LineString geometry) =>
-        new(id, GeometryFingerprint.Compute(geometry), geometry);
+    private static TrailCandidate Candidate(int id, LineString geometry)
+    {
+        return new(id, GeometryFingerprint.Compute(geometry), geometry);
+    }
 
-    private static double Metres(double metres) => metres / 111372.0;
+    private static double Metres(double metres)
+    {
+        return metres / 111372.0;
+    }
 
-    private static double EastMetres(double metres) => Metres(metres) / Math.Cos(57.68 * Math.PI / 180);
+    private static double EastMetres(double metres)
+    {
+        return Metres(metres) / Math.Cos(57.68 * Math.PI / 180);
+    }
 
     [Fact]
     public void Match_ForAnIdenticalGeometry_ShouldBeCertain()

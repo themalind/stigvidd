@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.HikeSubmission;
+using Core.Validators.Hikes;
 using WebDataContracts.RequestModels.HikeSubmission;
 
 namespace UnitTests.ValidatorTests;
@@ -11,18 +11,21 @@ public class CreateHikeSubmissionRequestValidatorTests
 {
     private readonly CreateHikeSubmissionRequestValidator _validator = new();
 
-    private static CreateHikeSubmissionRequest ValidRequest() => new()
+    private static CreateHikeSubmissionRequest ValidRequest()
     {
-        HikeIdentifier = "hike-1",
-        Name = "Kvällsrunda",
-        Description = "Runt sjön",
-        Classification = 2,
-        GettingThere = "Buss 3",
-        City = "Borås",
-        AcceptTransfer = true,
-        ConsentVersion = HikeSubmissionConsent.CurrentVersion,
-        ConsentLocale = "sv",
-    };
+        return new()
+        {
+            HikeIdentifier = "hike-1",
+            Name = "Kvällsrunda",
+            Description = "Runt sjön",
+            Classification = 2,
+            GettingThere = "Buss 3",
+            City = "Borås",
+            AcceptTransfer = true,
+            ConsentVersion = HikeSubmissionConsent.CurrentVersion,
+            ConsentLocale = "sv",
+        };
+    }
 
     [Fact]
     public void Validate_WithTheCurrentConsent_ShouldPass()

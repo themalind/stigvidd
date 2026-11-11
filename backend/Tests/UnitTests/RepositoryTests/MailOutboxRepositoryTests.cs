@@ -15,8 +15,10 @@ public class MailOutboxRepositoryTests : TestBase
 {
     private const int MaxAttempts = 5;
 
-    private static MailOutboxRepository Build(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<MailOutboxRepository>.Instance);
+    private static MailOutboxRepository Build(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<MailOutboxRepository>.Instance);
+    }
 
     private static OutboxEmail MakeEmail(
         int id,
@@ -24,8 +26,9 @@ public class MailOutboxRepositoryTests : TestBase
         DateTime? nextAttemptAt = null,
         int attempts = 0,
         DateTime? settledAt = null,
-        DateTime? redactedAt = null) =>
-        new()
+        DateTime? redactedAt = null)
+    {
+        return new()
         {
             Id = id,
             Identifier = $"mail-{id}",
@@ -42,9 +45,12 @@ public class MailOutboxRepositoryTests : TestBase
             CreatedAt = Utilities.SeedDates.Created,
             LastUpdatedAt = Utilities.SeedDates.Updated,
         };
+    }
 
-    private static Action<StigViddDbContext> Seed(params OutboxEmail[] emails) =>
-        db => db.OutboxEmails.AddRange(emails);
+    private static Action<StigViddDbContext> Seed(params OutboxEmail[] emails)
+    {
+        return db => db.OutboxEmails.AddRange(emails);
+    }
 
     // ---- The admin surface ----
 

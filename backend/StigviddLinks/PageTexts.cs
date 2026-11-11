@@ -89,6 +89,8 @@ public record PageTexts
     };
 
     // Swedish unless ?lang=en asks otherwise: link previews are fetched by crawlers whose Accept-Language is English. keep-comment: why the header is not used
-    public static PageTexts For(string? lang) =>
-        string.Equals(lang, English.Code, StringComparison.OrdinalIgnoreCase) ? English : Swedish;
+    public static PageTexts For(string? lang)
+    {
+        return string.Equals(lang, English.Code, StringComparison.OrdinalIgnoreCase) ? English : Swedish;
+    }
 }

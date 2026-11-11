@@ -46,7 +46,10 @@ public class HikeShareRecipientServiceTests
         );
     }
 
-    private static SenderProjection Sender(int id = 1) => new(id, "NaturElskaren");
+    private static SenderProjection Sender(int id = 1)
+    {
+        return new(id, "NaturElskaren");
+    }
 
     // Sender, hike and reshare permission all answer yes, so a test only sets up the distribution side.
     private static (Mock<IUserRepository> UserRepo, Mock<IHikeRepository> HikeRepo, Mock<IHikeShareRecipientRepository> RecipientRepo) AllowedResharer()
@@ -138,27 +141,32 @@ public class HikeShareRecipientServiceTests
         recorded.For(MetricNames.HikeShareRecipients).Should().BeEmpty();
     }
 
-    private static Hike HikeOwnedByOther() => new()
+    private static Hike HikeOwnedByOther()
     {
-        Id = 10,
-        Identifier = "hike-identifier",
-        Name = "Test",
-        CreatedBy = "owner-identifier",
-        UserId = 99,
-        GeoPath = UnitTests.Utilities.GeoPath(),
-        HikeLength = 10,
-        Duration = 3600,
-        CreatedByNickName = "owner-nickname",
-    };
+        return new()
+        {
+            Id = 10,
+            Identifier = "hike-identifier",
+            Name = "Test",
+            CreatedBy = "owner-identifier",
+            UserId = 99,
+            GeoPath = UnitTests.Utilities.GeoPath(),
+            HikeLength = 10,
+            Duration = 3600,
+            CreatedByNickName = "owner-nickname",
+        };
+    }
 
     // The whole reshare gate is one question: does this sender hold an accepted share of
     // this hike that the owner marked as resharable? HikeShare is keyed on
     // (HikeId, SharedWithId), so at most one row can answer it. Every test that reaches past
     // the gate has to answer it; HasHikeSharedWithUserAsync is only the later duplicate
     // check against the *target*, and most tests return before reaching it.
-    private static void AllowReshare(Mock<IHikeShareRecipientRepository> repoMock, bool allowed = true) =>
+    private static void AllowReshare(Mock<IHikeShareRecipientRepository> repoMock, bool allowed = true)
+    {
         repoMock.Setup(r => r.IsAllowedToReshareHikeAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(RepositoryResult<bool>.Success(allowed));
+    }
 
     [Fact]
     public async Task GetAllHikesSharedWithUserAsync_WhenRepositoryError_ReturnsServerError()

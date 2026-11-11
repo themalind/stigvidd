@@ -21,8 +21,10 @@ public static class TrailMatcher
     // feature before the expensive comparison; far wider than the tolerance needs.
     private const double EnvelopeSlackDegrees = 0.005;
 
-    public static TrailMatch Match(LineString feature, IReadOnlyCollection<TrailCandidate> candidates) =>
-        Match(feature, GeometryFingerprint.Compute(feature), candidates);
+    public static TrailMatch Match(LineString feature, IReadOnlyCollection<TrailCandidate> candidates)
+    {
+        return Match(feature, GeometryFingerprint.Compute(feature), candidates);
+    }
 
     // Takes the fingerprint from the caller, which computes it once per feature to look
     // the feature up among the excluded links before any trail is compared.
@@ -91,7 +93,9 @@ public static class TrailMatcher
     }
 
     private static TrailMatch Matched(TrailCandidate candidate, GeometryComparison.Comparison comparison,
-        MatchConfidence confidence, string fingerprint, string reason) =>
-        new(candidate.TrailId, candidate.TrailId, confidence, comparison.CoverageForward, comparison.CoverageBackward,
+        MatchConfidence confidence, string fingerprint, string reason)
+    {
+        return new(candidate.TrailId, candidate.TrailId, confidence, comparison.CoverageForward, comparison.CoverageBackward,
             comparison.HausdorffMetres, reason, fingerprint);
+    }
 }

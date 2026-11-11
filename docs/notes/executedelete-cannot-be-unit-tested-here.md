@@ -19,7 +19,7 @@ no unit test at all.
 ## Why you reach for it anyway
 
 The alternative is loading the entities and `RemoveRange`. For
-[`MailOutboxRepository.PurgeSentBeforeAsync`](../../backend/Core/Repositories/MailOutboxRepository.cs)
+[`MailOutboxRepository.PurgeSentBeforeAsync`](../../backend/Core/Repositories/Mail/MailOutboxRepository.cs)
 that means materialising `BodyHtml` and `BodyText` — whole rendered mail bodies — for every row
 being deleted, into the change tracker, to then issue one `DELETE` each. `ExecuteDeleteAsync` is
 one statement and hands back the affected row count, which is exactly what the caller wants to

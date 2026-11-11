@@ -17,7 +17,10 @@ public sealed class RecordingLogger<T> : ILogger<T>
         return null;
     }
 
-    public bool IsEnabled(LogLevel logLevel) => true;
+    public bool IsEnabled(LogLevel logLevel)
+    {
+        return true;
+    }
 
     public void Log<TState>(
         LogLevel logLevel,
@@ -29,8 +32,10 @@ public sealed class RecordingLogger<T> : ILogger<T>
         Entries.Add(new LogEntry(logLevel, formatter(state, exception), ToDictionary(state), exception));
     }
 
-    private static IReadOnlyDictionary<string, object?> ToDictionary<TState>(TState state) =>
-        state is IEnumerable<KeyValuePair<string, object?>> pairs
+    private static IReadOnlyDictionary<string, object?> ToDictionary<TState>(TState state)
+    {
+        return state is IEnumerable<KeyValuePair<string, object?>> pairs
             ? pairs.GroupBy(pair => pair.Key).ToDictionary(group => group.Key, group => group.Last().Value)
             : new Dictionary<string, object?>();
+    }
 }

@@ -24,18 +24,23 @@ public class TrailImportRepositoryTests
     private sealed class ImmediateRetry(IDbContextFactory<StigViddDbContext> factory)
         : TrailImportRepository(factory, NullLogger<TrailImportRepository>.Instance)
     {
-        protected override Task WaitBeforeRetryAsync(int attempt, CancellationToken ctoken) =>
-            Task.CompletedTask;
+        protected override Task WaitBeforeRetryAsync(int attempt, CancellationToken ctoken)
+        {
+            return Task.CompletedTask;
+        }
     }
 
     private const int Attempts = 5;   // the first try plus four retries
 
-    private static TrailImportProposal Proposal() => new()
+    private static TrailImportProposal Proposal()
     {
-        ExternalId = "1",
-        FeatureName = "Feature",
-        GeometryFingerprint = new string('a', 64),
-    };
+        return new()
+        {
+            ExternalId = "1",
+            FeatureName = "Feature",
+            GeometryFingerprint = new string('a', 64),
+        };
+    }
 
     private static Mock<IDbContextFactory<StigViddDbContext>> FailingWith(Exception ex)
     {

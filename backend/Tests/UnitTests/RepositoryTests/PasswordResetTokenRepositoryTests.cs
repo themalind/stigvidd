@@ -16,18 +16,23 @@ public class PasswordResetTokenRepositoryTests : TestBase
     private const string SeededEmail = "natur@example.local";
     private const int SeededUserId = 1;
 
-    private static PasswordResetTokenRepository Build(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<PasswordResetTokenRepository>.Instance);
-
-    private static PasswordResetToken NewToken(string hash, DateTime? consumedAt = null) => new()
+    private static PasswordResetTokenRepository Build(IDbContextFactory<StigViddDbContext> factory)
     {
-        UserId = SeededUserId,
-        TokenHash = hash,
-        ExpiresAt = DateTime.UtcNow.AddHours(2),
-        ConsumedAt = consumedAt,
-        CreatedAt = DateTime.UtcNow,
-        LastUpdatedAt = DateTime.UtcNow,
-    };
+        return new(factory, NullLogger<PasswordResetTokenRepository>.Instance);
+    }
+
+    private static PasswordResetToken NewToken(string hash, DateTime? consumedAt = null)
+    {
+        return new()
+        {
+            UserId = SeededUserId,
+            TokenHash = hash,
+            ExpiresAt = DateTime.UtcNow.AddHours(2),
+            ConsumedAt = consumedAt,
+            CreatedAt = DateTime.UtcNow,
+            LastUpdatedAt = DateTime.UtcNow,
+        };
+    }
 
     [Fact]
     public async Task GetUserByEmailAsync_MatchesCaseInsensitively()

@@ -34,13 +34,20 @@ public class MailOutboxRetentionIntegrationTests : IClassFixture<StigViddWebAppl
         _factory.SeedDatabase();
     }
 
-    private IServiceScope NewScope() => _factory.Services.CreateScope();
+    private IServiceScope NewScope()
+    {
+        return _factory.Services.CreateScope();
+    }
 
-    private static IMailOutboxRepository Repository(IServiceScope scope) =>
-        scope.ServiceProvider.GetRequiredService<IMailOutboxRepository>();
+    private static IMailOutboxRepository Repository(IServiceScope scope)
+    {
+        return scope.ServiceProvider.GetRequiredService<IMailOutboxRepository>();
+    }
 
-    private StigViddDbContext NewContext() =>
-        _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    private StigViddDbContext NewContext()
+    {
+        return _factory.Services.GetRequiredService<IDbContextFactory<StigViddDbContext>>().CreateDbContext();
+    }
 
     private const string LeavingIdentifier = "b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e";
     private const string LeavingEmail = "vandrar@example.local";

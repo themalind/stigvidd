@@ -37,7 +37,10 @@ public class ReviewRepositoryTests : TestBase
             TrailIdentifier = r.Trail != null ? r.Trail.Identifier : string.Empty
         };
 
-    private ReviewRepository BuildRepo() => new(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
+    private ReviewRepository BuildRepo()
+    {
+        return new(CreateSeededFactory(), NullLogger<ReviewRepository>.Instance);
+    }
 
     [Fact]
     public async Task GetReviewsByTrailIdentifier_WhenTrailHasReviews_ReturnsCorrectCount()

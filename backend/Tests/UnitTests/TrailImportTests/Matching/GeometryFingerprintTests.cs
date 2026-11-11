@@ -16,8 +16,10 @@ namespace UnitTests.TrailImportTests.Matching;
 /// </summary>
 public class GeometryFingerprintTests
 {
-    private static LineString Line(params (double X, double Y)[] points) =>
-        new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    private static LineString Line(params (double X, double Y)[] points)
+    {
+        return new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    }
 
     [Fact]
     public void Compute_ForTheSameGeometry_ShouldReturnTheSameFingerprint()

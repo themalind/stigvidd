@@ -15,8 +15,13 @@ public class TrailImportAnalysisQueue : ITrailImportAnalysisQueue
         SingleReader = true,
     });
 
-    public void Enqueue(int sessionId) => _sessions.Writer.TryWrite(sessionId);
+    public void Enqueue(int sessionId)
+    {
+        _sessions.Writer.TryWrite(sessionId);
+    }
 
-    public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken) =>
-        _sessions.Reader.ReadAllAsync(ctoken);
+    public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken)
+    {
+        return _sessions.Reader.ReadAllAsync(ctoken);
+    }
 }

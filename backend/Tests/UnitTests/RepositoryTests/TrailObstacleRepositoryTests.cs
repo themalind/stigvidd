@@ -32,8 +32,10 @@ public class TrailObstacleRepositoryTests : TestBase
     private const int ObstacleId3 = 3;
 
     // Empty configuration: the tests assert on the retention defaults, 30 days and 3 votes.
-    private static TrailObstacleRepository BuildRepo(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<TrailObstacleRepository>.Instance, new ConfigurationBuilder().Build());
+    private static TrailObstacleRepository BuildRepo(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<TrailObstacleRepository>.Instance, new ConfigurationBuilder().Build());
+    }
 
     private static IDbContextFactory<StigViddDbContext> CreateFactoryWithObstacleAt(DateTime createdAt)
     {

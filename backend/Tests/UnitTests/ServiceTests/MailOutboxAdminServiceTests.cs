@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -22,33 +21,43 @@ public class MailOutboxAdminServiceTests
     {
         public List<int> Enqueued { get; } = [];
 
-        public void Enqueue(int outboxEmailId) => Enqueued.Add(outboxEmailId);
+        public void Enqueue(int outboxEmailId)
+        {
+            Enqueued.Add(outboxEmailId);
+        }
 
-        public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken) =>
+        public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken)
+        {
             throw new NotSupportedException();
+        }
     }
 
     private static OutboxEmail MakeEmail(
         OutboxEmailStatus status = OutboxEmailStatus.Pending,
-        DateTime? redactedAt = null) => new()
+        DateTime? redactedAt = null)
     {
-        Id = 42,
-        Identifier = "mail-42",
-        ToAddress = "vandrare@example.com",
-        Subject = "Hej",
-        BodyHtml = redactedAt is null ? "<p>Hej</p>" : string.Empty,
-        BodyText = redactedAt is null ? "Hej" : string.Empty,
-        TemplateKey = "welcome",
-        Status = status,
-        RedactedAt = redactedAt,
-    };
+        return new()
+        {
+            Id = 42,
+            Identifier = "mail-42",
+            ToAddress = "vandrare@example.com",
+            Subject = "Hej",
+            BodyHtml = redactedAt is null ? "<p>Hej</p>" : string.Empty,
+            BodyText = redactedAt is null ? "Hej" : string.Empty,
+            TemplateKey = "welcome",
+            Status = status,
+            RedactedAt = redactedAt,
+        };
+    }
 
     private static MailOutboxAdminService Build(
-        Mock<IMailOutboxRepository> repository, IMailOutboxQueue queue) =>
-        new(repository.Object,
+        Mock<IMailOutboxRepository> repository, IMailOutboxQueue queue)
+    {
+        return new(repository.Object,
             queue,
             new MailOutboxResponseFactory(),
             NullLogger<MailOutboxAdminService>.Instance);
+    }
 
     [Fact]
     public async Task RetryAsync_SignalsTheQueueWithTheRowsIdOnlyAfterTheRepositoryCommitted()

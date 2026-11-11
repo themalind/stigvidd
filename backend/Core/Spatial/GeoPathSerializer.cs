@@ -11,13 +11,17 @@ namespace Core.Spatial;
 // A null path (a hike or trail without a stored route) serializes to an empty array.
 public static class GeoPathSerializer
 {
-    public static string ToCoordinateJson(LineString? geoPath) =>
-        geoPath is null
+    public static string ToCoordinateJson(LineString? geoPath)
+    {
+        return geoPath is null
             ? "[]"
             : JsonSerializer.Serialize(
                 geoPath.Coordinates.Select(c => new { latitude = c.Y, longitude = c.X }));
+    }
 
     // [longitude, latitude] pairs, the order GeoJSON uses and the review map draws.
-    public static IReadOnlyList<double[]> ToCoordinatePairs(LineString line) =>
-        line.Coordinates.Select(c => new[] { c.X, c.Y }).ToList();
+    public static IReadOnlyList<double[]> ToCoordinatePairs(LineString line)
+    {
+        return line.Coordinates.Select(c => new[] { c.X, c.Y }).ToList();
+    }
 }

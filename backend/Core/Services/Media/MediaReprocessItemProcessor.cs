@@ -151,7 +151,7 @@ public class MediaReprocessItemProcessor
             : $"{ex.Message} ({innermost.GetType().Name}: {innermost.Message})";
     }
 
-    // keep-comment: the result stays in the source's folder because the app labels placeholders by "mock" in the URL (app/src/utils/is-mock-image.ts) - a mock/ image moved to trails/ would lose its "Example image" badge
+    // keep-comment: the result stays in the source's folder because the app labels placeholders by "mock" in the URL (app/src/components/media/is-mock-image.ts) - a mock/ image moved to trails/ would lose its "Example image" badge
     public static string TargetDirectory(string sourcePath, string ownerType)
     {
         var relative = sourcePath.TrimStart('/');
@@ -163,8 +163,10 @@ public class MediaReprocessItemProcessor
         return ownerType == "Trail" ? "trails" : "facilities";
     }
 
-    private static ImageProcessingOptions ParseOptions(string? optionsJson) =>
-        string.IsNullOrWhiteSpace(optionsJson)
+    private static ImageProcessingOptions ParseOptions(string? optionsJson)
+    {
+        return string.IsNullOrWhiteSpace(optionsJson)
             ? new ImageProcessingOptions()
             : JsonSerializer.Deserialize<ImageProcessingOptions>(optionsJson) ?? new ImageProcessingOptions();
+    }
 }

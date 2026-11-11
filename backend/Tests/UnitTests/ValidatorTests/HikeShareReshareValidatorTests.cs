@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Validators.HikeShare;
+using Core.Validators.HikeShares;
 using AwesomeAssertions;
 using System.Text.Json;
 using WebDataContracts.RequestModels.HikeShare;
@@ -12,11 +12,14 @@ public class HikeShareReshareValidatorTests
 {
     private readonly HikeShareReshareValidator _validator = new();
 
-    private static ReshareSharedHikeRequest ValidRequest() => new()
+    private static ReshareSharedHikeRequest ValidRequest()
     {
-        HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90",
-        ReShareToNames = ["VandrarVennen"]
-    };
+        return new()
+        {
+            HikeIdentifier = "3f9c1b7e-8a42-4e6d-9c5f-2a7b1d8e4f90",
+            ReShareToNames = ["VandrarVennen"]
+        };
+    }
 
     [Fact]
     public void Validate_WithValidData_ShouldPass()

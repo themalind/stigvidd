@@ -7,8 +7,10 @@ namespace Core.Logging;
 
 public static partial class LogRedaction
 {
-    public static string ScrubEmails(string? text) =>
-        string.IsNullOrEmpty(text) ? "" : EmailPattern().Replace(text, "***@$1");
+    public static string ScrubEmails(string? text)
+    {
+        return string.IsNullOrEmpty(text) ? "" : EmailPattern().Replace(text, "***@$1");
+    }
 
     public static string MaskEmail(string? email)
     {

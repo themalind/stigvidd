@@ -28,8 +28,10 @@ public class KeycloakRealmRolesTransformationTests
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"));
     }
 
-    private static async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal) =>
-        await new KeycloakRealmRolesTransformation(NullLogger<KeycloakRealmRolesTransformation>.Instance).TransformAsync(principal);
+    private static async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
+    {
+        return await new KeycloakRealmRolesTransformation(NullLogger<KeycloakRealmRolesTransformation>.Instance).TransformAsync(principal);
+    }
 
     [Fact]
     public async Task TransformAsync_WithRealmRoles_AddsThemAsRoleClaims()

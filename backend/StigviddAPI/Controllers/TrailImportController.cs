@@ -203,13 +203,19 @@ public class TrailImportController : StigViddController
 
     /// <summary>The confidence and decision names the filters and requests accept.</summary>
     [HttpGet("vocabulary")]
-    public ActionResult GetVocabulary() => Ok(new
+    public ActionResult GetVocabulary()
     {
-        confidences = Enum.GetNames<MatchConfidence>(),
-        decisions = Enum.GetNames<ProposalDecision>(),
-        roles = Enum.GetNames<TrailSourceLinkRole>(),
-        statuses = Enum.GetNames<ImportSessionStatus>(),
-    });
+        return Ok(new
+        {
+            confidences = Enum.GetNames<MatchConfidence>(),
+            decisions = Enum.GetNames<ProposalDecision>(),
+            roles = Enum.GetNames<TrailSourceLinkRole>(),
+            statuses = Enum.GetNames<ImportSessionStatus>(),
+        });
+    }
 
-    private string CurrentUser() => User.Identity?.Name ?? "unknown";
+    private string CurrentUser()
+    {
+        return User.Identity?.Name ?? "unknown";
+    }
 }

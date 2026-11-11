@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -37,32 +36,40 @@ public class TrailServiceTests
             new MemoryCache(new MemoryCacheOptions()));
     }
 
-    private static TrailResponse StubTrailResponse() =>
-        TrailResponse.Create(Utilities.Identifiers.Trail4, "Vildmarksleden Årås", 8.5M, 2, true,
+    private static TrailResponse StubTrailResponse()
+    {
+        return TrailResponse.Create(Utilities.Identifiers.Trail4, "Vildmarksleden Årås", 8.5M, 2, true,
             "Info", "Symbol", "SymbolImg", "Desc", "FullDesc", "Tags",
             "user-id", true, "Arås", null, null, null);
+    }
 
-    private static UpdateTrailRequest ValidUpdateRequest() => new()
+    private static UpdateTrailRequest ValidUpdateRequest()
     {
-        Name = "Updated Trail",
-        TrailLength = 12.0M,
-        Classification = 3,
-        Accessibility = false,
-        Description = "Updated description",
-    };
+        return new()
+        {
+            Name = "Updated Trail",
+            TrailLength = 12.0M,
+            Classification = 3,
+            Accessibility = false,
+            Description = "Updated description",
+        };
+    }
 
-    private static CreateTrailRequest ValidRequest() => new()
+    private static CreateTrailRequest ValidRequest()
     {
-        Name = "Test Trail",
-        TrailLength = 10.5M,
-        Classification = 2,
-        Accessibility = true,
-        Description = "A test trail",
-        FullDescription = "Full description",
-        Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80},{\"latitude\":57.63,\"longitude\":12.81}]",
-        Tags = "[\"skog\"]",
-        City = "Test City"
-    };
+        return new()
+        {
+            Name = "Test Trail",
+            TrailLength = 10.5M,
+            Classification = 2,
+            Accessibility = true,
+            Description = "A test trail",
+            FullDescription = "Full description",
+            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.80},{\"latitude\":57.63,\"longitude\":12.81}]",
+            Tags = "[\"skog\"]",
+            City = "Test City"
+        };
+    }
 
     [Fact]
     public async Task GetTrailIdByIdentifier_WhenFound_ReturnsId()

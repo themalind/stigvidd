@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.Trail;
+using Core.Validators.Trails;
 using WebDataContracts.RequestModels.Trail;
 
 namespace UnitTests.ValidatorTests;
@@ -11,11 +11,14 @@ public class UpdateTrailRequestValidatorTests
 {
     private readonly UpdateTrailRequestValidator _validator = new();
 
-    private static UpdateTrailRequest ValidRequest() => new()
+    private static UpdateTrailRequest ValidRequest()
     {
-        Name = "Sörknatten",
-        TrailLength = 5.0m,
-    };
+        return new()
+        {
+            Name = "Sörknatten",
+            TrailLength = 5.0m,
+        };
+    }
 
     // --- Name ---
 

@@ -112,10 +112,12 @@ public static class SourceFeatureReader
             : [];
     }
 
-    private static bool IsLine(JsonElement element) =>
-        element.ValueKind == JsonValueKind.Array &&
+    private static bool IsLine(JsonElement element)
+    {
+        return element.ValueKind == JsonValueKind.Array &&
         element.GetArrayLength() > 0 &&
         element[0].ValueKind == JsonValueKind.Array;
+    }
 
     private static List<Coordinate>? ReadPoints(JsonElement line, Func<double, double, Coordinate> project)
     {
@@ -179,17 +181,23 @@ public static class SourceFeatureReader
         return [.. lines.Where((line, i) => i == 0 || LengthMetres(line) >= JoinToleranceMetres)];
     }
 
-    private static List<Coordinate> Join(List<Coordinate> first, List<Coordinate> second) =>
-        [.. first, .. first[^1].Equals2D(second[0]) ? second.Skip(1) : second];
+    private static List<Coordinate> Join(List<Coordinate> first, List<Coordinate> second)
+    {
+        return [.. first, .. first[^1].Equals2D(second[0]) ? second.Skip(1) : second];
+    }
 
-    private static double LengthMetres(List<Coordinate> points) =>
-        points.Zip(points.Skip(1), TrailLength.Haversine).Sum();
+    private static double LengthMetres(List<Coordinate> points)
+    {
+        return points.Zip(points.Skip(1), TrailLength.Haversine).Sum();
+    }
 
     // The source writes id as a number and namn as a string, and leaves either out.
-    private static string ReadString(JsonElement properties, string name) =>
-        properties.TryGetProperty(name, out var value) && value.ValueKind is not JsonValueKind.Null
+    private static string ReadString(JsonElement properties, string name)
+    {
+        return properties.TryGetProperty(name, out var value) && value.ValueKind is not JsonValueKind.Null
             ? value.ValueKind == JsonValueKind.String ? value.GetString() ?? string.Empty : value.GetRawText()
             : string.Empty;
+    }
 
     // keep-comment: each source spells id and name fields differently (Borås "id"/"namn", Naturvårdsverket "LED_ID"/"LEDNAMN" or "OBJECTID"/"STATLIGLEDNAMN", RUFS2050 "FID" with no name at all) — first one present wins.
     private static string ReadFirstString(JsonElement properties, params string[] names)

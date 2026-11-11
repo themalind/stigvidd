@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -26,8 +25,9 @@ public class HikeServiceTests
         Mock<IHikeShareRecipientRepository>? shareRepo = null,
         Mock<IWebDavService>? webDav = null,
         Mock<IMediaUploadService>? mediaUpload = null,
-        StigviddMetrics? metrics = null) =>
-        new(
+        StigviddMetrics? metrics = null)
+    {
+        return new(
             (hikeRepo ?? new Mock<IHikeRepository>()).Object,
             Utilities.Stubs.HikeResponseFactory(),
             (userRepo ?? new Mock<IUserRepository>()).Object,
@@ -36,17 +36,21 @@ public class HikeServiceTests
             (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             metrics ?? new StigviddMetrics(),
             NullLogger<HikeService>.Instance);
+    }
 
-    private static CreateHikeRequest ValidRequest() => new()
+    private static CreateHikeRequest ValidRequest()
     {
-        Name = "TestHike",
-        HikeLength = 5000,
-        Duration = 1800000,
-        Coordinates = "[{\"latitude\":57.62,\"longitude\":12.81},{\"latitude\":57.64,\"longitude\":12.83}]",
-        Description = "Description",
-        GettingThere = "Getting there",
-        ParkingInfo = "Parking info"
-    };
+        return new()
+        {
+            Name = "TestHike",
+            HikeLength = 5000,
+            Duration = 1800000,
+            Coordinates = "[{\"latitude\":57.62,\"longitude\":12.81},{\"latitude\":57.64,\"longitude\":12.83}]",
+            Description = "Description",
+            GettingThere = "Getting there",
+            ParkingInfo = "Parking info"
+        };
+    }
 
     [Fact]
     public async Task CreateHike_WhenUserExists_ReturnsSuccess()

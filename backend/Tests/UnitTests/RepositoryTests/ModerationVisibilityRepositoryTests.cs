@@ -33,25 +33,33 @@ public class ModerationVisibilityRepositoryTests : TestBase
     // Obstacle 3: trail 3, user 3, three solved votes, so expired.
     private const int Obstacle1UserId = 1;
 
-    private static IDbContextFactory<StigViddDbContext> FactoryWithHiddenReview() =>
-        CreateSeededFactory(db =>
+    private static IDbContextFactory<StigViddDbContext> FactoryWithHiddenReview()
+    {
+        return CreateSeededFactory(db =>
             db.Reviews
                 .IgnoreQueryFilters(["Moderation"])
                 .Single(r => r.Identifier == Review1Identifier)
                 .ModerationState = ModerationState.HiddenPendingReview);
+    }
 
-    private static IDbContextFactory<StigViddDbContext> FactoryWithHiddenObstacle(string identifier) =>
-        CreateSeededFactory(db =>
+    private static IDbContextFactory<StigViddDbContext> FactoryWithHiddenObstacle(string identifier)
+    {
+        return CreateSeededFactory(db =>
             db.TrailObstacles
                 .IgnoreQueryFilters(["Moderation"])
                 .Single(o => o.Identifier == identifier)
                 .ModerationState = ModerationState.HiddenPendingReview);
+    }
 
-    private static ReviewRepository BuildReviewRepo(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<ReviewRepository>.Instance);
+    private static ReviewRepository BuildReviewRepo(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<ReviewRepository>.Instance);
+    }
 
-    private static TrailObstacleRepository BuildObstacleRepo(IDbContextFactory<StigViddDbContext> factory) =>
-        new(factory, NullLogger<TrailObstacleRepository>.Instance, new ConfigurationBuilder().Build());
+    private static TrailObstacleRepository BuildObstacleRepo(IDbContextFactory<StigViddDbContext> factory)
+    {
+        return new(factory, NullLogger<TrailObstacleRepository>.Instance, new ConfigurationBuilder().Build());
+    }
 
     // Tiveden carries reviews 1 and 8. Paging is zero-indexed at this level.
     [Fact]

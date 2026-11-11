@@ -18,8 +18,13 @@ public class MailOutboxQueue : IMailOutboxQueue
 
     // TryWrite cannot fail on an unbounded channel, and the return is discarded for the same
     // reason the durable state is elsewhere: the OutboxEmails row is what guarantees delivery.
-    public void Enqueue(int outboxEmailId) => _ids.Writer.TryWrite(outboxEmailId);
+    public void Enqueue(int outboxEmailId)
+    {
+        _ids.Writer.TryWrite(outboxEmailId);
+    }
 
-    public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken) =>
-        _ids.Reader.ReadAllAsync(ctoken);
+    public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken)
+    {
+        return _ids.Reader.ReadAllAsync(ctoken);
+    }
 }

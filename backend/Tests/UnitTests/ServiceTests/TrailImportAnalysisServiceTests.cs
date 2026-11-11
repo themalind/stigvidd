@@ -34,8 +34,10 @@ public class TrailImportAnalysisServiceTests : IDisposable
     }
     """;
 
-    private static LineString Line(params (double X, double Y)[] points) =>
-        new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    private static LineString Line(params (double X, double Y)[] points)
+    {
+        return new([.. points.Select(p => new Coordinate(p.X, p.Y))]);
+    }
 
     public void Dispose()
     {
@@ -83,8 +85,10 @@ public class TrailImportAnalysisServiceTests : IDisposable
         return repository;
     }
 
-    private static TrailImportAnalysisService Build(Mock<ITrailImportRepository> repository) =>
-        new(repository.Object, NullLogger<TrailImportAnalysisService>.Instance);
+    private static TrailImportAnalysisService Build(Mock<ITrailImportRepository> repository)
+    {
+        return new(repository.Object, NullLogger<TrailImportAnalysisService>.Instance);
+    }
 
     private static Mock<ITrailImportRepository> CapturingProposals(
         Mock<ITrailImportRepository> repository,

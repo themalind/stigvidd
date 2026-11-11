@@ -14,7 +14,10 @@ namespace UnitTests.TrailImportTests.Source;
 /// </summary>
 public class SourceFeatureReaderTests
 {
-    private static Stream Json(string text) => new MemoryStream(Encoding.UTF8.GetBytes(text));
+    private static Stream Json(string text)
+    {
+        return new MemoryStream(Encoding.UTF8.GetBytes(text));
+    }
 
     private const string OneFeature = """
     {

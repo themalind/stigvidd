@@ -14,7 +14,7 @@ namespace Core.Repositories.Events;
 public static class EventRemoval
 {
     // Children are removed by hand: in-memory SQLite on Linux does not cascade them. keep-comment: why not rely on Cascade
-    public static async Task<DeletedEvent?> RemoveAsync(StigViddDbContext context, Expression<Func<Event, bool>> which, int? actingUserId, DateTime now, CancellationToken ctoken)
+    public static async Task<EventDeletion?> RemoveAsync(StigViddDbContext context, Expression<Func<Event, bool>> which, int? actingUserId, DateTime now, CancellationToken ctoken)
     {
         var existing = await context.Events
             .Include(e => e.Participants)
@@ -40,6 +40,6 @@ public static class EventRemoval
 
         context.Events.Remove(existing);
 
-        return new DeletedEvent(existing.Identifier, existing.Title, existing.StartsAt, existing.Image?.ImageUrl, notify);
+        return new EventDeletion(existing.Identifier, existing.Title, existing.StartsAt, existing.Image?.ImageUrl, notify);
     }
 }

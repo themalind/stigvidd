@@ -86,10 +86,14 @@ public class MetricAttributeVocabularyTests
         ConstantsOf(typeof(MetricTags.Keys)).Should().NotBeEmpty();
     }
 
-    private static FieldInfo[] ConstantsOf(Type type) =>
-        [.. type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+    private static FieldInfo[] ConstantsOf(Type type)
+    {
+        return [.. type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
             .Where(f => f is { IsLiteral: true, IsInitOnly: false } && f.FieldType == typeof(string))];
+    }
 
-    private static IEnumerable<string> Tokenise(string value) =>
-        Regex.Split(value.ToLowerInvariant(), "[^a-z0-9]+").Where(t => t.Length > 0);
+    private static IEnumerable<string> Tokenise(string value)
+    {
+        return Regex.Split(value.ToLowerInvariant(), "[^a-z0-9]+").Where(t => t.Length > 0);
+    }
 }

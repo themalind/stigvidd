@@ -1,0 +1,20 @@
+﻿// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+using Infrastructure.Data.Entities;
+using System.Linq.Expressions;
+
+namespace Core.Interfaces.Repositories.HikeShares;
+
+public interface IHikeShareRecipientRepository
+{
+    // WithUser = you are the recipient
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllHikesSharedWithUserAsync<T>(string identifier, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<bool>> HasHikeSharedWithUserAsync(int userId, int hikeId, CancellationToken ctoken);
+    Task<RepositoryResult<bool>> IsAllowedToReshareHikeAsync(int userId, int hikeId, CancellationToken ctoken);
+    Task<RepositoryResult> DeleteHikeShareAsync(int hikeId, int userId, CancellationToken ctoken);
+    Task<RepositoryResult<IReadOnlyCollection<T>>> GetPendingSharesForUserAsync<T>(int sharedWithId, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult<T>> GetPendingShareByIdentifierAsync<T>(int sharedWithId, string hikeIdentifier, int[] hiddenUserIds, Expression<Func<HikeShare, T>> selector, CancellationToken ctoken);
+    Task<RepositoryResult> AcceptHikeShareAsync(int hikeId, int sharedWithId, CancellationToken ctoken);
+    Task<RepositoryResult> RejectHikeShareAsync(int hikeId, int sharedWithId, CancellationToken ctoken);
+}

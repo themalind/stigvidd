@@ -21,8 +21,10 @@ public class UserRepositoryTests : TestBase
     private const string TivedenIdentifier = "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c";
     private const string NassehultIdentifier = "77a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c";
 
-    private UserRepository BuildRepo() =>
-        new(CreateSeededFactory(), NullLogger<UserRepository>.Instance);
+    private UserRepository BuildRepo()
+    {
+        return new(CreateSeededFactory(), NullLogger<UserRepository>.Instance);
+    }
 
     [Fact]
     public async Task GetUserBySubjectId_WhenFound_ReturnsSuccess()

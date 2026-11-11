@@ -20,21 +20,28 @@ public class MediaReprocessServiceTests
     {
         public List<int> Enqueued { get; } = [];
 
-        public void Enqueue(int itemId) => Enqueued.Add(itemId);
+        public void Enqueue(int itemId)
+        {
+            Enqueued.Add(itemId);
+        }
 
-        public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken) =>
+        public IAsyncEnumerable<int> DequeueAllAsync(CancellationToken ctoken)
+        {
             throw new NotSupportedException();
+        }
     }
 
     private static MediaReprocessService Build(
         Mock<IMediaReprocessRepository>? reprocess = null,
         Mock<IMediaRepository>? media = null,
-        IMediaReprocessQueue? queue = null) =>
-        new(
+        IMediaReprocessQueue? queue = null)
+    {
+        return new(
             (reprocess ?? new Mock<IMediaReprocessRepository>()).Object,
             (media ?? MediaRepoResolving()).Object,
             queue ?? new RecordingQueue(),
             NullLogger<MediaReprocessService>.Instance);
+    }
 
     private static Mock<IMediaRepository> MediaRepoResolving(params (string Identifier, string OwnerType)[] known)
     {
@@ -82,13 +89,20 @@ public class MediaReprocessServiceTests
         return repo;
     }
 
-    private static ImageProcessingOptionsRequest Options() => new() { MaxWidth = 800 };
+    private static ImageProcessingOptionsRequest Options()
+    {
+        return new() { MaxWidth = 800 };
+    }
 
-    private static CreateMediaReprocessJobRequest Request(string[] identifiers) =>
-        new() { MediaIdentifiers = identifiers, Options = Options() };
+    private static CreateMediaReprocessJobRequest Request(string[] identifiers)
+    {
+        return new() { MediaIdentifiers = identifiers, Options = Options() };
+    }
 
-    private static CreateMediaReprocessJobRequest FilterRequest(MediaFilter? filter = null) =>
-        new() { Filter = filter ?? new MediaFilter { TargetMaxWidth = 800, TargetFormat = "webp" }, Options = Options() };
+    private static CreateMediaReprocessJobRequest FilterRequest(MediaFilter? filter = null)
+    {
+        return new() { Filter = filter ?? new MediaFilter { TargetMaxWidth = 800, TargetFormat = "webp" }, Options = Options() };
+    }
 
     private static Mock<IMediaRepository> MediaRepoMatching(int count)
     {

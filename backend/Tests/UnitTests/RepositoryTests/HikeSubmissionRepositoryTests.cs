@@ -4,7 +4,7 @@
 using AwesomeAssertions;
 using Core.Interfaces.Repositories;
 using Core.Repositories;
-using Core.Validators.HikeSubmission;
+using Core.Validators.Hikes;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
@@ -17,25 +17,28 @@ public class HikeSubmissionRepositoryTests : TestBase
 {
     private const string SubmissionIdentifier = "sub-1a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
 
-    private static HikeSubmission Submission(HikeSubmissionStatus status = HikeSubmissionStatus.Pending, bool withImage = true) => new()
+    private static HikeSubmission Submission(HikeSubmissionStatus status = HikeSubmissionStatus.Pending, bool withImage = true)
     {
-        Identifier = SubmissionIdentifier,
-        UserId = 1,
-        SourceHikeId = 1,
-        Name = "Kvällsrunda",
-        Description = "Runt sjön",
-        GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)),
-        OriginalGeoPath = Utilities.GeoPath((12.93, 57.71), (12.94, 57.72), (12.95, 57.73)),
-        TrailLength = 1.3m,
-        Classification = 2,
-        Parking = "Grus",
-        GettingThere = "Buss 3",
-        ShowSubmitterName = true,
-        TransferAcceptedAt = new DateTime(2026, 10, 15, 8, 0, 0, DateTimeKind.Utc),
-        ConsentTextId = 2,
-        Status = status,
-        Images = withImage ? [new HikeSubmissionImage { ImageUrl = "trails/copy.jpeg", Width = 800, Height = 600 }] : [],
-    };
+        return new()
+        {
+            Identifier = SubmissionIdentifier,
+            UserId = 1,
+            SourceHikeId = 1,
+            Name = "Kvällsrunda",
+            Description = "Runt sjön",
+            GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)),
+            OriginalGeoPath = Utilities.GeoPath((12.93, 57.71), (12.94, 57.72), (12.95, 57.73)),
+            TrailLength = 1.3m,
+            Classification = 2,
+            Parking = "Grus",
+            GettingThere = "Buss 3",
+            ShowSubmitterName = true,
+            TransferAcceptedAt = new DateTime(2026, 10, 15, 8, 0, 0, DateTimeKind.Utc),
+            ConsentTextId = 2,
+            Status = status,
+            Images = withImage ? [new HikeSubmissionImage { ImageUrl = "trails/copy.jpeg", Width = 800, Height = 600 }] : [],
+        };
+    }
 
     private static (HikeSubmissionRepository Repository, Microsoft.EntityFrameworkCore.IDbContextFactory<StigViddDbContext> Factory) Build(HikeSubmission submission)
     {

@@ -13,8 +13,23 @@ public class RepositoryResult
         Status = status;
     }
 
-    public static RepositoryResult Success() => new(RepositoryResultStatus.Success);
-    public static RepositoryResult NotFound() => new(RepositoryResultStatus.NotFound);
-    public static RepositoryResult Conflict() => new(RepositoryResultStatus.Conflict);
-    public static RepositoryResult Error() => new(RepositoryResultStatus.Error);
+    public static RepositoryResult Success()
+    {
+        return new(RepositoryResultStatus.Success);
+    }
+
+    public static RepositoryResult NotFound()
+    {
+        return new(RepositoryResultStatus.NotFound);
+    }
+
+    public static RepositoryResult Conflict()
+    {
+        return new(RepositoryResultStatus.Conflict);
+    }
+
+    public static RepositoryResult Error()
+    {
+        return new(RepositoryResultStatus.Error);
+    }
 }

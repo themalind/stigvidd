@@ -33,11 +33,14 @@ public class NotificationsControllerTests : IClassFixture<StigViddWebApplication
         return client;
     }
 
-    private static RegisterPushTokenRequest ValidRequest(string token = TestToken, string platform = "ios") => new()
+    private static RegisterPushTokenRequest ValidRequest(string token = TestToken, string platform = "ios")
     {
-        ExpoToken = token,
-        Platform = platform
-    };
+        return new()
+        {
+            ExpoToken = token,
+            Platform = platform
+        };
+    }
 
     #region POST /tokens
 

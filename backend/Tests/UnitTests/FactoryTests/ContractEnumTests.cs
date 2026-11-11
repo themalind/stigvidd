@@ -3,7 +3,6 @@
 
 using System.Text.Json;
 using AwesomeAssertions;
-using Core.Factories;
 using Database = Infrastructure.Enums;
 using Contract = WebDataContracts.Enums;
 

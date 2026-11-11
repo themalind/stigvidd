@@ -146,10 +146,12 @@ public class KeycloakAdminRepositoryTests
 
     private sealed class StubHandler(HttpStatusCode status) : HttpMessageHandler
     {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(new HttpResponseMessage(status)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HttpResponseMessage(status)
             {
                 Content = new StringContent("{\"error\":\"User not found\"}", System.Text.Encoding.UTF8, "application/json"),
             });
+        }
     }
 }

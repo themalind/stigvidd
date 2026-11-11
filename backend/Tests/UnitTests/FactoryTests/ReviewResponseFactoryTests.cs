@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Configuration;
@@ -19,17 +18,20 @@ public class ReviewResponseFactoryTests
         return new ReviewResponseFactory(cfg.Object);
     }
 
-    private static Review BaseReview() => new()
+    private static Review BaseReview()
     {
-        Id = 1,
-        Identifier = "test-review-id",
-        TrailReview = "Great trail",
-        Rating = 4.0M,
-        CreatedAt = DateTime.UtcNow,
-        User = new User { Id = 1, Identifier = "user-id", NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
-        Trail = new Trail { Id = 1, Identifier = "trail-id", Name = "Test Trail", TrailLength = 5M },
-        ReviewImages = []
-    };
+        return new()
+        {
+            Id = 1,
+            Identifier = "test-review-id",
+            TrailReview = "Great trail",
+            Rating = 4.0M,
+            CreatedAt = DateTime.UtcNow,
+            User = new User { Id = 1, Identifier = "user-id", NickName = "Nick", Email = "nick@test.com", SubjectId = "uid" },
+            Trail = new Trail { Id = 1, Identifier = "trail-id", Name = "Test Trail", TrailLength = 5M },
+            ReviewImages = []
+        };
+    }
 
     [Fact]
     public void Create_WhenReviewHasImages_ImageUrlsHaveBaseUrlPrepended()

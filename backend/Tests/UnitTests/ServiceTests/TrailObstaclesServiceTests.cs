@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-using Core.Factories;
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services;
@@ -22,14 +21,15 @@ public class TrailObstaclesServiceTests
         Mock<ITrailObstacleRepository>? obstacleRepo = null,
         Mock<IUserService>? userService = null,
         Mock<ITrailService>? trailService = null,
-        Mock<IUserBlockService>? userBlockService = null) =>
-        new(
+        Mock<IUserBlockService>? userBlockService = null)
+    {
+        return new(
             (obstacleRepo ?? new Mock<ITrailObstacleRepository>()).Object,
             (userBlockService ?? Utilities.MockFactory.UserBlockServiceHiding()).Object,
             new TrailObstaclesResponseFactory(),
             (userService ?? Utilities.MockFactory.UserServiceFoundById(UserId)).Object,
             (trailService ?? Utilities.MockFactory.TrailServiceFound(TrailId)).Object);
-
+    }
 
     [Fact]
     public async Task GetObstacles_WhenObstaclesExist_ReturnsSuccess()

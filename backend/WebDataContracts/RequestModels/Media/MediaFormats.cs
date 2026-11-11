@@ -14,9 +14,14 @@ public static class MediaFormats
     // keep-comment: MediaFilter.TargetFormat asks "what would a reprocess to this change", so it is Output without "original" - accepting a format no reprocess can produce would let the browse page count images for a batch the reprocess endpoint then refuses
     public static readonly IReadOnlyList<string> ReprocessTarget = ["jpeg", "jpg", "webp", "png"];
 
-    public static bool IsOneOf(IReadOnlyList<string> allowed, string? value) =>
-        string.IsNullOrWhiteSpace(value)
+    public static bool IsOneOf(IReadOnlyList<string> allowed, string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
         || allowed.Contains(value.Trim(), StringComparer.OrdinalIgnoreCase);
+    }
 
-    public static string Describe(IReadOnlyList<string> allowed) => string.Join(", ", allowed);
+    public static string Describe(IReadOnlyList<string> allowed)
+    {
+        return string.Join(", ", allowed);
+    }
 }
