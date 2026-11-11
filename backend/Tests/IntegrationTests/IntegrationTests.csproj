@@ -24,7 +24,7 @@
      <!-- Windows only: the bundled e_sqlite3 would shadow the libsqlite3 mod_spatialite is linked against -->
     <PackageReference Condition=" '$(OS)' == 'Windows_NT' " Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageReference Include="NetTopologySuite" Version="2.6.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.11.1" />
     <PackageReference Include="Moq" Version="4.21.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
