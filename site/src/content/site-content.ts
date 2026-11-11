@@ -2,17 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 /**
- * Every word on the public site, in one file.
- *
- * The product description and tagline are COPIED FROM THE APP —
- * keep-comment: `app/src/i18n/locales/{sv,en}.json`, key `about`. That is the text the About screen already
- * shows, so keeping the two identical is the whole point: a landing page that describes a
- * different product than the app is worse than no landing page. When the app's copy
- * changes, change it here too. Nothing checks that they agree.
- *
+ * keep-comment: description and tagline are copied from the app's About text,
+ * keep-comment: `app/src/i18n/locales/{sv,en}.json` key `about`; nothing checks that they agree.
  * keep-comment: the feature list mirrors the app's `about.features`, one card per entry, same order and wording;
  * keep-comment: nothing checks this side, so change both together (`about-screen.test.tsx` pins the app's count).
- *
  * keep-comment: `phase` only shows the beta badge; the buttons come from `installLinks`, so a store goes live by filling in its URL.
  */
 
@@ -27,7 +20,7 @@ export const sourceUrl = "https://github.com/themalind/stigvidd";
 // keep-comment: null renders no button for that platform, so testers on it are recruited by mail
 export const installLinks: { ios: string | null; android: string | null } = {
   ios: "https://apps.apple.com/se/app/stigvidd/id6818785238",
-  android: null,
+  android: "https://play.google.com/store/apps/details?id=com.stigvidd.app",
 };
 
 export type Locale = "sv" | "en";
@@ -217,15 +210,13 @@ const sv: SiteContent = {
   },
   install: {
     title: "Hämta Stigvidd",
-    body:
-      "Stigvidd finns i App Store för iPhone. Android-versionen är i sluten testperiod – " +
-      "mejla oss så får du en testlänk.",
+    body: "Stigvidd finns i App Store för iPhone och på Google Play för Android.",
     mailCta: "Testa på Android",
     mailSubject: "Jag vill testa Stigvidd på Android",
     steps: [
       {
         title: "Hämta appen",
-        body: `Har du iPhone hämtar du Stigvidd i App Store. Har du Android, mejla ${contactEmail} så får du en länk.`,
+        body: "Hämta Stigvidd i App Store om du har iPhone, eller på Google Play om du har Android.",
       },
       {
         title: "Hitta en led",
@@ -415,15 +406,13 @@ const en: SiteContent = {
   },
   install: {
     title: "Get Stigvidd",
-    body:
-      "Stigvidd is on the App Store for iPhone. The Android version is in closed testing – " +
-      "email us and we will send you a test link.",
+    body: "Stigvidd is on the App Store for iPhone and on Google Play for Android.",
     mailCta: "Try it on Android",
     mailSubject: "I want to test Stigvidd on Android",
     steps: [
       {
         title: "Get the app",
-        body: `On iPhone, get Stigvidd from the App Store. On Android, email ${contactEmail} and we will send you a link.`,
+        body: "Get Stigvidd from the App Store on iPhone, or from Google Play on Android.",
       },
       {
         title: "Find a trail",

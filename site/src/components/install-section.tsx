@@ -20,8 +20,7 @@ export default function InstallSection({
   install: SiteContent["install"];
   labels: SiteContent["installLabels"];
 }) {
-  // Read once, at first render. This is a client-only bundle with no SSR, so the user
-  // agent is already there and an effect would only add a second render.
+  // keep-comment: client-only bundle, so the user agent is readable at first render
   const [platform] = useState<Platform>(() => detectPlatform(navigator.userAgent));
 
   const available = orderedPlatforms(installLinks, platform);
@@ -58,10 +57,12 @@ export default function InstallSection({
             );
           })}
 
-          <a href={mailto} className={available.length === 0 ? PRIMARY : SECONDARY}>
-            <Mail aria-hidden="true" className="size-5" />
-            {install.mailCta}
-          </a>
+          {!installLinks.android && (
+            <a href={mailto} className={available.length === 0 ? PRIMARY : SECONDARY}>
+              <Mail aria-hidden="true" className="size-5" />
+              {install.mailCta}
+            </a>
+          )}
         </div>
       </div>
     </section>
