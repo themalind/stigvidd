@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
-    "lucide-react": "^1.71.0",
+    "lucide-react": "^1.72.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwindcss": "^4.1.18"
@@ -40,7 +40,7 @@
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.2",
-    "vite": "^8.3.7",
+    "vite": "^8.3.8",
     "vitest": "^5.1.0"
   },
   "overrides": {
