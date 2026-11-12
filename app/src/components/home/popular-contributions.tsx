@@ -10,6 +10,7 @@ import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import ContributionCard from "@/components/home/contribution-card";
 import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/layout/section-panel";
 import ContributionInfo from "@/components/trail/contribution-info";
+import { POPULAR_CONTRIBUTIONS_QUERY_ROOT } from "@/hooks/trail/useTrailLike";
 import { guardedNavigate } from "@/utils/navigation";
 import { POPULAR_TRAILS_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
@@ -20,7 +21,7 @@ import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import { useTheme } from "react-native-paper";
 
 export const popularContributionsQueryKey = (latitude?: number, longitude?: number) =>
-  ["trails", "popular-contributions", latitude, longitude] as const;
+  [...POPULAR_CONTRIBUTIONS_QUERY_ROOT, latitude, longitude] as const;
 
 export const HOME_CONTRIBUTION_LIMIT = 5;
 

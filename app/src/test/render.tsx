@@ -47,6 +47,7 @@ export async function renderWithProviders(
     defaultOptions: {
       queries: {
         retry: false,
+        // keep-comment: setQueryData on a key nothing observes is dropped at once; seed with setQueryDefaults(root, { gcTime: Infinity })
         gcTime: 0,
         notifyOnChangeProps: "all",
         // As src/api/query-client.ts, so an offline test fails the way the app does instead of pausing.

@@ -5,23 +5,15 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getTrailLike, likeTrail, unlikeTrail } from "@/api/trails";
-import { showErrorAtom } from "@/atoms/snackbar-atoms";
-import { useAuth } from "@/components/auth/auth-provider";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import ContributionInfo from "@/components/trail/contribution-info";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { TrailContribution, TrailLike } from "@/data/types";
-import { TRAIL_LIKES_STALE_TIME } from "@/constants/cache";
-import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSetAtom } from "jotai";
+import { TrailContribution } from "@/data/types";
+import { useTrailLike } from "@/hooks/trail/useTrailLike";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
-
-export const trailLikeQueryKey = (identifier: string, userId: string | undefined) =>
-  ["trailLike", identifier, userId] as const;
 
 interface Props {
   trailIdentifier: string;
@@ -31,47 +23,15 @@ interface Props {
 export default function TrailContributionBar({ trailIdentifier, contribution }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { user, isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
-  const setErrorMsg = useSetAtom(showErrorAtom);
   const [showAuthDialog, setAuthDialog] = useState(false);
-  const queryKey = trailLikeQueryKey(trailIdentifier, user?.id);
-
-  const { data } = useQuery({
-    queryKey,
-    queryFn: isAuthenticated ? () => getTrailLike(trailIdentifier) : skipToken,
-    staleTime: TRAIL_LIKES_STALE_TIME,
-  });
-
-  const like: TrailLike = data ?? { likeCount: contribution.likeCount, likedByMe: false };
-
-  const mutation = useMutation({
-    mutationFn: (liked: boolean) => (liked ? likeTrail(trailIdentifier) : unlikeTrail(trailIdentifier)),
-    onMutate: async (liked) => {
-      await queryClient.cancelQueries({ queryKey });
-      const previous = queryClient.getQueryData<TrailLike>(queryKey);
-      queryClient.setQueryData<TrailLike>(queryKey, {
-        likeCount: Math.max(0, like.likeCount + (liked ? 1 : -1)),
-        likedByMe: liked,
-      });
-      return { previous };
-    },
-    onError: (_error, _liked, context) => {
-      queryClient.setQueryData(queryKey, context?.previous);
-      setErrorMsg(t("trail.likeError"));
-    },
-    onSuccess: (result) => queryClient.setQueryData(queryKey, result),
-  });
-
-  // keep-comment: until the user's own like has loaded, a press would guess likedByMe and could like when meaning to unlike
-  const canPress = !isAuthenticated || (data !== undefined && !mutation.isPending);
+  const { like, canPress, isAuthenticated, toggle } = useTrailLike(trailIdentifier, contribution.likeCount);
 
   const onPress = () => {
     if (!isAuthenticated) {
       setAuthDialog(true);
       return;
     }
-    mutation.mutate(!like.likedByMe);
+    toggle();
   };
 
   return (
