@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { ROUTE_LINE_COLOR } from "@/components/map/marker-styles";
+import { MARKER_COLORS } from "@/components/map/marker-styles";
 import { AreaMapShapes, MapFacilityKind } from "@/utils/area/area-map-shapes";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,8 +31,7 @@ export default function AreaMapLegend({ shapes, style }: Props) {
         key: "trails",
         count: trails,
         label: t("area.trailCount", { count: trails }),
-        color: ROUTE_LINE_COLOR,
-        line: true,
+        color: MARKER_COLORS.trails.fill,
       },
       {
         key: "swimming",
@@ -61,7 +60,7 @@ export default function AreaMapLegend({ shapes, style }: Props) {
     <View testID="area-map-legend" style={[s.legend, style]}>
       {entries.map((entry) => (
         <View key={entry.key} style={s.item}>
-          <View style={[entry.line ? s.line : s.dot, { backgroundColor: entry.color }]} />
+          <View style={[s.dot, { backgroundColor: entry.color }]} />
           <Text style={[s.text, { color: theme.colors.onSurface }]}>{entry.label}</Text>
         </View>
       ))}
@@ -85,10 +84,6 @@ const s = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-  },
-  line: {
-    width: 16,
-    height: 4,
   },
   text: {
     fontSize: 13,

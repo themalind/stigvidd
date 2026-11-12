@@ -24,7 +24,7 @@ function area(overrides: Partial<CityArea>): CityArea {
 }
 
 describe("areaMapShapes", () => {
-  it("draws the boundary, the trails with a path and the facilities with a position", () => {
+  it("draws the boundary, a start marker per trail with a path and the facilities with a position", () => {
     const shapes = areaMapShapes(
       area({
         boundary: SQUARE,
@@ -45,7 +45,7 @@ describe("areaMapShapes", () => {
         facilities: [
           {
             identifier: "bad",
-            name: "",
+            name: "Badet",
             facilityType: FacilityType.SwimmingArea,
             isAccessible: false,
             latitude: 57.71,
@@ -57,8 +57,12 @@ describe("areaMapShapes", () => {
     );
 
     expect(shapes.boundary.features).toHaveLength(1);
-    expect(shapes.trails.features).toHaveLength(1);
-    expect(shapes.facilities.features.map((f) => [f.id, f.properties?.kind])).toEqual([["bad", "swimming"]]);
+    expect(shapes.trails.features.map((f) => [f.properties?.identifier, f.geometry])).toEqual([
+      ["t", { type: "Point", coordinates: [12.95, 57.75] }],
+    ]);
+    expect(shapes.facilities.features.map((f) => [f.id, f.properties?.kind, f.properties?.name])).toEqual([
+      ["bad", "swimming", "Badet"],
+    ]);
     expect(shapes.bounds).toEqual([12.9, 57.7, 13.1, 57.8]);
   });
 

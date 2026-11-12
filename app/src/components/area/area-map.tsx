@@ -67,7 +67,7 @@ export default function AreaMap({ area, onOpen, heading, style }: Props) {
             {...STATIC_GESTURES}
           >
             <Camera ref={cameraRef} />
-            <AreaMapLayers shapes={shapes} lineWidth={3} />
+            <AreaMapLayers shapes={shapes} />
           </Map>
           <MapPreviewOverlay label={t("area.openMap")} onPress={onOpen} />
         </View>
