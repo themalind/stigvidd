@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { FileUp, Loader2, Upload } from "lucide-react";
 import { useCreateSession } from "@/features/trail-import/api/trail-import";
+import { FileDrop } from "@/components/file-drop";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,21 +13,12 @@ import { Label } from "@/components/ui/label";
 export function UploadCard() {
   const [file, setFile] = useState<File | null>(null);
   const [source, setSource] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const upload = useCreateSession();
 
   function handleUpload() {
     if (!file) return;
 
-    upload.mutate(
-      { file, source: source.trim() || undefined },
-      {
-        onSuccess: () => {
-          setFile(null);
-          if (fileInputRef.current) fileInputRef.current.value = "";
-        },
-      },
-    );
+    upload.mutate({ file, source: source.trim() || undefined }, { onSuccess: () => setFile(null) });
   }
 
   return (
@@ -42,17 +34,14 @@ export function UploadCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="export">Export (.geojson or .json)</Label>
-          <Input
-            id="export"
-            ref={fileInputRef}
-            type="file"
-            accept=".geojson,.json,application/geo+json,application/json"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            disabled={upload.isPending}
-          />
-        </div>
+        <FileDrop
+          label="Export"
+          accept=".geojson,.json,application/geo+json,application/json"
+          hint="GeoJSON (.geojson or .json)"
+          file={file}
+          disabled={upload.isPending}
+          onChange={setFile}
+        />
         <div className="space-y-2">
           <Label htmlFor="source">Source</Label>
           <Input

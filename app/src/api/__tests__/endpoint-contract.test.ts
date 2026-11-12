@@ -1100,6 +1100,13 @@ describe("endpoints that are not plain JSON", () => {
     expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/events`);
   });
 
+  it("getAreas appends the position when it has one", async () => {
+    const fetchMock = mockFetch(true);
+    await getAreas(57.72, 12.94);
+
+    expect(fetchMock.mock.calls[0][0]).toBe(`${BASE}/cityareas?latitude=57.72&longitude=12.94`);
+  });
+
   it("getPopularTrails appends the position when it has one", async () => {
     const fetchMock = mockFetch(true);
     await getPopularTrails(57.72, 12.94);

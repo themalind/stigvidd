@@ -15,16 +15,12 @@ import {
   TrailShortInfoResponse,
 } from "@/data/types";
 import { imageFormPart } from "./core/image-form-part";
-import { queryString, send, sendForJson } from "./core/request";
-
-function position(latitude?: number, longitude?: number): string {
-  return latitude !== undefined && longitude !== undefined ? queryString({ latitude, longitude }) : "";
-}
+import { positionQuery, send, sendForJson } from "./core/request";
 
 export function getPopularTrails(latitude?: number, longitude?: number): Promise<TrailOverview[]> {
   return sendForJson({
     name: "getPopularTrails",
-    path: `/trails/popular${position(latitude, longitude)}`,
+    path: `/trails/popular${positionQuery(latitude, longitude)}`,
     endpoint: "/trails/popular",
     auth: "none",
   });
@@ -33,7 +29,7 @@ export function getPopularTrails(latitude?: number, longitude?: number): Promise
 export function getPopularContributedTrails(latitude?: number, longitude?: number): Promise<TrailCard[]> {
   return sendForJson({
     name: "getPopularContributedTrails",
-    path: `/trails/popular-contributions${position(latitude, longitude)}`,
+    path: `/trails/popular-contributions${positionQuery(latitude, longitude)}`,
     endpoint: "/trails/popular-contributions",
     auth: "none",
   });

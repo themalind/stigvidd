@@ -5,15 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getAreaByIdentifier } from "@/api/areas";
-import ExampleImageOverlay from "@/components/media/example-image-overlay";
-import { CITY_AREAS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
+import { FACILITY_ICONS } from "@/constants/facility-icons";
 import { FacilityType, hasFacilityType } from "@/data/types";
+import { useArea } from "@/hooks/area/useArea";
 import { asTranslationKey } from "@/i18n";
+import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useQuery } from "@tanstack/react-query";
-import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
@@ -22,25 +20,24 @@ import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native"
 import { Icon, Text, useTheme } from "react-native-paper";
 import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
+import AreaImage from "./area-image";
+import AreaMap from "./area-map";
 import AreaTrailSection from "./area-trail-section";
 import FacilityCountRow from "./facility-count-row";
 import FacilitySection from "./facility-section";
 
 const HERO_HEIGHT = 260;
 
-// Facility groups, driven by the [Flags] FacilityType enum. Membership is tested
-// bitwise via hasFacilityType, so a combined facility (e.g. FirePit | Shelter)
-// correctly surfaces under every kind it carries.
-// Fire pits and shelters are shown as a count; their positions are on the map tab.
+// keep-comment: FacilityType is a [Flags] bitmask, so a combined facility (FirePit | Shelter) counts under every kind it carries
 const COUNTED_FACILITY_GROUPS = [
-  { type: FacilityType.FirePit, countKey: "area.firePitCount", icon: "outdoor-grill" },
-  { type: FacilityType.Shelter, countKey: "area.shelterCount", icon: "cabin" },
+  { type: FacilityType.FirePit, countKey: "area.firePitCount", icon: FACILITY_ICONS.firePit },
+  { type: FacilityType.Shelter, countKey: "area.shelterCount", icon: FACILITY_ICONS.shelter },
 ] as const;
 
 const FACILITY_GROUPS = [
-  { type: FacilityType.FishingArea, titleKey: "area.fishing", icon: "set-meal" },
-  { type: FacilityType.SwimmingArea, titleKey: "area.swimming", icon: "pool" },
-  { type: FacilityType.NatureReserve, titleKey: "area.natureReserve", icon: "park" },
+  { type: FacilityType.FishingArea, titleKey: "area.fishing", icon: FACILITY_ICONS.fishing },
+  { type: FacilityType.SwimmingArea, titleKey: "area.swimming", icon: FACILITY_ICONS.swimming },
+  { type: FacilityType.NatureReserve, titleKey: "area.natureReserve", icon: FACILITY_ICONS.natureReserve },
 ] as const;
 
 export default function AreaDetailScreen() {
@@ -48,16 +45,7 @@ export default function AreaDetailScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ identifier: string }>();
 
-  const {
-    data: area,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ["cityArea", params.identifier],
-    queryFn: () => getAreaByIdentifier(params.identifier),
-    staleTime: CITY_AREAS_STALE_TIME,
-  });
+  const { data: area, isLoading, error, refetch } = useArea(params.identifier);
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -79,8 +67,7 @@ export default function AreaDetailScreen() {
     <View testID="area-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
         <View testID="area-hero" style={s.hero}>
-          <Image source={{ uri: area.imageUrl }} style={s.heroImage} contentFit="cover" transition={200} />
-          <ExampleImageOverlay source={{ uri: area.imageUrl }} />
+          <AreaImage area={area} style={s.heroImage} />
           <LinearGradient
             colors={["rgba(0,0,0,0.35)", "transparent", "rgba(0,0,0,0.15)", "rgba(0,0,0,0.8)"]}
             locations={[0, 0.35, 0.6, 1]}
@@ -139,6 +126,20 @@ export default function AreaDetailScreen() {
           </Text>
         ) : null}
 
+        <AreaMap
+          area={area}
+          style={s.section}
+          heading={<Text style={[s.sectionHeading, { color: theme.colors.onBackground }]}>{t("area.onTheMap")}</Text>}
+          onOpen={() =>
+            guardedNavigate(() =>
+              router.navigate({
+                pathname: "/(tabs)/(home)/area/map/[identifier]",
+                params: { identifier: area.identifier },
+              }),
+            )
+          }
+        />
+
         {area.trails.length > 0 && (
           <View style={s.section}>
             <Text style={[s.sectionHeading, { color: theme.colors.onBackground }]}>{t("area.trails")}</Text>
@@ -158,9 +159,6 @@ export default function AreaDetailScreen() {
                     label={t(group.countKey, { count: group.count })}
                   />
                 ))}
-                <Text testID="facility-count-hint" style={[s.hint, { color: theme.colors.onSurfaceVariant }]}>
-                  {t("area.facilitiesOnMapHint")}
-                </Text>
               </View>
             )}
             {FACILITY_GROUPS.map((group) => (
@@ -251,10 +249,6 @@ const s = StyleSheet.create({
   countRows: {
     paddingHorizontal: SCREEN_PADDING,
     gap: 8,
-  },
-  hint: {
-    fontSize: 13,
-    paddingHorizontal: 4,
   },
   sectionHeading: {
     paddingHorizontal: SCREEN_PADDING + 4,

@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { FACILITY_ICONS } from "@/constants/facility-icons";
 import { MapMarkerFilter } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -24,9 +25,9 @@ interface Props {
 const ITEMS: { key: keyof MapMarkerFilter; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { key: "trails", label: "filter.trails", icon: "map-marker-path" },
   { key: "contributions", label: "filter.contributions", icon: "account-group" },
-  { key: "shelters", label: "filter.shelters", icon: "tent" },
-  { key: "firePits", label: "filter.firePits", icon: "campfire" },
-  { key: "accessibility", label: "filter.accessibility", icon: "wheelchair-accessibility" },
+  { key: "shelters", label: "filter.shelters", icon: FACILITY_ICONS.shelter },
+  { key: "firePits", label: "filter.firePits", icon: FACILITY_ICONS.firePit },
+  { key: "accessibility", label: "filter.accessibility", icon: FACILITY_ICONS.accessible },
 ];
 
 // Collapsed filter control for the map: a slim pill that expands into a checkbox

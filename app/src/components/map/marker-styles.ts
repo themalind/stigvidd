@@ -38,6 +38,12 @@ export const MARKER_COLORS: Record<MarkerCategory, MarkerColors> = {
   firePits: { fill: colors.secondary, stroke: colors.onSecondary },
 };
 
+// keep-comment: swimming is a third dot colour beside fire pits and shelters, a water blue the theme has no role for
+export const SWIMMING_MARKER_COLORS: MarkerColors = {
+  fill: "#2A6FB0",
+  stroke: colors.onPrimary,
+};
+
 // The route line and the trailhead "start" marker sit on the same always-light
 // basemap, so they must use the fixed light palette too — never useTheme(), which
 // would turn them orange in the app's dark mode (the basemap stays light there).

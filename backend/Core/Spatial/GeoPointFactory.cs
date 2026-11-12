@@ -56,6 +56,14 @@ public static class GeoPointFactory
         return Wgs84Factory.CreateLineString([.. lonLatCoordinates]);
     }
 
+    // keep-comment: GeoJSON MultiPolygon order: per polygon the outer ring first, then its holes; each ring closed
+    public static MultiPolygon FromLonLatPolygons(IEnumerable<IReadOnlyList<IReadOnlyList<Coordinate>>> polygons)
+    {
+        return Wgs84Factory.CreateMultiPolygon([.. polygons.Select(rings => Wgs84Factory.CreatePolygon(
+            Wgs84Factory.CreateLinearRing([.. rings[0]]),
+            [.. rings.Skip(1).Select(hole => Wgs84Factory.CreateLinearRing([.. hole]))]))]);
+    }
+
     public static Geometry FromLonLatEnvelope(Envelope lonLatEnvelope)
     {
         return Wgs84Factory.ToGeometry(lonLatEnvelope);

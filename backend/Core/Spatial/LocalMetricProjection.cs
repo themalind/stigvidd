@@ -66,6 +66,13 @@ public sealed class LocalMetricProjection
         (coordinate.Y - _originLatitude) * _metresPerDegreeLatitude);
     }
 
+    public Coordinate Unproject(Coordinate projected)
+    {
+        return new(
+        (projected.X / _metresPerDegreeLongitude) + _originLongitude,
+        (projected.Y / _metresPerDegreeLatitude) + _originLatitude);
+    }
+
     public double MetresTo(Coordinate coordinate)
     {
         return Math.Sqrt(SquaredMetresTo(coordinate));
@@ -86,5 +93,24 @@ public sealed class LocalMetricProjection
         // METRES on a flat plane, not degrees. Nothing here is ever persisted, and stamping
         // it 4326 would be a lie about its units.
         return new LineString([.. line.Coordinates.Select(Project)]);
+    }
+
+    public MultiPolygon Project(MultiPolygon area)
+    {
+        ArgumentNullException.ThrowIfNull(area);
+
+        return new MultiPolygon([.. area.Geometries.OfType<Polygon>().Select(Project)]);
+    }
+
+    public Polygon Project(Polygon polygon)
+    {
+        ArgumentNullException.ThrowIfNull(polygon);
+
+        return new Polygon(Project(polygon.Shell), [.. polygon.Holes.Select(Project)]);
+    }
+
+    private LinearRing Project(LinearRing ring)
+    {
+        return new LinearRing([.. ring.Coordinates.Select(Project)]);
     }
 }

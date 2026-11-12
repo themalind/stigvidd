@@ -59,6 +59,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IMediaRepository, MediaRepository>();
         services.AddTransient<IMediaReprocessRepository, MediaReprocessRepository>();
         services.AddTransient<ICityAreaRepository, CityAreaRepository>();
+        services.AddTransient<IMunicipalityRepository, MunicipalityRepository>();
+        services.AddTransient<IFacilityImportSourceRepository, FacilityImportSourceRepository>();
         services.AddTransient<ITrailImportRepository, TrailImportRepository>();
         services.AddTransient<IMailTemplateRepository, MailTemplateRepository>();
         services.AddTransient<IMailOutboxRepository, MailOutboxRepository>();
@@ -105,6 +107,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IHikeSubmissionService, HikeSubmissionService>();
         services.AddTransient<ITrailObstaclesService, TrailObstaclesService>();
         services.AddTransient<IFacilityService, FacilityService>();
+        services.AddTransient<IFacilityImportService, FacilityImportService>();
+        services.AddTransient<IFacilityImportSourceService, FacilityImportSourceService>();
         services.AddTransient<HikeShareDistributor>();
         services.AddTransient<IHikeShareService, HikeShareService>();
         services.AddTransient<IHikeShareRecipientService, HikeShareRecipientService>();
@@ -115,6 +119,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IUserKeycloakMappingService, UserKeycloakMappingService>();
         services.AddTransient<IUserKeycloakMappingRepository, UserKeycloakMappingRepository>();
         services.AddTransient<ICityAreaService, CityAreaService>();
+        services.AddTransient<ICityAreaMembershipService, CityAreaMembershipService>();
+        services.AddTransient<IMunicipalityService, MunicipalityService>();
         services.AddTransient<ITrailImportAnalysisService, TrailImportAnalysisService>();
         services.AddTransient<ITrailImportService, TrailImportService>();
         services.AddTransient<ITrailImportFileStore, TrailImportFileStore>();
@@ -212,7 +218,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<HikeResponseFactory>();
         services.AddTransient<TrailObstaclesResponseFactory>();
         services.AddTransient<FacilityResponseFactory>();
+        services.AddTransient<FacilityImportResponseFactory>();
+        services.AddTransient<FacilityImportSourceResponseFactory>();
         services.AddTransient<CityAreaResponseFactory>();
+        services.AddTransient<MunicipalityResponseFactory>();
         services.AddTransient<TrailImportResponseFactory>();
         services.AddTransient<ContentReportResponseFactory>();
         services.AddTransient<MailTemplateResponseFactory>();

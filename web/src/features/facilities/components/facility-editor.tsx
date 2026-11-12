@@ -18,7 +18,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useSaveFacility } from "@/features/facilities/api/facility";
-import { FACILITY_TYPES } from "@/features/facilities/utils/facility-types";
+import { FACILITY_TYPES } from "@/utils/facility-types";
 import { isHttpUrl } from "@/utils/url";
 
 // keep-comment: mirrors SaveFacilityRequestValidator; over one, the API rejects the whole save with a 400

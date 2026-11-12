@@ -52,6 +52,11 @@ export interface CityArea {
   url?: string;
   facilities: Facility[];
   trails: CityAreaTrail[];
+  municipality?: string | null;
+  // keep-comment: kilometres to the boundary, 0 inside; only when the list was asked with a position
+  distanceKm?: number | null;
+  // keep-comment: GeoJSON MultiPolygon coordinates, [longitude, latitude]; only on a single area
+  boundary?: number[][][][] | null;
 }
 
 export interface CityAreaTrail {
@@ -62,4 +67,6 @@ export interface CityAreaTrail {
   description?: string;
   averageRating: number;
   image?: TrailImage;
+  // keep-comment: [longitude, latitude] pairs; only on a single area
+  path?: number[][] | null;
 }

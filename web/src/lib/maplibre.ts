@@ -19,6 +19,13 @@ const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
 
 export const hasSatellite = Boolean(MAPTILER_KEY);
 
+// keep-comment: shared by every admin map, so a trail, its start and its end look the same on each page
+export const MAP_COLORS = {
+  trail: "#134a5b",
+  start: "#2e7d32",
+  end: "#b3261e",
+} as const;
+
 const OSM_STYLE: StyleSpecification = {
   version: 8,
   sources: {

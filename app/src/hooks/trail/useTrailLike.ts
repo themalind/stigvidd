@@ -11,11 +11,10 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { TRAIL_LIKES_STALE_TIME } from "@/constants/cache";
 import { HikeSubmission, Trail, TrailCard, TrailLike } from "@/data/types";
 import { HIKE_SUBMISSIONS_QUERY_ROOT } from "@/hooks/hike/useMyHikeSubmissions";
+import { POPULAR_CONTRIBUTIONS_QUERY_ROOT } from "@/hooks/trail/usePopularContributions";
 import { QueryClient, skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
-
-export const POPULAR_CONTRIBUTIONS_QUERY_ROOT = ["trails", "popular-contributions"] as const;
 
 export const trailLikeQueryKey = (identifier: string, userId: string | undefined) =>
   ["trailLike", identifier, userId] as const;

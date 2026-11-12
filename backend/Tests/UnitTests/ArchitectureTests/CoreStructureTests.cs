@@ -1,6 +1,7 @@
 ﻿// SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using AwesomeAssertions;
 using FluentValidation;
@@ -13,14 +14,21 @@ public class CoreStructureTests
     // keep-comment: a new domain is added here on purpose, so it is a decision rather than a typo
     private static readonly HashSet<string> Domains =
     [
-        "Account", "CityAreas", "DataTransfer", "DomainEvents", "Events", "Friends", "Hikes",
-        "HikeShares", "Mail", "Media", "Push", "Reporting", "TrailImport", "Trails",
+        "Account", "CityAreas", "DataTransfer", "DomainEvents", "Events", "Facilities", "Friends",
+        "Hikes", "HikeShares", "Mail", "Media", "Municipalities", "Push", "Reporting", "TrailImport",
+        "Trails",
     ];
 
     private static readonly string[] DomainRoots =
     [
         "Core.Interfaces.Repositories", "Core.Interfaces.Services", "Core.Repositories",
         "Core.Services", "Core.Factories", "Core.Validators",
+    ];
+
+    // keep-comment: records that hold the event permission rules, so they are logic and stay in Services
+    private static readonly HashSet<Type> EventPermissionTypes =
+    [
+        typeof(Core.Services.Events.EventMembership), typeof(Core.Services.Events.LoadedEvent),
     ];
 
     private static readonly List<Type> CoreTypes = typeof(Result).Assembly.GetTypes()
@@ -90,6 +98,19 @@ public class CoreStructureTests
     }
 
     [Fact]
+    public void DataTypes_ShouldNotLiveUnderServicesOrRepositories()
+    {
+        var misplaced = typeof(Result).Assembly.GetTypes()
+            .Where(type => !type.IsDefined(typeof(CompilerGeneratedAttribute), false) && !type.IsNestedPrivate)
+            .Where(type => IsUnder(type, "Core.Services") || IsUnder(type, "Core.Repositories"))
+            .Where(type => type.IsEnum || IsRecord(type))
+            .Where(type => !EventPermissionTypes.Contains(type))
+            .Select(Name);
+
+        string.Join(", ", misplaced).Should().BeEmpty("records and enums go in the Models folder beside the interface; only a private nested one may stay in its class");
+    }
+
+    [Fact]
     public void ResponseFactories_ShouldLiveInADomainFolderUnderFactories()
     {
         var misplaced = CoreTypes
@@ -108,6 +129,12 @@ public class CoreStructureTests
     private static bool IsModels(Type type)
     {
         return IsUnder(type, "Core.Interfaces") && type.Namespace?.Split('.').Contains("Models") == true;
+    }
+
+    private static bool IsRecord(Type type)
+    {
+        return type.GetMethod("<Clone>$") is not null
+            || type is { IsValueType: true } && type.GetMethod("PrintMembers", BindingFlags.NonPublic | BindingFlags.Instance) is not null;
     }
 
     private static bool IsValidator(Type type)

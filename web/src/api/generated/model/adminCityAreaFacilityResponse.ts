@@ -10,4 +10,5 @@ export interface AdminCityAreaFacilityResponse {
   identifier: string;
   name: string;
   facilityType: number;
+  isManual: boolean;
 }

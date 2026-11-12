@@ -3,8 +3,10 @@
 
 using Core.Repositories;
 using AwesomeAssertions;
+using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace UnitTests.RepositoryTests;
@@ -233,7 +235,6 @@ public class FacilityRepositoryTests : TestBase
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        // Deleting again should now report NotFound, confirming it was removed.
         var second = await repo.DeleteFacilityImageAsync("fac-img-del", TestContext.Current.CancellationToken);
         second.Status.Should().Be(RepositoryResultStatus.NotFound);
     }
@@ -251,5 +252,95 @@ public class FacilityRepositoryTests : TestBase
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Status.Should().Be(RepositoryResultStatus.NotFound);
+    }
+
+    [Fact]
+    public async Task ApplyImportAsync_WritesOnlyTheFieldsTheImportOwns()
+    {
+        // Arrange
+        var ct = TestContext.Current.CancellationToken;
+        var factory = CreateSeededFactory();
+        var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+        Facility stale;
+        await using (var read = await factory.CreateDbContextAsync(ct))
+        {
+            stale = await read.Facilities.AsNoTracking().SingleAsync(f => f.Identifier == Facility1Identifier, ct);
+        }
+
+        var accessibleMeanwhile = !stale.IsAccessible;
+        await using (var edit = await factory.CreateDbContextAsync(ct))
+        {
+            var facility = await edit.Facilities.SingleAsync(f => f.Identifier == Facility1Identifier, ct);
+            facility.IsAccessible = accessibleMeanwhile;
+            facility.Name = "Omdöpt under importen";
+            await edit.SaveChangesAsync(ct);
+        }
+
+        stale.Description = "Importerad beskrivning";
+        var sourceId = await AddSourceAsync(factory, ct);
+
+        // Act
+        var result = await repo.ApplyImportAsync(sourceId, "{\"IdField\":\"id\"}", [], [stale], ct);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        await using var verify = await factory.CreateDbContextAsync(ct);
+        var saved = await verify.Facilities.AsNoTracking().SingleAsync(f => f.Identifier == Facility1Identifier, ct);
+        saved.Description.Should().Be("Importerad beskrivning");
+        saved.Name.Should().Be("Omdöpt under importen");
+        saved.IsAccessible.Should().Be(accessibleMeanwhile);
+        var source = await verify.FacilityImportSources.AsNoTracking().SingleAsync(s => s.Id == sourceId, ct);
+        source.Mapping.Should().Be("{\"IdField\":\"id\"}");
+    }
+
+    private static async Task<int> AddSourceAsync(IDbContextFactory<StigViddDbContext> factory, CancellationToken ct)
+    {
+        await using var context = await factory.CreateDbContextAsync(ct);
+        var source = new FacilityImportSource
+        {
+            Municipality = new Municipality { Name = "Borås", Slug = "boras" },
+            Name = "Badplatser",
+            Slug = "badplatser",
+            Key = "boras:badplatser",
+        };
+        context.FacilityImportSources.Add(source);
+        await context.SaveChangesAsync(ct);
+
+        return source.Id;
+    }
+
+    [Fact]
+    public async Task ApplyImportAsync_ReportsAConflictWhenAFacilityWasDeletedMeanwhile()
+    {
+        // Arrange
+        var ct = TestContext.Current.CancellationToken;
+        var factory = CreateSeededFactory();
+        var repo = new FacilityRepository(factory, NullLogger<FacilityRepository>.Instance);
+        var facility = new Facility
+        {
+            Identifier = Guid.NewGuid().ToString(),
+            Name = "Borttagen badplats",
+            FacilityType = FacilityType.SwimmingArea,
+            CreatedAt = DateTime.UtcNow,
+            LastUpdatedAt = DateTime.UtcNow,
+        };
+        await repo.CreateFacilityAsync(facility, ct);
+        await using (var delete = await factory.CreateDbContextAsync(ct))
+        {
+            delete.Facilities.Remove(await delete.Facilities.SingleAsync(f => f.Identifier == facility.Identifier, ct));
+            await delete.SaveChangesAsync(ct);
+        }
+
+        var sourceId = await AddSourceAsync(factory, ct);
+
+        // Act
+        var result = await repo.ApplyImportAsync(sourceId, "{\"IdField\":\"id\"}", [], [facility], ct);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Status.Should().Be(RepositoryResultStatus.Conflict);
+        await using var verify = await factory.CreateDbContextAsync(ct);
+        var source = await verify.FacilityImportSources.AsNoTracking().SingleAsync(s => s.Id == sourceId, ct);
+        source.Mapping.Should().BeNull();
     }
 }

@@ -10,8 +10,8 @@ import AdventureCard from "@/components/home/adventure-card";
 import GetStartedCard from "@/components/home/get-started-card";
 import HeroBanner from "@/components/home/hero-banner";
 import LatestHikeCard from "@/components/home/latest-hike-card";
+import NearbyAreas from "@/components/home/nearby-areas";
 import PopularContributions from "@/components/home/popular-contributions";
-import ImageLinkCard from "@/components/media/image-link-card";
 import InlineError from "@/components/status/inline-error";
 import SectionPanel, { PANEL_BLEED, PANEL_PADDING } from "@/components/layout/section-panel";
 import LatestHikeSkeleton from "@/components/skeletons/latest-hike-skeleton";
@@ -19,37 +19,24 @@ import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleto
 import PagerCarousel from "@/components/trail/pager-carousel";
 import { POPULAR_TRAILS_STALE_TIME } from "@/constants/cache";
 import { SCREEN_PADDING } from "@/constants/constants";
-import { guardedNavigate } from "@/utils/navigation";
-import { roundTo } from "@/utils/format/round-to";
 import { useLatestHike } from "@/hooks/hike/useLatestHike";
 import { useIsOnline } from "@/hooks/useIsOnline";
-import { useUserLocation } from "@/hooks/location/useUserLocation";
+import { useApproximatePosition } from "@/hooks/location/useApproximatePosition";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import React, { useRef } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
-const AREA_COVERS = [
-  require("../../../assets/images/area_cover1.jpg"),
-  require("../../../assets/images/area_cover2.jpg"),
-  require("../../../assets/images/area_cover3.jpg"),
-  require("../../../assets/images/area_cover4.jpg"),
-];
-
 export default function HomeScreen() {
   const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const theme = useTheme();
   const { t } = useTranslation();
-  // keep-comment: the Borås fallback is not the user's position, so it never reaches the API; without coordinates the section asks for popular trails
-  const { data: location, isPending: locationPending } = useUserLocation();
-  const userLocation = location?.isFallback ? undefined : location;
+  // keep-comment: without a real position the section asks for popular trails
+  const { latitude, longitude, hasPosition, isPending: locationPending } = useApproximatePosition();
   const latest = useLatestHike();
   const isOnline = useIsOnline();
-  // keep-comment: about a kilometre, so GPS drift does not make a new query for the same ranking
-  const latitude = roundTo(userLocation?.latitude, 2);
-  const longitude = roundTo(userLocation?.longitude, 2);
   const query = useQuery({
     queryKey: ["trails", "popular", latitude, longitude],
     queryFn: () => getPopularTrails(latitude, longitude),
@@ -77,7 +64,7 @@ export default function HomeScreen() {
       )}
       {/* Offline with nothing cached there is nothing to show; the offline banner says why. keep-comment: hidden coupling to the banner */}
       {(query.data || isOnline) && (
-        <SectionPanel testID="home-popular" title={userLocation ? t("home.popularNearYou") : t("home.popular")}>
+        <SectionPanel testID="home-popular" title={hasPosition ? t("home.popularNearYou") : t("home.popular")}>
           {query.data ? (
             <View style={PANEL_BLEED}>
               <PagerCarousel
@@ -99,14 +86,7 @@ export default function HomeScreen() {
         </SectionPanel>
       )}
 
-      <ImageLinkCard
-        testID="home-areas-card"
-        style={s.wideCard}
-        images={AREA_COVERS}
-        title={t("home.explore")}
-        subtitle={t("home.exploreSubtitle")}
-        onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(home)/area/area-list-screen"))}
-      />
+      <NearbyAreas />
 
       <PopularContributions latitude={latitude} longitude={longitude} enabled={!locationPending} />
 
@@ -129,8 +109,5 @@ const s = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 30,
     gap: 16,
-  },
-  wideCard: {
-    marginHorizontal: SCREEN_PADDING,
   },
 });

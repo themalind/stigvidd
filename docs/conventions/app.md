@@ -18,7 +18,7 @@ hooks/        React Query and state hooks, in domain subfolders
 atoms/        jotai atoms
 services/     device and platform: auth, logger, notifications, location, dialog
 api/          one module per backend area; api/core/ holds request.ts and the error types
-utils/        pure helpers, in subfolders (event, format, geo, image, map, share)
+utils/        pure helpers, in subfolders (area, event, format, geo, image, map, share)
 data/         types and static data
 constants/    constants (colours, BORDER_RADIUS, ...)
 i18n/         translations
@@ -53,6 +53,8 @@ folder are free. Tests (`__tests__/`, `*.test.ts(x)`, `__mocks__/`, `src/test/`)
 - UI is a reusable component in `components/<domain>/`. Look for an existing one first.
 - Modals use `ModalScrim`, never a blur. Dialogs live in `components/dialog/`.
 - One border radius: `BORDER_RADIUS` (5) from the constants.
+- An icon name is typed `keyof typeof MaterialCommunityIcons.glyphMap`, never `string`, or `tsc` lets a
+  missing glyph through (Paper's `Icon` is MCI). Facility icons come from `constants/facility-icons.ts`.
 - Licence: `app/` is MPL-2.0, and Exhibit B is never added.
 
 ## Checks

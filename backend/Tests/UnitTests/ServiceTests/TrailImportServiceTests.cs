@@ -32,11 +32,12 @@ public class TrailImportServiceTests
     private readonly Mock<ITrailImportRepository> _repository = new();
     private readonly Mock<ITrailImportFileStore> _fileStore = new();
     private readonly Mock<ITrailImportAnalysisQueue> _queue = new();
+    private readonly Mock<ICityAreaMembershipService> _cityAreas = new();
 
     private TrailImportService CreateService()
     {
         return new(_repository.Object, _fileStore.Object, _queue.Object, new TrailImportResponseFactory(),
-            NullLogger<TrailImportService>.Instance);
+            NullLogger<TrailImportService>.Instance, _cityAreas.Object);
     }
 
     private static TrailImportSession Session(ImportSessionStatus status, string? storedPath = null)

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
-using Core.Validators.Trails;
+using Core.Validators.Facilities;
 using WebDataContracts.RequestModels.Facility;
 
 namespace UnitTests.ValidatorTests;
@@ -62,7 +62,7 @@ public class SaveFacilityRequestValidatorTests
     [Fact]
     public void Validate_WithANameOverTheLimit_Fails()
     {
-        var result = _validator.Validate(Valid(name: new string('a', SaveFacilityRequestValidator.NameMaxLength + 1)));
+        var result = _validator.Validate(Valid(name: new string('a', FacilityRules.NameMaxLength + 1)));
 
         result.Errors.Should().ContainSingle(e => e.PropertyName == nameof(SaveFacilityRequest.Name));
     }
@@ -102,7 +102,7 @@ public class SaveFacilityRequestValidatorTests
     [Fact]
     public void Validate_WithADescriptionAtTheLimit_Passes()
     {
-        var result = _validator.Validate(Valid(description: new string('a', SaveFacilityRequestValidator.DescriptionMaxLength)));
+        var result = _validator.Validate(Valid(description: new string('a', FacilityRules.DescriptionMaxLength)));
 
         result.IsValid.Should().BeTrue();
     }
@@ -110,7 +110,7 @@ public class SaveFacilityRequestValidatorTests
     [Fact]
     public void Validate_WithADescriptionOverTheLimit_Fails()
     {
-        var result = _validator.Validate(Valid(description: new string('a', SaveFacilityRequestValidator.DescriptionMaxLength + 1)));
+        var result = _validator.Validate(Valid(description: new string('a', FacilityRules.DescriptionMaxLength + 1)));
 
         result.Errors.Should().ContainSingle(e => e.PropertyName == nameof(SaveFacilityRequest.Description));
     }
@@ -118,7 +118,7 @@ public class SaveFacilityRequestValidatorTests
     [Fact]
     public void Validate_WithALocationOverTheLimit_Fails()
     {
-        var result = _validator.Validate(Valid(location: new string('a', SaveFacilityRequestValidator.LocationMaxLength + 1)));
+        var result = _validator.Validate(Valid(location: new string('a', FacilityRules.LocationMaxLength + 1)));
 
         result.Errors.Should().ContainSingle(e => e.PropertyName == nameof(SaveFacilityRequest.Location));
     }

@@ -3,4 +3,4 @@
 
 namespace Core.Interfaces.Repositories.CityAreas.Models;
 
-public record AdminCityAreaFacilityProjection(string Identifier, string Name, int FacilityType);
+public record AdminCityAreaFacilityProjection(string Identifier, string Name, int FacilityType, bool IsManual);

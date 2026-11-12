@@ -89,7 +89,10 @@ export default function DateTimeField({
           style={[s.button, { borderColor, backgroundColor: theme.colors.surfaceVariant }]}
         >
           <Icon source="calendar-blank-outline" size={18} color={theme.colors.onSurfaceVariant} />
-          <Text style={{ color: value ? theme.colors.onSurface : theme.colors.onSurfaceVariant }} numberOfLines={1}>
+          <Text
+            style={[s.value, { color: value ? theme.colors.onSurface : theme.colors.onSurfaceVariant }]}
+            numberOfLines={1}
+          >
             {value ? formatFieldValue(value, mode, i18n.language) : (placeholder ?? t("common.select"))}
           </Text>
         </Pressable>
@@ -136,6 +139,11 @@ const s = StyleSheet.create({
   field: {
     gap: 4,
     flex: 1,
+    minWidth: 0,
+  },
+  // keep-comment: without flexShrink a long date runs out of the button instead of truncating
+  value: {
+    flexShrink: 1,
   },
   label: {
     fontSize: 13,

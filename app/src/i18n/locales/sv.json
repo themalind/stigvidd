@@ -6,6 +6,7 @@
     "since": "Avstängd sedan {{date}}"
   },
   "common": {
+    "seeAll": "Visa alla",
     "dragToMove": "Dra för att flytta",
     "imageFraming": "Bildens utsnitt",
     "imageFramingHint": "Svep uppåt eller nedåt för att flytta utsnittet",
@@ -717,8 +718,6 @@
     "km": "km",
     "trails": "Vandring, motion & promenadstigar",
     "facilities": "Faciliteter",
-    "firePits": "Grillplatser",
-    "shelters": "Vindskydd",
     "fishing": "Fiske",
     "swimming": "Badplatser",
     "natureReserve": "Naturreservat",
@@ -726,7 +725,26 @@
     "firePitCount_other": "{{count}} grillplatser",
     "shelterCount_one": "{{count}} vindskydd",
     "shelterCount_other": "{{count}} vindskydd",
-    "facilitiesOnMapHint": "Slå på Grillplatser och Vindskydd i kartans filter för att se var de ligger."
+    "listTitle": "Utflyktsmål",
+    "searchPlaceholder": "Sök område eller sjö",
+    "sortNear": "Närmast",
+    "sortPopular": "Populärast",
+    "sortAz": "A–Ö",
+    "allMunicipalities": "Alla kommuner",
+    "otherMunicipality": "Övriga",
+    "noMatches": "Inga utflyktsmål med de filtren.",
+    "trailCount_one": "{{count}} led",
+    "trailCount_other": "{{count}} leder",
+    "feature": {
+      "swimming": "Bad",
+      "firePit": "Grill",
+      "shelter": "Vindskydd",
+      "accessible": "Tillgängligt"
+    },
+    "onTheMap": "På kartan",
+    "openMap": "Öppna karta",
+    "mapSwimming_one": "{{count}} badplats",
+    "mapSwimming_other": "{{count}} badplatser"
   },
   "home": {
     "popularNearYou": "Populära promenader nära dig",
@@ -735,10 +753,10 @@
     "popularContributions": "Delat av andra vandrare",
     "popularContributionsNearYou": "Delat av vandrare nära dig",
     "popularContributionsHint": "Populära promenader som andra spelat in",
-    "seeAllContributions": "Visa alla",
     "locationUnknown": "Plats okänd",
-    "explore": "Utforska Borås",
-    "exploreSubtitle": "Rya åsar · Kype · m.fl.",
+    "areasNearYou": "Utflyktsmål nära dig",
+    "areasPopular": "Populära utflyktsmål",
+    "areasError": "Kunde inte hämta utflyktsmålen just nu.",
     "latestHike": "Din senaste promenad",
     "latestHikeError": "Kunde inte hämta din senaste promenad just nu.",
     "getStartedSignedOutTitle": "Din nästa promenad börjar här",

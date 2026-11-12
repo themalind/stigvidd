@@ -28,6 +28,9 @@ public class LayerDependencyTests
     private const string Repositories = @"^(?!.*\.Models(\.|$))(Core\.Repositories|Core\.Interfaces\.Repositories)(\..+)?$";
     private const string Services = @"^(?!.*\.Models(\.|$))Core\.Interfaces\.Services(\..+)?$";
 
+    // keep-comment: a domain's own logic; the cross-cutting helpers at the Core.Services root (UtcDates, Slug) are open to all
+    private const string DomainLogic = @"^Core\.(Services|Repositories)\.[^.]+(\..+)?$";
+
     [Fact]
     public void Controllers_ShouldNotReachRepositoriesOrTheDatabase()
     {
@@ -69,7 +72,21 @@ public class LayerDependencyTests
             .Should().NotDependOnAny(Types().That()
                 .ResideInNamespaceMatching(Repositories)
                 .Or().ResideInNamespaceMatching(Services)
+                .Or().ResideInNamespaceMatching(DomainLogic)
                 .Or().HaveFullName(DbContext));
+
+        Violations(rule).Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Services_ShouldNotBorrowFromValidators()
+    {
+        // keep-comment: a limit both need lives in a *Rules or *Limits class beside the validator, never in the validator itself
+        var rule = Types().That().ResideInNamespaceOrBelow("Core.Services")
+            .Or().ResideInNamespaceOrBelow("Core.Repositories")
+            .Should().NotDependOnAny(Types().That()
+                .ResideInNamespaceOrBelow("Core.Validators")
+                .And().HaveNameEndingWith("Validator"));
 
         Violations(rule).Should().BeEmpty();
     }

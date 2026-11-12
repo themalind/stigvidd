@@ -21,9 +21,10 @@ public class CityAreasController : StigViddController
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyCollection<CityAreaResponse>>> GetAll(CancellationToken ctoken)
+    public async Task<ActionResult<IReadOnlyCollection<CityAreaResponse>>> GetAll(
+        [FromQuery] double? latitude, [FromQuery] double? longitude, CancellationToken ctoken)
     {
-        var result = await _cityAreaService.GetAllAsync(ctoken);
+        var result = await _cityAreaService.GetAllAsync(latitude, longitude, ctoken);
 
         if (!result.Success && result.Message != null)
         {

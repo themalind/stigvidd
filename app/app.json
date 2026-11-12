@@ -2,6 +2,7 @@
   "expo": {
     "name": "Stigvidd",
     "slug": "stigvidd",
+    "owner": "stigvidd",
     "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
@@ -14,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.stigvidd.app",
-      "buildNumber": "12",
+      "buildNumber": "14",
       "associatedDomains": ["applinks:link.stigvidd.se"],
       "infoPlist": {
         "CFBundleDevelopmentRegion": "sv",
@@ -27,7 +28,7 @@
       "sv": "./src/i18n/ios/sv.json"
     },
     "android": {
-      "versionCode": 14,
+      "versionCode": 16,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#68AE82",

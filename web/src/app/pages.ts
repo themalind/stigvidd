@@ -9,6 +9,8 @@ import {
   Footprints,
   Gauge,
   Images,
+  Import,
+  Inbox,
   Mail,
   MapPinned,
   Route,
@@ -16,6 +18,7 @@ import {
   Settings2,
   Upload,
   Users,
+  Waves,
   type LucideIcon,
 } from "lucide-react";
 import { paths } from "@/config/paths";
@@ -28,8 +31,17 @@ export interface AppPage {
   component: LazyExoticComponent<ComponentType>;
   // keep-comment: a page with an icon is listed in the sidebar, in this order
   icon?: LucideIcon;
+  group?: NavGroup;
   loader?: LoaderFunction;
 }
+
+export interface NavGroup {
+  title: string;
+  icon: LucideIcon;
+}
+
+const contributions: NavGroup = { title: "Contributions", icon: Inbox };
+const imports: NavGroup = { title: "Import", icon: Import };
 
 const loaders = detailLoaders(queryClient);
 
@@ -50,6 +62,7 @@ export const pages: AppPage[] = [
     path: paths.userWalks(),
     title: "User Walks",
     icon: Footprints,
+    group: contributions,
     component: lazy(() => import("./routes/user-walks")),
   },
   {
@@ -74,6 +87,7 @@ export const pages: AppPage[] = [
     path: paths.trailImport,
     title: "Trail Import",
     icon: Route,
+    group: imports,
     component: lazy(() => import("./routes/trail-import")),
   },
   {
@@ -81,6 +95,13 @@ export const pages: AppPage[] = [
     title: "Review Import",
     component: lazy(() => import("./routes/trail-import-review")),
     loader: loaders.trailImportSession,
+  },
+  {
+    path: paths.facilityImport,
+    title: "Facility Import",
+    icon: Waves,
+    group: imports,
+    component: lazy(() => import("./routes/facility-import")),
   },
   {
     path: paths.moderation,
@@ -92,6 +113,7 @@ export const pages: AppPage[] = [
     path: paths.hikeSubmissions,
     title: "Hike Submissions",
     icon: Upload,
+    group: contributions,
     component: lazy(() => import("./routes/hike-submissions")),
   },
   {

@@ -3,4 +3,4 @@
 
 namespace Core.Interfaces.Repositories.CityAreas.Models;
 
-public record AdminCityAreaTrailProjection(string Identifier, string Name, bool IsVerified);
+public record AdminCityAreaTrailProjection(string Identifier, string Name, bool IsVerified, bool IsManual);
