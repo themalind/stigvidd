@@ -53,7 +53,8 @@ public class ModerationQueryFilterTests : TestBase
             NullLogger<TrailService>.Instance,
             new TrailResponseFactory(cfg.Object),
             new TrailContributionRanking(new ConfigurationBuilder().Build()),
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()),
+            new Mock<ICityAreaMembershipService>().Object);
     }
 
     [Fact]
@@ -147,7 +148,8 @@ public class ModerationQueryFilterTests : TestBase
             NullLogger<TrailService>.Instance,
             new TrailResponseFactory(cfg.Object),
             new TrailContributionRanking(new ConfigurationBuilder().Build()),
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()),
+            new Mock<ICityAreaMembershipService>().Object);
     }
 
     private static (int High, int Low) PositionsIn(IReadOnlyCollection<TrailOverviewResponse?> overviews)
@@ -273,7 +275,7 @@ public class ModerationQueryFilterTests : TestBase
         var service = BuildCityAreaService(ModerationState.HiddenPendingReview);
 
         // Act
-        var result = await service.GetAllAsync(TestContext.Current.CancellationToken);
+        var result = await service.GetAllAsync(null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();

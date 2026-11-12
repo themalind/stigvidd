@@ -6,10 +6,16 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CityArea } from "@/data/types";
-import { sendForJson } from "./core/request";
+import { positionQuery, sendForJson } from "./core/request";
 
-export function getAreas(): Promise<CityArea[]> {
-  return sendForJson({ name: "getAreas", path: "/cityareas", endpoint: "/cityareas", auth: "none" });
+// keep-comment: nearest first with a position, else most popular first
+export function getAreas(latitude?: number, longitude?: number): Promise<CityArea[]> {
+  return sendForJson({
+    name: "getAreas",
+    path: `/cityareas${positionQuery(latitude, longitude)}`,
+    endpoint: "/cityareas",
+    auth: "none",
+  });
 }
 
 export function getAreaByIdentifier(areaIdentifier: string): Promise<CityArea> {

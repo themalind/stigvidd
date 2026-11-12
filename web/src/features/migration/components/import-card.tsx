@@ -1,9 +1,10 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { AlertTriangle, Loader2, Upload } from "lucide-react";
+import { FileDrop } from "@/components/file-drop";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,6 @@ import { useImportData } from "@/features/migration/api/migration";
 export function ImportCard({ sharedServices }: { sharedServices: boolean }) {
   const [file, setFile] = useState<File | null>(null);
   const [confirmText, setConfirmText] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const importData = useImportData();
   const importing = importData.isPending;
 
@@ -29,7 +29,6 @@ export function ImportCard({ sharedServices }: { sharedServices: boolean }) {
         toast.success(message, { description: notes.join(" ") || undefined, duration: 15000 });
         setFile(null);
         setConfirmText("");
-        if (fileInputRef.current) fileInputRef.current.value = "";
       },
     });
   }
@@ -59,17 +58,14 @@ export function ImportCard({ sharedServices }: { sharedServices: boolean }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="archive">Migration archive (.zip)</Label>
-          <Input
-            id="archive"
-            ref={fileInputRef}
-            type="file"
-            accept=".zip,application/zip"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            disabled={importing}
-          />
-        </div>
+        <FileDrop
+          label="Migration archive"
+          accept=".zip,application/zip"
+          hint="A .zip exported from another host"
+          file={file}
+          disabled={importing}
+          onChange={setFile}
+        />
 
         <Separator />
 

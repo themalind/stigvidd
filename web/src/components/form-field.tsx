@@ -56,18 +56,58 @@ export function TextField({ label, value, onChange, max, multiline = false }: Te
   );
 }
 
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface SelectFieldProps {
+  label: string;
+  value: string;
+  options: readonly SelectOption[];
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  hint?: ReactNode;
+}
+
+export function SelectField({ label, value, options, onChange, disabled, hint }: SelectFieldProps) {
+  return (
+    <FormField label={label}>
+      {(id) => (
+        <>
+          <select
+            id={id}
+            className="h-9 w-full min-w-64 rounded-sm border bg-background px-2 text-sm sm:w-auto"
+            value={value}
+            disabled={disabled}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+        </>
+      )}
+    </FormField>
+  );
+}
+
 interface CheckboxFieldProps {
   label: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
 }
 
-export function CheckboxField({ label, checked, onChange }: CheckboxFieldProps) {
+export function CheckboxField({ label, checked, onChange, disabled }: CheckboxFieldProps) {
   const id = useId();
 
   return (
     <div className="flex items-center gap-2">
-      <Checkbox id={id} checked={checked} onCheckedChange={(state) => onChange(state === true)} />
+      <Checkbox id={id} checked={checked} disabled={disabled} onCheckedChange={(state) => onChange(state === true)} />
       <Label htmlFor={id}>{label}</Label>
     </div>
   );

@@ -34,6 +34,10 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
     public DbSet<UserKeycloakMapping> UserKeycloakMappings { get; set; }
     public DbSet<UserPushToken> UserPushTokens { get; set; }
     public DbSet<CityArea> CityAreas { get; set; }
+    public DbSet<CityAreaTrailExclusion> CityAreaTrailExclusions { get; set; }
+    public DbSet<CityAreaFacilityExclusion> CityAreaFacilityExclusions { get; set; }
+    public DbSet<Municipality> Municipalities { get; set; }
+    public DbSet<FacilityImportSource> FacilityImportSources { get; set; }
     public DbSet<TrailSourceLink> TrailSourceLinks { get; set; }
     public DbSet<TrailImportSession> TrailImportSessions { get; set; }
     public DbSet<TrailImportProposal> TrailImportProposals { get; set; }
@@ -118,6 +122,18 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
                 .HasIndex(to => to.IncidentLocation)
                 .HasMethod("gist");
 
+            modelBuilder.Entity<Trail>()
+                .HasIndex(t => t.GeoPath)
+                .HasMethod("gist");
+
+            modelBuilder.Entity<CityArea>()
+                .Property(a => a.Boundary)
+                .HasColumnType("geometry(MultiPolygon, 4326)");
+
+            modelBuilder.Entity<CityArea>()
+                .HasIndex(a => a.Boundary)
+                .HasMethod("gist");
+
             modelBuilder.Entity<Event>()
                 .Property(e => e.MeetingPoint)
                 .HasColumnType("geometry(Point, 4326)");
@@ -177,6 +193,10 @@ public class StigViddDbContext(DbContextOptions<StigViddDbContext> options) : Db
 
         modelBuilder.Entity<EventRoute>()
             .Property(r => r.Path)
+            .HasAnnotation("Sqlite:Srid", 4326);
+
+        modelBuilder.Entity<CityArea>()
+            .Property(a => a.Boundary)
             .HasAnnotation("Sqlite:Srid", 4326);
     }
 }

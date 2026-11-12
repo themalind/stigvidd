@@ -106,29 +106,16 @@ public class UserPushTokenRepository : IUserPushTokenRepository
     {
         try
         {
-            using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
-
-            var token = await context.UserPushTokens
-                .FirstOrDefaultAsync(t => t.ExpoToken == expoToken, ctoken);
-
-            if (token == null)
+            try
             {
-                // Create new token
-                token = new UserPushToken
-                {
-                    ExpoToken = expoToken,
-                    UserId = userId,
-                    Platform = platform
-                };
-                context.UserPushTokens.Add(token);
+                await SaveTokenAsync(userId, expoToken, platform, ctoken);
             }
-            else
+            catch (DbUpdateException ex) when (UniqueViolation.Is(ex))
             {
-                // Update existing token
-                token.Platform = platform;
+                // keep-comment: unique ExpoToken; a concurrent request inserted it first, so the retry updates that row.
+                await SaveTokenAsync(userId, expoToken, platform, ctoken);
             }
 
-            await context.SaveChangesAsync(ctoken);
             return RepositoryResult.Success();
         }
         catch (Exception ex)
@@ -136,5 +123,30 @@ public class UserPushTokenRepository : IUserPushTokenRepository
             _logger.LogError(ex, "Error upserting a push token for user {UserId}", userId);
             return RepositoryResult.Error();
         }
-    }    
+    }
+
+    private async Task SaveTokenAsync(int userId, string expoToken, string platform, CancellationToken ctoken)
+    {
+        using var context = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+        var token = await context.UserPushTokens
+            .FirstOrDefaultAsync(t => t.ExpoToken == expoToken, ctoken);
+
+        if (token == null)
+        {
+            context.UserPushTokens.Add(new UserPushToken
+            {
+                ExpoToken = expoToken,
+                UserId = userId,
+                Platform = platform
+            });
+        }
+        else
+        {
+            token.UserId = userId;
+            token.Platform = platform;
+        }
+
+        await context.SaveChangesAsync(ctoken);
+    }
 }

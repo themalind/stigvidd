@@ -35,15 +35,18 @@ public class TrailImportService : ITrailImportService
     private readonly ITrailImportAnalysisQueue _queue;
     private readonly TrailImportResponseFactory _responseFactory;
     private readonly ILogger<TrailImportService> _logger;
+    private readonly ICityAreaMembershipService _cityAreaMembership;
 
     public TrailImportService(
         ITrailImportRepository repository,
         ITrailImportFileStore fileStore,
         ITrailImportAnalysisQueue queue,
         TrailImportResponseFactory responseFactory,
-        ILogger<TrailImportService> logger)
+        ILogger<TrailImportService> logger,
+        ICityAreaMembershipService cityAreaMembership)
     {
         _repository = repository;
+        _cityAreaMembership = cityAreaMembership;
         _fileStore = fileStore;
         _queue = queue;
         _responseFactory = responseFactory;
@@ -578,6 +581,12 @@ public class TrailImportService : ITrailImportService
         if (!applied.IsSuccess)
             return Result.Fail<TrailImportApplyResponse>(new Message(
                 (int)HttpStatusCode.InternalServerError, "The session could not be applied."));
+
+        var movedTrails = applied.Value.Values
+            .Concat(writes.Updates.Where(u => u.GeoPath is not null).Select(u => u.TrailId))
+            .Distinct()
+            .ToList();
+        await _cityAreaMembership.TrailsMovedAsync(movedTrails, ctoken);
 
         _logger.LogInformation(
             "TrailImportService: Session {sessionId} applied. {created} trail(s) created, {updated} updated, {links} link(s) written, {conflicts} conflict(s).",

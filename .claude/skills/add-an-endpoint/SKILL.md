@@ -67,7 +67,12 @@ build now does most of this for you:
    on the wire, or that a nullable slipped. (`git diff` will not show it — it is not
    tracked. Read the operation you added.)
 3. `cd web && npm run generate:api`, then commit `web/src/api/generated` — the typed client
-   is the only half of this that is committed.
+   is the only half of this that is committed. **Renamed or deleted a DTO?** orval never
+   removes what it no longer generates (`orval.config.ts` has no `clean`, and it appends to
+   existing index files): the old `model/<dto>.ts` stays, and so does its `export *` even
+   after you delete the file. Delete the stale file, `git checkout -- src/api/generated/index.ts
+   src/api/generated/model/index.ts`, then regenerate. Jenkins regenerates on a clean
+   checkout, so a leftover export fails its diff gate.
 4. Use it from `web/src/features/<domain>/api/<domain>.ts` (or `web/src/api/` when two
    features need it): wrap orval's `get…QueryOptions`/`get…SuspenseQueryOptions` and its
    `get…QueryKey` for invalidation, and put mutations there as `useX()` hooks. Components

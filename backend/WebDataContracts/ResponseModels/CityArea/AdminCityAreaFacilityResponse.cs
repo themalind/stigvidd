@@ -8,4 +8,6 @@ public class AdminCityAreaFacilityResponse
     public required string Identifier { get; set; }
     public required string Name { get; set; }
     public required int FacilityType { get; set; }
+    // keep-comment: linked by hand rather than by the boundary
+    public required bool IsManual { get; set; }
 }

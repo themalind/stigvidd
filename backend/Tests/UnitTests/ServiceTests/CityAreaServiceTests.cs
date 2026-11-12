@@ -30,7 +30,7 @@ public class CityAreaServiceTests
 
     private static CityAreaProjection MakeCityArea()
     {
-        return new(CityAreaIdentifier, "Dalsjöfors", "Öster om Borås", null, null, null, [], []);
+        return new(CityAreaIdentifier, "Dalsjöfors", "Öster om Borås", null, null, null, null, null, [], []);
     }
 
     [Fact]
@@ -43,11 +43,41 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<CityAreaProjection>>.Success(cityAreas));
 
         // Act
-        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetAllAsync(null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().HaveCount(1);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetAllAsync_LoadsTheBoundaryOnlyWithAPosition(bool withPosition)
+    {
+        // Arrange
+        Expression<Func<CityArea, CityAreaProjection>>? selector = null;
+        var repo = new Mock<ICityAreaRepository>();
+        repo.Setup(r => r.GetAllAsync(It.IsAny<Expression<Func<CityArea, CityAreaProjection>>>(), It.IsAny<CancellationToken>()))
+            .Callback((Expression<Func<CityArea, CityAreaProjection>> s, CancellationToken _) => selector = s)
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<CityAreaProjection>>.Success([]));
+        var area = new CityArea
+        {
+            Name = "Kypesjön",
+            Location = "",
+            Boundary = GeoPointFactory.FromLonLatPolygons([[[new(12.9, 57.7), new(13.0, 57.7), new(13.0, 57.8), new(12.9, 57.7)]]]),
+            Trails = [],
+            Facilities = [],
+        };
+
+        // Act
+        await Build(repo).GetAllAsync(withPosition ? 57.7 : null, withPosition ? 12.9 : null, TestContext.Current.CancellationToken);
+
+        // Assert
+        selector.Should().NotBeNull();
+        if (selector is null)
+            return;
+        (selector.Compile()(area).Boundary is not null).Should().Be(withPosition);
     }
 
     [Fact]
@@ -59,7 +89,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<CityAreaProjection>>.Success([]));
 
         // Act
-        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetAllAsync(null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeTrue();
@@ -75,7 +105,7 @@ public class CityAreaServiceTests
             .ReturnsAsync(RepositoryResult<IReadOnlyCollection<CityAreaProjection>>.Error());
 
         // Act
-        var result = await Build(repo).GetAllAsync(TestContext.Current.CancellationToken);
+        var result = await Build(repo).GetAllAsync(null, null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Success.Should().BeFalse();

@@ -24,4 +24,10 @@ public class Facility : BaseEntity
     public string? Url { get; set; }
 
     public ICollection<CityArea>? CityAreas { get; set; }
+
+    // keep-comment: format "<source>:<the source's own id>"; null for a facility entered by hand
+    public string? SourceId { get; set; }
+
+    // keep-comment: the source's fields at the last import, the merge baseline for the next one
+    public string? SourceSnapshot { get; set; }
 }

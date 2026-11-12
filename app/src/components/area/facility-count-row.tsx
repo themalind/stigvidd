@@ -6,12 +6,13 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { BORDER_RADIUS } from "@/constants/constants";
-import { MaterialIcons } from "@expo/vector-icons";
+import { FacilityIconName } from "@/constants/facility-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 interface FacilityCountRowProps {
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: FacilityIconName;
   label: string;
 }
 
@@ -28,7 +29,7 @@ export default function FacilityCountRow({ icon, label }: FacilityCountRowProps)
         },
       ]}
     >
-      <MaterialIcons name={icon} size={20} color={theme.colors.primary} />
+      <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
       <Text style={[s.label, { color: theme.colors.onSurface }]}>{label}</Text>
     </View>
   );

@@ -13,9 +13,6 @@ namespace Core.TrailImport.Source;
 // geometry, which always knows.
 public static class TrailLength
 {
-    // Mean Earth radius, the same figure the geometry fingerprint rounds against.
-    private const double EarthRadiusMetres = 6371008.8;
-
     // A parsed length this far from the measured one is reported rather than stored. Set
     // wide on purpose: signs round to half kilometres, and the cases worth a human's time
     // are the ones off by a factor, not a few percent.
@@ -93,20 +90,7 @@ public static class TrailLength
 
     internal static double Haversine(Coordinate from, Coordinate to)
     {
-        var dLat = ToRadians(to.Y - from.Y);
-        var dLon = ToRadians(to.X - from.X);
-        var lat1 = ToRadians(from.Y);
-        var lat2 = ToRadians(to.Y);
-
-        var h = Math.Pow(Math.Sin(dLat / 2), 2)
-              + Math.Cos(lat1) * Math.Cos(lat2) * Math.Pow(Math.Sin(dLon / 2), 2);
-
-        return 2 * EarthRadiusMetres * Math.Asin(Math.Sqrt(h));
-    }
-
-    private static double ToRadians(double degrees)
-    {
-        return degrees * Math.PI / 180;
+        return GeoDistance.Metres(from.X, from.Y, to.X, to.Y);
     }
 
     private static decimal Round(decimal kilometres)

@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Infrastructure.Enums;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using NetTopologySuite.Geometries;
 using WebDataContracts.Enums;
 
 namespace UnitTests.FactoryTests;
@@ -29,18 +30,27 @@ public class CityAreaResponseFactoryTests
         "Ett friluftsområde.",
         "https://stigvidd.se/area.jpg",
         "https://www.boras.se/dalsjofors",
+        "Borås",
+        Square,
         Facilities:
         [
-            new CityAreaFacilityProjection("fac-firepit", "Grillplats Tiveden", (int)FacilityType.FirePit, true, null, null, null),
-            new CityAreaFacilityProjection("fac-fishing", "Ankedammen", (int)FacilityType.FishingArea, false, "Dalsjöfors", null, null)
+            new CityAreaFacilityProjection(
+                "fac-firepit", "Grillplats Tiveden", (int)FacilityType.FirePit, true, null, null, null, GeoPointFactory.FromLonLat(12.95, 57.71)),
+            new CityAreaFacilityProjection("fac-fishing", "Ankedammen", (int)FacilityType.FishingArea, false, "Dalsjöfors", null, null, null)
         ],
         Trails:
         [
             new CityAreaTrailProjection(
                 "trail-tiveden", "Tiveden", 9.5M, 2, "En vandringsled genom skogen.",
-                4.5M, new CityAreaTrailImageProjection("img-tiveden", "tiveden.jpg"))
+                4.5M, new CityAreaTrailImageProjection("img-tiveden", "tiveden.jpg"),
+                GeoPointFactory.FromLonLatPath([new Coordinate(12.9, 57.7), new Coordinate(12.91, 57.71)]))
         ]);
     }
+
+    private static readonly MultiPolygon Square = GeoPointFactory.FromLonLatPolygons(
+    [
+        [[new Coordinate(12.9, 57.7), new Coordinate(13.0, 57.7), new Coordinate(13.0, 57.8), new Coordinate(12.9, 57.7)]]
+    ]);
 
     [Fact]
     public void Create_Single_MapsAllFieldsFacilitiesAndTrails()
@@ -49,7 +59,7 @@ public class CityAreaResponseFactoryTests
         var factory = BuildFactory();
 
         // Act
-        var result = factory.Create(AreaWithLinks());
+        var result = factory.Create(AreaWithLinks(), null, includeShapes: false);
 
         // Assert
         result.Identifier.Should().Be("area-dalsjofors");
@@ -80,34 +90,50 @@ public class CityAreaResponseFactoryTests
         // Arrange — area not linked to anything
         var factory = BuildFactory();
         var area = new CityAreaProjection(
-            "area-viskafors", "Viskafors", "Söder om Borås", null, null, null, [], []);
+            "area-viskafors", "Viskafors", "Söder om Borås", null, null, null, null, null, [], []);
 
         // Act
-        var result = factory.Create(area);
+        var result = factory.Create(area, null, includeShapes: true);
 
         // Assert
         result.Facilities.Should().NotBeNull().And.BeEmpty();
         result.Trails.Should().NotBeNull().And.BeEmpty();
+        result.Boundary.Should().BeNull();
     }
 
     [Fact]
-    public void Create_Collection_MapsAllItems()
+    public void Create_ForTheList_LeavesTheShapesOutButKeepsMunicipalityDistanceAndPositions()
     {
-        // Arrange
-        var factory = BuildFactory();
-        var areas = new List<CityAreaProjection>
-        {
-            AreaWithLinks(),
-            new("area-viskafors", "Viskafors", "Söder om Borås", null, null, null, [], [])
-        };
-
         // Act
-        var result = factory.Create(areas);
+        var result = BuildFactory().Create(AreaWithLinks(), 2.345, includeShapes: false);
 
         // Assert
-        result.Should().HaveCount(2);
-        result.Should().Contain(a => a.Identifier == "area-dalsjofors");
-        result.Should().Contain(a => a.Identifier == "area-viskafors");
+        result.Municipality.Should().Be("Borås");
+        result.DistanceKm.Should().Be(2.3);
+        result.Boundary.Should().BeNull();
+        result.Trails.Should().ContainSingle().Which.Path.Should().BeNull();
+        var firePit = result.Facilities.Single(f => f.Identifier == "fac-firepit");
+        firePit.Latitude.Should().Be(57.71M);
+        firePit.Longitude.Should().Be(12.95M);
+        result.Facilities.Single(f => f.Identifier == "fac-fishing").Latitude.Should().BeNull();
+    }
+
+    [Fact]
+    public void Create_ForOneArea_IncludesTheBoundaryAndTrailPaths()
+    {
+        // Act
+        var result = BuildFactory().Create(AreaWithLinks(), null, includeShapes: true);
+
+        // Assert
+        result.DistanceKm.Should().BeNull();
+        var boundary = result.Boundary;
+        boundary.Should().NotBeNull();
+        if (boundary is null) throw new InvalidOperationException("expected a boundary");
+        boundary.Should().ContainSingle().Which.Should().ContainSingle().Which.Should().HaveCount(4);
+        var path = result.Trails.Should().ContainSingle().Subject.Path;
+        if (path is null) throw new InvalidOperationException("expected a path");
+        path.Should().HaveCount(2);
+        path[0].Should().Equal(12.9, 57.7);
     }
 
     [Fact]

@@ -84,3 +84,8 @@ export function queryString(params: Record<string, string | number | boolean | u
     .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`);
   return parts.length === 0 ? "" : `?${parts.join("&")}`;
 }
+
+// keep-comment: both or neither, since the API ignores half a position
+export function positionQuery(latitude?: number, longitude?: number): string {
+  return latitude !== undefined && longitude !== undefined ? queryString({ latitude, longitude }) : "";
+}

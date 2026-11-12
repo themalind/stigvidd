@@ -5,7 +5,7 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { useEffect } from "react";
 import type { Jump, LngLat } from "@/utils/geometry-edit";
 import { useMapLibre } from "@/hooks/use-maplibre";
-import { upsertSource } from "@/lib/maplibre";
+import { MAP_COLORS, upsertSource } from "@/lib/maplibre";
 
 type Props = {
   path: LngLat[];
@@ -13,10 +13,10 @@ type Props = {
   satellite: boolean;
 };
 
-const LINE = "#134a5b";
-const GAP = "#b3261e";
-const START = "#2e7d32";
-const END = "#b3261e";
+const LINE = MAP_COLORS.trail;
+const GAP = MAP_COLORS.end;
+const START = MAP_COLORS.start;
+const END = MAP_COLORS.end;
 
 function collection(features: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
   return { type: "FeatureCollection", features };

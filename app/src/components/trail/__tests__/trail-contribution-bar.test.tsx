@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
-import { popularContributionsQueryKey } from "@/components/home/popular-contributions";
+import { popularContributionsQueryKey } from "@/hooks/trail/usePopularContributions";
 import TrailContributionBar from "@/components/trail/trail-contribution-bar";
 import { myHikeSubmissionsQueryKey } from "@/hooks/hike/useMyHikeSubmissions";
 import { APP_THEMES } from "@/constants/theme";

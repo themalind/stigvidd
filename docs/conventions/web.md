@@ -34,7 +34,8 @@ Imports go one way only: shared → features → app.
 
 ## Other rules
 
-- Server data goes only through React Query in `features/<x>/api/`. Query options come from orval's
+- Server data goes only through React Query in `features/<x>/api/`, or in `src/api/<x>.ts` when two
+  features need the same hooks (`api/municipalities.ts`). Query options come from orval's
   `get…QueryOptions` / `get…QueryKey`, never from hand-made keys. Mutations toast through `meta`.
 - `src/api/generated` is never edited by hand. Regenerate it after a backend contract change and
   commit it.

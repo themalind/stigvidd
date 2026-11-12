@@ -11,6 +11,11 @@ public class CityAreaConfiguration : IEntityTypeConfiguration<CityArea>
 {
     public void Configure(EntityTypeBuilder<CityArea> builder)
     {
+        builder.HasOne(a => a.Municipality)
+            .WithMany()
+            .HasForeignKey(a => a.MunicipalityId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasMany(a => a.Trails)
             .WithMany(t => t.CityAreas)
             .UsingEntity<Dictionary<string, object>>(
@@ -20,6 +25,7 @@ public class CityAreaConfiguration : IEntityTypeConfiguration<CityArea>
                 j =>
                 {
                     j.HasKey("CityAreaId", "TrailId");
+                    j.IndexerProperty<bool>("IsManual").HasDefaultValue(false);
                     j.ToTable("CityAreaTrail");
                 });
 
@@ -32,6 +38,7 @@ public class CityAreaConfiguration : IEntityTypeConfiguration<CityArea>
                 j =>
                 {
                     j.HasKey("CityAreaId", "FacilityId");
+                    j.IndexerProperty<bool>("IsManual").HasDefaultValue(false);
                     j.ToTable("CityAreaFacility");
                 });
     }

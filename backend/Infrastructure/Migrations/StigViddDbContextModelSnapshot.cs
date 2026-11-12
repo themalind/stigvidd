@@ -33,6 +33,11 @@ namespace Infrastructure.Migrations
                     b.Property<int>("FacilityId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsManual")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.HasKey("CityAreaId", "FacilityId");
 
                     b.HasIndex("FacilityId");
@@ -48,6 +53,11 @@ namespace Infrastructure.Migrations
                     b.Property<int>("TrailId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsManual")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.HasKey("CityAreaId", "TrailId");
 
                     b.HasIndex("TrailId");
@@ -62,6 +72,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<MultiPolygon>("Boundary")
+                        .HasColumnType("geometry(MultiPolygon, 4326)")
+                        .HasAnnotation("Sqlite:Srid", 4326);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -83,6 +97,9 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("MunicipalityId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
@@ -92,7 +109,49 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Boundary");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Boundary"), "gist");
+
+                    b.HasIndex("MunicipalityId");
+
                     b.ToTable("CityAreas", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.CityAreaFacilityExclusion", b =>
+                {
+                    b.Property<int>("CityAreaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FacilityId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CityAreaId", "FacilityId");
+
+                    b.HasIndex("FacilityId");
+
+                    b.ToTable("CityAreaFacilityExclusions", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.CityAreaTrailExclusion", b =>
+                {
+                    b.Property<int>("CityAreaId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TrailId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("CityAreaId", "TrailId");
+
+                    b.HasIndex("TrailId");
+
+                    b.ToTable("CityAreaTrailExclusions", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.ConsentText", b =>
@@ -676,6 +735,13 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("SourceId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("SourceSnapshot")
+                        .HasColumnType("text");
+
                     b.Property<string>("Url")
                         .HasColumnType("text");
 
@@ -684,6 +750,9 @@ namespace Infrastructure.Migrations
                     b.HasIndex("Coordinates");
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Coordinates"), "gist");
+
+                    b.HasIndex("SourceId")
+                        .IsUnique();
 
                     b.ToTable("Facilities", "dbo");
                 });
@@ -739,6 +808,59 @@ namespace Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("FacilityImages", "dbo");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImportSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(101)
+                        .HasColumnType("character varying(101)");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Mapping")
+                        .HasColumnType("text");
+
+                    b.Property<int>("MunicipalityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.HasIndex("MunicipalityId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("FacilityImportSources", "dbo");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.FriendNote", b =>
@@ -1198,6 +1320,48 @@ namespace Infrastructure.Migrations
                     b.ToTable("MediaReprocessJobs", "dbo");
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.Municipality", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Municipalities", "dbo");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.OutboxEmail", b =>
                 {
                     b.Property<int>("Id")
@@ -1453,6 +1617,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GeoPath");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("GeoPath"), "gist");
 
                     b.HasIndex("Identifier")
                         .IsUnique();
@@ -2259,6 +2427,54 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Infrastructure.Data.Entities.CityArea", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Municipality", "Municipality")
+                        .WithMany()
+                        .HasForeignKey("MunicipalityId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Municipality");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.CityAreaFacilityExclusion", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.CityArea", "CityArea")
+                        .WithMany()
+                        .HasForeignKey("CityAreaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.Facility", "Facility")
+                        .WithMany()
+                        .HasForeignKey("FacilityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CityArea");
+
+                    b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.CityAreaTrailExclusion", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.CityArea", "CityArea")
+                        .WithMany()
+                        .HasForeignKey("CityAreaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Infrastructure.Data.Entities.Trail", "Trail")
+                        .WithMany()
+                        .HasForeignKey("TrailId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CityArea");
+
+                    b.Navigation("Trail");
+                });
+
             modelBuilder.Entity("Infrastructure.Data.Entities.ContentReport", b =>
                 {
                     b.HasOne("Infrastructure.Data.Entities.User", "Reporter")
@@ -2384,6 +2600,17 @@ namespace Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Facility");
+                });
+
+            modelBuilder.Entity("Infrastructure.Data.Entities.FacilityImportSource", b =>
+                {
+                    b.HasOne("Infrastructure.Data.Entities.Municipality", "Municipality")
+                        .WithMany()
+                        .HasForeignKey("MunicipalityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Municipality");
                 });
 
             modelBuilder.Entity("Infrastructure.Data.Entities.FriendNote", b =>

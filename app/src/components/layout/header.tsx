@@ -33,7 +33,7 @@ export default function Header() {
         ]}
       >
         <View style={s.stigviddContainer}>
-          <Image style={s.image} source={require("../assets/images/mammaapp.png")} />
+          <Image style={s.image} source={require("@/assets/images/mammaapp.png")} />
           <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>
         </View>
         <View style={s.iconContainer}>

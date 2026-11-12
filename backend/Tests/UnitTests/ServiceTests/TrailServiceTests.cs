@@ -21,7 +21,8 @@ public class TrailServiceTests
     private TrailService Build(
         Mock<ITrailRepository>? trailRepo = null,
         Mock<IWebDavService>? webDav = null,
-        Mock<IMediaUploadService>? mediaUpload = null)
+        Mock<IMediaUploadService>? mediaUpload = null,
+        Mock<ICityAreaMembershipService>? cityAreas = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -33,7 +34,8 @@ public class TrailServiceTests
             new Mock<ILogger<TrailService>>().Object,
             new TrailResponseFactory(cfg.Object),
             new TrailContributionRanking(new ConfigurationBuilder().Build()),
-            new MemoryCache(new MemoryCacheOptions()));
+            new MemoryCache(new MemoryCacheOptions()),
+            (cityAreas ?? new Mock<ICityAreaMembershipService>()).Object);
     }
 
     private static TrailResponse StubTrailResponse()
@@ -204,6 +206,27 @@ public class TrailServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Name.Should().Be("Test Trail");
+    }
+
+    [Fact]
+    public async Task AddTrail_RecalculatesTheAreasOfTheNewTrail()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Trail t, CancellationToken _) =>
+            {
+                t.Id = 42;
+                return RepositoryResult<Trail>.Success(t);
+            });
+        var cityAreas = new Mock<ICityAreaMembershipService>();
+
+        // Act
+        await Build(repo, cityAreas: cityAreas).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
+
+        // Assert
+        cityAreas.Verify(c => c.TrailsMovedAsync(
+            It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 42 })), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

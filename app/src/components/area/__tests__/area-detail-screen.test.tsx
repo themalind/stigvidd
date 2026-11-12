@@ -13,6 +13,7 @@ import { getByType, queryAllByType } from "@/test/composites";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen, within } from "@testing-library/react-native";
+import { Image } from "expo-image";
 import { ActivityIndicator, Platform, Text } from "react-native";
 
 const mockGetArea = jest.fn();
@@ -94,10 +95,11 @@ function stat(pattern: RegExp) {
   return within(screen.getByTestId("area-stats")).queryByText(pattern);
 }
 
+// keep-comment: guardedNavigate debounces on module state, so the clock only moves forward across tests
+let clock = 6_000_000;
+
 beforeEach(() => {
   jest.clearAllMocks();
-  // guardedNavigate debounces on module state for 500 ms, which would swallow the next test's press.
-  let clock = 6_000_000;
   jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
 });
 
@@ -176,6 +178,19 @@ it("keeps the hero a fixed height with a light title over the photo", async () =
   expect(screen.getByTestId("area-hero")).toHaveStyle({ height: 260, width: "100%", justifyContent: "flex-end" });
   expect(screen.getByText("Kransmossen")).toHaveStyle({ color: "#fff", fontSize: 26 });
   expect(screen.getByText("Borås")).toHaveStyle({ color: "rgba(255,255,255,0.9)" });
+});
+
+it("shows the cover photo in the hero", async () => {
+  await show();
+
+  expect(getByType(Image).props.source).toEqual({ uri: "https://media.example/area.jpg" });
+});
+
+it("shows a plain surface in the hero for an area without a photo", async () => {
+  await show({ imageUrl: undefined });
+
+  expect(queryAllByType(Image)).toHaveLength(0);
+  expect(screen.getByText("Kransmossen")).toBeTruthy();
 });
 
 it("clamps a long area name to two lines and the place to one", async () => {
@@ -315,9 +330,9 @@ it("groups the named facilities under the kind they are", async () => {
   });
 
   expect(screen.getByText("Faciliteter")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-section-pool")).getByText("Bryggan")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-section-set-meal")).getByText("Ryasjön")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-section-park")).getByText("Rya åsar naturreservat")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-section-swim")).getByText("Bryggan")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-section-fish")).getByText("Ryasjön")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-section-pine-tree")).getByText("Rya åsar naturreservat")).toBeTruthy();
 });
 
 // The imported names are near-identical ("Rya åsar - grillplats"), so fire pits and shelters are counted instead.
@@ -330,11 +345,11 @@ it("counts fire pits and shelters instead of listing their names", async () => {
     ],
   });
 
-  expect(within(screen.getByTestId("facility-count-outdoor-grill")).getByText("2 grillplatser")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-count-cabin")).getByText("1 vindskydd")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-count-campfire")).getByText("2 grillplatser")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-count-tent")).getByText("1 vindskydd")).toBeTruthy();
   expect(screen.queryByText(/Rya åsar -/)).toBeNull();
-  expect(screen.queryByTestId("facility-section-outdoor-grill")).toBeNull();
-  expect(screen.queryByTestId("facility-section-cabin")).toBeNull();
+  expect(screen.queryByTestId("facility-section-campfire")).toBeNull();
+  expect(screen.queryByTestId("facility-section-tent")).toBeNull();
 });
 
 it("uses the singular for a single fire pit", async () => {
@@ -352,35 +367,25 @@ it("counts a combined facility under every kind it carries", async () => {
     ],
   });
 
-  expect(within(screen.getByTestId("facility-count-outdoor-grill")).getByText("2 grillplatser")).toBeTruthy();
-  expect(within(screen.getByTestId("facility-count-cabin")).getByText("1 vindskydd")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-count-campfire")).getByText("2 grillplatser")).toBeTruthy();
+  expect(within(screen.getByTestId("facility-count-tent")).getByText("1 vindskydd")).toBeTruthy();
 });
 
-// Fire pits and shelters are off by default on the map tab, so the hint says to turn them on.
-it("points to the map filter under the counts", async () => {
-  await show({ facilities: [facility({ facilityType: FacilityType.Shelter })] });
-
-  expect(screen.getByTestId("facility-count-hint")).toHaveTextContent(
-    "Slå på Grillplatser och Vindskydd i kartans filter för att se var de ligger.",
-  );
-});
-
-it("leaves out the counts and the hint for an area with neither fire pits nor shelters", async () => {
+it("leaves out the counts for an area with neither fire pits nor shelters", async () => {
   await show({ facilities: [facility({ facilityType: FacilityType.SwimmingArea })] });
 
-  expect(screen.queryByTestId("facility-count-outdoor-grill")).toBeNull();
-  expect(screen.queryByTestId("facility-count-cabin")).toBeNull();
-  expect(screen.queryByTestId("facility-count-hint")).toBeNull();
+  expect(screen.queryByTestId("facility-count-campfire")).toBeNull();
+  expect(screen.queryByTestId("facility-count-tent")).toBeNull();
 });
 
 it("leaves out the groups nothing falls into", async () => {
   await show({ facilities: [facility({ facilityType: FacilityType.FirePit })] });
 
-  expect(screen.getByTestId("facility-count-outdoor-grill")).toBeTruthy();
-  expect(screen.queryByTestId("facility-count-cabin")).toBeNull();
-  expect(screen.queryByTestId("facility-section-set-meal")).toBeNull();
-  expect(screen.queryByTestId("facility-section-pool")).toBeNull();
-  expect(screen.queryByTestId("facility-section-park")).toBeNull();
+  expect(screen.getByTestId("facility-count-campfire")).toBeTruthy();
+  expect(screen.queryByTestId("facility-count-tent")).toBeNull();
+  expect(screen.queryByTestId("facility-section-fish")).toBeNull();
+  expect(screen.queryByTestId("facility-section-swim")).toBeNull();
+  expect(screen.queryByTestId("facility-section-pine-tree")).toBeNull();
 });
 
 it("names each group and heads it with its own icon", async () => {
@@ -394,9 +399,9 @@ it("names each group and heads it with its own icon", async () => {
 
   expect(screen.getByText("Fiske")).toBeTruthy();
   expect(screen.getByText("Naturreservat")).toBeTruthy();
-  expect(screen.getByTestId("icon-outdoor-grill")).toBeTruthy();
-  expect(screen.getByTestId("icon-set-meal")).toBeTruthy();
-  expect(screen.getByTestId("icon-park")).toBeTruthy();
+  expect(screen.getByTestId("icon-campfire")).toBeTruthy();
+  expect(screen.getByTestId("icon-fish")).toBeTruthy();
+  expect(screen.getByTestId("icon-pine-tree")).toBeTruthy();
 });
 
 it("shows a facility's place and description when it has them", async () => {
@@ -412,7 +417,7 @@ it("shows a facility's place and description when it has them", async () => {
 
   expect(screen.getByText("Vid norra parkeringen")).toBeTruthy();
   expect(screen.getByText("Fiskekort krävs.")).toBeTruthy();
-  expect(screen.getByTestId("icon-place")).toBeTruthy();
+  expect(screen.getByTestId("icon-map-marker")).toBeTruthy();
 });
 
 it("leaves out the place row for a facility with no place", async () => {
@@ -421,7 +426,7 @@ it("leaves out the place row for a facility with no place", async () => {
   });
 
   expect(screen.getByText("Grillplatsen vid sjön")).toBeTruthy();
-  expect(screen.queryByTestId("icon-place")).toBeNull();
+  expect(screen.queryByTestId("icon-map-marker")).toBeNull();
   expect(emptyTextNodes()).toHaveLength(0);
 });
 
@@ -472,4 +477,36 @@ it("keeps the area on screen when a later refetch fails", async () => {
 
   expect(screen.getByTestId("area-hero")).toBeTruthy();
   expect(screen.queryByText("Försök igen")).toBeNull();
+});
+
+it("shows the area on a map once it has a boundary", async () => {
+  await show({
+    boundary: [
+      [
+        [
+          [12.9, 57.7],
+          [13.0, 57.7],
+          [13.0, 57.8],
+          [12.9, 57.7],
+        ],
+      ],
+    ],
+  });
+
+  expect(screen.getByText("På kartan")).toBeTruthy();
+  expect(screen.getByTestId("area-map")).toBeTruthy();
+
+  fireEvent.press(screen.getByRole("button", { name: "Öppna karta" }));
+
+  expect(mockNavigate).toHaveBeenCalledWith({
+    pathname: "/(tabs)/(home)/area/map/[identifier]",
+    params: { identifier: "kransmossen" },
+  });
+});
+
+it("leaves the map out when nothing in the area has a position", async () => {
+  await show({ boundary: null, facilities: [facility()], trails: [trail()] });
+
+  expect(screen.queryByText("På kartan")).toBeNull();
+  expect(screen.queryByTestId("area-map")).toBeNull();
 });

@@ -16,4 +16,6 @@ export interface CityAreaTrailResponse {
   description?: string | null;
   averageRating?: number;
   image?: TrailImageResponse | null;
+  /** @nullable */
+  path?: number[][] | null;
 }

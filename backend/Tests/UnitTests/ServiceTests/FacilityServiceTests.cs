@@ -21,7 +21,8 @@ public class FacilityServiceTests
     private static FacilityService Build(
         Mock<IFacilityRepository>? repo = null,
         Mock<IMediaUploadService>? mediaUpload = null,
-        Mock<IWebDavService>? webDav = null)
+        Mock<IWebDavService>? webDav = null,
+        Mock<ICityAreaMembershipService>? cityAreas = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
@@ -32,7 +33,8 @@ public class FacilityServiceTests
             (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
             new Mock<ILogger<FacilityService>>().Object,
-            cfg.Object);
+            cfg.Object,
+            (cityAreas ?? new Mock<ICityAreaMembershipService>()).Object);
     }
 
     private static SaveFacilityRequest Request(
@@ -239,6 +241,27 @@ public class FacilityServiceTests
 
         // Assert
         result.Success.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateFacilityAsync_RecalculatesTheAreasOfTheFacility()
+    {
+        // Arrange
+        var facility = MakeFacility();
+        facility.Id = 7;
+        var repo = new Mock<IFacilityRepository>();
+        repo.Setup(r => r.GetByIdentifierAsync(FacilityIdentifier, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Facility>.Success(facility));
+        repo.Setup(r => r.UpdateAsync(It.IsAny<Facility>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Facility>.Success(facility));
+        var cityAreas = new Mock<ICityAreaMembershipService>();
+
+        // Act
+        await Build(repo, cityAreas: cityAreas).UpdateFacilityAsync(FacilityIdentifier, Request("New Name"), TestContext.Current.CancellationToken);
+
+        // Assert
+        cityAreas.Verify(c => c.FacilitiesMovedAsync(
+            It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 7 })), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
