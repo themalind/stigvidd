@@ -32,6 +32,27 @@ public static class PathMetrics
         return longest;
     }
 
+    // keep-comment: 0..1 of the path's length in metres that lies inside the area
+    public static double ShareInside(LineString path, MultiPolygon area)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(area);
+
+        if (path.NumPoints < 2)
+            return 0.0;
+
+        var projection = LocalMetricProjection.CentredOn(path.EnvelopeInternal);
+        var projectedPath = projection.Project(path);
+        var length = projectedPath.Length;
+
+        if (length <= 0.0)
+            return 0.0;
+
+        var inside = projection.Project(area).Intersection(projectedPath).Length;
+
+        return Math.Min(1.0, inside / length);
+    }
+
     private static LineString Projected(LineString path)
     {
         return LocalMetricProjection.CentredOn(path.EnvelopeInternal).Project(path);

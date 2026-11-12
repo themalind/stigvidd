@@ -23,7 +23,16 @@ import type {
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 
-import type { AdminCityAreaResponse, AdminLinkSuggestionsResponse } from "../model";
+import type {
+  AdminCityAreaBoundaryPreviewResponse,
+  AdminCityAreaBoundaryResponse,
+  AdminCityAreaRecalculationResponse,
+  AdminCityAreaResponse,
+  AdminCityAreaTrailPathResponse,
+  AdminLinkSuggestionsResponse,
+  SaveCityAreaBoundaryRequest,
+  SetCityAreaMunicipalityRequest,
+} from "../model";
 
 import { customFetch } from "../../mutator";
 
@@ -707,4 +716,968 @@ export const useAdminCityAreasUnlinkTrail = <TError = unknown, TContext = unknow
   TContext
 > => {
   return useMutation(getAdminCityAreasUnlinkTrailMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasRemoveFacilityExclusionUrl = (identifier: string, facilityIdentifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/excluded-facilities/${facilityIdentifier}`;
+};
+
+export const adminCityAreasRemoveFacilityExclusion = async (
+  identifier: string,
+  facilityIdentifier: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminCityAreasRemoveFacilityExclusionUrl(identifier, facilityIdentifier), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getAdminCityAreasRemoveFacilityExclusionMutationKey = () =>
+  ["adminCityAreasRemoveFacilityExclusion"] as const;
+
+export const getAdminCityAreasRemoveFacilityExclusionMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasRemoveFacilityExclusion>>,
+    TError,
+    AdminCityAreasRemoveFacilityExclusionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasRemoveFacilityExclusion>>,
+  TError,
+  AdminCityAreasRemoveFacilityExclusionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminCityAreasRemoveFacilityExclusionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasRemoveFacilityExclusion>>,
+    AdminCityAreasRemoveFacilityExclusionMutationVariables
+  > = (props) => {
+    const { identifier, facilityIdentifier } = props ?? {};
+
+    return adminCityAreasRemoveFacilityExclusion(identifier, facilityIdentifier, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCityAreasRemoveFacilityExclusionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasRemoveFacilityExclusion>>
+>;
+
+export type AdminCityAreasRemoveFacilityExclusionMutationError = unknown;
+export type AdminCityAreasRemoveFacilityExclusionMutationVariables = { identifier: string; facilityIdentifier: string };
+
+export const useAdminCityAreasRemoveFacilityExclusion = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasRemoveFacilityExclusion>>,
+      TError,
+      AdminCityAreasRemoveFacilityExclusionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasRemoveFacilityExclusion>>,
+  TError,
+  AdminCityAreasRemoveFacilityExclusionMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminCityAreasRemoveFacilityExclusionMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasRemoveTrailExclusionUrl = (identifier: string, trailIdentifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/excluded-trails/${trailIdentifier}`;
+};
+
+export const adminCityAreasRemoveTrailExclusion = async (
+  identifier: string,
+  trailIdentifier: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminCityAreasRemoveTrailExclusionUrl(identifier, trailIdentifier), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getAdminCityAreasRemoveTrailExclusionMutationKey = () => ["adminCityAreasRemoveTrailExclusion"] as const;
+
+export const getAdminCityAreasRemoveTrailExclusionMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasRemoveTrailExclusion>>,
+    TError,
+    AdminCityAreasRemoveTrailExclusionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasRemoveTrailExclusion>>,
+  TError,
+  AdminCityAreasRemoveTrailExclusionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminCityAreasRemoveTrailExclusionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasRemoveTrailExclusion>>,
+    AdminCityAreasRemoveTrailExclusionMutationVariables
+  > = (props) => {
+    const { identifier, trailIdentifier } = props ?? {};
+
+    return adminCityAreasRemoveTrailExclusion(identifier, trailIdentifier, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCityAreasRemoveTrailExclusionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasRemoveTrailExclusion>>
+>;
+
+export type AdminCityAreasRemoveTrailExclusionMutationError = unknown;
+export type AdminCityAreasRemoveTrailExclusionMutationVariables = { identifier: string; trailIdentifier: string };
+
+export const useAdminCityAreasRemoveTrailExclusion = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasRemoveTrailExclusion>>,
+      TError,
+      AdminCityAreasRemoveTrailExclusionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasRemoveTrailExclusion>>,
+  TError,
+  AdminCityAreasRemoveTrailExclusionMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminCityAreasRemoveTrailExclusionMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasSaveBoundaryUrl = (identifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/boundary`;
+};
+
+export const adminCityAreasSaveBoundary = async (
+  identifier: string,
+  saveCityAreaBoundaryRequest: SaveCityAreaBoundaryRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<Blob>(getAdminCityAreasSaveBoundaryUrl(identifier), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveCityAreaBoundaryRequest),
+  });
+};
+
+export const getAdminCityAreasSaveBoundaryMutationKey = () => ["adminCityAreasSaveBoundary"] as const;
+
+export const getAdminCityAreasSaveBoundaryMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasSaveBoundary>>,
+    TError,
+    AdminCityAreasSaveBoundaryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasSaveBoundary>>,
+  TError,
+  AdminCityAreasSaveBoundaryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminCityAreasSaveBoundaryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasSaveBoundary>>,
+    AdminCityAreasSaveBoundaryMutationVariables
+  > = (props) => {
+    const { identifier, data } = props ?? {};
+
+    return adminCityAreasSaveBoundary(identifier, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCityAreasSaveBoundaryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasSaveBoundary>>
+>;
+export type AdminCityAreasSaveBoundaryMutationBody = SaveCityAreaBoundaryRequest;
+export type AdminCityAreasSaveBoundaryMutationError = unknown;
+export type AdminCityAreasSaveBoundaryMutationVariables = { identifier: string; data: SaveCityAreaBoundaryRequest };
+
+export const useAdminCityAreasSaveBoundary = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasSaveBoundary>>,
+      TError,
+      AdminCityAreasSaveBoundaryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasSaveBoundary>>,
+  TError,
+  AdminCityAreasSaveBoundaryMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminCityAreasSaveBoundaryMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasRemoveBoundaryUrl = (identifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/boundary`;
+};
+
+export const adminCityAreasRemoveBoundary = async (
+  identifier: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  return customFetch<Blob>(getAdminCityAreasRemoveBoundaryUrl(identifier), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getAdminCityAreasRemoveBoundaryMutationKey = () => ["adminCityAreasRemoveBoundary"] as const;
+
+export const getAdminCityAreasRemoveBoundaryMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasRemoveBoundary>>,
+    TError,
+    AdminCityAreasRemoveBoundaryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasRemoveBoundary>>,
+  TError,
+  AdminCityAreasRemoveBoundaryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminCityAreasRemoveBoundaryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasRemoveBoundary>>,
+    AdminCityAreasRemoveBoundaryMutationVariables
+  > = (props) => {
+    const { identifier } = props ?? {};
+
+    return adminCityAreasRemoveBoundary(identifier, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCityAreasRemoveBoundaryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasRemoveBoundary>>
+>;
+
+export type AdminCityAreasRemoveBoundaryMutationError = unknown;
+export type AdminCityAreasRemoveBoundaryMutationVariables = { identifier: string };
+
+export const useAdminCityAreasRemoveBoundary = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasRemoveBoundary>>,
+      TError,
+      AdminCityAreasRemoveBoundaryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasRemoveBoundary>>,
+  TError,
+  AdminCityAreasRemoveBoundaryMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminCityAreasRemoveBoundaryMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasPreviewBoundaryUrl = (identifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/boundary-preview`;
+};
+
+export const adminCityAreasPreviewBoundary = async (
+  identifier: string,
+  saveCityAreaBoundaryRequest: SaveCityAreaBoundaryRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminCityAreaBoundaryPreviewResponse> => {
+  const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<AdminCityAreaBoundaryPreviewResponse>(getAdminCityAreasPreviewBoundaryUrl(identifier), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveCityAreaBoundaryRequest),
+  });
+};
+
+export const getAdminCityAreasPreviewBoundaryMutationKey = () => ["adminCityAreasPreviewBoundary"] as const;
+
+export const getAdminCityAreasPreviewBoundaryMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasPreviewBoundary>>,
+    TError,
+    AdminCityAreasPreviewBoundaryMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasPreviewBoundary>>,
+  TError,
+  AdminCityAreasPreviewBoundaryMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminCityAreasPreviewBoundaryMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasPreviewBoundary>>,
+    AdminCityAreasPreviewBoundaryMutationVariables
+  > = (props) => {
+    const { identifier, data } = props ?? {};
+
+    return adminCityAreasPreviewBoundary(identifier, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCityAreasPreviewBoundaryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasPreviewBoundary>>
+>;
+export type AdminCityAreasPreviewBoundaryMutationBody = SaveCityAreaBoundaryRequest;
+export type AdminCityAreasPreviewBoundaryMutationError = unknown;
+export type AdminCityAreasPreviewBoundaryMutationVariables = { identifier: string; data: SaveCityAreaBoundaryRequest };
+
+export const useAdminCityAreasPreviewBoundary = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasPreviewBoundary>>,
+      TError,
+      AdminCityAreasPreviewBoundaryMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasPreviewBoundary>>,
+  TError,
+  AdminCityAreasPreviewBoundaryMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminCityAreasPreviewBoundaryMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasGetTrailPathsUrl = (identifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/trail-paths`;
+};
+
+export const adminCityAreasGetTrailPaths = async (
+  identifier: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminCityAreaTrailPathResponse[]> => {
+  return customFetch<AdminCityAreaTrailPathResponse[]>(getAdminCityAreasGetTrailPathsUrl(identifier), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminCityAreasGetTrailPathsQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/city-areas/${identifier}/trail-paths`] as const;
+};
+
+export const getAdminCityAreasGetTrailPathsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasGetTrailPathsQueryKey(identifier);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>> = ({ signal }) =>
+    adminCityAreasGetTrailPaths(identifier, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type AdminCityAreasGetTrailPathsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>
+>;
+export type AdminCityAreasGetTrailPathsQueryError = unknown;
+
+export function useAdminCityAreasGetTrailPaths<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+          TError,
+          Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetTrailPaths<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+          TError,
+          Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetTrailPaths<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetTrailPaths<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasGetTrailPathsQueryOptions(identifier, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminCityAreasGetTrailPathsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasGetTrailPathsQueryKey(identifier);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>> = ({ signal }) =>
+    adminCityAreasGetTrailPaths(identifier, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & { throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never } };
+};
+
+export type AdminCityAreasGetTrailPathsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>
+>;
+export type AdminCityAreasGetTrailPathsSuspenseQueryError = unknown;
+
+export function useAdminCityAreasGetTrailPathsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetTrailPathsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetTrailPathsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasGetTrailPathsSuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasGetTrailPaths>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasGetTrailPathsSuspenseQueryOptions(identifier, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminCityAreasSuggestBoundaryUrl = (identifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/boundary-suggestion`;
+};
+
+export const adminCityAreasSuggestBoundary = async (
+  identifier: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminCityAreaBoundaryResponse> => {
+  return customFetch<AdminCityAreaBoundaryResponse>(getAdminCityAreasSuggestBoundaryUrl(identifier), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminCityAreasSuggestBoundaryQueryKey = (identifier: string) => {
+  return [`/api/v1/admin/city-areas/${identifier}/boundary-suggestion`] as const;
+};
+
+export const getAdminCityAreasSuggestBoundaryQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasSuggestBoundaryQueryKey(identifier);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>> = ({ signal }) =>
+    adminCityAreasSuggestBoundary(identifier, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: identifier !== null && identifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type AdminCityAreasSuggestBoundaryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>
+>;
+export type AdminCityAreasSuggestBoundaryQueryError = unknown;
+
+export function useAdminCityAreasSuggestBoundary<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+          TError,
+          Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasSuggestBoundary<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+          TError,
+          Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasSuggestBoundary<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasSuggestBoundary<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasSuggestBoundaryQueryOptions(identifier, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminCityAreasSuggestBoundarySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminCityAreasSuggestBoundaryQueryKey(identifier);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>> = ({ signal }) =>
+    adminCityAreasSuggestBoundary(identifier, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & { throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never } };
+};
+
+export type AdminCityAreasSuggestBoundarySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>
+>;
+export type AdminCityAreasSuggestBoundarySuspenseQueryError = unknown;
+
+export function useAdminCityAreasSuggestBoundarySuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasSuggestBoundarySuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasSuggestBoundarySuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminCityAreasSuggestBoundarySuspense<
+  TData = Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>,
+  TError = unknown,
+>(
+  identifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminCityAreasSuggestBoundary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminCityAreasSuggestBoundarySuspenseQueryOptions(identifier, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminCityAreasSetMunicipalityUrl = (identifier: string) => {
+  return `/api/v1/admin/city-areas/${identifier}/municipality`;
+};
+
+export const adminCityAreasSetMunicipality = async (
+  identifier: string,
+  setCityAreaMunicipalityRequest: SetCityAreaMunicipalityRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  const getHeaders = (h?: NonNullable<RequestInit["headers"]>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<Blob>(getAdminCityAreasSetMunicipalityUrl(identifier), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setCityAreaMunicipalityRequest),
+  });
+};
+
+export const getAdminCityAreasSetMunicipalityMutationKey = () => ["adminCityAreasSetMunicipality"] as const;
+
+export const getAdminCityAreasSetMunicipalityMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCityAreasSetMunicipality>>,
+    TError,
+    AdminCityAreasSetMunicipalityMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCityAreasSetMunicipality>>,
+  TError,
+  AdminCityAreasSetMunicipalityMutationVariables,
+  TContext
+> => {
+  const mutationKey = getAdminCityAreasSetMunicipalityMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCityAreasSetMunicipality>>,
+    AdminCityAreasSetMunicipalityMutationVariables
+  > = (props) => {
+    const { identifier, data } = props ?? {};
+
+    return adminCityAreasSetMunicipality(identifier, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCityAreasSetMunicipalityMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasSetMunicipality>>
+>;
+export type AdminCityAreasSetMunicipalityMutationBody = SetCityAreaMunicipalityRequest;
+export type AdminCityAreasSetMunicipalityMutationError = unknown;
+export type AdminCityAreasSetMunicipalityMutationVariables = {
+  identifier: string;
+  data: SetCityAreaMunicipalityRequest;
+};
+
+export const useAdminCityAreasSetMunicipality = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof adminCityAreasSetMunicipality>>,
+      TError,
+      AdminCityAreasSetMunicipalityMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof adminCityAreasSetMunicipality>>,
+  TError,
+  AdminCityAreasSetMunicipalityMutationVariables,
+  TContext
+> => {
+  return useMutation(getAdminCityAreasSetMunicipalityMutationOptions(options), queryClient);
+};
+export const getAdminCityAreasRecalculateAllUrl = () => {
+  return `/api/v1/admin/city-areas/recalculate`;
+};
+
+export const adminCityAreasRecalculateAll = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminCityAreaRecalculationResponse> => {
+  return customFetch<AdminCityAreaRecalculationResponse>(getAdminCityAreasRecalculateAllUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAdminCityAreasRecalculateAllMutationKey = () => ["adminCityAreasRecalculateAll"] as const;
+
+export const getAdminCityAreasRecalculateAllMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasRecalculateAll>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasRecalculateAll>>, TError, void, TContext> => {
+  const mutationKey = getAdminCityAreasRecalculateAllMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof adminCityAreasRecalculateAll>>, void> = () => {
+    return adminCityAreasRecalculateAll(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCityAreasRecalculateAllMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCityAreasRecalculateAll>>
+>;
+
+export type AdminCityAreasRecalculateAllMutationError = unknown;
+
+export const useAdminCityAreasRecalculateAll = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof adminCityAreasRecalculateAll>>, TError, void, TContext>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof adminCityAreasRecalculateAll>>, TError, void, TContext> => {
+  return useMutation(getAdminCityAreasRecalculateAllMutationOptions(options), queryClient);
 };

@@ -114,6 +114,23 @@ public class UserPushTokenRepositoryTests : TestBase
     }
 
     [Fact]
+    public async Task UpsertAsync_WhenTokenBelongsToAnotherUser_MovesItToTheNewUser()
+    {
+        const int newUserId = 2;
+        var repo = BuildRepo(CreateSeededFactoryWithTokens());
+
+        var result = await repo.UpsertAsync(newUserId, ExistingToken, "ios", TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+
+        var newOwner = await repo.GetTokensForUserAsync(newUserId, TestContext.Current.CancellationToken);
+        newOwner.Value.Should().ContainSingle(t => t.ExpoToken == ExistingToken);
+
+        var oldOwner = await repo.GetTokensForUserAsync(ExistingUserId, TestContext.Current.CancellationToken);
+        oldOwner.Value.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task DeleteByTokenAsync_WhenFound_ReturnsSuccess()
     {
         var repo = BuildRepo(CreateSeededFactoryWithTokens());

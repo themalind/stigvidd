@@ -15,6 +15,11 @@ public class CityAreaResponse
     public string? Url { get; set; }
     public required IReadOnlyCollection<FacilityResponse> Facilities { get; set; }
     public required IReadOnlyCollection<CityAreaTrailResponse> Trails { get; set; }
+    public string? Municipality { get; set; }
+    // keep-comment: kilometres from the caller's position to the boundary, 0 inside; null without a position or a boundary
+    public double? DistanceKm { get; set; }
+    // keep-comment: GeoJSON MultiPolygon coordinates, [longitude, latitude]; only for a single area
+    public IReadOnlyList<IReadOnlyList<IReadOnlyList<IReadOnlyList<double>>>>? Boundary { get; set; }
 
     public static CityAreaResponse Create(
         string identifier,

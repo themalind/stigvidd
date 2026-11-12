@@ -12,6 +12,12 @@ export interface AdminCityAreaResponse {
   identifier: string;
   name: string;
   location: string;
+  /** @nullable */
+  municipalityIdentifier: string | null;
+  /** @nullable */
+  boundary: number[][][][] | null;
   facilities: AdminCityAreaFacilityResponse[];
   trails: AdminCityAreaTrailResponse[];
+  excludedFacilities: AdminCityAreaFacilityResponse[];
+  excludedTrails: AdminCityAreaTrailResponse[];
 }

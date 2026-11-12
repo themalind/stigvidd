@@ -34,20 +34,30 @@ Core/DomainEvents/                              the outbox mechanism, cross-cutt
 Core/TrailImport/                               own namespaces, not in GlobalUsings
 ```
 
-A helper used by one implementation only stays beside it, for example `LoadedEvent` in
-`Core/Services/Events/`. A few cross-cutting files sit at a folder root on purpose:
-`IMaintenanceGate`, `MaintenanceGate`, `UtcDates`, `SwedishCollation` and `ContractEnum`.
+A record or enum always goes in a `Models/` folder, never under `Core/Services/` or
+`Core/Repositories/`. The one exception is a `private` record or enum nested in the class that alone
+uses it, such as `CityAreaRepository.FoundArea`. A helper class with logic used by one implementation stays beside it, for example
+`FacilityImportPlanner` in `Core/Services/Facilities/`. `EventMembership` and `LoadedEvent` are records
+that hold the event permission rules, so they stay in `Core/Services/Events/`; the test lists them.
+A few cross-cutting files sit at a folder root on purpose:
+`IMaintenanceGate`, `MaintenanceGate`, `UtcDates`, `Slug`, `SwedishCollation`, `ContractEnum` and
+`UniqueViolation` (used by repositories in several domains).
+
+Limits and checks that a validator shares with a service go in a `*Rules` or `*Limits` class beside
+the validator (`FacilityRules`, `HikeSubmissionLimits`, `EventRequestRules`, `MailHtmlPolicy`), never on the validator itself.
 
 ### Domains
 
 Every layer uses the same domain names:
 
-`Account`, `CityAreas`, `DataTransfer`, `DomainEvents`, `Events`, `Friends`, `Hikes`,
-`HikeShares`, `Mail`, `Media`, `Push`, `Reporting`, `TrailImport`, `Trails`.
+`Account`, `CityAreas`, `DataTransfer`, `DomainEvents`, `Events`, `Facilities`, `Friends`,
+`Hikes`, `HikeShares`, `Mail`, `Media`, `Municipalities`, `Push`, `Reporting`, `TrailImport`, `Trails`.
 
 To add a domain, add its name to `Domains` in
-`Tests/UnitTests/ArchitectureTests/CoreStructureTests.cs` and to the list above. A folder name
+`Tests/UnitTests/ArchitectureTests/CoreStructureTests.cs` and to the list above, and add its
+namespaces to `GlobalUsings.cs` in Core, both test projects and (for its service interface) StigviddAPI. A folder name
 that is not in the list fails the test, so a typo such as `Trail/` next to `Trails/` cannot slip in.
+`GlobalUsingsTests` fails when a domain namespace is missing from any of those four files.
 
 ## Rules and what enforces them
 
@@ -73,6 +83,8 @@ test file. EF-generated migrations are exempt from all four style rules.
 
 - `Core/Interfaces/**` holds only interfaces outside `Models/`, and `Models/` holds no interfaces.
 - Domain folders use only the names in `Domains`.
+- No record or enum lives under `Core/Services/` or `Core/Repositories/`, except one nested `private`
+  in its class; they go in `Models/`.
 - A class named `*Repository` lives in `Core/Repositories/<Domain>/`, a `*Service` in
   `Core/Services/<Domain>/`, a `*ResponseFactory` in `Core/Factories/<Domain>/`, and an
   `AbstractValidator<T>` in `Core/Validators/<Domain>/`.
@@ -84,8 +96,9 @@ test file. EF-generated migrations are exempt from all four style rules.
 | Controllers | repositories, `Infrastructure.Data` | Controllers are thin and call services |
 | Repositories | service interfaces | Data access does not call back up into logic |
 | Factories | repositories, services, `StigViddDbContext` | A factory maps what it is given and reads nothing |
-| Validators | repositories, services, `StigViddDbContext` | A validator checks the request's shape |
+| Validators | repositories, services (interfaces and `Core.Services.<Domain>`), `StigViddDbContext` | A validator checks the request's shape |
 | Services | `StigViddDbContext` | Services reach data through repositories |
+| Services, repositories | a `*Validator` class | Shared limits go in a `*Rules`/`*Limits` class |
 
 Types in a `Models/` folder are plain data, so every layer may use them. Two exceptions are written
 in the tests with their reason:

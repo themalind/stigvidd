@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { NEARBY_RADIUS_KM } from "@/constants/constants";
 import { FilterOptions, LatLng } from "@/data/types";
 import { compareSv } from "@/utils/format/compare-sv";
 import { getDistance } from "geolib";
@@ -137,7 +138,7 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     }
 
     if (filters.nearMe && userLocation) {
-      const maxDistance = filters.maxDistance || 50;
+      const maxDistance = filters.maxDistance || NEARBY_RADIUS_KM;
       result = result.filter((trail) => trail.distanceKm != null && trail.distanceKm <= maxDistance);
     }
 

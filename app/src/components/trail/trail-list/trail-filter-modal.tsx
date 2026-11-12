@@ -9,6 +9,7 @@ import FilterSheet, { FilterSection, filterSectionTitleStyle } from "@/component
 import OptionGroup from "@/components/filter/option-group";
 import ReleasedSlider from "@/components/filter/released-slider";
 import SelectInput from "@/components/form/select-input";
+import { NEARBY_RADIUS_KM } from "@/constants/constants";
 import { FilterOptions } from "@/data/types";
 import { SortOption } from "@/hooks/trail/useTrailFilters";
 import { classificationParser } from "@/utils/classification-parser";
@@ -119,7 +120,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           />
           {filters.nearMe && (
             <ReleasedSlider
-              value={[filters.maxDistance ?? 50]}
+              value={[filters.maxDistance ?? NEARBY_RADIUS_KM]}
               minimumValue={5}
               maximumValue={200}
               step={5}

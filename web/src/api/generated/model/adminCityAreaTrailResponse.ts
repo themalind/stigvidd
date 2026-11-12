@@ -10,4 +10,5 @@ export interface AdminCityAreaTrailResponse {
   identifier: string;
   name: string;
   isVerified: boolean;
+  isManual: boolean;
 }

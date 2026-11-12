@@ -22,6 +22,7 @@ public class TrailService : ITrailService
     private readonly ITrailRepository _trailRepository;
     private readonly TrailContributionRanking _ranking;
     private readonly IMemoryCache _cache;
+    private readonly ICityAreaMembershipService _cityAreaMembership;
 
     private const string PopularContributionsCacheKey = "trails:popular-contributions";
 
@@ -32,9 +33,11 @@ public class TrailService : ITrailService
         ILogger<TrailService> logger,
         TrailResponseFactory factory,
         TrailContributionRanking ranking,
-        IMemoryCache cache)
+        IMemoryCache cache,
+        ICityAreaMembershipService cityAreaMembership)
     {
         _trailRepository = trailResponseRepository;
+        _cityAreaMembership = cityAreaMembership;
         _ranking = ranking;
         _cache = cache;
         _webDavService = webDavService;
@@ -479,6 +482,8 @@ public class TrailService : ITrailService
                 await CleanupUploadedImagesAsync(uploadedUrls);
                 return Result.Fail<TrailResponse?>(new Message(500, "An error occurred while adding the trail."));
             }
+
+            await _cityAreaMembership.TrailsMovedAsync([addResult.Value.Id], ctoken);
 
             return Result.Ok<TrailResponse?>(_trailResponseFactory.Create(addResult.Value));
         }

@@ -352,7 +352,7 @@ moment the page opened. See
 | `Core/Services/Mail/MailTemplateRenderer.cs` | `{{Placeholder}}` substitution and the encoding rules |
 | `Core/Services/Mail/MailTemplateCatalog.cs` | which placeholders each template key may use |
 | `Core/Services/Mail/MailTemplateAdminService.cs` | the editor's read/update/preview, and the unknown-placeholder refusal |
-| `Core/Services/Mail/MailHtmlPolicy.cs` | the email-safe markup allowlist a save is checked against |
+| `Core/Validators/Mail/MailHtmlPolicy.cs` | the email-safe markup allowlist a save is checked against |
 | `StigviddAPI/Controllers/Admin/MailTemplatesController.cs` | `api/v1/admin/mail-templates`, admin-only |
 | `web/src/features/mail/utils/mail-template.ts` | the editor's pure rules: the token grammar, the HTML scanner, loss detection |
 | `Core/Services/Mail/MailOutboxQueue.cs` | the `Channel<int>` trigger |

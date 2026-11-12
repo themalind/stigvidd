@@ -23,12 +23,15 @@ public class CityAreaRepositoryTests : TestBase
         area.Description,
         area.ImageUrl,
         area.Url,
+        area.Municipality != null ? area.Municipality.Name : null,
+        area.Boundary,
         area.Facilities!.Select(f => new CityAreaFacilityProjection(
-            f.Identifier, f.Name, (int)f.FacilityType, f.IsAccessible, f.Location, f.Description, f.Url)).ToList(),
+            f.Identifier, f.Name, (int)f.FacilityType, f.IsAccessible, f.Location, f.Description, f.Url, f.Coordinates)).ToList(),
         area.Trails!.Select(t => new CityAreaTrailProjection(
             t.Identifier, t.Name, t.TrailLength, t.Classification, t.Description,
             t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
-            t.TrailImages!.Select(i => new CityAreaTrailImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault())).ToList());
+            t.TrailImages!.Select(i => new CityAreaTrailImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault(),
+            t.GeoPath)).ToList());
 
 
     // Seeds a city area linked (m2m) to an existing trail and firepit facility on top of the

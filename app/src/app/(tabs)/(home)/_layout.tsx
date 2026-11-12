@@ -18,6 +18,7 @@ export default function HomeStackLayout() {
       <Stack.Screen name="hike-follow/[identifier]" />
       <Stack.Screen name="area/[identifier]" />
       <Stack.Screen name="area/area-list-screen" options={{ animation: "none" }} />
+      <Stack.Screen name="area/map/[identifier]" />
     </Stack>
   );
 }

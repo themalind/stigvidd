@@ -95,6 +95,8 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
   `openobserve` = production `3Igh0Ez9tpaLNBgzzVouYA1NyT5`, `openobserve-staging` = staging
   `3KeRfxpDWf9Hf2CiVsulKJpHWTL` ([note](docs/notes/openobserve-mcp-org-is-not-default.md)). Device-side errors
   (push token, token refresh) are only in `stigvidd_app_logs`, not `stigvidd_api_logs`; select columns, not `_timestamp, *`.
+  Which alert fired: `ListAlerts` with `detail: "full"` (`last_outcome`); `GetAlertHistory` 404s and there is no `triggers`
+  stream. API errors: `severity IN ('Error','Critical')` (not `level`); `output_format: "csv"` returns empty hits here.
 - **Secrets**: `.env`, `mail-config/` and `*firebase-adminsdk*.json` hold real credentials. Never commit or echo
   them. `DEPLOYMENT.md` is a tracked, public runbook: names variables only, never values.
 - **CodeGraph**: where `.codegraph/` exists, use `codegraph_explore` before grep. A denied search passes on retry.

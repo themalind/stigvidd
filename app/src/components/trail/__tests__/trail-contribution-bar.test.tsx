@@ -6,7 +6,9 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
+import { popularContributionsQueryKey } from "@/hooks/trail/usePopularContributions";
 import TrailContributionBar from "@/components/trail/trail-contribution-bar";
+import { myHikeSubmissionsQueryKey } from "@/hooks/hike/useMyHikeSubmissions";
 import { APP_THEMES } from "@/constants/theme";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
@@ -190,4 +192,40 @@ it("asks a signed-out user to sign in instead of liking", async () => {
   expect(mockGetLike).not.toHaveBeenCalled();
   expect(mockLike).not.toHaveBeenCalled();
   expect(count()).toBe(234);
+});
+
+it("carries the new count to the trail page, the home cards and the user's own submissions", async () => {
+  const { queryClient } = await renderWithProviders(
+    <TrailContributionBar trailIdentifier="t1" contribution={contribution} />,
+  );
+  // keep-comment: the harness's gcTime 0 drops unobserved data, and Infinity schedules no timer
+  for (const root of [["trail"], ["trails"], ["hikeSubmissions"]]) {
+    queryClient.setQueryDefaults(root, { gcTime: Infinity });
+  }
+  queryClient.setQueryData(["trail", "t1"], { identifier: "t1", contribution });
+  queryClient.setQueryData(["trail", "t2"], { identifier: "t2", contribution });
+  queryClient.setQueryData(popularContributionsQueryKey(57.7, 12.9), [
+    { identifier: "t1", contribution },
+    { identifier: "t2", contribution },
+  ]);
+  queryClient.setQueryData(myHikeSubmissionsQueryKey("me"), [
+    { identifier: "s1", publishedTrailIdentifier: "t1", likeCount: 234 },
+    { identifier: "s2", publishedTrailIdentifier: "t2", likeCount: 234 },
+  ]);
+  await flushUntil(pressable);
+
+  await fireEvent.press(screen.getByTestId("trail-like"));
+  await flushUntil(() => mockLike.mock.calls.length > 0 && count() === 235);
+  await settle();
+
+  expect(queryClient.getQueryData(["trail", "t1"])).toMatchObject({ contribution: { likeCount: 235 } });
+  expect(queryClient.getQueryData(["trail", "t2"])).toMatchObject({ contribution: { likeCount: 234 } });
+  expect(queryClient.getQueryData(popularContributionsQueryKey(57.7, 12.9))).toMatchObject([
+    { contribution: { likeCount: 235 } },
+    { contribution: { likeCount: 234 } },
+  ]);
+  expect(queryClient.getQueryData(myHikeSubmissionsQueryKey("me"))).toMatchObject([
+    { likeCount: 235 },
+    { likeCount: 234 },
+  ]);
 });

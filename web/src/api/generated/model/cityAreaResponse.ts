@@ -20,4 +20,10 @@ export interface CityAreaResponse {
   url?: string | null;
   facilities: FacilityResponse[];
   trails: CityAreaTrailResponse[];
+  /** @nullable */
+  municipality?: string | null;
+  /** @nullable */
+  distanceKm?: number | null;
+  /** @nullable */
+  boundary?: number[][][][] | null;
 }

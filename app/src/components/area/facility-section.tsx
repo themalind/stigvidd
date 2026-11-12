@@ -8,14 +8,15 @@
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Facility } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
-import { MaterialIcons } from "@expo/vector-icons";
+import { FacilityIconName } from "@/constants/facility-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 interface FacilitySectionProps {
   title: string;
-  icon: keyof typeof MaterialIcons.glyphMap;
+  icon: FacilityIconName;
   items: Facility[];
 }
 
@@ -26,7 +27,7 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
   return (
     <View testID={`facility-section-${icon}`} style={s.section}>
       <View style={s.sectionHeader}>
-        <MaterialIcons name={icon} size={20} color={theme.colors.primary} />
+        <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
         <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{title}</Text>
       </View>
       {items.map((item, index) => (
@@ -44,7 +45,7 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
           <Text style={[s.facilityName, { color: theme.colors.onSurface }]}>{item.name}</Text>
           {item.location ? (
             <View style={s.locationRow}>
-              <MaterialIcons name="place" size={14} color={theme.colors.onSurfaceVariant} />
+              <MaterialCommunityIcons name="map-marker" size={14} color={theme.colors.onSurfaceVariant} />
               <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>{item.location}</Text>
             </View>
           ) : null}

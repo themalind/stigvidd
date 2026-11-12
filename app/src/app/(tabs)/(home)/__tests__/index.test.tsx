@@ -5,7 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { Hike, TrailOverview } from "@/data/types";
 import PagerCarouselSkeleton from "@/components/skeletons/pager-carousel-skeleton";
@@ -56,6 +55,16 @@ jest.mock("@/components/home/popular-contributions", () => {
       mockContributionProps(props);
       return ReactActual.createElement(View, { testID: "home-contributions" });
     },
+  };
+});
+
+// keep-comment: the destinations row has a suite of its own
+jest.mock("@/components/home/nearby-areas", () => {
+  const { View } = jest.requireActual("react-native");
+  const ReactActual = jest.requireActual("react");
+  return {
+    __esModule: true,
+    default: () => ReactActual.createElement(View, { testID: "home-areas" }),
   };
 });
 
@@ -327,21 +336,6 @@ it("leaves the nature guide to the drawer", async () => {
   expect(screen.queryByText("Naturguide")).toBeNull();
 });
 
-it("opens the area list", async () => {
-  await showLoaded();
-
-  await fireEvent.press(screen.getByTestId("home-areas-card"));
-
-  expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(home)/area/area-list-screen");
-});
-
-it("names the area card", async () => {
-  await showLoaded();
-
-  expect(screen.getByText("Utforska Borås")).toBeTruthy();
-  expect(screen.getByText("Rya åsar · Kype · m.fl.")).toBeTruthy();
-});
-
 it("fills the screen with the theme's background", async () => {
   await showLoaded();
 
@@ -361,24 +355,14 @@ it("fills the screen with the dark theme's background too", async () => {
   });
 });
 
-it("lays the area card out full width and clipped", async () => {
-  await showLoaded();
-
-  expect(screen.getByTestId("home-areas-card")).toHaveStyle({
-    marginHorizontal: SCREEN_PADDING,
-    borderRadius: SURFACE_BORDER_RADIUS,
-    overflow: "hidden",
-  });
-});
-
-it("puts the area card between the popular trails and the shared walks, and the randomizer last", async () => {
+it("puts the destinations between the popular trails and the shared walks, and the randomizer last", async () => {
   await showLoaded();
 
   // keep-comment: the rendered tree, not the JSX children: the cards are given no testID props, so theirs exist only once they render
   const scroll = screen.getByTestId("home-scroll");
   const order = scroll.queryAll((node) => typeof node.props.testID === "string").map((node) => node.props.testID);
 
-  const areas = order.indexOf("home-areas-card");
+  const areas = order.indexOf("home-areas");
   expect(areas).toBeGreaterThan(order.indexOf("home-popular"));
   expect(order.indexOf("home-contributions")).toBeGreaterThan(areas);
   expect(order.at(-1)).toBe("adventure-card");

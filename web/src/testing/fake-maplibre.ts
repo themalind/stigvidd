@@ -13,6 +13,7 @@ export class FakeMap {
   visibility: Record<string, string> = {};
   styles: { diff?: boolean }[] = [];
   fits = 0;
+  markers: FakeMarker[] = [];
 
   constructor() {
     maps.push(this);
@@ -64,6 +65,26 @@ export class FakeMap {
   remove() {}
 }
 
+export class FakeMarker {
+  element: HTMLElement;
+  position: [number, number] = [0, 0];
+
+  constructor(options: { element: HTMLElement }) {
+    this.element = options.element;
+  }
+  setLngLat(position: [number, number]) {
+    this.position = position;
+    return this;
+  }
+  addTo(map: FakeMap) {
+    map.markers.push(this);
+    return this;
+  }
+  remove() {
+    for (const map of maps) map.markers = map.markers.filter((marker) => marker !== this);
+  }
+}
+
 export class LngLatBounds {
   extend() {
     return this;
@@ -72,6 +93,6 @@ export class LngLatBounds {
 
 class Control {}
 
-export { FakeMap as Map, Control as NavigationControl, Control as ScaleControl };
+export { FakeMap as Map, FakeMarker as Marker, Control as NavigationControl, Control as ScaleControl };
 
 export function setWorkerUrl() {}

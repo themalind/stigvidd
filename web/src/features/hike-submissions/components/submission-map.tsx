@@ -5,7 +5,7 @@ import type { MapLayerMouseEvent, Map as MapLibreMap, MapMouseEvent } from "mapl
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { type Jump, type LngLat, midpoints } from "@/utils/geometry-edit";
 import { useMapLibre } from "@/hooks/use-maplibre";
-import { fitTo, upsertSource as setData } from "@/lib/maplibre";
+import { fitTo, MAP_COLORS, upsertSource as setData } from "@/lib/maplibre";
 
 export type EditMode = "move" | "delete" | "cut" | "redraw" | "extend" | "start";
 
@@ -24,12 +24,12 @@ type Props = {
   onMapClick: (at: LngLat) => void;
 };
 
-const KEPT = "#134a5b";
+const KEPT = MAP_COLORS.trail;
 const TRIMMED = "#8a9799";
-const JUMP = "#b3261e";
+const JUMP = MAP_COLORS.end;
 const DRAFT = "#0f766e";
-const START = "#2e7d32";
-const END = "#b3261e";
+const START = MAP_COLORS.start;
+const END = MAP_COLORS.end;
 
 const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: [] };
 

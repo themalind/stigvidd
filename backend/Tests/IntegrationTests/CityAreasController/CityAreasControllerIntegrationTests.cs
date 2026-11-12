@@ -4,7 +4,9 @@
 using AwesomeAssertions;
 using StigviddAPI;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using WebDataContracts.RequestModels.CityArea;
 using WebDataContracts.ResponseModels.CityArea;
 
 namespace IntegrationTests.CityAreasController;
@@ -141,5 +143,40 @@ public class CityAreasControllerIntegrationTests : IClassFixture<StigViddWebAppl
         // Assert
         facilities.Should().NotBeNull().And.HaveCount(2);
         facilities.Should().NotContain(f => f.Identifier == "fac-fishing-ankedammen");
+    }
+
+    // keep-comment: a box around the seeded Tiveden trail, about 12.81, 57.62
+    private static SaveCityAreaBoundaryRequest AroundTiveden()
+    {
+        List<List<double>> ring = [[12.80, 57.61], [12.82, 57.61], [12.82, 57.63], [12.80, 57.63], [12.80, 57.61]];
+
+        return new SaveCityAreaBoundaryRequest { Coordinates = [[ring]] };
+    }
+
+    [Fact]
+    public async Task GetAll_WithAPosition_PutsTheAreaWithANearBoundaryFirst_AndOneAreaCarriesItsShapes()
+    {
+        // Arrange
+        var ct = TestContext.Current.CancellationToken;
+        var admin = _factory.CreateClient();
+        admin.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "firebase-uid-12346");
+        admin.DefaultRequestHeaders.Add(TestAuthHandler.RolesHeader, TestAuthHandler.AdminRole);
+        var saved = await admin.PutAsJsonAsync($"/api/v1/admin/city-areas/{EmptyAreaIdentifier}/boundary", AroundTiveden(), ct);
+        saved.EnsureSuccessStatusCode();
+        var client = _factory.CreateClient();
+
+        // Act
+        var near = await client.GetFromJsonAsync<List<CityAreaResponse>>("/api/v1/cityareas?latitude=57.62&longitude=12.85", ct);
+        var area = await client.GetFromJsonAsync<CityAreaResponse>($"/api/v1/cityareas/{EmptyAreaIdentifier}", ct);
+
+        // Assert
+        near.Should().NotBeNull();
+        near[0].Identifier.Should().Be(EmptyAreaIdentifier);
+        near[0].DistanceKm.Should().BeApproximately(1.8, 0.1);
+        near[0].Boundary.Should().BeNull();
+        near[1].DistanceKm.Should().BeNull();
+        area.Should().NotBeNull();
+        area.Boundary.Should().NotBeNull();
+        area.Trails.Should().Contain(t => t.Identifier == "11a1b2c3-d4e5-4f6a-7b8c-9d0e1f2a3b4c" && t.Path != null && t.Path.Count > 1);
     }
 }

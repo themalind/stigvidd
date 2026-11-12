@@ -17,6 +17,7 @@ export const paths = {
   users: "/users",
   trailImport: "/trail-import",
   trailImportSession: (sessionId: number | string) => `/trail-import/${sessionId}`,
+  facilityImport: "/facility-import",
   moderation: "/moderation",
   hikeSubmissions: "/hike-submissions",
   hikeSubmission: (identifier: string) => `/hike-submissions/${identifier}`,

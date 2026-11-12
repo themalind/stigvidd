@@ -8,21 +8,19 @@
 import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
+import MapBackChip from "@/components/map/map-back-chip";
+import MapStatusOverlay from "@/components/map/map-status-overlay";
 import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styles";
 import StartMarker from "@/components/map/start-marker";
 import UserLocationMarker from "@/components/map/user-location-marker";
-import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { useLiveUserLocation } from "@/hooks/location/useLiveUserLocation";
 import { lineStringFromPositions } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
 import { MeetingPoint, openDirectionsToStart } from "@/utils/map/open-directions";
-import { MaterialIcons } from "@expo/vector-icons";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
-import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
-import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 
 // The fullscreen "follow" view: one route drawn cleanly with the user's live position,
 // nothing else (no clusters, other trails or facility pins). Shared by the trail follow
@@ -46,8 +44,6 @@ interface Props {
 }
 
 export default function RouteFollowView({ idPrefix, path, title, isLoading, errorMessage, meetingPoint }: Props) {
-  const theme = useTheme();
-  const router = useRouter();
   const { t } = useTranslation();
 
   const cameraRef = useRef<CameraRef>(null);
@@ -144,37 +140,9 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
         )}
       </Map>
 
-      {/* Back arrow and route name share one surface that hugs its text, so the map keeps
-          as much of its top edge as possible. The whole chip goes back. No safe-area
-          offset: the app header sits above the tab navigator and already clears it. */}
-      <Pressable
-        onPress={() => router.back()}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel={t("common.back")}
-        style={[title ? s.backChip : s.iconButton, { backgroundColor: theme.colors.surface }]}
-      >
-        <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
-        {title && (
-          <Text style={[s.title, { color: theme.colors.onSurface }]} numberOfLines={1}>
-            {title}
-          </Text>
-        )}
-      </Pressable>
+      <MapBackChip title={title} />
 
-      {isLoading && (
-        <View style={s.centreOverlay} pointerEvents="none">
-          <ActivityIndicator color={theme.colors.primary} />
-        </View>
-      )}
-
-      {!isLoading && errorMessage && (
-        <View style={s.centreOverlay} pointerEvents="none">
-          <View style={[s.messagePill, { backgroundColor: theme.colors.surface }]}>
-            <Text style={{ color: theme.colors.onSurface }}>{errorMessage}</Text>
-          </View>
-        </View>
-      )}
+      <MapStatusOverlay isLoading={isLoading} errorMessage={errorMessage} />
 
       <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
       <BasemapToggle />
@@ -185,44 +153,5 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
 const s = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  backChip: {
-    position: "absolute",
-    top: SCREEN_PADDING,
-    left: SURFACE_BORDER_RADIUS,
-    // Long names truncate rather than push the chip across the map.
-    maxWidth: "70%",
-    height: 40,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingLeft: 8,
-    paddingRight: 16,
-    borderRadius: SURFACE_BORDER_RADIUS,
-  },
-  iconButton: {
-    position: "absolute",
-    top: SCREEN_PADDING,
-    left: SURFACE_BORDER_RADIUS,
-    width: 40,
-    height: 40,
-    borderRadius: SURFACE_BORDER_RADIUS,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    flexShrink: 1,
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-  },
-  centreOverlay: {
-    ...StyleSheet.absoluteFill,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  messagePill: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: SURFACE_BORDER_RADIUS,
   },
 });

@@ -20,7 +20,7 @@ import type {
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 
-import type { CityAreaResponse } from "../model";
+import type { CityAreaResponse, CityAreasGetAllParams } from "../model";
 
 import { customFetch } from "../../mutator";
 
@@ -41,34 +41,47 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getCityAreasGetAllUrl = () => {
-  return `/api/v1/CityAreas`;
+export const getCityAreasGetAllUrl = (params?: CityAreasGetAllParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/CityAreas?${stringifiedParams}` : `/api/v1/CityAreas`;
 };
 
-export const cityAreasGetAll = async (options?: Parameters<typeof customFetch>[1]): Promise<CityAreaResponse[]> => {
-  return customFetch<CityAreaResponse[]>(getCityAreasGetAllUrl(), {
+export const cityAreasGetAll = async (
+  params?: CityAreasGetAllParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CityAreaResponse[]> => {
+  return customFetch<CityAreaResponse[]>(getCityAreasGetAllUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getCityAreasGetAllQueryKey = () => {
-  return [`/api/v1/CityAreas`] as const;
+export const getCityAreasGetAllQueryKey = (params?: CityAreasGetAllParams) => {
+  return [`/api/v1/CityAreas`, ...(params ? [params] : [])] as const;
 };
 
-export const getCityAreasGetAllQueryOptions = <
-  TData = Awaited<ReturnType<typeof cityAreasGetAll>>,
-  TError = unknown,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+export const getCityAreasGetAllQueryOptions = <TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params?: CityAreasGetAllParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getCityAreasGetAllQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getCityAreasGetAllQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof cityAreasGetAll>>> = ({ signal }) =>
-    cityAreasGetAll({ signal, ...requestOptions });
+    cityAreasGetAll(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof cityAreasGetAll>>,
@@ -81,6 +94,7 @@ export type CityAreasGetAllQueryResult = NonNullable<Awaited<ReturnType<typeof c
 export type CityAreasGetAllQueryError = unknown;
 
 export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params: undefined | CityAreasGetAllParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>> &
       Pick<
@@ -96,6 +110,7 @@ export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGe
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params?: CityAreasGetAllParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>> &
       Pick<
@@ -111,6 +126,7 @@ export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGe
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params?: CityAreasGetAllParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -118,13 +134,14 @@ export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGe
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params?: CityAreasGetAllParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getCityAreasGetAllQueryOptions(options);
+  const queryOptions = getCityAreasGetAllQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -136,16 +153,19 @@ export function useCityAreasGetAll<TData = Awaited<ReturnType<typeof cityAreasGe
 export const getCityAreasGetAllSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof cityAreasGetAll>>,
   TError = unknown,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: CityAreasGetAllParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getCityAreasGetAllQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getCityAreasGetAllQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof cityAreasGetAll>>> = ({ signal }) =>
-    cityAreasGetAll({ signal, ...requestOptions });
+    cityAreasGetAll(params, { signal, ...requestOptions });
 
   return queryOptionsBuilder({
     queryKey,
@@ -160,6 +180,7 @@ export type CityAreasGetAllSuspenseQueryResult = NonNullable<Awaited<ReturnType<
 export type CityAreasGetAllSuspenseQueryError = unknown;
 
 export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params: undefined | CityAreasGetAllParams,
   options: {
     query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -167,6 +188,7 @@ export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cit
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params?: CityAreasGetAllParams,
   options?: {
     query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -174,6 +196,7 @@ export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cit
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params?: CityAreasGetAllParams,
   options?: {
     query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -181,13 +204,14 @@ export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cit
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 export function useCityAreasGetAllSuspense<TData = Awaited<ReturnType<typeof cityAreasGetAll>>, TError = unknown>(
+  params?: CityAreasGetAllParams,
   options?: {
     query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof cityAreasGetAll>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getCityAreasGetAllSuspenseQueryOptions(options);
+  const queryOptions = getCityAreasGetAllSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

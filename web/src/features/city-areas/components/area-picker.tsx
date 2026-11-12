@@ -109,7 +109,12 @@ export function AreaPicker({ areas, selected, onSelect }: AreaPickerProps) {
       closeOnSelect
       className="w-(--radix-popover-trigger-width)"
       trigger={
-        <Button variant="outline" role="combobox" className="h-auto w-full max-w-md justify-between py-2">
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-label={`Area: ${selected.name}`}
+          className="h-auto w-full max-w-md justify-between py-2"
+        >
           <span className="flex min-w-0 flex-col items-start">
             <span className="truncate font-medium">{selected.name}</span>
             <span className="text-muted-foreground text-xs font-normal">{counts(selected)}</span>

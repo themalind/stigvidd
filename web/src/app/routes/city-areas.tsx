@@ -7,6 +7,7 @@ import type { AdminCityAreaResponse, AdminFacilityResponse, AdminTrailListItemRe
 import { EmptyState } from "@/components/empty-state";
 import { FilterRow } from "@/components/filter-row";
 import LinkedItemsCard, { type LinkItem } from "@/components/linked-items-card";
+import { MunicipalitySelect } from "@/components/municipality-select";
 import { Page, PageHeader } from "@/components/page";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,22 +15,40 @@ import {
   cityAreasQueryOptions,
   linkSuggestionsQueryOptions,
   useSetFacilityLink,
+  useSetMunicipality,
   useSetTrailLink,
 } from "@/features/city-areas/api/city-areas";
+import { AreaBoundaryCard } from "@/features/city-areas/components/area-boundary-card";
 import { AreaPicker } from "@/features/city-areas/components/area-picker";
+import { ExcludedCard } from "@/features/city-areas/components/excluded-card";
+import { RecalculateAreasButton } from "@/features/city-areas/components/recalculate-areas-button";
 import { UnlinkedList } from "@/features/city-areas/components/unlinked-list";
 import { facilitiesQueryOptions } from "@/features/facilities/api/facility";
 import { FacilityEditor } from "@/features/facilities/components/facility-editor";
-import { FACILITY_TYPES, facilityTypeLabel } from "@/features/facilities/utils/facility-types";
+import { FACILITY_TYPES, facilityTypeLabel } from "@/utils/facility-types";
 import { trailsQueryOptions } from "@/features/trails/api/trail";
 import { useSearchState } from "@/hooks/use-search-state";
 
-function facilityItem(facility: { identifier: string; name: string; facilityType: number }): LinkItem {
-  return { identifier: facility.identifier, label: facility.name, detail: facilityTypeLabel(facility.facilityType) };
+// keep-comment: origin is only worth showing once the area has a boundary; before that every link is manual
+function origin(link: { isManual?: boolean }, hasBoundary: boolean): string | undefined {
+  if (!hasBoundary || link.isManual === undefined) return undefined;
+  return link.isManual ? "manual" : "from boundary";
 }
 
-function trailItem(trail: { identifier: string; name: string; isVerified: boolean }, city?: string): LinkItem {
-  const parts = [city, trail.isVerified ? undefined : "inactive"].filter(Boolean);
+function facilityItem(
+  facility: { identifier: string; name: string; facilityType: number; isManual?: boolean },
+  hasBoundary = false,
+): LinkItem {
+  const parts = [facilityTypeLabel(facility.facilityType), origin(facility, hasBoundary)].filter(Boolean);
+  return { identifier: facility.identifier, label: facility.name, detail: parts.join(" · ") };
+}
+
+function trailItem(
+  trail: { identifier: string; name: string; isVerified: boolean; isManual?: boolean },
+  city?: string,
+  hasBoundary = false,
+): LinkItem {
+  const parts = [city, trail.isVerified ? undefined : "inactive", origin(trail, hasBoundary)].filter(Boolean);
   return { identifier: trail.identifier, label: trail.name, detail: parts.join(" · ") || undefined };
 }
 
@@ -46,6 +65,7 @@ export default function CityAreasPage() {
       <PageHeader
         title="Areas"
         description="Which fire pits, shelters, bathing spots and trails belong to each area. The app shows them on the area's page."
+        actions={<RecalculateAreasButton />}
       />
 
       {selected ? (
@@ -56,7 +76,7 @@ export default function CityAreasPage() {
           </TabsList>
           <TabsContent value="areas" className="space-y-6 pt-4">
             <AreaPicker areas={areas} selected={selected} onSelect={(area) => update({ area })} />
-            <AreaLinks area={selected} facilities={facilities} trails={trails} />
+            <AreaLinks area={selected} areas={areas} facilities={facilities} trails={trails} />
           </TabsContent>
           <TabsContent value="unlinked" className="pt-4">
             <QueryBoundary>
@@ -131,16 +151,38 @@ function Unlinked({ areas }: { areas: AdminCityAreaResponse[] }) {
 
 interface AreaLinksProps {
   area: AdminCityAreaResponse;
+  areas: AdminCityAreaResponse[];
   facilities: AdminFacilityResponse[];
   trails: AdminTrailListItemResponse[];
 }
 
-function AreaLinks({ area, facilities, trails }: AreaLinksProps) {
+function AreaLinks({ area, areas, facilities, trails }: AreaLinksProps) {
   const setFacilityLink = useSetFacilityLink();
   const setTrailLink = useSetTrailLink();
+  const setMunicipality = useSetMunicipality();
 
   const facilitiesById = useMemo(() => new Map(facilities.map((f) => [f.identifier, f])), [facilities]);
   const trailsById = useMemo(() => new Map(trails.map((t) => [t.identifier, t])), [trails]);
+  const neighbours = useMemo(
+    () =>
+      areas.flatMap((other) =>
+        other.identifier !== area.identifier && other.boundary
+          ? [{ identifier: other.identifier, name: other.name, boundary: other.boundary }]
+          : [],
+      ),
+    [areas, area.identifier],
+  );
+  const places = useMemo(
+    () =>
+      area.facilities.flatMap((linked) => {
+        const facility = facilitiesById.get(linked.identifier);
+        return facility?.longitude != null && facility.latitude != null
+          ? [{ identifier: linked.identifier, name: linked.name, position: [facility.longitude, facility.latitude] }]
+          : [];
+      }),
+    [area.facilities, facilitiesById],
+  );
+  const hasBoundary = area.boundary !== null;
 
   function linkFacility(identifier: string, linked: boolean) {
     const item = linked ? facilitiesById.get(identifier) : area.facilities.find((f) => f.identifier === identifier);
@@ -159,17 +201,32 @@ function AreaLinks({ area, facilities, trails }: AreaLinksProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">{area.name}</h2>
-        <p className="text-sm text-muted-foreground">{area.location}</p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-semibold">{area.name}</h2>
+          <p className="text-sm text-muted-foreground">{area.location}</p>
+        </div>
+        <div className="w-64">
+          <MunicipalitySelect
+            value={area.municipalityIdentifier ?? ""}
+            disabled={setMunicipality.isPending}
+            noneLabel="No municipality"
+            onChange={(municipality) => {
+              if (municipality !== (area.municipalityIdentifier ?? ""))
+                setMunicipality.mutate({ area: area.identifier, municipality: municipality || null });
+            }}
+          />
+        </div>
       </div>
+
+      <AreaBoundaryCard key={area.identifier} area={area} places={places} neighbours={neighbours} />
 
       <LinkedItemsCard
         title="Facilities"
         description="Fire pits, shelters, fishing and swimming spots, nature reserves."
         searchLabel="Search facilities to link"
-        linked={area.facilities.map(facilityItem)}
-        available={facilities.map(facilityItem)}
+        linked={area.facilities.map((f) => facilityItem(f, hasBoundary))}
+        available={facilities.map((f) => facilityItem(f))}
         onLink={(id) => linkFacility(id, true)}
         onUnlink={(id) => linkFacility(id, false)}
         actions={editFacility}
@@ -179,11 +236,13 @@ function AreaLinks({ area, facilities, trails }: AreaLinksProps) {
         title="Trails"
         description="Walks and trails in the area. Inactive trails stay hidden in the app."
         searchLabel="Search trails to link"
-        linked={area.trails.map((t) => trailItem(t, trailsById.get(t.identifier)?.city))}
+        linked={area.trails.map((t) => trailItem(t, trailsById.get(t.identifier)?.city, hasBoundary))}
         available={trails.map((t) => trailItem(t, t.city))}
         onLink={(id) => linkTrail(id, true)}
         onUnlink={(id) => linkTrail(id, false)}
       />
+
+      <ExcludedCard area={area} />
     </div>
   );
 }
