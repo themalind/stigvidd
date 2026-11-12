@@ -25,7 +25,6 @@ import {
   type InitialViewState,
   Layer,
   type MapProps,
-  Marker,
   type PressEventWithFeatures,
   useCurrentPosition,
   type ViewStateChangeEvent,
@@ -38,6 +37,7 @@ import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import Map from "./map";
+import MapNameBubble from "./map-name-bubble";
 import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
 
 type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
@@ -382,15 +382,7 @@ export default function TrailMarkersMap({
       >
         <Camera ref={cameraRef} initialViewState={initialViewState ?? DEFAULT_VIEW_STATE} />
 
-        {selectedFacility && (
-          <Marker lngLat={selectedFacility.coordinates} anchor="bottom" offset={[0, -8]}>
-            <View style={[s.callout, { backgroundColor: theme.colors.elevation.level3 }]}>
-              <Text style={[s.calloutText, { color: theme.colors.onSurface }]} numberOfLines={2}>
-                {selectedFacility.name}
-              </Text>
-            </View>
-          </Marker>
-        )}
+        {selectedFacility && <MapNameBubble name={selectedFacility.name} coordinates={selectedFacility.coordinates} />}
 
         {filter.trails && (
           <ClusterSource
@@ -470,16 +462,6 @@ export default function TrailMarkersMap({
 }
 
 const s = StyleSheet.create({
-  callout: {
-    maxWidth: 220,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: BORDER_RADIUS,
-  },
-  calloutText: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-  },
   locatingPill: {
     position: "absolute",
     top: 8,

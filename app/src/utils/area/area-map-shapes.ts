@@ -12,7 +12,8 @@ export type MapFacilityKind = "swimming" | "shelter" | "firePit" | "other";
 
 export interface AreaMapShapes {
   boundary: GeoJSON.FeatureCollection<GeoJSON.MultiPolygon>;
-  trails: GeoJSON.FeatureCollection<GeoJSON.LineString>;
+  // keep-comment: one start marker per trail, like the map tab; the paths only frame the camera
+  trails: GeoJSON.FeatureCollection<GeoJSON.Point>;
   facilities: GeoJSON.FeatureCollection<GeoJSON.Point>;
   bounds: Bounds | null;
 }
@@ -27,7 +28,10 @@ export function facilityKind(facilityType: number): MapFacilityKind {
 
 export function areaMapShapes(area: CityArea): AreaMapShapes {
   const boundary = area.boundary ?? [];
-  const paths = area.trails.flatMap((trail) => (trail.path && trail.path.length > 1 ? [trail.path] : []));
+  const trails = area.trails.flatMap((trail) =>
+    trail.path && trail.path.length > 1 ? [{ identifier: trail.identifier, path: trail.path }] : [],
+  );
+  const paths = trails.map((trail) => trail.path);
   const facilities = area.facilities.flatMap((facility) =>
     facility.longitude == null || facility.latitude == null
       ? []
@@ -44,10 +48,11 @@ export function areaMapShapes(area: CityArea): AreaMapShapes {
     },
     trails: {
       type: "FeatureCollection",
-      features: paths.map((coordinates) => ({
+      features: trails.map(({ identifier, path }) => ({
         type: "Feature",
-        properties: {},
-        geometry: { type: "LineString", coordinates },
+        id: identifier,
+        properties: { identifier },
+        geometry: { type: "Point", coordinates: path[0] },
       })),
     },
     facilities: {
@@ -55,7 +60,7 @@ export function areaMapShapes(area: CityArea): AreaMapShapes {
       features: facilities.map(({ facility, position }) => ({
         type: "Feature",
         id: facility.identifier,
-        properties: { kind: facilityKind(facility.facilityType) },
+        properties: { kind: facilityKind(facility.facilityType), name: facility.name },
         geometry: { type: "Point", coordinates: position },
       })),
     },

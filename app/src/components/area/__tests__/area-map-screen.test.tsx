@@ -20,10 +20,19 @@ jest.mock("@/api/areas", () => ({
   getAreaByIdentifier: (...args: unknown[]) => mockGetArea(...args),
 }));
 
+const mockNavigate = jest.fn();
+const mockGetTrailCards = jest.fn();
+
+jest.mock("@/api/trails", () => ({
+  getTrailCards: (...args: unknown[]) => mockGetTrailCards(...args),
+}));
+
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ identifier: "kypesjon" }),
-  useRouter: () => ({ back: mockBack, navigate: jest.fn() }),
+  useRouter: () => ({ back: mockBack, navigate: mockNavigate }),
 }));
+
+let clock = 5_000_000;
 
 jest.mock("@/hooks/location/useLiveUserLocation", () => ({
   useLiveUserLocation: () => mockUseLiveUserLocation(),
@@ -78,10 +87,99 @@ async function show(area: CityArea = AREA) {
   await flushUntil(() => screen.queryByText(area.name));
 }
 
+function press(features: { identifier?: string; name?: string; coordinates?: [number, number] }[]) {
+  return {
+    nativeEvent: {
+      features: features.map(({ coordinates = [12.95, 57.72], ...properties }) => ({
+        type: "Feature",
+        geometry: { type: "Point", coordinates },
+        properties,
+      })),
+    },
+    stopPropagation: () => {},
+  };
+}
+
+function card(identifier: string, name: string) {
+  return { identifier, name, trailLength: 3, classification: 1, isAccessible: false, averageRating: 0 };
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   maplibre.resetHandles();
   mockUseLiveUserLocation.mockReturnValue(null);
+  mockGetTrailCards.mockResolvedValue([card("t", "Runt sjön"), card("u", "Kortslingan")]);
+  // keep-comment: guardedNavigate debounces on module state, so the clock only ever moves on
+  jest.spyOn(Date, "now").mockImplementation(() => (clock += 1000));
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+it("marks each trail at its start, as on the map tab", async () => {
+  await show();
+
+  const trails = source("area-trails")?.props.data.features;
+  expect(trails).toEqual([
+    expect.objectContaining({
+      properties: { identifier: "t" },
+      geometry: { type: "Point", coordinates: [12.95, 57.72] },
+    }),
+  ]);
+  expect(
+    screen
+      .queryAllByTestId("maplibre-Layer")
+      .some((node) => node.props.type === "line" && node.props.id.startsWith("area-trails")),
+  ).toBe(false);
+});
+
+it("opens the trail card on a tapped trail and goes on to the trail", async () => {
+  await show();
+
+  await act(async () => {
+    source("area-trails")?.props.onPress(press([{ identifier: "t" }]));
+  });
+  await flushUntil(() => screen.queryByText("Runt sjön"));
+
+  expect(mockGetTrailCards).toHaveBeenCalledWith(["t"]);
+  expect(screen.queryByTestId("area-map-legend")).toBeNull();
+
+  await fireEvent.press(screen.getAllByText("Läs mer")[0]);
+  expect(mockNavigate).toHaveBeenCalledWith({
+    pathname: "/(tabs)/(home)/trail/[identifier]",
+    params: { identifier: "t" },
+  });
+});
+
+it("opens every trail that starts where the finger lands", async () => {
+  await show();
+
+  await act(async () => {
+    source("area-trails")?.props.onPress(press([{ identifier: "t" }, { identifier: "u" }, { identifier: "t" }]));
+  });
+  await flushUntil(() => screen.queryByText("Kortslingan"));
+
+  expect(screen.getByText("Runt sjön")).toBeTruthy();
+  expect(screen.getByText("1/2")).toBeTruthy();
+  expect(screen.queryByText("1/3")).toBeNull();
+});
+
+it("shows a tapped place's name, and a tap on the map clears it", async () => {
+  await show();
+
+  await act(async () => {
+    source("area-facilities")?.props.onPress(press([{ name: "Kypebadet", coordinates: [12.93, 57.71] }]));
+  });
+
+  expect(screen.getByTestId("map-name-bubble")).toHaveTextContent("Kypebadet");
+
+  await act(async () => {
+    screen.getByTestId("maplibre-Map").props.onPress();
+  });
+
+  expect(screen.queryByTestId("map-name-bubble")).toBeNull();
+  expect(screen.getByTestId("area-map-legend")).toBeTruthy();
 });
 
 it("draws the area named in the route with its name on the back chip", async () => {

@@ -9,15 +9,18 @@ import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
 import MapBackChip from "@/components/map/map-back-chip";
+import MapNameBubble from "@/components/map/map-name-bubble";
 import MapStatusOverlay from "@/components/map/map-status-overlay";
+import TrailCardCarousel from "@/components/map/trail-card-carousel";
 import UserLocationMarker from "@/components/map/user-location-marker";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { useArea } from "@/hooks/area/useArea";
 import { useLiveUserLocation } from "@/hooks/location/useLiveUserLocation";
 import { areaMapShapes } from "@/utils/area/area-map-shapes";
 import { Camera, type CameraRef } from "@maplibre/maplibre-react-native";
-import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { guardedNavigate } from "@/utils/navigation";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
@@ -29,6 +32,7 @@ const FIT_PADDING = { top: 100, right: 60, bottom: 120, left: 60 };
 export default function AreaMapScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
+  const router = useRouter();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const { data: area, isLoading } = useArea(identifier);
   const userLocation = useLiveUserLocation();
@@ -56,11 +60,53 @@ export default function AreaMapScreen() {
 
   const failed = !isLoading && !bounds;
 
+  const [carouselIds, setCarouselIds] = useState<string[] | null>(null);
+  const [bubble, setBubble] = useState<{ name: string; coordinates: [number, number] } | null>(null);
+
+  const openTrails = useCallback((identifiers: string[]) => {
+    setBubble(null);
+    setCarouselIds(identifiers);
+  }, []);
+
+  const showName = useCallback((name: string, coordinates: [number, number]) => {
+    setCarouselIds(null);
+    setBubble({ name, coordinates });
+  }, []);
+
+  const closeAll = useCallback(() => {
+    setCarouselIds(null);
+    setBubble(null);
+  }, []);
+
+  const readMore = useCallback(
+    (trailIdentifier: string) => {
+      guardedNavigate(() =>
+        router.navigate({ pathname: "/(tabs)/(home)/trail/[identifier]", params: { identifier: trailIdentifier } }),
+      );
+    },
+    [router],
+  );
+
+  const showOnMap = useCallback(
+    (trailIdentifier: string) => {
+      guardedNavigate(() =>
+        router.navigate({ pathname: "/(tabs)/(home)/follow/[identifier]", params: { identifier: trailIdentifier } }),
+      );
+    },
+    [router],
+  );
+
   return (
     <View testID="area-map-screen" style={s.container}>
-      <Map style={StyleSheet.absoluteFill} showsUserLocation={false} onDidFinishLoadingMap={handleMapReady}>
+      <Map
+        style={StyleSheet.absoluteFill}
+        showsUserLocation={false}
+        onDidFinishLoadingMap={handleMapReady}
+        onPress={closeAll}
+      >
         <Camera ref={cameraRef} />
-        {shapes && <AreaMapLayers shapes={shapes} lineWidth={4} />}
+        {shapes && <AreaMapLayers shapes={shapes} onTrailPress={openTrails} onFacilityPress={showName} />}
+        {bubble && <MapNameBubble name={bubble.name} coordinates={bubble.coordinates} />}
         {userLocation && (
           <UserLocationMarker
             // keep-comment: remount, not mutate, when the anchor appears (see UserLocationMarker)
@@ -76,9 +122,15 @@ export default function AreaMapScreen() {
       <MapBackChip title={area?.name} />
       <MapStatusOverlay isLoading={isLoading} errorMessage={failed ? t("map.loadError") : undefined} />
 
-      {shapes && <AreaMapLegend shapes={shapes} style={[s.legend, { backgroundColor: theme.colors.surface }]} />}
-      <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
-      <BasemapToggle />
+      {carouselIds ? (
+        <TrailCardCarousel identifiers={carouselIds} onClose={closeAll} onReadMore={readMore} onShowOnMap={showOnMap} />
+      ) : (
+        <>
+          {shapes && <AreaMapLegend shapes={shapes} style={[s.legend, { backgroundColor: theme.colors.surface }]} />}
+          <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
+          <BasemapToggle />
+        </>
+      )}
     </View>
   );
 }
