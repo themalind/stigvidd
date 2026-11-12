@@ -41,8 +41,8 @@ export default function AreaRow({ area, onPress }: Props) {
         },
       ]}
     >
-      <View style={s.thumbnail}>
-        <AreaImage area={area} style={s.thumbnail} />
+      <View testID={`area-row-thumbnail-${area.identifier}`} style={s.thumbnail}>
+        <AreaImage area={area} style={StyleSheet.absoluteFill} />
       </View>
       <View style={s.body}>
         <View style={s.titleRow}>
@@ -75,10 +75,10 @@ const s = StyleSheet.create({
     overflow: "hidden",
     minHeight: THUMBNAIL,
   },
+  // keep-comment: the photo fills a box sized by the text beside it; a percentage height made Android size the row by the photo instead
   thumbnail: {
     width: THUMBNAIL,
-    height: "100%",
-    minHeight: THUMBNAIL,
+    alignSelf: "stretch",
   },
   body: {
     flex: 1,

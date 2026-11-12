@@ -6,9 +6,12 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CityArea, FacilityType } from "@/data/types";
+import { getByType } from "@/test/composites";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { Image } from "expo-image";
+import { StyleSheet } from "react-native";
 import AreaListScreen from "../area/area-list-screen";
 
 const mockGetAreas = jest.fn();
@@ -51,7 +54,9 @@ const AREAS = [
 ];
 
 function rows() {
-  return screen.getAllByTestId(/^area-row-(?!distance)/).map((row) => row.props.testID.replace("area-row-", ""));
+  return screen
+    .getAllByTestId(/^area-row-(?!distance|thumbnail)/)
+    .map((row) => row.props.testID.replace("area-row-", ""));
 }
 
 async function show() {
@@ -78,6 +83,18 @@ it("lists the destinations nearest first with their distance", async () => {
   expect(rows()).toEqual(["rya", "asunden", "almenas"]);
   expect(screen.getByTestId("area-row-distance-rya")).toHaveTextContent("2,3 km");
   expect(screen.getByText("Närmast")).toBeTruthy();
+});
+
+// keep-comment: a percentage height let Android size the row by the photo, a whole screen tall
+it("lets the text, not the photo, set a row's height", async () => {
+  mockGetAreas.mockResolvedValue([{ ...AREAS[0], imageUrl: "https://media.example/rya.jpg" }]);
+  await show();
+
+  const thumbnail = screen.getByTestId("area-row-thumbnail-rya");
+  const photo = getByType(Image);
+
+  expect(StyleSheet.flatten(thumbnail.props.style)).toEqual({ width: 84, alignSelf: "stretch" });
+  expect(StyleSheet.flatten(photo.props.style)).toMatchObject({ position: "absolute", top: 0, bottom: 0 });
 });
 
 it("groups A–Ö by municipality", async () => {
