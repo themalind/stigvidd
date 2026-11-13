@@ -14,9 +14,11 @@ import { Text, useTheme } from "react-native-paper";
 
 interface Props {
   title?: string;
+  // keep-comment: laid out in a row by its parent instead of pinned top-left, so it shrinks to the room beside a top-right control
+  inline?: boolean;
 }
 
-export default function MapBackChip({ title }: Props) {
+export default function MapBackChip({ title, inline = false }: Props) {
   const theme = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -27,7 +29,11 @@ export default function MapBackChip({ title }: Props) {
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={t("common.back")}
-      style={[title ? s.backChip : s.iconButton, { backgroundColor: theme.colors.surface }]}
+      style={[
+        title ? s.backChip : s.iconButton,
+        inline ? s.inline : s.pinned,
+        { backgroundColor: theme.colors.surface },
+      ]}
     >
       <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
       {title && (
@@ -40,11 +46,16 @@ export default function MapBackChip({ title }: Props) {
 }
 
 const s = StyleSheet.create({
-  backChip: {
+  pinned: {
     position: "absolute",
     top: SCREEN_PADDING,
     left: SURFACE_BORDER_RADIUS,
     maxWidth: "70%",
+  },
+  inline: {
+    flexShrink: 1,
+  },
+  backChip: {
     height: 40,
     flexDirection: "row",
     alignItems: "center",
@@ -54,9 +65,6 @@ const s = StyleSheet.create({
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   iconButton: {
-    position: "absolute",
-    top: SCREEN_PADDING,
-    left: SURFACE_BORDER_RADIUS,
     width: 40,
     height: 40,
     borderRadius: SURFACE_BORDER_RADIUS,
