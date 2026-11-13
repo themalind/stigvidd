@@ -51,7 +51,13 @@ export default function SegmentedControl<T extends string>({
             onPress={() => onChange(option.value)}
             style={[s.segment, selected && { backgroundColor: theme.colors.primaryContainer }]}
           >
-            <Text style={[s.label, { color: selected ? theme.colors.onPrimaryContainer : theme.colors.onSurface }]}>
+            {/* keep-comment: segments share the width, so a long label at a large text size shrinks rather than wrapping */}
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.7}
+              style={[s.label, { color: selected ? theme.colors.onPrimaryContainer : theme.colors.onSurface }]}
+            >
               {option.label}
             </Text>
             <CountBadge
@@ -83,9 +89,11 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     paddingVertical: 7,
+    paddingHorizontal: 4,
     borderRadius: BORDER_RADIUS,
   },
   label: {
+    flexShrink: 1,
     fontFamily: "Inter_600SemiBold",
     fontSize: 14,
   },
