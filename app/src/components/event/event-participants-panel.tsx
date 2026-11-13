@@ -44,8 +44,11 @@ export default function EventParticipantsPanel({
   const invited = participants.invited ?? [];
   const canChangeRole = (participant: EventParticipant) =>
     permissions.canChangeRoles && participant.role !== "Organizer";
+  // keep-comment: mirrors RemoveRefusal: a co-host removes only participants; only the organizer (canChangeRoles) removes a co-host
   const canRemove = (participant: EventParticipant) =>
-    permissions.canRemoveParticipants && participant.role !== "Organizer" && participant.nickName !== myNickName;
+    permissions.canRemoveParticipants &&
+    participant.nickName !== myNickName &&
+    (participant.role === "Participant" || (participant.role === "CoHost" && permissions.canChangeRoles));
   // The API lets hosts revoke any invitation and others only their own; canPinOrDeletePosts is the host check. keep-comment: mirrors CanRevokeInvitation
   const canRevoke = (invitee: EventInvitee) =>
     permissions.canPinOrDeletePosts || (myNickName !== undefined && invitee.invitedByNickName === myNickName);
