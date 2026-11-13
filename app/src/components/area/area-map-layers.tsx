@@ -25,7 +25,8 @@ import {
   Layer,
   type PressEventWithFeatures,
 } from "@maplibre/maplibre-react-native";
-import { RefObject, useMemo, useRef } from "react";
+import { RefObject, useCallback, useMemo, useRef } from "react";
+import { type AreaMapFilter, FILTER_KEY_OF_KIND, SHOW_ALL_IN_AREA } from "./area-map-filter";
 import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent } from "react-native";
 
@@ -58,6 +59,8 @@ export const AREA_TOP_LAYER = "area-shelter-points";
 
 interface Props {
   shapes: AreaMapShapes;
+  // keep-comment: left out on the area page's preview, which shows everything
+  filter?: AreaMapFilter;
   // keep-comment: every trail under the finger or in a small cluster, so trails sharing a trailhead open together as on the map tab
   onTrailPress?: (identifiers: string[]) => void;
   onFacilityPress?: (name: string, coordinates: [number, number]) => void;
@@ -112,26 +115,23 @@ async function handleFacilityPress(
   event.stopPropagation();
   const feature = event.nativeEvent.features?.[0];
   if (!feature) return;
+  // keep-comment: as on the map tab, a cluster always zooms in; past CLUSTER_MAX_ZOOM nothing clusters, so every place ends up alone
   if (feature.properties?.point_count != null) {
-    const clusterId = feature.properties.cluster_id as number;
-    const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
-    if (expansionZoom != null && expansionZoom <= CLUSTER_MAX_ZOOM) {
-      onZoomTo?.(pointOf(feature), expansionZoom);
-      return;
-    }
-    // keep-comment: places sharing one spot never break apart, so their names are shown together instead of zooming
-    const leaves = await sourceRef.current?.getClusterLeaves(clusterId, feature.properties.point_count as number, 0);
-    const names = (leaves ?? []).map((leaf) => leaf.properties?.name as string | undefined);
-    const named = names.filter((name): name is string => !!name);
-    const unnamed = names.length - named.length;
-    onFacilityPress?.([...named, ...(unnamed > 0 ? [unnamedLabel(unnamed)] : [])].join("\n"), pointOf(feature));
+    const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(feature.properties.cluster_id as number);
+    onZoomTo?.(pointOf(feature), expansionZoom ?? CLUSTER_MAX_ZOOM + 1);
     return;
   }
   const name = feature.properties?.name as string | undefined;
   onFacilityPress?.(name || unnamedLabel(1), pointOf(feature));
 }
 
-export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress, onZoomTo }: Props) {
+export default function AreaMapLayers({
+  shapes,
+  filter = SHOW_ALL_IN_AREA,
+  onTrailPress,
+  onFacilityPress,
+  onZoomTo,
+}: Props) {
   const { t } = useTranslation();
   const trailSource = useRef<GeoJSONSourceRef>(null);
   const swimmingSource = useRef<GeoJSONSourceRef>(null);
@@ -140,6 +140,17 @@ export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress, o
   const facilitySources = { swimming: swimmingSource, firePit: firePitSource, shelter: shelterSource };
   const interactive = !!(onTrailPress || onFacilityPress);
 
+  const shown = useCallback(
+    (feature: GeoJSON.Feature, on: boolean) =>
+      on && (!filter.accessibility || feature.properties?.isAccessible === true),
+    [filter.accessibility],
+  );
+
+  const trails = useMemo<GeoJSON.FeatureCollection<GeoJSON.Point>>(
+    () => ({ type: "FeatureCollection", features: shapes.trails.features.filter((f) => shown(f, filter.trails)) }),
+    [shapes.trails, shown, filter.trails],
+  );
+
   const byKind = useMemo(
     () =>
       Object.fromEntries(
@@ -147,11 +158,13 @@ export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress, o
           kind,
           {
             type: "FeatureCollection",
-            features: shapes.facilities.features.filter((feature) => feature.properties?.kind === kind),
+            features: shapes.facilities.features.filter(
+              (feature) => feature.properties?.kind === kind && shown(feature, filter[FILTER_KEY_OF_KIND[kind]]),
+            ),
           } satisfies GeoJSON.FeatureCollection<GeoJSON.Point>,
         ]),
       ) as Record<FacilityKind, GeoJSON.FeatureCollection<GeoJSON.Point>>,
-    [shapes.facilities],
+    [shapes.facilities, shown, filter],
   );
 
   return (
@@ -166,11 +179,10 @@ export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress, o
       </GeoJSONSource>
       <ClusterSource
         id="area-trails"
-        data={shapes.trails}
+        data={trails}
         colors={MARKER_COLORS.trails}
         pointRadius={POINT_RADIUS}
         sourceRef={trailSource}
-        markAccessible
         {...(onTrailPress
           ? { onPress: (event: PressEvent) => void handleTrailPress(event, trailSource, onTrailPress, onZoomTo) }
           : {})}
@@ -183,7 +195,6 @@ export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress, o
           colors={FACILITY_COLORS[kind]}
           pointRadius={FACILITY_POINT_RADIUS}
           sourceRef={facilitySources[kind]}
-          markAccessible
           {...(interactive
             ? {
                 onPress: (event: PressEvent) =>

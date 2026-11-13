@@ -9,6 +9,7 @@ import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
 import Map from "@/components/map/map";
 import MapBackChip from "@/components/map/map-back-chip";
+import MapFilterMenu from "@/components/map/map-filter-menu";
 import MapNameBubble from "@/components/map/map-name-bubble";
 import MapStatusOverlay from "@/components/map/map-status-overlay";
 import TrailCardCarousel from "@/components/map/trail-card-carousel";
@@ -24,6 +25,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { type AreaMapFilter, areaFilterItems, initialAreaFilter } from "./area-map-filter";
 import AreaMapLayers, { AREA_TOP_LAYER } from "./area-map-layers";
 import AreaMapLegend from "./area-map-legend";
 import { AreaStackRoutes } from "./area-routes";
@@ -45,7 +47,10 @@ export default function AreaMapScreen({ routes }: Props) {
   const cameraRef = useRef<CameraRef>(null);
   const mapReadyRef = useRef(false);
   const shapes = useMemo(() => (area ? areaMapShapes(area) : null), [area]);
-  const bounds = (isAreaMapFocus(focus) ? shapes?.accessibleBounds[focus] : null) ?? shapes?.bounds;
+  const mapFocus = isAreaMapFocus(focus) ? focus : undefined;
+  const bounds = (mapFocus ? shapes?.accessibleBounds[mapFocus] : null) ?? shapes?.bounds;
+  const [filter, setFilter] = useState(() => initialAreaFilter(mapFocus));
+  const filterItems = useMemo(() => (shapes ? areaFilterItems(shapes, filter) : []), [shapes, filter]);
 
   const zoomTo = useCallback((center: [number, number], zoom: number) => {
     cameraRef.current?.flyTo({ center, zoom, duration: 500 });
@@ -87,6 +92,15 @@ export default function AreaMapScreen({ routes }: Props) {
     setBubble(null);
   }, []);
 
+  // keep-comment: an open card or name may belong to a place the new filter hides
+  const changeFilter = useCallback(
+    (next: AreaMapFilter) => {
+      closeAll();
+      setFilter(next);
+    },
+    [closeAll],
+  );
+
   const readMore = useCallback(
     (trailIdentifier: string) => {
       guardedNavigate(() => router.navigate({ pathname: routes.trail, params: { identifier: trailIdentifier } }));
@@ -111,7 +125,13 @@ export default function AreaMapScreen({ routes }: Props) {
       >
         <Camera ref={cameraRef} />
         {shapes && (
-          <AreaMapLayers shapes={shapes} onTrailPress={openTrails} onFacilityPress={showName} onZoomTo={zoomTo} />
+          <AreaMapLayers
+            shapes={shapes}
+            filter={filter}
+            onTrailPress={openTrails}
+            onFacilityPress={showName}
+            onZoomTo={zoomTo}
+          />
         )}
         {bubble && <MapNameBubble name={bubble.name} coordinates={bubble.coordinates} />}
         {userLocation && (
@@ -127,6 +147,11 @@ export default function AreaMapScreen({ routes }: Props) {
       </Map>
 
       <MapBackChip title={area?.name} />
+      {shapes && (
+        <View testID="area-map-top-bar" style={s.topBar}>
+          <MapFilterMenu filter={filter} onChange={changeFilter} items={filterItems} />
+        </View>
+      )}
       <MapStatusOverlay isLoading={isLoading} errorMessage={failed ? t("map.loadError") : undefined} />
 
       {carouselIds ? (
@@ -145,6 +170,11 @@ export default function AreaMapScreen({ routes }: Props) {
 const s = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  topBar: {
+    position: "absolute",
+    top: SCREEN_PADDING,
+    right: SCREEN_PADDING,
   },
   legend: {
     position: "absolute",

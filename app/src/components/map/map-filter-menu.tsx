@@ -15,30 +15,38 @@ import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { Text, useTheme } from "react-native-paper";
-import { MARKER_COLORS } from "./marker-styles";
+import { MARKER_COLORS, type MarkerColors } from "./marker-styles";
 
-interface Props {
-  filter: MapMarkerFilter;
-  onChange: (filter: MapMarkerFilter) => void;
+// keep-comment: a category with colors shows its marker swatch (a legend); one without, such as accessibility, its icon
+export interface MapFilterItem<K extends string> {
+  key: K;
+  label: string;
+  colors?: MarkerColors;
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
 }
 
-const ITEMS: { key: keyof MapMarkerFilter; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
-  { key: "trails", label: "filter.trails", icon: "map-marker-path" },
-  { key: "contributions", label: "filter.contributions", icon: "account-group" },
-  { key: "shelters", label: "filter.shelters", icon: FACILITY_ICONS.shelter },
-  { key: "firePits", label: "filter.firePits", icon: FACILITY_ICONS.firePit },
+interface Props<K extends string> {
+  filter: Record<K, boolean>;
+  onChange: (filter: Record<K, boolean>) => void;
+  items: MapFilterItem<K>[];
+}
+
+export const MAP_TAB_FILTER_ITEMS: MapFilterItem<keyof MapMarkerFilter>[] = [
+  { key: "trails", label: "filter.trails", colors: MARKER_COLORS.trails },
+  { key: "contributions", label: "filter.contributions", colors: MARKER_COLORS.contributions },
+  { key: "shelters", label: "filter.shelters", colors: MARKER_COLORS.shelters },
+  { key: "firePits", label: "filter.firePits", colors: MARKER_COLORS.firePits },
   { key: "accessibility", label: "filter.accessibility", icon: FACILITY_ICONS.accessible },
 ];
 
-// Collapsed filter control for the map: a slim pill that expands into a checkbox
-// menu. Floats in the top-right corner; uses elevation colour (not shadows) for depth.
-export default function MapFilterMenu({ filter, onChange }: Props) {
+// keep-comment: depth comes from the elevation colour, not a shadow
+export default function MapFilterMenu<K extends string>({ filter, onChange, items }: Props<K>) {
   const theme = useTheme();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const surface = theme.colors.elevation.level2;
-  const activeCount = ITEMS.filter((item) => filter[item.key]).length;
+  const activeCount = items.filter((item) => filter[item.key]).length;
 
   return (
     <View style={s.container}>
@@ -68,7 +76,7 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
           exiting={FadeOutUp.duration(120)}
           style={[s.panel, { backgroundColor: surface }]}
         >
-          {ITEMS.map((item) => {
+          {items.map((item) => {
             const selected = filter[item.key];
             return (
               <Pressable
@@ -78,22 +86,18 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
                 style={s.row}
               >
                 <View style={s.leading}>
-                  {item.key === "accessibility" ? (
+                  {item.colors ? (
+                    <View
+                      testID={`map-filter-dot-${item.key}`}
+                      style={[s.dot, { backgroundColor: item.colors.fill, borderColor: item.colors.stroke }]}
+                    />
+                  ) : item.icon ? (
                     <MaterialCommunityIcons
                       name={item.icon}
                       size={18}
                       color={selected ? theme.colors.primary : theme.colors.onSurfaceVariant}
                     />
-                  ) : (
-                    // Colour swatch matching the category's pin on the map (a legend).
-                    <View
-                      testID={`map-filter-dot-${item.key}`}
-                      style={[
-                        s.dot,
-                        { backgroundColor: MARKER_COLORS[item.key].fill, borderColor: MARKER_COLORS[item.key].stroke },
-                      ]}
-                    />
-                  )}
+                  ) : null}
                 </View>
                 <Text style={[s.rowText, { color: selected ? theme.colors.onSurface : theme.colors.onSurfaceVariant }]}>
                   {t(asTranslationKey(item.label))}
@@ -114,8 +118,7 @@ export default function MapFilterMenu({ filter, onChange }: Props) {
 
 const s = StyleSheet.create({
   container: {
-    // Right-align the trigger and the panel so the menu drops down flush with the
-    // top-right corner (easier thumb reach) instead of overflowing leftward.
+    // keep-comment: right-aligned so the panel drops flush with the top-right corner instead of overflowing leftward
     alignItems: "flex-end",
   },
   trigger: {

@@ -16,7 +16,7 @@ import {
 import { RefObject } from "react";
 import { NativeSyntheticEvent } from "react-native";
 import { type ClusterActionConfig } from "./cluster-action";
-import { ACCESSIBLE_RING_COLOR, type MarkerColors } from "./marker-styles";
+import { type MarkerColors } from "./marker-styles";
 
 // keep-comment: clustered up to a high zoom so overlapping trailheads stay one tappable cluster instead of stacked pins
 export const CLUSTER_MAX_ZOOM = 16;
@@ -31,18 +31,11 @@ const CLUSTER_RADIUS_MED = 20;
 const CLUSTER_RADIUS_LARGE = 26;
 const CLUSTER_COUNT_MED = 10;
 const CLUSTER_COUNT_LARGE = 50;
-const ACCESSIBLE_RING_GAP = 3;
 
 const HAS_COUNT: FilterSpecification = ["has", "point_count"];
 const NO_COUNT: FilterSpecification = ["!", ["has", "point_count"]];
-const ACCESSIBLE: FilterSpecification = [
-  "case",
-  ["has", "point_count"],
-  [">", ["get", "accessible"], 0],
-  ["==", ["get", "isAccessible"], true],
-];
 
-// keep-comment: the one cluster size step, read by the cluster layer, the accessible ring and markerRadius
+// keep-comment: the one cluster size step, read by the cluster layer and markerRadius
 const CLUSTER_RADIUS: Extract<NonNullable<CircleLayerSpecification["paint"]>["circle-radius"], unknown[]> = [
   "step",
   ["get", "point_count"],
@@ -71,12 +64,10 @@ interface Props {
     event: NativeSyntheticEvent<PressEventWithFeatures>,
     sourceRef: RefObject<GeoJSONSourceRef | null>,
   ) => void;
-  // keep-comment: rings a point whose isAccessible is true, and a cluster holding at least one
-  markAccessible?: boolean;
 }
 
 // keep-comment: one source per marker category, so categories never merge into one cluster and all break apart at the same zooms
-export default function ClusterSource({ id, data, colors, pointRadius, sourceRef, onPress, markAccessible }: Props) {
+export default function ClusterSource({ id, data, colors, pointRadius, sourceRef, onPress }: Props) {
   return (
     <GeoJSONSource
       id={id}
@@ -85,24 +76,10 @@ export default function ClusterSource({ id, data, colors, pointRadius, sourceRef
       cluster
       clusterRadius={60}
       clusterMaxZoom={CLUSTER_MAX_ZOOM}
-      {...(markAccessible
-        ? { clusterProperties: { accessible: ["+", ["case", ["==", ["get", "isAccessible"], true], 1, 0]] } }
-        : {})}
       {...(onPress
         ? { onPress: (event: NativeSyntheticEvent<PressEventWithFeatures>) => onPress(event, sourceRef) }
         : {})}
     >
-      {markAccessible && (
-        <Layer
-          type="circle"
-          id={`${id}-accessible`}
-          filter={ACCESSIBLE}
-          paint={{
-            "circle-radius": ["+", ["case", ["has", "point_count"], CLUSTER_RADIUS, pointRadius], ACCESSIBLE_RING_GAP],
-            "circle-color": ACCESSIBLE_RING_COLOR,
-          }}
-        />
-      )}
       <Layer
         type="circle"
         id={`${id}-clusters`}

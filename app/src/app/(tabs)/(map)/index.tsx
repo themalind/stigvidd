@@ -8,7 +8,7 @@
 import ErrorView from "@/components/status/error-view";
 import BasemapToggle from "@/components/map/basemap-toggle";
 import CenterOnUserButton from "@/components/map/center-on-user-button";
-import MapFilterMenu from "@/components/map/map-filter-menu";
+import MapFilterMenu, { MAP_TAB_FILTER_ITEMS } from "@/components/map/map-filter-menu";
 import TrailCardCarousel from "@/components/map/trail-card-carousel";
 import TrailMarkersMap, { type MapHighlight } from "@/components/map/trail-markers-map";
 import { SCREEN_PADDING } from "@/constants/constants";
@@ -163,7 +163,7 @@ export default function MapScreen() {
       {/* No safe-area offset: the app header already clears the status bar. keep-comment: layout constraint */}
       {!offlineScreen && (
         <View testID="map-top-bar" style={s.topBar}>
-          <MapFilterMenu filter={filters} onChange={setFilters} />
+          <MapFilterMenu filter={filters} onChange={setFilters} items={MAP_TAB_FILTER_ITEMS} />
         </View>
       )}
 

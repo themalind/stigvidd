@@ -65,6 +65,3 @@ export const START_MARKER_COLORS: MarkerColors = {
 export const HIGHLIGHT_MARKER_COLORS = {
   ring: colors.tertiary,
 };
-
-// keep-comment: a dark halo behind the marker's white edge, so it reads as a mark on any pin colour
-export const ACCESSIBLE_RING_COLOR = "#1B1B1B";

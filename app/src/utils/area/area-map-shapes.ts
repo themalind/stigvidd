@@ -83,7 +83,8 @@ export function areaMapShapes(area: CityArea): AreaMapShapes {
         id: facility.identifier,
         properties: {
           kind: facilityKind(facility.facilityType),
-          name: facility.name,
+          // keep-comment: fire pits and shelters are counted, never named; their imported names are near-identical
+          name: facilityKind(facility.facilityType) === "swimming" ? facility.name : "",
           isAccessible: facility.isAccessible,
         },
         geometry: { type: "Point", coordinates: position },
