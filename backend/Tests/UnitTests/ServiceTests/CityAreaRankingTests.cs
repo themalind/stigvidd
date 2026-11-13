@@ -28,7 +28,7 @@ public class CityAreaRankingTests
     {
         return new(
             name, name, "", null, null, null, null, boundary, [],
-            [.. ratings.Select(rating => new CityAreaTrailProjection(name + rating, "", 1, 1, null, rating, null, null))]);
+            [.. ratings.Select(rating => new CityAreaTrailProjection(name + rating, "", 1, 1, null, rating, null, false, null))]);
     }
 
     [Fact]

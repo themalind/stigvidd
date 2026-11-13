@@ -43,6 +43,7 @@ public class CityAreaResponseFactoryTests
             new CityAreaTrailProjection(
                 "trail-tiveden", "Tiveden", 9.5M, 2, "En vandringsled genom skogen.",
                 4.5M, new CityAreaTrailImageProjection("img-tiveden", "tiveden.jpg"),
+                true,
                 GeoPointFactory.FromLonLatPath([new Coordinate(12.9, 57.7), new Coordinate(12.91, 57.71)]))
         ]);
     }
@@ -80,6 +81,7 @@ public class CityAreaResponseFactoryTests
             t.Classification == 2 &&
             t.Description == "En vandringsled genom skogen." &&
             t.AverageRating == 4.5M &&
+            t.IsAccessible &&
             t.Image!.Identifier == "img-tiveden" &&
             t.Image.ImageUrl == "http://stigvidd.se/testing/tiveden.jpg");
     }

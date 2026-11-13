@@ -13,5 +13,6 @@ public record CityAreaTrailProjection(
     string? Description,
     decimal AverageRating,
     CityAreaTrailImageProjection? Image,
+    bool IsAccessible,
     // keep-comment: only the single-area query loads it; the list leaves it null
     LineString? Path);

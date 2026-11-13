@@ -218,6 +218,7 @@ public class CityAreaService : ICityAreaService
                     t.Description,
                     t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
                     t.TrailImages!.Select(i => new CityAreaTrailImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault(),
+                    t.Accessibility,
                     withPaths ? t.GeoPath : null)).ToList());
     }
 

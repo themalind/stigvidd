@@ -14,6 +14,7 @@ public class CityAreaTrailResponse
     public string? Description { get; set; }
     public decimal AverageRating { get; set; }
     public TrailImageResponse? Image { get; set; }
+    public bool IsAccessible { get; set; }
     // keep-comment: [longitude, latitude] pairs, simplified; only for a single area
     public IReadOnlyList<double[]>? Path { get; set; }
 
