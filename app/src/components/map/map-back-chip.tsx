@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, MAP_CONTROL_HEIGHT, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
@@ -29,13 +29,13 @@ export default function MapBackChip({ title, inline = false }: Props) {
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={t("common.back")}
-      style={[
-        title ? s.backChip : s.iconButton,
-        inline ? s.inline : s.pinned,
-        { backgroundColor: theme.colors.surface },
-      ]}
+      style={
+        inline
+          ? [s.inlineChip, { backgroundColor: theme.colors.elevation.level2 }]
+          : [title ? s.backChip : s.iconButton, s.pinned, { backgroundColor: theme.colors.surface }]
+      }
     >
-      <MaterialIcons name="arrow-back" size={24} color={theme.colors.onSurface} />
+      <MaterialIcons name="arrow-back" size={inline ? 20 : 24} color={theme.colors.onSurface} />
       {title && (
         <Text style={[s.title, { color: theme.colors.onSurface }]} numberOfLines={1}>
           {title}
@@ -52,11 +52,19 @@ const s = StyleSheet.create({
     left: SURFACE_BORDER_RADIUS,
     maxWidth: "70%",
   },
-  inline: {
+  // keep-comment: sized like MapFilterMenu's trigger (padding, 20 px icon, 14 px text, radius), so the two match at any text size
+  inlineChip: {
     flexShrink: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minHeight: MAP_CONTROL_HEIGHT,
+    borderRadius: BORDER_RADIUS,
   },
   backChip: {
-    height: 40,
+    minHeight: MAP_CONTROL_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -65,8 +73,8 @@ const s = StyleSheet.create({
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: MAP_CONTROL_HEIGHT,
+    height: MAP_CONTROL_HEIGHT,
     borderRadius: SURFACE_BORDER_RADIUS,
     alignItems: "center",
     justifyContent: "center",

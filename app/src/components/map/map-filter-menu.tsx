@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, MAP_CONTROL_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { FACILITY_ICONS } from "@/constants/facility-icons";
 import { MapMarkerFilter } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
@@ -127,6 +127,7 @@ const s = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
+    minHeight: MAP_CONTROL_HEIGHT,
     borderRadius: BORDER_RADIUS,
   },
   triggerText: {

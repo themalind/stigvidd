@@ -5,30 +5,25 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { BORDER_RADIUS, SLIM_BUTTON_HEIGHT } from "@/constants/constants";
 import { openDirectionsToStart } from "@/utils/map/open-directions";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Text, useTheme } from "react-native-paper";
 
-// On narrow phones the two corner pills would crowd each other, so the directions
-// pill drops its label and shows just the icon below this width (app is portrait-locked).
+// keep-comment: on narrow phones the two corner badges would crowd, so directions shows only its icon (app is portrait-locked)
 const COMPACT_DIRECTIONS = Dimensions.get("window").width < 380;
 
 interface Props {
-  // Badge text — "Se på karta" for trails, "Visa kartvy" for hikes.
   label: string;
   onPress: () => void;
-  // When given, a directions pill is drawn for this start point. Needed because the
-  // full-cover Pressable below swallows map touches, so the start marker's own tap
-  // handler can't be reached while this overlay is mounted.
+  // keep-comment: the full-cover Pressable swallows map touches, so the start marker's own tap cannot reach directions
   startPosition?: GeoJSON.Position;
   directionsMessage?: string;
 }
 
-// The chrome that turns a static map preview into a button: the whole surface opens the
-// fullscreen follow view, with a corner badge saying so. Shared by the trail detail
-// preview and the hike/shared-hike detail modals so the affordance is identical.
+// keep-comment: shared by every static map preview, so tapping one to open the follow view looks the same everywhere
 export default function MapPreviewOverlay({ label, onPress, startPosition, directionsMessage }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -36,7 +31,7 @@ export default function MapPreviewOverlay({ label, onPress, startPosition, direc
   return (
     <>
       <Pressable style={s.overlay} onPress={onPress} accessibilityRole="button" accessibilityLabel={label}>
-        <View style={[s.badge, { backgroundColor: theme.colors.surface }]}>
+        <View testID="map-preview-badge" style={[s.badge, { backgroundColor: theme.colors.surface }]}>
           <MaterialIcons name="open-in-full" size={16} color={theme.colors.onSurface} />
           <Text style={[s.badgeText, { color: theme.colors.onSurface }]}>{label}</Text>
         </View>
@@ -73,7 +68,8 @@ const s = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 20,
+    minHeight: SLIM_BUTTON_HEIGHT,
+    borderRadius: BORDER_RADIUS,
     opacity: 0.95,
   },
   directions: {
@@ -85,7 +81,8 @@ const s = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 20,
+    minHeight: SLIM_BUTTON_HEIGHT,
+    borderRadius: BORDER_RADIUS,
     opacity: 0.95,
   },
   badgeText: {

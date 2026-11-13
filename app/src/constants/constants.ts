@@ -9,6 +9,8 @@ export const BORDER_RADIUS = 5;
 // Width per height of an event cover; the server cuts uploads to the same shape. keep-comment: must match EventImageService.CoverAspect
 export const EVENT_COVER_ASPECT = 2;
 export const SLIM_BUTTON_HEIGHT = 32;
+// keep-comment: a minimum, not a fixed height, so the controls floating on a map line up and still grow with large text
+export const MAP_CONTROL_HEIGHT = 40;
 export const SURFACE_BORDER_RADIUS = BORDER_RADIUS;
 export const DIALOG_BORDER_RADIUS = BORDER_RADIUS;
 export const SCREEN_PADDING = 10;
