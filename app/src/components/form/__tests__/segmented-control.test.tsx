@@ -30,7 +30,7 @@ it("marks only the chosen segment as selected", async () => {
   expect(screen.getByTestId("seg-a")).not.toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primaryContainer });
 });
 
-// keep-comment: "Från användare" wrapped onto two lines at a large system text size
+// keep-comment: segments share the width, so a long label at a large system text size would wrap
 it("keeps a label on one line, shrinking it to fit its segment", async () => {
   await show("a");
 

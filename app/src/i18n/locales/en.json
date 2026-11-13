@@ -117,7 +117,7 @@
     "title": "Filter & Sort",
     "label": "Filter",
     "trails": "Trails",
-    "contributions": "From users",
+    "contributions": "Walks",
     "shelters": "Wind shelters",
     "firePits": "Fire pits",
     "clear": "Clear",
@@ -174,7 +174,7 @@
     "showOutdoor": "Show terrain map",
     "locationBlocked": "Stigvidd is not allowed to use your location. Turn on location access in your phone settings.",
     "legendTrails": "Trails",
-    "legendContributions": "Walks by users"
+    "legendContributions": "Walks"
   },
   "publish": {
     "sectionTitle": "Publish as a trail",
