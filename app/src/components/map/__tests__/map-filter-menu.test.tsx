@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import MapFilterMenu from "@/components/map/map-filter-menu";
+import MapFilterMenu, { MAP_TAB_FILTER_ITEMS } from "@/components/map/map-filter-menu";
 import { MARKER_COLORS } from "@/components/map/marker-styles";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
@@ -34,7 +34,10 @@ function show(
   filter: Partial<MapMarkerFilter> = {},
   theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme,
 ) {
-  return renderWithProviders(<MapFilterMenu filter={{ ...NOTHING_ON, ...filter }} onChange={onChange} />, { theme });
+  return renderWithProviders(
+    <MapFilterMenu filter={{ ...NOTHING_ON, ...filter }} onChange={onChange} items={MAP_TAB_FILTER_ITEMS} />,
+    { theme },
+  );
 }
 
 async function open() {

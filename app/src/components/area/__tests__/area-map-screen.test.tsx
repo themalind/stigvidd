@@ -235,7 +235,7 @@ function clusterPress(pointCount: number, coordinates: [number, number] = [12.95
   };
 }
 
-// keep-comment: trails sharing a trailhead cluster into one marker, which opens them all in the carousel
+// keep-comment: as on the map tab, a cluster of up to ten trails opens them all in the carousel, even where it could split
 it("opens the trails of a small cluster together", async () => {
   await show();
   sourceHandle("area-trails").getClusterExpansionZoom.mockResolvedValue(15);
@@ -276,38 +276,38 @@ it("zooms into a cluster of facilities", async () => {
   expect(cameraHandles().at(-1)?.flyTo).toHaveBeenCalledWith({ center: [12.93, 57.71], zoom: 14, duration: 500 });
 });
 
-// keep-comment: places on one spot never break apart, so zooming would leave all but one unreachable
-it("names every place in a cluster that cannot be zoomed apart", async () => {
+// keep-comment: as on the map tab, fire pits a few metres apart split only past zoom 16, and a tap must still get there
+it("zooms a cluster of facilities past zoom 16 until each place stands alone", async () => {
   await show();
-  sourceHandle("area-swimming").getClusterExpansionZoom.mockResolvedValue(18);
-  sourceHandle("area-swimming").getClusterLeaves.mockResolvedValue([
-    { properties: { name: "Kypebadet" } },
-    { properties: { name: "Kypebadet norra" } },
-  ]);
+  sourceHandle("area-firePit").getClusterExpansionZoom.mockResolvedValue(17);
 
   await act(async () => {
-    await source("area-swimming")?.props.onPress(clusterPress(2, [12.93, 57.71]));
+    await source("area-firePit")?.props.onPress(clusterPress(3, [12.93, 57.71]));
   });
 
-  expect(cameraHandles().at(-1)?.flyTo).not.toHaveBeenCalled();
-  expect(screen.getByTestId("map-name-bubble")).toHaveTextContent("Kypebadet\nKypebadet norra");
+  expect(sourceHandle("area-firePit").getClusterLeaves).not.toHaveBeenCalled();
+  expect(cameraHandles().at(-1)?.flyTo).toHaveBeenCalledWith({ center: [12.93, 57.71], zoom: 17, duration: 500 });
+  expect(screen.queryByTestId("map-name-bubble")).toBeNull();
 });
 
-// keep-comment: imported places can lack a name, and a tap on them must still say what is there
-it("counts the unnamed places in a cluster that cannot be zoomed apart", async () => {
-  await show();
-  sourceHandle("area-swimming").getClusterExpansionZoom.mockResolvedValue(18);
-  sourceHandle("area-swimming").getClusterLeaves.mockResolvedValue([
-    { properties: { name: "Kypebadet" } },
-    { properties: { name: "" } },
-    { properties: {} },
-  ]);
+// keep-comment: fire pit names are near-identical, so a tapped fire pit says what it is, never its imported name
+it("calls a tapped fire pit a fire pit rather than its imported name", async () => {
+  await show({
+    ...AREA,
+    facilities: [
+      { ...AREA.facilities[0], identifier: "g", name: "Rya åsar - grillplats", facilityType: FacilityType.FirePit },
+    ],
+  });
+  const [firePit] = source("area-firePit")?.props.data.features ?? [];
 
   await act(async () => {
-    await source("area-swimming")?.props.onPress(clusterPress(3, [12.93, 57.71]));
+    await source("area-firePit")?.props.onPress({
+      nativeEvent: { features: [firePit] },
+      stopPropagation: () => {},
+    });
   });
 
-  expect(screen.getByTestId("map-name-bubble")).toHaveTextContent("Kypebadet\n2 badplatser");
+  expect(screen.getByTestId("map-name-bubble")).toHaveTextContent("1 grillplats");
 });
 
 // keep-comment: a counted row's link shows which of its own kind are accessible, not every accessible place in the area
@@ -345,4 +345,98 @@ it("says so when the area could not be loaded", async () => {
   await flushUntil(() => screen.queryByText("Kunde inte ladda kartdata"));
 
   expect(screen.getByText("Kunde inte ladda kartdata")).toBeTruthy();
+});
+
+describe("filter", () => {
+  const MIXED: CityArea = {
+    ...AREA,
+    trails: [
+      { ...AREA.trails[0], identifier: "t", isAccessible: false },
+      { ...AREA.trails[0], identifier: "ramp", isAccessible: true },
+    ],
+    facilities: [
+      { ...AREA.facilities[0], identifier: "bad", isAccessible: false },
+      { ...AREA.facilities[0], identifier: "g", facilityType: FacilityType.FirePit, isAccessible: true },
+    ],
+  };
+  const ids = (id: string) =>
+    (source(id)?.props.data.features ?? []).map(
+      (feature: GeoJSON.Feature) => feature.properties?.identifier ?? feature.id,
+    );
+
+  async function toggle(key: string) {
+    await fireEvent.press(screen.getByTestId("map-filter-trigger"));
+    await fireEvent.press(screen.getByTestId(`map-filter-row-${key}`));
+  }
+
+  it("offers the map tab's filter with the kinds this area has on the map", async () => {
+    await show(MIXED);
+
+    await fireEvent.press(screen.getByTestId("map-filter-trigger"));
+
+    for (const key of ["trails", "swimming", "firePits", "accessibility"]) {
+      expect(screen.getByTestId(`map-filter-row-${key}`)).toBeTruthy();
+    }
+    expect(screen.queryByTestId("map-filter-row-shelters")).toBeNull();
+    expect(screen.queryByTestId("map-filter-row-contributions")).toBeNull();
+  });
+
+  // keep-comment: swimming spots have no coordinates yet, so their row must not offer a kind with nothing to show
+  it("leaves out a kind with nothing on the map, and accessibility when nothing is accessible", async () => {
+    await show({
+      ...AREA,
+      facilities: [
+        { ...AREA.facilities[0], latitude: undefined, longitude: undefined },
+        { ...AREA.facilities[0], identifier: "v", facilityType: FacilityType.Shelter },
+      ],
+    });
+
+    await fireEvent.press(screen.getByTestId("map-filter-trigger"));
+
+    expect(screen.getByTestId("map-filter-row-trails")).toBeTruthy();
+    expect(screen.getByTestId("map-filter-row-shelters")).toBeTruthy();
+    expect(screen.queryByTestId("map-filter-row-swimming")).toBeNull();
+    expect(screen.queryByTestId("map-filter-row-firePits")).toBeNull();
+    expect(screen.queryByTestId("map-filter-row-accessibility")).toBeNull();
+  });
+
+  it("hides a kind that is turned off", async () => {
+    await show(MIXED);
+
+    await toggle("swimming");
+
+    expect(ids("area-swimming")).toEqual([]);
+    expect(ids("area-firePit")).toEqual(["g"]);
+    expect(ids("area-trails")).toEqual(["t", "ramp"]);
+  });
+
+  it("keeps only the accessible places when accessibility is on", async () => {
+    await show(MIXED);
+
+    await toggle("accessibility");
+
+    expect(ids("area-trails")).toEqual(["ramp"]);
+    expect(ids("area-swimming")).toEqual([]);
+    expect(ids("area-firePit")).toEqual(["g"]);
+  });
+
+  // keep-comment: a counted row's "show on the map" must show which ones are accessible, now that no ring marks them
+  it("opens on only the accessible places from a counted row", async () => {
+    mockParams = { identifier: "kypesjon", focus: "firePit" };
+    await show(MIXED);
+
+    expect(ids("area-trails")).toEqual(["ramp"]);
+    expect(ids("area-swimming")).toEqual([]);
+  });
+
+  // keep-comment: a link can arrive after the data changed; the accessibility row must stay so the empty map can be undone
+  it("keeps the accessibility row while it is on, even when nothing is accessible", async () => {
+    mockParams = { identifier: "kypesjon", focus: "firePit" };
+    await show(AREA);
+
+    await toggle("accessibility");
+
+    expect(ids("area-trails")).toEqual(["t"]);
+    expect(screen.queryByTestId("map-filter-row-accessibility")).toBeNull();
+  });
 });
