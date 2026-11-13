@@ -146,12 +146,11 @@ export default function AreaMapScreen({ routes }: Props) {
         )}
       </Map>
 
-      <MapBackChip title={area?.name} />
-      {shapes && (
-        <View testID="area-map-top-bar" style={s.topBar}>
-          <MapFilterMenu filter={filter} onChange={changeFilter} items={filterItems} />
-        </View>
-      )}
+      {/* keep-comment: one row, so a long area name shortens with an ellipsis beside the filter instead of running under it */}
+      <View testID="area-map-top-bar" style={s.topBar}>
+        <MapBackChip title={area?.name} inline />
+        {shapes && <MapFilterMenu filter={filter} onChange={changeFilter} items={filterItems} />}
+      </View>
       <MapStatusOverlay isLoading={isLoading} errorMessage={failed ? t("map.loadError") : undefined} />
 
       {carouselIds ? (
@@ -174,7 +173,12 @@ const s = StyleSheet.create({
   topBar: {
     position: "absolute",
     top: SCREEN_PADDING,
+    left: SURFACE_BORDER_RADIUS,
     right: SCREEN_PADDING,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 8,
   },
   legend: {
     position: "absolute",
