@@ -117,7 +117,7 @@
     "title": "Filter & Sortering",
     "label": "Filter",
     "trails": "Leder",
-    "contributions": "Från användare",
+    "contributions": "Promenader",
     "shelters": "Vindskydd",
     "firePits": "Grillplatser",
     "clear": "Rensa",
@@ -174,7 +174,7 @@
     "showOutdoor": "Visa terrängkarta",
     "locationBlocked": "Stigvidd får inte använda din position. Slå på platsåtkomst i telefonens inställningar.",
     "legendTrails": "Leder",
-    "legendContributions": "Användarnas promenader"
+    "legendContributions": "Promenader"
   },
   "publish": {
     "sectionTitle": "Publicera som led",
