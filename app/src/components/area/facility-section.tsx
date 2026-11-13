@@ -8,6 +8,7 @@
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { Facility } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
+import AccessibleTag from "@/components/area/accessible-tag";
 import { FacilityIconName } from "@/constants/facility-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -43,6 +44,7 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
           ]}
         >
           <Text style={[s.facilityName, { color: theme.colors.onSurface }]}>{item.name}</Text>
+          {item.isAccessible && <AccessibleTag testID={`facility-accessible-${item.identifier}`} />}
           {item.location ? (
             <View style={s.locationRow}>
               <MaterialCommunityIcons name="map-marker" size={14} color={theme.colors.onSurfaceVariant} />

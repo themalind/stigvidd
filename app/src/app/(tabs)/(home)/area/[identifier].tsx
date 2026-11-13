@@ -5,5 +5,9 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AreaDetailsScreen from "@/components/area/area-detail-screen";
-export default AreaDetailsScreen;
+import AreaDetailScreen from "@/components/area/area-detail-screen";
+import { HOME_AREA_ROUTES } from "@/components/area/area-routes";
+
+export default function AreaScreen() {
+  return <AreaDetailScreen routes={HOME_AREA_ROUTES} />;
+}

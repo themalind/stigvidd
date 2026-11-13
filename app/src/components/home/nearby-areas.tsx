@@ -5,8 +5,9 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AreaTile from "@/components/area/area-tile";
-import PanelCarousel from "@/components/layout/panel-carousel";
+import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
+import AreaRow from "@/components/area/area-row";
+import { HOME_AREA_ROUTES } from "@/components/area/area-routes";
 import SectionPanel from "@/components/layout/section-panel";
 import SeeAllLink from "@/components/layout/see-all-link";
 import InlineError from "@/components/status/inline-error";
@@ -14,12 +15,15 @@ import { NEARBY_RADIUS_KM } from "@/constants/constants";
 import { useAreas, usePopularAreas } from "@/hooks/area/useAreas";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
+import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
+import { StyleSheet, View } from "react-native";
 
-export const HOME_AREA_LIMIT = 6;
+export const HOME_AREA_LIMIT = 3;
 
 export default function NearbyAreas() {
   const { t } = useTranslation();
+  const setTrailListSource = useSetAtom(trailListSourceAtom);
   const nearest = useAreas();
   const near = nearest.hasPosition
     ? (nearest.data ?? []).filter((a) => a.distanceKm != null && a.distanceKm <= NEARBY_RADIUS_KM)
@@ -34,29 +38,35 @@ export default function NearbyAreas() {
   if (data && shown.length === 0) return null;
 
   const openArea = (identifier: string) =>
-    guardedNavigate(() => router.navigate({ pathname: "/(tabs)/(home)/area/[identifier]", params: { identifier } }));
+    guardedNavigate(() => router.navigate({ pathname: HOME_AREA_ROUTES.detail, params: { identifier } }));
+
+  const showAll = () =>
+    guardedNavigate(() => {
+      setTrailListSource("areas");
+      router.navigate("/(tabs)/trails");
+    });
 
   return (
     <SectionPanel
       testID="home-areas"
       title={showNear ? t("home.areasNearYou") : t("home.areasPopular")}
-      headerAction={
-        <SeeAllLink
-          testID="home-areas-see-all"
-          label={t("common.seeAll")}
-          onPress={() => guardedNavigate(() => router.navigate("/(tabs)/(home)/area/area-list-screen"))}
-        />
-      }
+      headerAction={<SeeAllLink testID="home-areas-see-all" label={t("common.seeAll")} onPress={showAll} />}
     >
       {data ? (
-        <PanelCarousel testID="home-areas-row">
+        <View testID="home-areas-list" style={s.list}>
           {shown.map((area) => (
-            <AreaTile key={area.identifier} testID={`home-area-${area.identifier}`} area={area} onPress={openArea} />
+            <AreaRow key={area.identifier} area={area} onPress={openArea} />
           ))}
-        </PanelCarousel>
+        </View>
       ) : (
         <InlineError testID="home-areas-error" message={t("home.areasError")} onRetry={() => void refetch()} />
       )}
     </SectionPanel>
   );
 }
+
+const s = StyleSheet.create({
+  list: {
+    gap: 8,
+  },
+});

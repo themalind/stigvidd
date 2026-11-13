@@ -28,6 +28,7 @@ stack    docker compose up -d, then /healthz and /readyz (checks the DB)
   To run one project: `dotnet test --project Tests/IntegrationTests/IntegrationTests.csproj --no-build`.
 - A new expo-router route fails `tsc` (TS2820) until `.expo/types/router.d.ts` (gitignored) is regenerated: run
   `CI=1 npx expo start --port 8099` in the background until the route appears in that file, then stop it.
+- A jest path with `(tabs)` is a regex: escape it (`"src/app/\(tabs\)/trails"`), or the run silently skips that file and reads green.
 - `npm test` type-checks nothing; `npm run build` / `npx tsc --noEmit` do. Pass `--silent` to app jest, whose
   console noise is 279 KB against a 7 KB summary.
 - Node >=22.18 and not 26 (CI uses `node:24`); on 26 the web suite stops at global setup. Linux geometry tests

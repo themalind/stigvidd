@@ -88,8 +88,6 @@ export default function HomeScreen() {
 
       <NearbyAreas />
 
-      <PopularContributions latitude={latitude} longitude={longitude} enabled={!locationPending} />
-
       {/* Held for the returning user, who is the one this slot is usually for: a first-time
           user resolves to "empty" and gets the get-started card above the carousel. */}
       {latest.kind === "loading" && <LatestHikeSkeleton />}
@@ -99,6 +97,8 @@ export default function HomeScreen() {
         </SectionPanel>
       )}
       {latest.kind === "hike" && <LatestHikeCard hike={latest.hike} />}
+
+      <PopularContributions latitude={latitude} longitude={longitude} enabled={!locationPending} />
 
       <AdventureCard />
     </ScrollView>

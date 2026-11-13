@@ -25,12 +25,16 @@ jest.mock("@/api/trails", () => ({
   getAllTrails: (...args: unknown[]) => mockGetAllTrails(...args),
 }));
 
+const mockGetAreas = jest.fn();
+jest.mock("@/api/areas", () => ({ getAreas: (...args: unknown[]) => mockGetAreas(...args) }));
+
 jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
 }));
 
 jest.mock("@/hooks/location/useUserLocation", () => ({
   useRealUserLocation: () => mockLocation,
+  useUserLocation: () => ({ data: undefined, isPending: false }),
 }));
 
 // The filter sheet has its own suite; this stub covers the wiring — what the screen hands it,
@@ -486,10 +490,11 @@ describe("trails and walks from users", () => {
     });
   });
 
-  it("hides the switch while no walk from users is published", async () => {
+  it("leaves the walks out of the switch while no walk from users is published", async () => {
     await show(TRAILS);
 
-    expect(screen.queryByTestId("trails-source")).toBeNull();
+    expect(screen.queryByTestId("trails-source-contributions")).toBeNull();
+    expect(screen.getByTestId("trails-source-areas")).toBeTruthy();
     expect(screen.getByText("Kvarnstigen")).toBeTruthy();
   });
 
@@ -499,5 +504,78 @@ describe("trails and walks from users", () => {
     await flushUntil(() => screen.queryByTestId("trails-screen"));
 
     expect(screen.getByText("Kvarnstigen")).toBeTruthy();
+  });
+});
+
+describe("destinations", () => {
+  const AREA = {
+    identifier: "rya",
+    name: "Rya åsar",
+    location: "",
+    municipality: "Borås",
+    distanceKm: null,
+    facilities: [],
+    trails: [],
+  };
+
+  async function showAreas() {
+    mockGetAreas.mockResolvedValue([AREA]);
+    await fireEvent.press(screen.getByTestId("trails-source-areas"));
+    await flushUntil(() => screen.queryByTestId("area-row-rya"));
+  }
+
+  it("swaps the trail list, its search and the filter button for the destinations", async () => {
+    await show();
+
+    await showAreas();
+
+    expect(screen.queryByTestId("trail-list")).toBeNull();
+    expect(screen.queryByPlaceholderText("Sök efter led eller ort...")).toBeNull();
+    expect(screen.queryByTestId("trails-filter-button")).toBeNull();
+    expect(screen.getByTestId("area-search")).toBeTruthy();
+  });
+
+  // keep-comment: the trail list remounts at the top, so a back-to-top link from before the switch would point nowhere
+  it("drops the back-to-top link after a visit to the destinations", async () => {
+    await show();
+    await act(() => scrollTo(400));
+    expect(screen.getByTestId("trails-back-to-top")).toBeTruthy();
+
+    await showAreas();
+    await fireEvent.press(screen.getByTestId("trails-source-trails"));
+
+    expect(screen.getByTestId("trail-list")).toBeTruthy();
+    expect(screen.queryByTestId("trails-back-to-top")).toBeNull();
+  });
+
+  it("opens a destination in the trails tab's own stack", async () => {
+    await show();
+    await showAreas();
+
+    await fireEvent.press(screen.getByTestId("area-row-rya"));
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      pathname: "/(tabs)/trails/area/[identifier]",
+      params: { identifier: "rya" },
+    });
+  });
+
+  it("opens on the destinations when the home screen asked for them", async () => {
+    mockGetAllTrails.mockResolvedValue(TRAILS);
+    mockGetAreas.mockResolvedValue([AREA]);
+    await renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "areas"]] });
+    await flushUntil(() => screen.queryByTestId("area-row-rya"));
+
+    expect(screen.getByTestId("trails-source-areas").props.accessibilityState).toMatchObject({ selected: true });
+  });
+
+  // keep-comment: the destinations have their own query, so a failed trails fetch must not hide them
+  it("shows the destinations while the trails are still loading or have failed", async () => {
+    mockGetAllTrails.mockRejectedValue(new Error("offline"));
+    mockGetAreas.mockResolvedValue([AREA]);
+    await renderWithProviders(<TrailsScreen />, { initialAtoms: [[trailListSourceAtom, "areas"]] });
+
+    await flushUntil(() => screen.queryByTestId("area-row-rya"));
+    expect(screen.getByTestId("area-row-rya")).toBeTruthy();
   });
 });

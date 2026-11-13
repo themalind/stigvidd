@@ -6,6 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
+import AreaList from "@/components/area/area-list";
+import { TRAILS_TAB_AREA_ROUTES } from "@/components/area/area-routes";
 import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import ScreenTitleBar from "@/components/layout/screen-title-bar";
@@ -43,7 +45,8 @@ export default function TrailsScreen() {
   };
   const [chosenSource, setSource] = useAtom(trailListSourceAtom);
   const hasContributions = trails?.some((trail) => trail.isContribution) ?? false;
-  const source = hasContributions ? chosenSource : "trails";
+  const source = chosenSource === "contributions" && !hasContributions ? "trails" : chosenSource;
+  const showAreas = source === "areas";
   const listSource = useDeferredValue(source);
   const sourceTrails = useMemo(
     () => trails?.filter((trail) => Boolean(trail.isContribution) === (listSource === "contributions")),
@@ -64,10 +67,13 @@ export default function TrailsScreen() {
     filteredCount,
     searchQuery,
     setSearchQuery,
-  } = useTrailFilters(sourceTrails, userLocation);
+    // keep-comment: no trails while the destinations show, so their search does not re-filter a list that is not mounted
+  } = useTrailFilters(showAreas ? undefined : sourceTrails, userLocation);
 
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  // keep-comment: the trail list remounts at the top after the destinations, so its back-to-top link must not linger
+  if (showAreas && showScrollToTop) setShowScrollToTop(false);
 
   const handlePress = useCallback((identifier: string) => {
     guardedNavigate(() =>
@@ -87,12 +93,13 @@ export default function TrailsScreen() {
     [handlePress],
   );
 
-  if (isLoading) {
+  // keep-comment: the destinations load on their own, so only the trail lists wait for or fail on the trails
+  if (!showAreas && isLoading) {
     return <LoadingIndicator />;
   }
 
   // A failed refetch keeps the cached data, so the error screen is only for having nothing to show. keep-comment: refetch-error semantics
-  if (isError && !trails) {
+  if (!showAreas && isError && !trails) {
     return <ErrorView error={undefined} onRetry={refetch} />;
   }
 
@@ -102,80 +109,93 @@ export default function TrailsScreen() {
         <ScreenTitleBar
           title={t("trailList.title")}
           leading={<Image contentFit="contain" source={hikers} style={s.hikers} />}
-          action={{
-            testID: "trails-filter-button",
-            label: t("trailList.filter"),
-            icon: "filter-list",
-            onPress: () => setFilterModalVisible(true),
-          }}
+          action={
+            showAreas
+              ? undefined
+              : {
+                  testID: "trails-filter-button",
+                  label: t("trailList.filter"),
+                  icon: "filter-list",
+                  onPress: () => setFilterModalVisible(true),
+                }
+          }
           style={s.headerRow}
         />
-        {hasContributions && (
-          <SegmentedControl
-            testID="trails-source"
-            options={[
-              { value: "trails", label: t("trailList.sourceTrails") },
-              { value: "contributions", label: t("trailList.sourceContributions") },
-            ]}
-            value={source}
-            onChange={(next) => {
-              listRef.current?.scrollToOffset({ offset: 0, animated: false });
-              setSource(next);
-            }}
-            style={s.sourceToggle}
-          />
-        )}
-        <SearchField
-          placeholder={t("trailList.search")}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={s.searchInput}
+        <SegmentedControl
+          testID="trails-source"
+          options={[
+            { value: "trails", label: t("trailList.sourceTrails") },
+            ...(hasContributions
+              ? [{ value: "contributions" as const, label: t("trailList.sourceContributions") }]
+              : []),
+            { value: "areas", label: t("trailList.sourceAreas") },
+          ]}
+          value={source}
+          onChange={(next) => {
+            listRef.current?.scrollToOffset({ offset: 0, animated: false });
+            setSource(next);
+          }}
+          style={s.sourceToggle}
         />
-        <View style={s.filterContainer}>
-          <Text style={s.resultText}>{t("trailList.showing", { count: totalCount, shown: filteredCount })}</Text>
-          {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
-            <Pressable testID="trails-clear-filters" onPress={clearFilters}>
-              <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>{t("trailList.clearFilters")}</Text>
-            </Pressable>
-          ) : null}
-        </View>
+        {!showAreas && (
+          <>
+            <SearchField
+              placeholder={t("trailList.search")}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={s.searchInput}
+            />
+            <View style={s.filterContainer}>
+              <Text style={s.resultText}>{t("trailList.showing", { count: totalCount, shown: filteredCount })}</Text>
+              {Object.values(filters).some((v) => v !== undefined) || searchQuery ? (
+                <Pressable testID="trails-clear-filters" onPress={clearFilters}>
+                  <Text style={[s.clearFilters, { color: theme.colors.tertiary }]}>{t("trailList.clearFilters")}</Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </>
+        )}
       </View>
-      <FlatList
-        testID="trail-list"
-        ref={listRef}
-        data={filteredTrails}
-        renderItem={renderTrailItem}
-        keyExtractor={(item) => item.identifier}
-        contentContainerStyle={s.listContent}
-        onScroll={(e) => setShowScrollToTop(e.nativeEvent.contentOffset.y > 300)}
-        scrollEventThrottle={16}
-        initialNumToRender={10}
-        maxToRenderPerBatch={10}
-        windowSize={5}
-        updateCellsBatchingPeriod={50}
-        removeClippedSubviews
-        refreshControl={
-          <RefreshControl
-            refreshing={isFetching}
-            onRefresh={onRefresh}
-            tintColor="#007AFF"
-            title={t("trailList.refreshing")}
-          />
-        }
-        ListEmptyComponent={
-          <View style={s.emptyContainer}>
-            <Text style={s.emptyText}>{t("trailList.noResults")}</Text>
-            <Text style={s.emptySubtext}>{t("trailList.noResultsHint")}</Text>
-          </View>
-        }
-        ListFooterComponent={
-          showScrollToTop ? (
-            <Pressable testID="trails-back-to-top" style={s.backToTop} onPress={onPressScrollToTop}>
-              <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
-            </Pressable>
-          ) : undefined
-        }
-      />
+      {showAreas ? (
+        <AreaList routes={TRAILS_TAB_AREA_ROUTES} />
+      ) : (
+        <FlatList
+          testID="trail-list"
+          ref={listRef}
+          data={filteredTrails}
+          renderItem={renderTrailItem}
+          keyExtractor={(item) => item.identifier}
+          contentContainerStyle={s.listContent}
+          onScroll={(e) => setShowScrollToTop(e.nativeEvent.contentOffset.y > 300)}
+          scrollEventThrottle={16}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          updateCellsBatchingPeriod={50}
+          removeClippedSubviews
+          refreshControl={
+            <RefreshControl
+              refreshing={isFetching}
+              onRefresh={onRefresh}
+              tintColor="#007AFF"
+              title={t("trailList.refreshing")}
+            />
+          }
+          ListEmptyComponent={
+            <View style={s.emptyContainer}>
+              <Text style={s.emptyText}>{t("trailList.noResults")}</Text>
+              <Text style={s.emptySubtext}>{t("trailList.noResultsHint")}</Text>
+            </View>
+          }
+          ListFooterComponent={
+            showScrollToTop ? (
+              <Pressable testID="trails-back-to-top" style={s.backToTop} onPress={onPressScrollToTop}>
+                <Text style={[s.text, { color: theme.colors.secondary }]}>{t("trail.backToTop")}</Text>
+              </Pressable>
+            ) : undefined
+          }
+        />
+      )}
 
       <TrailFilterModal
         visible={filterModalVisible}

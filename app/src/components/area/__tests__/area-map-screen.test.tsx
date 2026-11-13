@@ -6,8 +6,10 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AreaMapScreen from "@/components/area/area-map-screen";
+import { HOME_AREA_ROUTES } from "@/components/area/area-routes";
 import { CityArea, FacilityType } from "@/data/types";
 import { flushUntil } from "@/test/flush";
+import { cameraHandles, sourceHandle } from "@/test/maplibre";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
@@ -27,8 +29,10 @@ jest.mock("@/api/trails", () => ({
   getTrailCards: (...args: unknown[]) => mockGetTrailCards(...args),
 }));
 
+let mockParams: { identifier: string; focus?: string } = { identifier: "kypesjon" };
+
 jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => ({ identifier: "kypesjon" }),
+  useLocalSearchParams: () => mockParams,
   useRouter: () => ({ back: mockBack, navigate: mockNavigate }),
 }));
 
@@ -83,7 +87,7 @@ function source(id: string) {
 
 async function show(area: CityArea = AREA) {
   mockGetArea.mockResolvedValue(area);
-  await renderWithProviders(<AreaMapScreen />);
+  await renderWithProviders(<AreaMapScreen routes={HOME_AREA_ROUTES} />);
   await flushUntil(() => screen.queryByText(area.name));
 }
 
@@ -107,6 +111,7 @@ function card(identifier: string, name: string) {
 beforeEach(() => {
   jest.clearAllMocks();
   maplibre.resetHandles();
+  mockParams = { identifier: "kypesjon" };
   mockUseLiveUserLocation.mockReturnValue(null);
   mockGetTrailCards.mockResolvedValue([card("t", "Runt sjön"), card("u", "Kortslingan")]);
   // keep-comment: guardedNavigate debounces on module state, so the clock only ever moves on
@@ -123,7 +128,7 @@ it("marks each trail at its start, as on the map tab", async () => {
   const trails = source("area-trails")?.props.data.features;
   expect(trails).toEqual([
     expect.objectContaining({
-      properties: { identifier: "t" },
+      properties: { identifier: "t", isAccessible: false },
       geometry: { type: "Point", coordinates: [12.95, 57.72] },
     }),
   ]);
@@ -169,7 +174,7 @@ it("shows a tapped place's name, and a tap on the map clears it", async () => {
   await show();
 
   await act(async () => {
-    source("area-facilities")?.props.onPress(press([{ name: "Kypebadet", coordinates: [12.93, 57.71] }]));
+    source("area-swimming")?.props.onPress(press([{ name: "Kypebadet", coordinates: [12.93, 57.71] }]));
   });
 
   expect(screen.getByTestId("map-name-bubble")).toHaveTextContent("Kypebadet");
@@ -212,12 +217,131 @@ it("puts the user's position above the area", async () => {
   await show();
 
   const halo = screen.queryAllByTestId("maplibre-Layer").find((node) => node.props.id === "area-user-halo");
-  expect(halo?.props.afterId).toBe("area-facilities-dots");
+  expect(halo?.props.afterId).toBe("area-shelter-points");
+});
+
+function clusterPress(pointCount: number, coordinates: [number, number] = [12.95, 57.72]) {
+  return {
+    nativeEvent: {
+      features: [
+        {
+          type: "Feature",
+          geometry: { type: "Point", coordinates },
+          properties: { point_count: pointCount, cluster_id: 7 },
+        },
+      ],
+    },
+    stopPropagation: () => {},
+  };
+}
+
+// keep-comment: trails sharing a trailhead cluster into one marker, which opens them all in the carousel
+it("opens the trails of a small cluster together", async () => {
+  await show();
+  sourceHandle("area-trails").getClusterExpansionZoom.mockResolvedValue(15);
+  sourceHandle("area-trails").getClusterLeaves.mockResolvedValue([
+    { properties: { identifier: "t" } },
+    { properties: { identifier: "u" } },
+  ]);
+
+  await act(async () => {
+    await source("area-trails")?.props.onPress(clusterPress(2));
+  });
+  await flushUntil(() => screen.queryByText("Kortslingan"));
+
+  expect(sourceHandle("area-trails").getClusterLeaves).toHaveBeenCalledWith(7, 2, 0);
+  expect(screen.getByText("1/2")).toBeTruthy();
+});
+
+it("zooms into a large cluster that breaks apart", async () => {
+  await show();
+  sourceHandle("area-trails").getClusterExpansionZoom.mockResolvedValue(13);
+
+  await act(async () => {
+    await source("area-trails")?.props.onPress(clusterPress(12));
+  });
+
+  expect(sourceHandle("area-trails").getClusterLeaves).not.toHaveBeenCalled();
+  expect(cameraHandles().at(-1)?.flyTo).toHaveBeenCalledWith({ center: [12.95, 57.72], zoom: 13, duration: 500 });
+});
+
+it("zooms into a cluster of facilities", async () => {
+  await show();
+  sourceHandle("area-swimming").getClusterExpansionZoom.mockResolvedValue(14);
+
+  await act(async () => {
+    await source("area-swimming")?.props.onPress(clusterPress(3, [12.93, 57.71]));
+  });
+
+  expect(cameraHandles().at(-1)?.flyTo).toHaveBeenCalledWith({ center: [12.93, 57.71], zoom: 14, duration: 500 });
+});
+
+// keep-comment: places on one spot never break apart, so zooming would leave all but one unreachable
+it("names every place in a cluster that cannot be zoomed apart", async () => {
+  await show();
+  sourceHandle("area-swimming").getClusterExpansionZoom.mockResolvedValue(18);
+  sourceHandle("area-swimming").getClusterLeaves.mockResolvedValue([
+    { properties: { name: "Kypebadet" } },
+    { properties: { name: "Kypebadet norra" } },
+  ]);
+
+  await act(async () => {
+    await source("area-swimming")?.props.onPress(clusterPress(2, [12.93, 57.71]));
+  });
+
+  expect(cameraHandles().at(-1)?.flyTo).not.toHaveBeenCalled();
+  expect(screen.getByTestId("map-name-bubble")).toHaveTextContent("Kypebadet\nKypebadet norra");
+});
+
+// keep-comment: imported places can lack a name, and a tap on them must still say what is there
+it("counts the unnamed places in a cluster that cannot be zoomed apart", async () => {
+  await show();
+  sourceHandle("area-swimming").getClusterExpansionZoom.mockResolvedValue(18);
+  sourceHandle("area-swimming").getClusterLeaves.mockResolvedValue([
+    { properties: { name: "Kypebadet" } },
+    { properties: { name: "" } },
+    { properties: {} },
+  ]);
+
+  await act(async () => {
+    await source("area-swimming")?.props.onPress(clusterPress(3, [12.93, 57.71]));
+  });
+
+  expect(screen.getByTestId("map-name-bubble")).toHaveTextContent("Kypebadet\n2 badplatser");
+});
+
+// keep-comment: a counted row's link shows which of its own kind are accessible, not every accessible place in the area
+it("frames only the accessible places of the asked kind", async () => {
+  mockParams = { identifier: "kypesjon", focus: "firePit" };
+  await show({
+    ...AREA,
+    facilities: [
+      { ...AREA.facilities[0], identifier: "g", facilityType: FacilityType.FirePit, isAccessible: true },
+      {
+        ...AREA.facilities[0],
+        identifier: "v",
+        facilityType: FacilityType.Shelter,
+        isAccessible: true,
+        latitude: 57.8,
+      },
+      { ...AREA.facilities[0], identifier: "g2", facilityType: FacilityType.FirePit, latitude: 57.79 },
+    ],
+  });
+
+  await act(async () => {
+    screen.getByTestId("maplibre-Map").props.onDidFinishLoadingMap();
+  });
+
+  const [bounds] = cameraHandles().at(-1)?.fitBounds.mock.calls.at(-1) ?? [];
+  expect(bounds[0]).toBeCloseTo(12.928);
+  expect(bounds[1]).toBeCloseTo(57.708);
+  expect(bounds[2]).toBeCloseTo(12.932);
+  expect(bounds[3]).toBeCloseTo(57.712);
 });
 
 it("says so when the area could not be loaded", async () => {
   mockGetArea.mockRejectedValue(new Error("network"));
-  await renderWithProviders(<AreaMapScreen />);
+  await renderWithProviders(<AreaMapScreen routes={HOME_AREA_ROUTES} />);
   await flushUntil(() => screen.queryByText("Kunde inte ladda kartdata"));
 
   expect(screen.getByText("Kunde inte ladda kartdata")).toBeTruthy();

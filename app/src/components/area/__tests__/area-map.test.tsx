@@ -94,21 +94,78 @@ it("draws the boundary, the trails and a dot per facility", async () => {
 
   expect(source("area-boundary")?.props.data.features).toHaveLength(1);
   expect(source("area-trails")?.props.data.features).toHaveLength(1);
-  expect(source("area-facilities")?.props.data.features.map((f: GeoJSON.Feature) => f.properties?.kind)).toEqual([
-    "swimming",
-    "firePit",
-    "firePit",
-    "shelter",
+  expect(source("area-swimming")?.props.data.features).toHaveLength(1);
+  expect(source("area-firePit")?.props.data.features).toHaveLength(2);
+  expect(source("area-shelter")?.props.data.features).toHaveLength(1);
+  expect(layer("area-swimming-points")?.props.paint["circle-color"]).toBe(SWIMMING_MARKER_COLORS.fill);
+  expect(layer("area-firePit-points")?.props.paint["circle-color"]).toBe(MARKER_COLORS.firePits.fill);
+  expect(layer("area-shelter-points")?.props.paint["circle-color"]).toBe(MARKER_COLORS.shelters.fill);
+});
+
+// keep-comment: trailheads that share a start, and facilities side by side, would otherwise stack into one untappable dot
+it("clusters the trails and every kind of facility", async () => {
+  await renderWithProviders(<AreaMap area={AREA} onOpen={jest.fn()} />);
+
+  for (const id of ["area-trails", "area-swimming", "area-firePit", "area-shelter"]) {
+    expect(source(id)?.props.cluster).toBe(true);
+    expect(layer(`${id}-cluster-count`)).toBeTruthy();
+  }
+});
+
+it("rings an accessible place and a cluster holding one, and says so in the legend", async () => {
+  await renderWithProviders(
+    <AreaMap
+      area={{ ...AREA, facilities: AREA.facilities.map((f, i) => (i === 1 ? { ...f, isAccessible: true } : f)) }}
+      onOpen={jest.fn()}
+    />,
+  );
+
+  const ring = layer("area-firePit-accessible");
+  expect(ring?.props.filter).toEqual([
+    "case",
+    ["has", "point_count"],
+    [">", ["get", "accessible"], 0],
+    ["==", ["get", "isAccessible"], true],
   ]);
-  expect(layer("area-facilities-dots")?.props.paint["circle-color"]).toEqual([
-    "match",
-    ["get", "kind"],
-    "swimming",
-    SWIMMING_MARKER_COLORS.fill,
-    "shelter",
-    MARKER_COLORS.shelters.fill,
-    MARKER_COLORS.firePits.fill,
+  expect(source("area-firePit")?.props.clusterProperties).toEqual({
+    accessible: ["+", ["case", ["==", ["get", "isAccessible"], true], 1, 0]],
+  });
+  expect(source("area-firePit")?.props.data.features.map((f: GeoJSON.Feature) => f.properties?.isAccessible)).toEqual([
+    true,
+    false,
   ]);
+  expect(screen.getByTestId("area-map-legend-accessible")).toHaveTextContent("Tillgänglighetsanpassad");
+});
+
+// keep-comment: fishing spots have no dot, so an accessible one must not promise a ring on the map
+it("ignores an accessible place the map does not draw", async () => {
+  await renderWithProviders(
+    <AreaMap
+      area={{
+        ...AREA,
+        facilities: [
+          ...AREA.facilities,
+          {
+            identifier: "fiske",
+            name: "Fiskeplatsen",
+            facilityType: FacilityType.FishingArea,
+            isAccessible: true,
+            latitude: 57.7,
+            longitude: 12.9,
+          },
+        ],
+      }}
+      onOpen={jest.fn()}
+    />,
+  );
+
+  expect(screen.queryByTestId("area-map-legend-accessible")).toBeNull();
+});
+
+it("leaves the accessible row out of the legend when nothing is accessible", async () => {
+  await renderWithProviders(<AreaMap area={AREA} onOpen={jest.fn()} />);
+
+  expect(screen.queryByTestId("area-map-legend-accessible")).toBeNull();
 });
 
 it("counts what is on the map in the legend", async () => {

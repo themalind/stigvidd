@@ -10,6 +10,7 @@ import { FACILITY_ICONS } from "@/constants/facility-icons";
 import { FacilityType, hasFacilityType } from "@/data/types";
 import { useArea } from "@/hooks/area/useArea";
 import { asTranslationKey } from "@/i18n";
+import { AreaMapFocus } from "@/utils/area/area-map-shapes";
 import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -22,6 +23,7 @@ import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import AreaImage from "./area-image";
 import AreaMap from "./area-map";
+import { AreaStackRoutes } from "./area-routes";
 import AreaTrailSection from "./area-trail-section";
 import FacilityCountRow from "./facility-count-row";
 import FacilitySection from "./facility-section";
@@ -30,8 +32,8 @@ const HERO_HEIGHT = 260;
 
 // keep-comment: FacilityType is a [Flags] bitmask, so a combined facility (FirePit | Shelter) counts under every kind it carries
 const COUNTED_FACILITY_GROUPS = [
-  { type: FacilityType.FirePit, countKey: "area.firePitCount", icon: FACILITY_ICONS.firePit },
-  { type: FacilityType.Shelter, countKey: "area.shelterCount", icon: FACILITY_ICONS.shelter },
+  { type: FacilityType.FirePit, focus: "firePit", countKey: "area.firePitCount", icon: FACILITY_ICONS.firePit },
+  { type: FacilityType.Shelter, focus: "shelter", countKey: "area.shelterCount", icon: FACILITY_ICONS.shelter },
 ] as const;
 
 const FACILITY_GROUPS = [
@@ -40,7 +42,11 @@ const FACILITY_GROUPS = [
   { type: FacilityType.NatureReserve, titleKey: "area.natureReserve", icon: FACILITY_ICONS.natureReserve },
 ] as const;
 
-export default function AreaDetailScreen() {
+interface Props {
+  routes: AreaStackRoutes;
+}
+
+export default function AreaDetailScreen({ routes }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ identifier: string }>();
@@ -58,10 +64,19 @@ export default function AreaDetailScreen() {
 
   const trailCount = area.trails.length;
   const totalKm = Math.round(area.trails.reduce((sum, tr) => sum + (tr.trailLength ?? 0), 0));
-  const countedGroups = COUNTED_FACILITY_GROUPS.map((group) => ({
-    ...group,
-    count: area.facilities.filter((f) => hasFacilityType(f.facilityType, group.type)).length,
-  })).filter((group) => group.count > 0);
+  const countedGroups = COUNTED_FACILITY_GROUPS.map((group) => {
+    const members = area.facilities.filter((f) => hasFacilityType(f.facilityType, group.type));
+    // keep-comment: only places the map can show, so "show on the map" never opens a map without them
+    const accessible = members.filter((f) => f.isAccessible && f.longitude != null && f.latitude != null);
+    return { ...group, count: members.length, accessibleCount: accessible.length };
+  }).filter((group) => group.count > 0);
+  const openMap = (focus?: AreaMapFocus) =>
+    guardedNavigate(() =>
+      router.navigate({
+        pathname: routes.map,
+        params: focus ? { identifier: area.identifier, focus } : { identifier: area.identifier },
+      }),
+    );
 
   return (
     <View testID="area-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
@@ -130,20 +145,13 @@ export default function AreaDetailScreen() {
           area={area}
           style={s.section}
           heading={<Text style={[s.sectionHeading, { color: theme.colors.onBackground }]}>{t("area.onTheMap")}</Text>}
-          onOpen={() =>
-            guardedNavigate(() =>
-              router.navigate({
-                pathname: "/(tabs)/(home)/area/map/[identifier]",
-                params: { identifier: area.identifier },
-              }),
-            )
-          }
+          onOpen={() => openMap()}
         />
 
         {area.trails.length > 0 && (
           <View style={s.section}>
             <Text style={[s.sectionHeading, { color: theme.colors.onBackground }]}>{t("area.trails")}</Text>
-            <AreaTrailSection trails={area.trails} />
+            <AreaTrailSection trails={area.trails} trailRoute={routes.trail} />
           </View>
         )}
 
@@ -157,6 +165,8 @@ export default function AreaDetailScreen() {
                     key={group.type}
                     icon={group.icon}
                     label={t(group.countKey, { count: group.count })}
+                    accessibleCount={group.accessibleCount}
+                    onShowAccessible={() => openMap(group.focus)}
                   />
                 ))}
               </View>

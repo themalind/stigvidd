@@ -42,7 +42,9 @@ function fold(text: string): string {
 }
 
 export function hasFeature(area: CityArea, feature: AreaFeature): boolean {
-  if (feature === "accessible") return area.facilities.some((f) => f.isAccessible);
+  if (feature === "accessible") {
+    return area.trails.some((t) => t.isAccessible) || area.facilities.some((f) => f.isAccessible);
+  }
   return area.facilities.some((f) => hasFacilityType(f.facilityType, FEATURE_TYPES[feature]));
 }
 

@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { MARKER_COLORS } from "@/components/map/marker-styles";
+import { ACCESSIBLE_RING_COLOR, MARKER_COLORS } from "@/components/map/marker-styles";
 import { AreaMapShapes, MapFacilityKind } from "@/utils/area/area-map-shapes";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,6 +53,9 @@ export default function AreaMapLegend({ shapes, style }: Props) {
       },
     ].filter((entry) => entry.count > 0);
   }, [shapes, t]);
+  const hasAccessible = [...shapes.trails.features, ...shapes.facilities.features].some(
+    (feature) => feature.properties?.isAccessible === true,
+  );
 
   if (entries.length === 0) return null;
 
@@ -64,6 +67,12 @@ export default function AreaMapLegend({ shapes, style }: Props) {
           <Text style={[s.text, { color: theme.colors.onSurface }]}>{entry.label}</Text>
         </View>
       ))}
+      {hasAccessible && (
+        <View testID="area-map-legend-accessible" style={s.item}>
+          <View style={[s.ring, { borderColor: ACCESSIBLE_RING_COLOR }]} />
+          <Text style={[s.text, { color: theme.colors.onSurface }]}>{t("area.mapAccessible")}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -84,6 +93,12 @@ const s = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
+  },
+  ring: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 3,
   },
   text: {
     fontSize: 13,

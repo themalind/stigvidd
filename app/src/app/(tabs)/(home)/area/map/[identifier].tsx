@@ -6,4 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AreaMapScreen from "@/components/area/area-map-screen";
-export default AreaMapScreen;
+import { HOME_AREA_ROUTES } from "@/components/area/area-routes";
+
+export default function AreaMapRoute() {
+  return <AreaMapScreen routes={HOME_AREA_ROUTES} />;
+}

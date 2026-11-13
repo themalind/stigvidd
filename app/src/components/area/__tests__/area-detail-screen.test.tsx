@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AreaDetailScreen from "@/components/area/area-detail-screen";
+import { HOME_AREA_ROUTES } from "@/components/area/area-routes";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { CityArea, CityAreaTrail, Facility, FacilityType } from "@/data/types";
@@ -42,6 +43,9 @@ function facility(overrides: Partial<Facility> = {}): Facility {
   };
 }
 
+// keep-comment: a position, which an accessible fire pit or shelter needs to be counted
+const PLACED = { latitude: 57.72, longitude: 12.94 };
+
 function trail(overrides: Partial<CityAreaTrail> = {}): CityAreaTrail {
   return {
     identifier: "t-1",
@@ -71,7 +75,7 @@ async function show(
   theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme,
 ) {
   mockGetArea.mockResolvedValue(area(overrides));
-  const rendered = await renderWithProviders(<AreaDetailScreen />, { theme });
+  const rendered = await renderWithProviders(<AreaDetailScreen routes={HOME_AREA_ROUTES} />, { theme });
   await flushUntil(() => screen.queryByTestId("area-hero"));
   return rendered;
 }
@@ -116,7 +120,7 @@ it("asks for the area named in the route", async () => {
 // A half-built hero over a missing name is worse than nothing to look at.
 it("draws nothing but a spinner until the area is in", async () => {
   mockGetArea.mockReturnValue(new Promise(() => {}));
-  await renderWithProviders(<AreaDetailScreen />);
+  await renderWithProviders(<AreaDetailScreen routes={HOME_AREA_ROUTES} />);
 
   expect(screen.queryByTestId("area-hero")).toBeNull();
   expect(screen.queryByText("Kransmossen")).toBeNull();
@@ -125,7 +129,7 @@ it("draws nothing but a spinner until the area is in", async () => {
 
 it("offers a retry instead of a blank page when the area cannot be fetched", async () => {
   mockGetArea.mockRejectedValue(new Error("network"));
-  await renderWithProviders(<AreaDetailScreen />);
+  await renderWithProviders(<AreaDetailScreen routes={HOME_AREA_ROUTES} />);
   await flushUntil(() => screen.queryByText("Försök igen"));
 
   expect(screen.queryByTestId("area-hero")).toBeNull();
@@ -140,7 +144,7 @@ it("offers a retry instead of a blank page when the area cannot be fetched", asy
 // react-query refuses an undefined result, so a 200 with no body reaches the screen as a failed query.
 it("treats an empty response as an error rather than reading through it", async () => {
   mockGetArea.mockResolvedValue(undefined);
-  await renderWithProviders(<AreaDetailScreen />);
+  await renderWithProviders(<AreaDetailScreen routes={HOME_AREA_ROUTES} />);
   await flushUntil(() => screen.queryByText("Något gick fel"));
 
   expect(screen.getByText("Något gick fel")).toBeTruthy();
@@ -402,6 +406,75 @@ it("names each group and heads it with its own icon", async () => {
   expect(screen.getByTestId("icon-campfire")).toBeTruthy();
   expect(screen.getByTestId("icon-fish")).toBeTruthy();
   expect(screen.getByTestId("icon-pine-tree")).toBeTruthy();
+});
+
+it("tags an accessible trail where it is listed", async () => {
+  await show({
+    trails: [trail({ identifier: "t-1", name: "Sjöslingan", isAccessible: true }), trail({ identifier: "t-2" })],
+  });
+
+  expect(screen.getByTestId("area-trail-accessible-t-1")).toHaveTextContent("Tillgänglig");
+  expect(screen.queryByTestId("area-trail-accessible-t-2")).toBeNull();
+});
+
+// keep-comment: fire pits and shelters are counted, never named, because the imported names are near-identical
+it("counts the accessible fire pits and shelters without naming them", async () => {
+  await show({
+    facilities: [
+      facility({ identifier: "f-1", name: "Rya åsar - grillplats", isAccessible: true, ...PLACED }),
+      facility({
+        identifier: "f-2",
+        name: "Rya åsar - grillplats 2",
+        facilityType: FacilityType.FirePit | FacilityType.Shelter,
+        isAccessible: true,
+        ...PLACED,
+      }),
+      facility({ identifier: "f-3", name: "Rya åsar - grillplats 3" }),
+      facility({ identifier: "f-4", name: "Rya åsar - vindskydd", facilityType: FacilityType.Shelter }),
+    ],
+  });
+
+  expect(screen.getByTestId("facility-count-campfire-accessible")).toHaveTextContent("2 tillgängliga");
+  expect(screen.getByTestId("facility-count-tent-accessible")).toHaveTextContent("1 tillgänglig");
+  expect(screen.queryByText(/Rya åsar - /)).toBeNull();
+});
+
+it("opens the map on the accessible places from a counted row", async () => {
+  await show({ facilities: [facility({ identifier: "f-1", isAccessible: true, ...PLACED })] });
+
+  await fireEvent.press(screen.getByTestId("facility-count-campfire"));
+
+  expect(mockNavigate).toHaveBeenCalledWith({
+    pathname: "/(tabs)/(home)/area/map/[identifier]",
+    params: { identifier: "kransmossen", focus: "firePit" },
+  });
+});
+
+// keep-comment: the map frames only placed facilities, so a link to one without a position would show the whole area
+it("does not count an accessible fire pit the map cannot show", async () => {
+  await show({ facilities: [facility({ identifier: "f-1", isAccessible: true })] });
+
+  expect(screen.queryByTestId("facility-count-campfire-accessible")).toBeNull();
+  await fireEvent.press(screen.getByTestId("facility-count-campfire"));
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+it("leaves a counted row without an accessible one untagged and inert", async () => {
+  await show({ facilities: [facility({ identifier: "f-1" })] });
+
+  expect(screen.queryByTestId("facility-count-campfire-accessible")).toBeNull();
+  await fireEvent.press(screen.getByTestId("facility-count-campfire"));
+  expect(mockNavigate).not.toHaveBeenCalled();
+});
+
+it("tags an accessible swimming spot where it is named", async () => {
+  await show({
+    facilities: [
+      facility({ identifier: "b-1", name: "Kypebadet", facilityType: FacilityType.SwimmingArea, isAccessible: true }),
+    ],
+  });
+
+  expect(screen.getByTestId("facility-accessible-b-1")).toHaveTextContent("Tillgänglig");
 });
 
 it("shows a facility's place and description when it has them", async () => {

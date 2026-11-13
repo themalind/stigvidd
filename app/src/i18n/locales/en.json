@@ -725,7 +725,8 @@
     "firePitCount_other": "{{count}} fire pits",
     "shelterCount_one": "{{count}} wind shelter",
     "shelterCount_other": "{{count}} wind shelters",
-    "listTitle": "Destinations",
+    "swimmingCount_one": "{{count}} swimming spot",
+    "swimmingCount_other": "{{count}} swimming spots",
     "searchPlaceholder": "Search for an area or lake",
     "sortNear": "Nearest",
     "sortPopular": "Most popular",
@@ -741,6 +742,11 @@
       "shelter": "Shelter",
       "accessible": "Accessible"
     },
+    "accessibleBadge": "Accessible",
+    "accessibleCount_one": "{{count}} accessible",
+    "accessibleCount_other": "{{count}} accessible",
+    "accessibleOnMap": "Show accessible places on the map",
+    "mapAccessible": "Accessible",
     "onTheMap": "On the map",
     "openMap": "Open map",
     "mapSwimming_one": "{{count}} swimming spot",
@@ -1213,7 +1219,8 @@
     "noResults": "No trails found",
     "noResultsHint": "Try adjusting your filters",
     "sourceTrails": "Trails",
-    "sourceContributions": "From users"
+    "sourceContributions": "From users",
+    "sourceAreas": "Destinations"
   },
   "report": {
     "title": "Report content",

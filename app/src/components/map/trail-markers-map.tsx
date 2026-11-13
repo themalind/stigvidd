@@ -10,7 +10,14 @@ import { useUserLocation } from "@/hooks/location/useUserLocation";
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import { BORDER_RADIUS, START_COORDINATE_BORAS } from "@/constants/constants";
 import { FacilityType, hasFacilityType, MapMarkerFilter } from "@/data/types";
-import { type ClusterActionConfig, decideClusterAction } from "@/components/map/cluster-action";
+import { decideClusterAction } from "@/components/map/cluster-action";
+import ClusterSource, {
+  CLUSTER_MAX_ZOOM,
+  FACILITY_POINT_RADIUS,
+  markerRadius,
+  POINT_RADIUS,
+  TRAIL_CLUSTER_ACTION,
+} from "@/components/map/cluster-source";
 import {
   featureCollectionFromFacilities,
   featureCollectionFromMarkers,
@@ -19,7 +26,6 @@ import {
 import {
   Camera,
   type CameraRef,
-  type FilterSpecification,
   GeoJSONSource,
   type GeoJSONSourceRef,
   type InitialViewState,
@@ -38,7 +44,7 @@ import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "re
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import Map from "./map";
 import MapNameBubble from "./map-name-bubble";
-import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, type MarkerColors } from "./marker-styles";
+import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS } from "./marker-styles";
 
 type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
 
@@ -75,123 +81,14 @@ interface Props {
 const BORAS_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
 // Where the camera opens the first time, before any view has been remembered.
 const DEFAULT_VIEW_STATE: InitialViewState = { center: BORAS_CENTER, zoom: 9.5 };
-// Keep points clustered up to a high zoom so overlapping trailheads stay a single
-// tappable cluster instead of un-tappable stacked individual pins.
-const CLUSTER_MAX_ZOOM = 16;
-// Small clusters open the carousel directly — they're usually trails sharing a
-// trailhead that won't separate usefully by zooming. Larger, genuinely separable
-// clusters zoom in to break apart instead.
-const CAROUSEL_MAX_COUNT = 10;
-
-const CLUSTER_ACTION_CONFIG: ClusterActionConfig = {
-  clusterMaxZoom: CLUSTER_MAX_ZOOM,
-  carouselMaxCount: CAROUSEL_MAX_COUNT,
-};
-
-const HAS_COUNT: FilterSpecification = ["has", "point_count"];
-const NO_COUNT: FilterSpecification = ["!", ["has", "point_count"]];
-
-// Circle radii for the trail source's rendered layers. Kept as named constants so
-// the selection ring can be sized from the same numbers and always sit just outside
-// whatever was tapped (a point or a cluster of any size).
-const POINT_RADIUS = 9;
-const FACILITY_POINT_RADIUS = 6;
-const CLUSTER_RADIUS_BASE = 16;
-const CLUSTER_RADIUS_MED = 20;
-const CLUSTER_RADIUS_LARGE = 26;
-const CLUSTER_COUNT_MED = 10;
-const CLUSTER_COUNT_LARGE = 50;
 // Gap between the marker edge and the selection ring.
 const RING_GAP = 5;
-
-// The rendered radius of a tapped feature — null pointCount means a single trail
-// point; otherwise mirror the cluster circle-radius step below.
-function markerRadius(pointCount: number | null): number {
-  if (pointCount == null) return POINT_RADIUS;
-  if (pointCount >= CLUSTER_COUNT_LARGE) return CLUSTER_RADIUS_LARGE;
-  if (pointCount >= CLUSTER_COUNT_MED) return CLUSTER_RADIUS_MED;
-  return CLUSTER_RADIUS_BASE;
-}
 
 // The tapped cluster/trail to ring on the map while its carousel is open. The
 // radius sizes the ring to hug that specific marker.
 export interface MapHighlight {
   coordinate: [number, number];
   radius: number;
-}
-
-// keep-comment: one source per marker category, so categories never merge into one cluster and all break apart at the same zooms
-function ClusterSource({
-  id,
-  data,
-  colors,
-  pointRadius,
-  sourceRef,
-  onPress,
-}: {
-  id: string;
-  data: GeoJSON.FeatureCollection<GeoJSON.Point>;
-  colors: MarkerColors;
-  pointRadius: number;
-  sourceRef: RefObject<GeoJSONSourceRef | null>;
-  onPress: (event: NativeSyntheticEvent<PressEventWithFeatures>, sourceRef: RefObject<GeoJSONSourceRef | null>) => void;
-}) {
-  return (
-    <GeoJSONSource
-      id={id}
-      ref={sourceRef}
-      data={data}
-      cluster
-      clusterRadius={60}
-      clusterMaxZoom={CLUSTER_MAX_ZOOM}
-      onPress={(event) => onPress(event, sourceRef)}
-    >
-      <Layer
-        type="circle"
-        id={`${id}-clusters`}
-        filter={HAS_COUNT}
-        paint={{
-          "circle-color": colors.fill,
-          "circle-radius": [
-            "step",
-            ["get", "point_count"],
-            CLUSTER_RADIUS_BASE,
-            CLUSTER_COUNT_MED,
-            CLUSTER_RADIUS_MED,
-            CLUSTER_COUNT_LARGE,
-            CLUSTER_RADIUS_LARGE,
-          ],
-          "circle-stroke-width": 2,
-          "circle-stroke-color": colors.stroke,
-        }}
-      />
-      <Layer
-        type="symbol"
-        id={`${id}-cluster-count`}
-        filter={HAS_COUNT}
-        layout={{
-          "text-field": ["get", "point_count_abbreviated"],
-          "text-font": ["Noto Sans Regular"],
-          "text-size": 12,
-          // keep-comment: clusters from different sources can overlap, and a collided count would leave its circle blank
-          "text-allow-overlap": true,
-          "text-ignore-placement": true,
-        }}
-        paint={{ "text-color": colors.stroke }}
-      />
-      <Layer
-        type="circle"
-        id={`${id}-points`}
-        filter={NO_COUNT}
-        paint={{
-          "circle-color": colors.fill,
-          "circle-radius": pointRadius,
-          "circle-stroke-width": 2,
-          "circle-stroke-color": colors.stroke,
-        }}
-      />
-    </GeoJSONSource>
-  );
 }
 
 export default function TrailMarkersMap({
@@ -316,7 +213,7 @@ export default function TrailMarkersMap({
         const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
 
         const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
-        const action = decideClusterAction(pointCount, expansionZoom, CLUSTER_ACTION_CONFIG);
+        const action = decideClusterAction(pointCount, expansionZoom, TRAIL_CLUSTER_ACTION);
         if (action.kind === "zoom") {
           cameraRef.current?.flyTo({ center: [lng, lat], zoom: action.zoom, duration: 500 });
           return;
