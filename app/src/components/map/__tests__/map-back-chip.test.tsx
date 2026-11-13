@@ -6,8 +6,11 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import MapBackChip from "@/components/map/map-back-chip";
+import MapFilterMenu from "@/components/map/map-filter-menu";
+import { MAP_CONTROL_HEIGHT } from "@/constants/constants";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 const mockBack = jest.fn();
 
@@ -45,4 +48,25 @@ it("goes back when pressed", async () => {
   await fireEvent.press(screen.getByRole("button"));
 
   expect(mockBack).toHaveBeenCalled();
+});
+
+// keep-comment: side by side on the area map they must look like a pair; a fixed height differed from the trigger's on most phones
+it("matches the filter trigger's padding, corners and colour when inline", async () => {
+  await renderWithProviders(
+    <>
+      <MapBackChip title={LONG_NAME} inline />
+      <MapFilterMenu
+        filter={{ trails: true }}
+        onChange={jest.fn()}
+        items={[{ key: "trails", label: "filter.trails" }]}
+      />
+    </>,
+  );
+
+  const chip = StyleSheet.flatten(screen.getByRole("button", { name: "Gå tillbaka" }).props.style);
+  const trigger = StyleSheet.flatten(screen.getByTestId("map-filter-trigger").props.style);
+  for (const key of ["paddingVertical", "paddingHorizontal", "borderRadius", "backgroundColor", "minHeight"] as const) {
+    expect(chip[key]).toEqual(trigger[key]);
+  }
+  expect(trigger.minHeight).toBe(MAP_CONTROL_HEIGHT);
 });
