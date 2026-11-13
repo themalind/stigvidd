@@ -16,6 +16,15 @@ export interface AreaMapShapes {
   trails: GeoJSON.FeatureCollection<GeoJSON.Point>;
   facilities: GeoJSON.FeatureCollection<GeoJSON.Point>;
   bounds: Bounds | null;
+  // keep-comment: what a counted row's "show accessible on the map" frames; null when none of that kind is accessible
+  accessibleBounds: Record<AreaMapFocus, Bounds | null>;
+}
+
+// keep-comment: the counted kinds, which have no usable names, so the map shows which of them are accessible
+export type AreaMapFocus = "firePit" | "shelter";
+
+export function isAreaMapFocus(value: string | undefined): value is AreaMapFocus {
+  return value === "firePit" || value === "shelter";
 }
 
 // keep-comment: one dot per facility, so a combined fire pit and shelter shows as a shelter
@@ -29,7 +38,9 @@ export function facilityKind(facilityType: number): MapFacilityKind {
 export function areaMapShapes(area: CityArea): AreaMapShapes {
   const boundary = area.boundary ?? [];
   const trails = area.trails.flatMap((trail) =>
-    trail.path && trail.path.length > 1 ? [{ identifier: trail.identifier, path: trail.path }] : [],
+    trail.path && trail.path.length > 1
+      ? [{ identifier: trail.identifier, path: trail.path, isAccessible: trail.isAccessible === true }]
+      : [],
   );
   const paths = trails.map((trail) => trail.path);
   const facilities = area.facilities.flatMap((facility) =>
@@ -37,6 +48,16 @@ export function areaMapShapes(area: CityArea): AreaMapShapes {
       ? []
       : [{ facility, position: [facility.longitude, facility.latitude] }],
   );
+  // keep-comment: fishing spots and nature reserves have no dot, so they never count as something on the map
+  const drawn = facilities.filter(({ facility }) => facilityKind(facility.facilityType) !== "other");
+  const accessibleOf = (type: (typeof FacilityType)[keyof typeof FacilityType]) =>
+    atLeastSpan(
+      getBoundsFromTrail(
+        drawn
+          .filter(({ facility }) => facility.isAccessible && hasFacilityType(facility.facilityType, type))
+          .map((f) => f.position),
+      ),
+    );
 
   return {
     boundary: {
@@ -48,26 +69,45 @@ export function areaMapShapes(area: CityArea): AreaMapShapes {
     },
     trails: {
       type: "FeatureCollection",
-      features: trails.map(({ identifier, path }) => ({
+      features: trails.map(({ identifier, path, isAccessible }) => ({
         type: "Feature",
         id: identifier,
-        properties: { identifier },
+        properties: { identifier, isAccessible },
         geometry: { type: "Point", coordinates: path[0] },
       })),
     },
     facilities: {
       type: "FeatureCollection",
-      features: facilities.map(({ facility, position }) => ({
+      features: drawn.map(({ facility, position }) => ({
         type: "Feature",
         id: facility.identifier,
-        properties: { kind: facilityKind(facility.facilityType), name: facility.name },
+        properties: {
+          kind: facilityKind(facility.facilityType),
+          name: facility.name,
+          isAccessible: facility.isAccessible,
+        },
         geometry: { type: "Point", coordinates: position },
       })),
     },
     bounds: getBoundsFromTrail([
       ...boundary.flatMap((polygon) => polygon[0] ?? []),
       ...paths.flat(),
-      ...facilities.map((f) => f.position),
+      ...drawn.map((f) => f.position),
     ]),
+    accessibleBounds: {
+      firePit: accessibleOf(FacilityType.FirePit),
+      shelter: accessibleOf(FacilityType.Shelter),
+    },
   };
+}
+
+// keep-comment: about 400 m, so a single accessible spot frames its surroundings instead of zooming to the maximum
+const MIN_SPAN = 0.004;
+
+function atLeastSpan(bounds: Bounds | null): Bounds | null {
+  if (!bounds) return null;
+  const [west, south, east, north] = bounds;
+  const padLng = Math.max(0, (MIN_SPAN - (east - west)) / 2);
+  const padLat = Math.max(0, (MIN_SPAN - (north - south)) / 2);
+  return [west - padLng, south - padLat, east + padLng, north + padLat];
 }

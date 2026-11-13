@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import AccessibleTag from "@/components/area/accessible-tag";
 import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { CityAreaTrail } from "@/data/types";
@@ -17,12 +18,14 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { Rating } from "../review/rating";
+import { AreaStackRoutes } from "./area-routes";
 
 interface AreaTrailSectionProps {
   trails: CityAreaTrail[];
+  trailRoute: AreaStackRoutes["trail"];
 }
 
-export default function AreaTrailSection({ trails }: AreaTrailSectionProps) {
+export default function AreaTrailSection({ trails, trailRoute }: AreaTrailSectionProps) {
   const theme = useTheme();
 
   return (
@@ -36,7 +39,7 @@ export default function AreaTrailSection({ trails }: AreaTrailSectionProps) {
             onPress={() =>
               guardedNavigate(() =>
                 router.navigate({
-                  pathname: "/(tabs)/(home)/trail/[identifier]",
+                  pathname: trailRoute,
                   params: { identifier: trail.identifier },
                 }),
               )
@@ -70,6 +73,7 @@ export default function AreaTrailSection({ trails }: AreaTrailSectionProps) {
                   textStyle={[s.meta, { color: theme.colors.onSurfaceVariant }]}
                 />
               </View>
+              {trail.isAccessible && <AccessibleTag testID={`area-trail-accessible-${trail.identifier}`} />}
               {trail.description ? (
                 <Text style={[s.description, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
                   {trail.description}

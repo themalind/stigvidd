@@ -14,8 +14,7 @@ public class CityAreaRepositoryTests : TestBase
 {
     private const string LinkedAreaIdentifier = "area-dalsjofors";
 
-    // Mirrors the selector CityAreaService uses, so these tests exercise the same projection the
-    // service relies on (and confirm EF can translate the nested facility/trail projections).
+    // keep-comment: mirrors CityAreaService's selector, so EF must translate the same nested projection
     private static readonly Expression<Func<CityArea, CityAreaProjection>> Selector = area => new CityAreaProjection(
         area.Identifier,
         area.Name,
@@ -31,11 +30,9 @@ public class CityAreaRepositoryTests : TestBase
             t.Identifier, t.Name, t.TrailLength, t.Classification, t.Description,
             t.Reviews!.Any() ? t.Reviews!.Average(r => r.Rating) : 0m,
             t.TrailImages!.Select(i => new CityAreaTrailImageProjection(i.Identifier, i.ImageUrl)).FirstOrDefault(),
+            t.Accessibility,
             t.GeoPath)).ToList());
 
-
-    // Seeds a city area linked (m2m) to an existing trail and firepit facility on top of the
-    // standard seed, so the repository's projection of Facilities/Trails can be verified.
     private static void SeedLinkedArea(Infrastructure.Data.StigViddDbContext db)
     {
         var trail = db.Trails.First(t => t.Id == 1);       // Tiveden

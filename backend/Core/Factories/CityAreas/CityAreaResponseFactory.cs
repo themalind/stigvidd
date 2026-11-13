@@ -50,6 +50,7 @@ public class CityAreaResponseFactory
                     trail.Image != null
                         ? TrailImageResponse.Create(PresentableBaseUrl, trail.Image.Identifier, trail.Image.ImageUrl)
                         : null);
+                response.IsAccessible = trail.IsAccessible;
                 response.Path = includeShapes && trail.Path is { } path ? SimplifiedPath(path) : null;
                 return response;
             })

@@ -15,9 +15,7 @@ export interface CreateFacilityRequest {
   longitude: number;
 }
 
-// Facility kinds. Mirrors the backend's [Flags] FacilityType enum: a facility can
-// carry several flags at once (a combined fire pit + shelter is 3 = FirePit | Shelter),
-// so test membership with hasFacilityType() (bitwise), never equality.
+// keep-comment: the backend's [Flags] enum; test membership with hasFacilityType(), never equality
 export const FacilityType = {
   None: 0,
   FirePit: 1,
@@ -67,6 +65,8 @@ export interface CityAreaTrail {
   description?: string;
   averageRating: number;
   image?: TrailImage;
+  // keep-comment: optional because an API older than this field omits it
+  isAccessible?: boolean;
   // keep-comment: [longitude, latitude] pairs; only on a single area
   path?: number[][] | null;
 }

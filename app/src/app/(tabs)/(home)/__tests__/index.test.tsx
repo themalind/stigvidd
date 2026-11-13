@@ -355,7 +355,9 @@ it("fills the screen with the dark theme's background too", async () => {
   });
 });
 
-it("puts the destinations between the popular trails and the shared walks, and the randomizer last", async () => {
+// keep-comment: the latest walk keeps the destinations list and the shared-walks row apart
+it("orders popular trails, destinations, latest walk, shared walks, and the randomizer last", async () => {
+  mockLatest = { kind: "error", retry: jest.fn() };
   await showLoaded();
 
   // keep-comment: the rendered tree, not the JSX children: the cards are given no testID props, so theirs exist only once they render
@@ -364,6 +366,8 @@ it("puts the destinations between the popular trails and the shared walks, and t
 
   const areas = order.indexOf("home-areas");
   expect(areas).toBeGreaterThan(order.indexOf("home-popular"));
-  expect(order.indexOf("home-contributions")).toBeGreaterThan(areas);
+  const latestWalk = order.indexOf("home-latest-error");
+  expect(latestWalk).toBeGreaterThan(areas);
+  expect(order.indexOf("home-contributions")).toBeGreaterThan(latestWalk);
   expect(order.at(-1)).toBe("adventure-card");
 });

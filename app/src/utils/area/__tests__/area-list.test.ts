@@ -70,6 +70,12 @@ describe("areaFeatures", () => {
     expect(areaFeatures(ALMENAS)).toEqual(["swimming", "firePit", "accessible"]);
     expect(areaFeatures(RYA)).toEqual(["shelter"]);
   });
+
+  it("calls an area accessible when only one of its trails is", () => {
+    const trail = { identifier: "t-1", name: "", trailLength: 1, classification: 1, averageRating: 0 };
+    expect(areaFeatures(area("Kype", { trails: [{ ...trail, isAccessible: true }] }))).toEqual(["accessible"]);
+    expect(areaFeatures(area("Kype", { trails: [trail] }))).toEqual([]);
+  });
 });
 
 describe("areaMunicipalities", () => {

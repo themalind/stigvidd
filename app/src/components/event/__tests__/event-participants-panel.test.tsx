@@ -65,6 +65,27 @@ describe("EventParticipantsPanel", () => {
     expect(screen.getByTestId("event-participant-menu-cissi")).toBeTruthy();
   });
 
+  // keep-comment: the API refuses a co-host removing another co-host, so the menu must not offer it
+  it("lets a co-host manage participants but not another co-host", async () => {
+    await show(
+      { ...NO_PERMISSIONS, canRemoveParticipants: true },
+      {
+        ...PARTICIPANTS,
+        participants: [
+          { userIdentifier: "o", nickName: "olle", role: "Organizer", joinedAt: "2026-10-01T10:00:00Z" },
+          { userIdentifier: "me", nickName: "jag", role: "CoHost", joinedAt: "2026-10-02T10:00:00Z" },
+          { userIdentifier: "u2", nickName: "bertil", role: "CoHost", joinedAt: "2026-10-02T11:00:00Z" },
+          { userIdentifier: "u3", nickName: "cissi", role: "Participant", joinedAt: "2026-10-03T10:00:00Z" },
+        ],
+      },
+    );
+
+    expect(screen.queryByTestId("event-participant-menu-olle")).toBeNull();
+    expect(screen.queryByTestId("event-participant-menu-jag")).toBeNull();
+    expect(screen.queryByTestId("event-participant-menu-bertil")).toBeNull();
+    expect(screen.getByTestId("event-participant-menu-cissi")).toBeTruthy();
+  });
+
   it("shows the first page of a long list and grows it a page per press until all are shown", async () => {
     const total = PARTICIPANTS_PAGE * 2 + 3;
     const many = Array.from({ length: total }, (_, i) => ({

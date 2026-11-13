@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { trailListSourceAtom } from "@/atoms/trail-list-atoms";
 import NearbyAreas from "@/components/home/nearby-areas";
 import { CityArea, FacilityType } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
@@ -59,9 +60,9 @@ it("shows the destinations within the nearby radius, nearest first, with distanc
 
   expect(mockGetAreas).toHaveBeenCalledWith(57.72, 12.94);
   expect(screen.getByText("Utflyktsmål nära dig")).toBeTruthy();
-  expect(screen.getByTestId("home-area-rya")).toBeTruthy();
-  expect(screen.getByTestId("home-area-almenas")).toBeTruthy();
-  expect(screen.queryByTestId("home-area-far")).toBeNull();
+  expect(screen.getByTestId("area-row-rya")).toBeTruthy();
+  expect(screen.getByTestId("area-row-almenas")).toBeTruthy();
+  expect(screen.queryByTestId("area-row-far")).toBeNull();
   expect(screen.getByText("2,3 km")).toBeTruthy();
   expect(screen.getAllByText("Borås · 2 leder")).toHaveLength(2);
   expect(screen.getAllByLabelText("Bad")).toHaveLength(2);
@@ -72,10 +73,10 @@ it("shows the popular destinations when none is nearby", async () => {
     Promise.resolve(latitude === undefined ? [area("kiruna", "Kiruna", null)] : [area("far", "Långt bort", 80)]),
   );
   await renderWithProviders(<NearbyAreas />);
-  await flushUntil(() => screen.queryByTestId("home-area-kiruna"));
+  await flushUntil(() => screen.queryByTestId("area-row-kiruna"));
 
   expect(screen.getByText("Populära utflyktsmål")).toBeTruthy();
-  expect(screen.queryByTestId("home-area-far")).toBeNull();
+  expect(screen.queryByTestId("area-row-far")).toBeNull();
 });
 
 it("asks without a position for the Borås fallback and calls them popular", async () => {
@@ -88,27 +89,38 @@ it("asks without a position for the Borås fallback and calls them popular", asy
   expect(screen.getByText("Populära utflyktsmål")).toBeTruthy();
 });
 
-it("opens a destination and the whole list", async () => {
-  mockGetAreas.mockResolvedValue([area("rya", "Rya åsar", 2.3)]);
+it("shows at most three destinations as rows", async () => {
+  mockGetAreas.mockResolvedValue([area("a", "A", 1), area("b", "B", 2), area("c", "C", 3), area("d", "D", 4)]);
   await renderWithProviders(<NearbyAreas />);
-  await flushUntil(() => screen.queryByTestId("home-area-rya"));
+  await flushUntil(() => screen.queryByTestId("area-row-a"));
 
-  await fireEvent.press(screen.getByTestId("home-area-rya"));
+  expect(within(screen.getByTestId("home-areas-list")).getAllByRole("button")).toHaveLength(3);
+  expect(screen.queryByTestId("area-row-d")).toBeNull();
+});
+
+// keep-comment: a destination stays in the home stack, while the whole list lives in the trails tab
+it("opens a destination at home and the whole list in the trails tab", async () => {
+  mockGetAreas.mockResolvedValue([area("rya", "Rya åsar", 2.3)]);
+  const { store } = await renderWithProviders(<NearbyAreas />);
+  await flushUntil(() => screen.queryByTestId("area-row-rya"));
+
+  await fireEvent.press(screen.getByTestId("area-row-rya"));
   await fireEvent.press(screen.getByTestId("home-areas-see-all"));
 
   expect(mockNavigate).toHaveBeenNthCalledWith(1, {
     pathname: "/(tabs)/(home)/area/[identifier]",
     params: { identifier: "rya" },
   });
-  expect(mockNavigate).toHaveBeenNthCalledWith(2, "/(tabs)/(home)/area/area-list-screen");
+  expect(mockNavigate).toHaveBeenNthCalledWith(2, "/(tabs)/trails");
+  expect(store.get(trailListSourceAtom)).toBe("areas");
 });
 
 it("marks an example picture on a tile", async () => {
   mockGetAreas.mockResolvedValue([{ ...area("rya", "Rya åsar", 2.3), imageUrl: "https://media.example/mock/rya.jpg" }]);
   await renderWithProviders(<NearbyAreas />);
-  await flushUntil(() => screen.queryByTestId("home-area-rya"));
+  await flushUntil(() => screen.queryByTestId("area-row-rya"));
 
-  expect(within(screen.getByTestId("home-area-rya")).getByTestId("example-image-overlay")).toBeTruthy();
+  expect(within(screen.getByTestId("area-row-rya")).getByTestId("example-image-overlay")).toBeTruthy();
 });
 
 it("waits for the position before asking", async () => {

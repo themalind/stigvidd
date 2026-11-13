@@ -5,52 +5,155 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { MARKER_COLORS, ROUTE_LINE_COLOR, SWIMMING_MARKER_COLORS } from "@/components/map/marker-styles";
+import { decideClusterAction } from "@/components/map/cluster-action";
+import ClusterSource, {
+  CLUSTER_MAX_ZOOM,
+  FACILITY_POINT_RADIUS,
+  POINT_RADIUS,
+  TRAIL_CLUSTER_ACTION,
+} from "@/components/map/cluster-source";
+import {
+  MARKER_COLORS,
+  type MarkerColors,
+  ROUTE_LINE_COLOR,
+  SWIMMING_MARKER_COLORS,
+} from "@/components/map/marker-styles";
 import { AreaMapShapes, MapFacilityKind } from "@/utils/area/area-map-shapes";
-import { GeoJSONSource, Layer, type PressEventWithFeatures } from "@maplibre/maplibre-react-native";
+import {
+  GeoJSONSource,
+  type GeoJSONSourceRef,
+  Layer,
+  type PressEventWithFeatures,
+} from "@maplibre/maplibre-react-native";
+import { RefObject, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { NativeSyntheticEvent } from "react-native";
 
 type PressEvent = NativeSyntheticEvent<PressEventWithFeatures>;
+type FacilityKind = Exclude<MapFacilityKind, "other">;
 
-const TRAIL_RADIUS = 9;
-
-export const AREA_DOT_COLORS: Record<Exclude<MapFacilityKind, "other">, string> = {
-  swimming: SWIMMING_MARKER_COLORS.fill,
-  firePit: MARKER_COLORS.firePits.fill,
-  shelter: MARKER_COLORS.shelters.fill,
+const FACILITY_COLORS: Record<FacilityKind, MarkerColors> = {
+  swimming: SWIMMING_MARKER_COLORS,
+  firePit: MARKER_COLORS.firePits,
+  shelter: MARKER_COLORS.shelters,
 };
 
+export const AREA_DOT_COLORS: Record<FacilityKind, string> = {
+  swimming: FACILITY_COLORS.swimming.fill,
+  firePit: FACILITY_COLORS.firePit.fill,
+  shelter: FACILITY_COLORS.shelter.fill,
+};
+
+// keep-comment: drawn bottom to top, so the last kind's points are the topmost layer
+const FACILITY_KINDS: FacilityKind[] = ["swimming", "firePit", "shelter"];
+
+const FACILITY_COUNT_KEYS = {
+  swimming: "area.swimmingCount",
+  firePit: "area.firePitCount",
+  shelter: "area.shelterCount",
+} as const satisfies Record<FacilityKind, string>;
+
 // keep-comment: the id of the topmost layer, for a puck drawn above everything
-export const AREA_TOP_LAYER = "area-facilities-dots";
+export const AREA_TOP_LAYER = "area-shelter-points";
 
 interface Props {
   shapes: AreaMapShapes;
-  // keep-comment: every trail under the finger, so trails sharing a trailhead open together as on the map tab
+  // keep-comment: every trail under the finger or in a small cluster, so trails sharing a trailhead open together as on the map tab
   onTrailPress?: (identifiers: string[]) => void;
   onFacilityPress?: (name: string, coordinates: [number, number]) => void;
+  // keep-comment: a cluster too big for the carousel zooms in until it breaks apart
+  onZoomTo?: (center: [number, number], zoom: number) => void;
 }
 
-function handleTrailPress(event: PressEvent, onTrailPress: (identifiers: string[]) => void) {
+function pointOf(feature: GeoJSON.Feature): [number, number] {
+  const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+  return [lng, lat];
+}
+
+async function handleTrailPress(
+  event: PressEvent,
+  sourceRef: RefObject<GeoJSONSourceRef | null>,
+  onTrailPress: (identifiers: string[]) => void,
+  onZoomTo?: (center: [number, number], zoom: number) => void,
+) {
   event.stopPropagation();
-  const identifiers = (event.nativeEvent.features ?? [])
+  const features = event.nativeEvent.features ?? [];
+  const cluster = features.find((feature) => feature.properties?.point_count != null);
+  if (cluster) {
+    const clusterId = cluster.properties?.cluster_id as number;
+    const pointCount = cluster.properties?.point_count as number;
+    const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
+    const action = decideClusterAction(pointCount, expansionZoom, TRAIL_CLUSTER_ACTION);
+    if (action.kind === "zoom") {
+      onZoomTo?.(pointOf(cluster), action.zoom);
+      return;
+    }
+    const leaves = await sourceRef.current?.getClusterLeaves(clusterId, pointCount, 0);
+    const identifiers = (leaves ?? [])
+      .map((leaf) => leaf.properties?.identifier as string | undefined)
+      .filter((identifier): identifier is string => !!identifier);
+    if (identifiers.length > 0) onTrailPress(identifiers);
+    return;
+  }
+  const identifiers = features
     .map((feature) => feature.properties?.identifier as string | undefined)
     .filter((identifier): identifier is string => !!identifier);
   if (identifiers.length > 0) onTrailPress([...new Set(identifiers)]);
 }
 
-function handleFacilityPress(
+async function handleFacilityPress(
   event: PressEvent,
-  onFacilityPress: (name: string, coordinates: [number, number]) => void,
+  sourceRef: RefObject<GeoJSONSourceRef | null>,
+  // keep-comment: what a place without a name is called, so tapping it still says what is there
+  unnamedLabel: (count: number) => string,
+  onFacilityPress?: (name: string, coordinates: [number, number]) => void,
+  onZoomTo?: (center: [number, number], zoom: number) => void,
 ) {
   event.stopPropagation();
   const feature = event.nativeEvent.features?.[0];
-  const name = feature?.properties?.name as string | undefined;
-  if (!feature || !name) return;
-  const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
-  onFacilityPress(name, [lng, lat]);
+  if (!feature) return;
+  if (feature.properties?.point_count != null) {
+    const clusterId = feature.properties.cluster_id as number;
+    const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
+    if (expansionZoom != null && expansionZoom <= CLUSTER_MAX_ZOOM) {
+      onZoomTo?.(pointOf(feature), expansionZoom);
+      return;
+    }
+    // keep-comment: places sharing one spot never break apart, so their names are shown together instead of zooming
+    const leaves = await sourceRef.current?.getClusterLeaves(clusterId, feature.properties.point_count as number, 0);
+    const names = (leaves ?? []).map((leaf) => leaf.properties?.name as string | undefined);
+    const named = names.filter((name): name is string => !!name);
+    const unnamed = names.length - named.length;
+    onFacilityPress?.([...named, ...(unnamed > 0 ? [unnamedLabel(unnamed)] : [])].join("\n"), pointOf(feature));
+    return;
+  }
+  const name = feature.properties?.name as string | undefined;
+  onFacilityPress?.(name || unnamedLabel(1), pointOf(feature));
 }
 
-export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress }: Props) {
+export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress, onZoomTo }: Props) {
+  const { t } = useTranslation();
+  const trailSource = useRef<GeoJSONSourceRef>(null);
+  const swimmingSource = useRef<GeoJSONSourceRef>(null);
+  const firePitSource = useRef<GeoJSONSourceRef>(null);
+  const shelterSource = useRef<GeoJSONSourceRef>(null);
+  const facilitySources = { swimming: swimmingSource, firePit: firePitSource, shelter: shelterSource };
+  const interactive = !!(onTrailPress || onFacilityPress);
+
+  const byKind = useMemo(
+    () =>
+      Object.fromEntries(
+        FACILITY_KINDS.map((kind) => [
+          kind,
+          {
+            type: "FeatureCollection",
+            features: shapes.facilities.features.filter((feature) => feature.properties?.kind === kind),
+          } satisfies GeoJSON.FeatureCollection<GeoJSON.Point>,
+        ]),
+      ) as Record<FacilityKind, GeoJSON.FeatureCollection<GeoJSON.Point>>,
+    [shapes.facilities],
+  );
+
   return (
     <>
       <GeoJSONSource id="area-boundary" data={shapes.boundary}>
@@ -61,47 +164,40 @@ export default function AreaMapLayers({ shapes, onTrailPress, onFacilityPress }:
           paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 2, "line-dasharray": [3, 2] }}
         />
       </GeoJSONSource>
-      <GeoJSONSource
+      <ClusterSource
         id="area-trails"
         data={shapes.trails}
-        {...(onTrailPress ? { onPress: (event: PressEvent) => handleTrailPress(event, onTrailPress) } : {})}
-      >
-        <Layer
-          type="circle"
-          id="area-trails-points"
-          paint={{
-            "circle-color": MARKER_COLORS.trails.fill,
-            "circle-radius": TRAIL_RADIUS,
-            "circle-stroke-width": 2,
-            "circle-stroke-color": MARKER_COLORS.trails.stroke,
-          }}
+        colors={MARKER_COLORS.trails}
+        pointRadius={POINT_RADIUS}
+        sourceRef={trailSource}
+        markAccessible
+        {...(onTrailPress
+          ? { onPress: (event: PressEvent) => void handleTrailPress(event, trailSource, onTrailPress, onZoomTo) }
+          : {})}
+      />
+      {FACILITY_KINDS.map((kind) => (
+        <ClusterSource
+          key={kind}
+          id={`area-${kind}`}
+          data={byKind[kind]}
+          colors={FACILITY_COLORS[kind]}
+          pointRadius={FACILITY_POINT_RADIUS}
+          sourceRef={facilitySources[kind]}
+          markAccessible
+          {...(interactive
+            ? {
+                onPress: (event: PressEvent) =>
+                  void handleFacilityPress(
+                    event,
+                    facilitySources[kind],
+                    (count) => t(FACILITY_COUNT_KEYS[kind], { count }),
+                    onFacilityPress,
+                    onZoomTo,
+                  ),
+              }
+            : {})}
         />
-      </GeoJSONSource>
-      <GeoJSONSource
-        id="area-facilities"
-        data={shapes.facilities}
-        {...(onFacilityPress ? { onPress: (event: PressEvent) => handleFacilityPress(event, onFacilityPress) } : {})}
-      >
-        <Layer
-          type="circle"
-          id={AREA_TOP_LAYER}
-          filter={["!=", ["get", "kind"], "other"]}
-          paint={{
-            "circle-radius": 6,
-            "circle-color": [
-              "match",
-              ["get", "kind"],
-              "swimming",
-              AREA_DOT_COLORS.swimming,
-              "shelter",
-              AREA_DOT_COLORS.shelter,
-              AREA_DOT_COLORS.firePit,
-            ],
-            "circle-stroke-color": SWIMMING_MARKER_COLORS.stroke,
-            "circle-stroke-width": 2,
-          }}
-        />
-      </GeoJSONSource>
+      ))}
     </>
   );
 }

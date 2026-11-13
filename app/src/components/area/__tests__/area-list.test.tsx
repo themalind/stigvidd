@@ -12,7 +12,10 @@ import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import { StyleSheet } from "react-native";
-import AreaListScreen from "../area/area-list-screen";
+import AreaList from "../area-list";
+import { TRAILS_TAB_AREA_ROUTES } from "../area-routes";
+
+const AreaListScreen = () => <AreaList routes={TRAILS_TAB_AREA_ROUTES} />;
 
 const mockGetAreas = jest.fn();
 jest.mock("@/api/areas", () => ({ getAreas: (...args: unknown[]) => mockGetAreas(...args) }));
@@ -149,13 +152,13 @@ it("keeps calling the kept popular list popular while the position's list loads"
   expect(screen.queryByText("Närmast")).toBeNull();
 });
 
-it("opens a destination", async () => {
+it("opens a destination in its own stack", async () => {
   await show();
 
   await fireEvent.press(screen.getByTestId("area-row-almenas"));
 
   expect(mockNavigate).toHaveBeenCalledWith({
-    pathname: "/(tabs)/(home)/area/[identifier]",
+    pathname: "/(tabs)/trails/area/[identifier]",
     params: { identifier: "almenas" },
   });
 });

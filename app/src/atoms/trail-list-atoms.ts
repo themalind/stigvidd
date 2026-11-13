@@ -7,6 +7,6 @@
 
 import { atom } from "jotai";
 
-export type TrailListSource = "trails" | "contributions";
+export type TrailListSource = "trails" | "contributions" | "areas";
 
 export const trailListSourceAtom = atom<TrailListSource>("trails");

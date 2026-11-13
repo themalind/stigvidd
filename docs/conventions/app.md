@@ -51,6 +51,9 @@ folder are free. Tests (`__tests__/`, `*.test.ts(x)`, `__mocks__/`, `src/test/`)
   `api/core/`, `services/keycloak-auth.ts` (Keycloak) and `services/telemetry.ts` (OpenObserve).
 - Tests live in `__tests__/` beside the code they test. The harness is in `src/test/`.
 - UI is a reusable component in `components/<domain>/`. Look for an existing one first.
+- A screen shown in more than one tab takes its routes as a prop, one set per stack
+  (`components/event/event-routes.ts`, `components/area/area-routes.ts`), so a tap stays in that tab's history.
+  A new stack also needs a route file per screen and a `Stack.Screen` in its `_layout.tsx`.
 - Modals use `ModalScrim`, never a blur. Dialogs live in `components/dialog/`.
 - One border radius: `BORDER_RADIUS` (5) from the constants.
 - An icon name is typed `keyof typeof MaterialCommunityIcons.glyphMap`, never `string`, or `tsc` lets a

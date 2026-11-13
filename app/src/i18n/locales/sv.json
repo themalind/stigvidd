@@ -725,7 +725,8 @@
     "firePitCount_other": "{{count}} grillplatser",
     "shelterCount_one": "{{count}} vindskydd",
     "shelterCount_other": "{{count}} vindskydd",
-    "listTitle": "Utflyktsmål",
+    "swimmingCount_one": "{{count}} badplats",
+    "swimmingCount_other": "{{count}} badplatser",
     "searchPlaceholder": "Sök område eller sjö",
     "sortNear": "Närmast",
     "sortPopular": "Populärast",
@@ -741,6 +742,11 @@
       "shelter": "Vindskydd",
       "accessible": "Tillgängligt"
     },
+    "accessibleBadge": "Tillgänglig",
+    "accessibleCount_one": "{{count}} tillgänglig",
+    "accessibleCount_other": "{{count}} tillgängliga",
+    "accessibleOnMap": "Visa tillgängliga på kartan",
+    "mapAccessible": "Tillgänglighetsanpassad",
     "onTheMap": "På kartan",
     "openMap": "Öppna karta",
     "mapSwimming_one": "{{count}} badplats",
@@ -1213,7 +1219,8 @@
     "noResults": "Inga leder hittades",
     "noResultsHint": "Prova att ändra dina filter",
     "sourceTrails": "Leder",
-    "sourceContributions": "Från användare"
+    "sourceContributions": "Från användare",
+    "sourceAreas": "Utflyktsmål"
   },
   "report": {
     "title": "Anmäl innehåll",

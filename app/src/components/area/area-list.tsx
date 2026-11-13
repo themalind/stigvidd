@@ -5,22 +5,25 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AreaFilterBar from "@/components/area/area-filter-bar";
-import AreaRow from "@/components/area/area-row";
-import BackButton from "@/components/layout/back-button";
 import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
-import { SCREEN_PADDING } from "@/constants/constants";
 import { useAreas } from "@/hooks/area/useAreas";
 import { DEFAULT_AREA_FILTERS, areaMunicipalities, groupAreas } from "@/utils/area/area-list";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, SectionList, StyleSheet, View } from "react-native";
+import { SectionList, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
+import AreaFilterBar from "./area-filter-bar";
+import AreaRow from "./area-row";
+import { AreaStackRoutes } from "./area-routes";
 
-export default function AreaListScreen() {
+interface Props {
+  routes: AreaStackRoutes;
+}
+
+export default function AreaList({ routes }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const { data: areas, isPending, isError, error, refetch, hasPosition } = useAreas();
@@ -47,12 +50,11 @@ export default function AreaListScreen() {
   }
 
   const openArea = (identifier: string) =>
-    guardedNavigate(() => router.navigate({ pathname: "/(tabs)/(home)/area/[identifier]", params: { identifier } }));
+    guardedNavigate(() => router.navigate({ pathname: routes.detail, params: { identifier } }));
 
   return (
     <SectionList
       testID="area-list"
-      style={{ backgroundColor: theme.colors.background }}
       contentContainerStyle={s.content}
       sections={sections}
       keyExtractor={(area) => area.identifier}
@@ -60,10 +62,6 @@ export default function AreaListScreen() {
       keyboardShouldPersistTaps="handled"
       ListHeaderComponent={
         <View style={s.header}>
-          <View style={s.titleRow}>
-            <BackButton />
-            <Text style={[s.title, { color: theme.colors.onBackground }]}>{t("area.listTitle")}</Text>
-          </View>
           <AreaFilterBar
             filters={filters}
             municipalities={municipalities}
@@ -92,23 +90,11 @@ export default function AreaListScreen() {
 
 const s = StyleSheet.create({
   content: {
-    paddingTop: 8,
     paddingBottom: 24,
-    paddingHorizontal: SCREEN_PADDING,
+    paddingHorizontal: 10,
   },
   header: {
-    gap: 12,
     paddingBottom: 12,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginLeft: Platform.select({ ios: -SCREEN_PADDING, default: 0 }),
-  },
-  title: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 22,
   },
   group: {
     fontFamily: "Inter_600SemiBold",
