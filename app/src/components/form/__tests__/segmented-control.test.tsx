@@ -30,6 +30,16 @@ it("marks only the chosen segment as selected", async () => {
   expect(screen.getByTestId("seg-a")).not.toHaveStyle({ backgroundColor: AppDefaultTheme.colors.primaryContainer });
 });
 
+// keep-comment: "Från användare" wrapped onto two lines at a large system text size
+it("keeps a label on one line, shrinking it to fit its segment", async () => {
+  await show("a");
+
+  const label = screen.getByText("Alfa");
+  expect(label.props.numberOfLines).toBe(1);
+  expect(label.props.adjustsFontSizeToFit).toBe(true);
+  expect(label).toHaveStyle({ flexShrink: 1 });
+});
+
 it("reports the pressed segment's value", async () => {
   const onChange = await show("a");
 
