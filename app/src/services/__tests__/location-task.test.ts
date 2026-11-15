@@ -512,7 +512,7 @@ describe("finalizeActiveSegment", () => {
     // maybeFinalizeStaleHike would leave this running; finalizeActiveSegment closes it.
     expect(maybeFinalizeStaleHike(state, NOW)).toBeNull();
 
-    const result = finalizeActiveSegment(state);
+    const result = finalizeActiveSegment(state, "recovery");
     expect(result.isTracking).toBe(false);
     expect(result.currentSegment).toBeNull();
     expect(result.hike.segments).toHaveLength(1);
@@ -528,7 +528,7 @@ describe("finalizeActiveSegment", () => {
       currentSegment: { coordinates: [point(NOW)], distance: 9, startTime: NOW - 1000 },
     };
 
-    const result = finalizeActiveSegment(state);
+    const result = finalizeActiveSegment(state, "recovery");
     expect(result.hike.segments).toHaveLength(0);
     expect(result.hike.totalDistance).toBe(0);
     expect(result.isTracking).toBe(false);
@@ -541,13 +541,13 @@ describe("finalizeActiveSegment", () => {
       currentSegment: { coordinates: [point(startTime + MAX_DURATION + 60_000)], distance: 5000, startTime },
     };
 
-    const result = finalizeActiveSegment(state);
+    const result = finalizeActiveSegment(state, "recovery");
     expect(result.hike.segments[0].endTime).toBe(startTime + MAX_DURATION);
     expect(result.hike.totalTime).toBe(MAX_DURATION);
   });
 
   it("just clears tracking when there is no active segment", () => {
-    const result = finalizeActiveSegment({ ...activeState, currentSegment: null });
+    const result = finalizeActiveSegment({ ...activeState, currentSegment: null }, "recovery");
     expect(result.isTracking).toBe(false);
     expect(result.currentSegment).toBeNull();
     expect(result.hike.segments).toHaveLength(0);
@@ -781,14 +781,14 @@ describe("ingestFixes — what it hands the filter", () => {
     let getItem!: jest.Mock;
     let setItem!: jest.Mock;
     let getDistance!: jest.Mock;
-    let debug!: jest.SpyInstance;
+    let info!: jest.SpyInstance;
     jest.isolateModules(() => {
       jest.doMock("react-native", () => ({ Platform: { OS: "android" } }));
       /* eslint-disable @typescript-eslint/no-require-imports */
       mod = require("../location-task");
       const storage = require("@react-native-async-storage/async-storage");
       getDistance = require("geolib").getDistance as jest.Mock;
-      debug = jest.spyOn(require("../logger").logger, "debug").mockImplementation(() => undefined);
+      info = jest.spyOn(require("../logger").logger, "info").mockImplementation(() => undefined);
       /* eslint-enable @typescript-eslint/no-require-imports */
       getDistance.mockReturnValue(0);
       getItem = storage.getItem as jest.Mock;
@@ -803,7 +803,7 @@ describe("ingestFixes — what it hands the filter", () => {
       getItem,
       setItem,
       getDistance,
-      debug,
+      info,
       taskCallback: locationTaskCallback,
     };
   }
@@ -877,6 +877,8 @@ describe("ingestFixes — what it hands the filter", () => {
       rejected: { accuracy: 1 },
       accuracyBuckets: { le20: 1, le40: 1 },
       longestGapMs: 3000,
+      longestFixGapMs: 2000,
+      lastFixAt: NOW,
       longestStepM: 8,
       reportedStillButMoving: 1,
     });
@@ -918,7 +920,7 @@ describe("ingestFixes — what it hands the filter", () => {
   });
 
   it("logs the stats when the segment is finalized, without positions, and drops them", () => {
-    const { finalizeActiveSegment: finalize, debug } = loadAndroid();
+    const { finalizeActiveSegment: finalize, info } = loadAndroid();
     const state: StoredHikeState = {
       ...walked,
       filterStats: {
@@ -926,25 +928,56 @@ describe("ingestFixes — what it hands the filter", () => {
         rejected: { noise: 2 },
         accuracyBuckets: { le20: 3 },
         longestGapMs: 3000,
+        longestFixGapMs: 45_000,
+        lastFixAt: NOW - 90_000,
         longestStepM: 8,
         reportedStillButMoving: 1,
       },
     };
 
-    const finalized = finalize(state);
+    const finalized = finalize(state, "recovery");
 
-    expect(debug).toHaveBeenCalledWith("Trail recording filter stats", {
-      platform: "android",
-      points: 1,
-      segmentMetres: 0,
-      accepted: 1,
-      rejected_noise: 2,
-      accuracy_le20: 3,
-      longestGapMs: 3000,
-      longestStepM: 8,
-      reportedStillButMoving: 1,
-    });
+    expect(info).toHaveBeenCalledWith(
+      "Hike recording segment ended",
+      expect.objectContaining({
+        reason: "recovery",
+        points: 1,
+        segmentMetres: 0,
+        fixesReceived: 3,
+        accepted: 1,
+        rejected_noise: 2,
+        accuracy_le20: 3,
+        longestGapMs: 3000,
+        longestFixGapMs: 45_000,
+        msSinceLastFix: 90_000,
+        longestStepM: 8,
+        reportedStillButMoving: 1,
+      }),
+    );
+    const context = info.mock.calls[0][1] as Record<string, unknown>;
+    expect(Object.keys(context).some((key) => /latitude|longitude|coord/i.test(key))).toBe(false);
     expect(finalized.filterStats).toBeUndefined();
+  });
+
+  it("records the longest gap between fixes the OS delivered, accepted or not", async () => {
+    const { ingestFixes: ingest, getItem, setItem } = loadAndroid();
+    const filterStats = {
+      accepted: 0,
+      rejected: {},
+      accuracyBuckets: {},
+      longestGapMs: 0,
+      longestStepM: 0,
+      reportedStillButMoving: 0,
+      lastFixAt: NOW - 40_000,
+    };
+    getItem.mockResolvedValue(JSON.stringify({ ...walked, filterStats }));
+
+    await ingest([{ latitude: 57.7, longitude: 11.97, accuracy: 500, timestamp: NOW }]);
+
+    const stats = lastWritten(setItem).filterStats;
+    expect(stats?.longestFixGapMs).toBe(40_000);
+    expect(stats?.lastFixAt).toBe(NOW);
+    expect(stats?.rejected.accuracy).toBe(1);
   });
 });
 

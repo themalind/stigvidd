@@ -103,6 +103,7 @@ optional — see `src/components/map/map.tsx` and [`../docs/map.md`](../docs/map
 | eslint                                    | ^9.25.0    | MIT             |
 | eslint-config-expo                        | ~58.0.4    | MIT             |
 | expo                                      | ^58.0.0    | MIT             |
+| expo-battery                              | ~58.0.3    | MIT             |
 | expo-blur                                 | ~58.0.5    | MIT             |
 | expo-build-properties                     | ~58.0.12   | MIT             |
 | expo-constants                            | ~58.0.15   | MIT             |

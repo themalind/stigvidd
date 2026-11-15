@@ -11,7 +11,7 @@ import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AppState, Linking } from "react-native";
+import { AppState, AppStateStatus, Linking } from "react-native";
 import {
   LOCATION_TASK_NAME,
   MIN_DISTANCE,
@@ -22,10 +22,12 @@ import {
   evaluatePoint,
   finalizeActiveSegment,
   ingestFixes,
+  logSegmentEnded,
   maybeFinalizeStaleHike,
   mutateHikeState,
   readHikeState,
 } from "./location-task";
+import { isBackgroundTaskRunning, logRecordingEnvironment } from "./recording-diagnostics";
 import {
   addLiveLocationListener,
   drainLiveLocation,
@@ -48,6 +50,29 @@ const POLL_INTERVAL = 2000;
 // which is exactly how we tell an interrupted recording (new process, engine dead)
 // from an active one that just remounted (same process, engine still running).
 let recoveryAttempted = false;
+
+async function startLocationTask(options: Location.LocationTaskOptions): Promise<void> {
+  try {
+    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, options);
+  } catch (error) {
+    logger.error("Starting the background location task failed", { errorMessage: String(error) });
+    throw error;
+  }
+}
+
+async function logIfRecording(next: AppStateStatus): Promise<void> {
+  if (next !== "active" && next !== "background") return;
+
+  const state = await readHikeState().catch(() => null);
+  if (!state?.isTracking) return;
+
+  const lastFixAt = state.filterStats?.lastFixAt;
+  await logRecordingEnvironment(next === "active" ? "foregrounded" : "backgrounded", {
+    points: state.currentSegment?.coordinates.length ?? 0,
+    msSinceLastFix: lastFixAt === undefined ? null : Date.now() - lastFixAt,
+    taskRunning: await isBackgroundTaskRunning(LOCATION_TASK_NAME),
+  });
+}
 
 export function useLocationTracking() {
   const { t } = useTranslation();
@@ -121,8 +146,15 @@ export function useLocationTracking() {
     const current = await readHikeState();
     if (!current.isTracking || !current.currentSegment) return;
 
+    logger.warn("Hike recording interrupted: the app was restarted while recording", {
+      points: current.currentSegment.coordinates.length,
+      minutesSinceSegmentStart: Math.round((Date.now() - current.currentSegment.startTime) / 60_000),
+    });
+
     await stopBackgroundSource();
-    await mutateHikeState((state) => (state.isTracking && state.currentSegment ? finalizeActiveSegment(state) : null));
+    await mutateHikeState((state) =>
+      state.isTracking && state.currentSegment ? finalizeActiveSegment(state, "recovery") : null,
+    );
   }, [drainNative, stopBackgroundSource]);
 
   // Applies a StoredHikeState snapshot into React state
@@ -184,7 +216,9 @@ export function useLocationTracking() {
     // Re-sync when the app returns from background so state is never stale
     const appStateSub = AppState.addEventListener("change", (nextState) => {
       if (nextState === "active") {
-        void syncSafely();
+        void syncSafely().then(() => logIfRecording(nextState));
+      } else {
+        void logIfRecording(nextState);
       }
     });
 
@@ -328,6 +362,10 @@ export function useLocationTracking() {
       engine: useNativeRef.current ? "native_ios" : "expo_task",
       backgroundPermission: bgPermission === "granted" ? "granted" : "denied",
     });
+    void logRecordingEnvironment("started", {
+      engine: useNativeRef.current ? "native_ios" : "expo_task",
+      segmentIndex: newState.hike.segments.length,
+    });
 
     // Each new segment starts with an empty live tail so it never carries points
     // from the previous (now finalized) segment.
@@ -348,7 +386,7 @@ export function useLocationTracking() {
     // Avoid registering the task twice if it somehow survived a previous session
     const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
     if (!isAlreadyRunning) {
-      await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+      await startLocationTask({
         // BestForNavigation keeps the GPS pinned hot for the duration of a recording.
         // High (~kCLLocationAccuracyNearestTenMeters, ~10m target) is too coarse for a
         // walking track: in a pocket with a locked screen the body blocks the antenna
@@ -409,6 +447,7 @@ export function useLocationTracking() {
         let updatedHike = state.hike;
 
         if (seg) {
+          logSegmentEnded(state, "user");
           const endTime = Date.now();
           // Duration is the span of recorded GPS timestamps, matching the value
           // recomputeTrimmedHike saves — so the live timer and the saved hike agree.
@@ -455,9 +494,12 @@ export function useLocationTracking() {
         distanceMeters: newState.hike.totalDistance,
         pointCount: newState.hike.segments.reduce((n, seg) => n + seg.coordinates.length, 0),
       });
-    } catch {
-      // Surface the failure instead of leaving an unhandled rejection and a UI that
-      // silently disagrees with the (possibly still-running) background task.
+      void logRecordingEnvironment("stopped", {
+        segments: newState.hike.segments.length,
+        taskRunning: await isBackgroundTaskRunning(LOCATION_TASK_NAME),
+      });
+    } catch (error) {
+      logger.error("Stopping the hike recording failed", { errorMessage: String(error) });
       setError(t("createHike.trackingError"));
     }
   };
@@ -480,7 +522,8 @@ export function useLocationTracking() {
       await clearHikeState();
       setLive([]);
       applyState(defaultHikeState);
-    } catch {
+    } catch (error) {
+      logger.error("Resetting the hike recording failed", { errorMessage: String(error) });
       setError(t("createHike.trackingError"));
     }
   };

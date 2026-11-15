@@ -522,6 +522,39 @@ decimals is ~1.1km and a start-of-trace point is plausibly someone's home. Free-
 strings are scrubbed too, since that is where identifiers usually hide — an
 upstream error message that embedded the request it failed on.
 
+### Troubleshooting one user's walk or recording
+
+App logs carry no user, session or device id (pinned by `telemetry.test.ts`). The link to an
+account is the API side, so start there and match the app logs by time and device:
+
+1. **API traces** (stream `default`, `span_kind='2'`): every authenticated request has
+   `enduser_id` (the Keycloak subject id). Every app request also sends `X-Stigvidd-Client`,
+   which `RequestLoggingMiddleware` turns into `client_app_version`, `client_build`,
+   `client_platform`, `client_os_version` and `client_device_model`. The same fields go into
+   the API log scope (`subjectid`, `clientosversion`, …). Lookup: `POST /api/v1/hikes` or
+   `/hikesubmissions` → `enduser_id` → that user's requests in order.
+2. **API logs**: `Hike submission {SubmissionId} created from hike {HikeId}` and `… withdrawn`.
+3. **App logs** (`stigvidd_app_logs`), matched by time, `platform`, `osversion` and `appversion`:
+   - `Hike recording started|stopped|backgrounded|foregrounded`:
+     foreground/background permission, `accuracygrant` (`fine`/`coarse` on Android),
+     `positioningenabled`, `gpsavailable`, `networkprovideravailable`, `lowpowermode`,
+     `batteryoptimization` (Android), `batterypercent`. `backgrounded`, `foregrounded` and
+     `stopped` add `taskrunning`. `foregrounded` also has `mssincelastfix`, so a large value
+     means nothing was recorded while the screen was off. No key may contain `location`:
+     `redact()` in `logger.ts` blanks it (asserted in `recording-diagnostics.test.ts`).
+   - `Starting the background location task failed`: the recording never really started.
+   - `Hike recording segment ended` (reason `user`, `inactivity`, `max_duration`,
+     `recovery`): `fixesreceived`, `fixesperminute`, `rejected_*` per filter reason,
+     `accuracy_*` histogram, `longestfixgapms` (the OS stopped delivering) against
+     `longestgapms` (the filter dropped fixes), `mssincelastfix`.
+   - `Hike recording interrupted: the app was restarted while recording`: the OS or the
+     user killed the app mid-walk.
+4. **Analytics** (`stigvidd_app_events`, consent only): `hike.recording_started|stopped`
+   with `sessionid`, `engine` and `backgroundpermission`.
+
+`expo-battery` is loaded lazily: a binary built before it was added reports
+`lowpowermode: "unknown"` instead of crashing on an OTA update.
+
 ## Mobile RUM — designed, and deliberately not enabled yet
 
 Sessions, views, taps, native crashes and network resources via

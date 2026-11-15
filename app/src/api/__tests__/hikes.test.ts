@@ -103,6 +103,16 @@ describe("what each call returns", () => {
     await expect(getAllHikesByUserId("user-1")).resolves.toEqual([hike]);
   });
 
+  it("sends the client header the API copies onto its trace", async () => {
+    mockFetch(true, [hike]);
+    await getAllHikesByUserId("user-1");
+
+    const init = (global.fetch as jest.Mock).mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>)["X-Stigvidd-Client"]).toMatch(
+      /^app=[^;]*;build=[^;]*;platform=[^;]*;os=[^;]*;model=[^;]*$/,
+    );
+  });
+
   it("shareHike reports success", async () => {
     mockFetch(true);
     await expect(shareHike(shareRequest)).resolves.toEqual({ success: true });

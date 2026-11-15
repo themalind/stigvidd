@@ -2,56 +2,35 @@
 <!--
   PUBLICERAD INTEGRITETSPOLICY — stigvidd.se/privacy-policy/
 
-  URL:en är permanent: den skrivs in i Play Console, App Store Connect och i §9.
-  Byt aldrig sökväg eller filnamn. (Bytt från /integritetspolicy/ 2026-08-13, innan
-  sidan hunnit publiceras eller registreras någonstans — därefter ligger den fast.)
+  URL:en är permanent: den står i Play Console, App Store Connect och §9. Byt aldrig
+  sökväg eller filnamn.
 
-  Sidan är tvåspråkig: svenska först, engelska under samma URL (#english). Ändras
-  ett avsnitt måste båda språken följas åt.
+  Sidan är tvåspråkig (#english). Varje ändring görs i BÅDA språken.
 
-  2026-09-13: §2 och §5 ändrade för att beskriva användningsstatistik. Den absoluta
-  "inga analysverktyg"-formuleringen var sann när den skrevs och blir falsk i samma stund
-  som det första händelsen skickas, så texten MÅSTE nå main i samma merge som
-  samtyckesdialogen och app/src/services/analytics.ts — inte före. Motsvarande text i
-  appen: nyckeln about.privacyText i app/src/i18n/locales/{en,sv}.json.
+  En sida med en kvarvarande <span class="todo">-markering får inte publiceras.
 
-  2026-10-03: positionsavsnitten följer platsförklaringen i appen (create-hike.tsx,
-  createHike.disclosureBackground). Förklaringen kommer före bakgrundsfrågan, inte före
-  förgrundsfrågan — hemskärmen och kartan frågar utan egen förklaring.
-
-  2026-10-03: §2 "Teknisk data" nämner användarnamnet vid misslyckad inloggning. Keycloaks
-  inbyggda event-lyssnare (jboss-logging) skriver det i Keycloaks container-logg på värden,
-  som åldras ut efter 7 dagar som övriga serverloggar (§5). Till OpenObserve går det
-  ALDRIG — authevents-collectorn släpper bara igenom en vitlista av fält
-  (observability/otel-auth-events.yaml). Slutar Keycloak logga användarnamnet kan
-  tillägget strykas, i BÅDA språken.
-
-  PUBLICERAD 2026-08-30. Båda grindarna som höll sidan tillbaka är klarade:
-    1. Alla <span class="todo">-markeringar är ersatta. Den sista satt i §8
-       (Hostups teknikeråtkomst) och togs bort i båda språken 2026-08-30.
-    2. §5:s "Serverloggar: 7 dagar" är nu sant på riktigt. Container-loggarna
-       storleksbegränsas av x-logging-ankaret i docker-compose.yml och åldras ut
-       av scripts/container-log-retention.sh, som en systemd-timer kör dagligen
-       på värden (DEPLOYMENT.md del 1). json-file-drivern har INGEN tidsbaserad
-       retention alls, så skriptet — inte compose — är det som håller löftet.
-
-  Regel 1 står kvar som en stående regel, inte en engångsgrind: .todo-klassen finns
-  fortfarande i stilmallen och ska användas för varje ofärdig uppgift. En sida med en
-  enda kvarvarande markering FÅR INTE publiceras.
-
-  Och siffran i §5 är nu bunden till CONTAINER_LOG_RETENTION_DAYS i .env: ändras
-  den ena måste den andra följa med, i BÅDA språken.
-
-  §4:s "fyra decimaler" är bundet till toFixed(4) i app/src/hooks/useWeather.ts, och
-  Expo-raden om appuppdateringar till expo.updates.url i app/app.json.
-
-  2026-11-01: evenemang i §2, §3 och §5, efter EventMembership (vem ser vad),
-  EventAccountDeletionStep (kontoradering) och UserActionLogs (gränsen per dygn). §5 säger
-  att passerade evenemang INTE gallras: ändra det när gallringsjobbet (2 månader) finns.
-  Kodändringarna som texten vilade på har landat:
-    §3  vidaredelning kräver ägarens tillstånd  → AllowResharing per delning (steg 1-2)
-    §3  e-postadressen visas aldrig             → Email borttagen ur FriendResponse
-    §5  borttaget raderas på riktigt            → hard delete + filradering (steg 3-4)
+  Texten är bunden till koden. Ändras den ena ändras den andra:
+    §2 användningsstatistik      app/src/services/analytics.ts, about.privacyText i
+                                 app/src/i18n/locales/{en,sv}.json
+    §2 positionsavsnitten        createHike.disclosureBackground
+                                 (components/hike/recorder/location-disclosure-dialog.tsx),
+                                 som visas före bakgrundsfrågan, inte före förgrundsfrågan
+    §2 användarnamn vid inlogg   Keycloaks jboss-logging; går aldrig till OpenObserve
+                                 (observability/otel-auth-events.yaml). Stryk om Keycloak
+                                 slutar logga det
+    §2 konto-id, telefonmodell   RequestLoggingMiddleware och X-Stigvidd-Client
+                                 (app/src/services/client-header.ts); apploggarna är anonyma
+    §2 §3 §5 evenemang           EventMembership (vem ser vad), EventAccountDeletionStep
+                                 (kontoradering), UserActionLogs (gräns per dygn)
+    §3 vidaredelning, e-post     AllowResharing, FriendResponse
+    §4 "fyra decimaler"          toFixed(4) i app/src/hooks/location/useWeather.ts
+    §4 Expo-raden                expo.updates.url i app/app.json
+    §5 borttaget raderas         hard delete och filradering
+    §5 serverloggar 7 dagar      CONTAINER_LOG_RETENTION_DAYS i .env (container-loggar,
+                                 scripts/container-log-retention.sh via systemd-timer,
+                                 DEPLOYMENT.md del 1) och OBSERVATORY_RETENTION_DAYS
+                                 (OpenObserves spår och loggar)
+    §5 evenemang gallras inte    ändra när gallringsjobbet (2 månader) finns
 -->
 <html lang="sv">
   <head>
@@ -245,7 +224,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 1 november 2026</p>
+        <p class="updated">Senast uppdaterad: 15 november 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -360,8 +339,9 @@
             <tr>
               <td>Teknisk data</td>
               <td>
-                IP-adress, tidpunkt och felmeddelanden i serverloggar, samt det användarnamn
-                (e-postadress) som angavs vid misslyckade inloggningsförsök
+                IP-adress, tidpunkt och felmeddelanden i serverloggar, ditt konto-id och, för
+                anrop från appen, appversion, telefonmodell och version av Android eller iOS,
+                samt det användarnamn (e-postadress) som angavs vid misslyckade inloggningsförsök
               </td>
               <td>Drift, felsökning och säkerhet</td>
               <td>Berättigat intresse (art. 6.1 f)</td>
@@ -644,7 +624,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 1 November 2026</p>
+          <p class="updated">Last updated: 15 November 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -756,8 +736,9 @@
               <tr>
                 <td>Technical data</td>
                 <td>
-                  IP address, timestamp and error messages in server logs, and the username (email
-                  address) entered in a failed sign-in attempt
+                  IP address, timestamp and error messages in server logs, your account id and,
+                  for requests from the app, the app version, phone model and Android or iOS
+                  version, and the username (email address) entered in a failed sign-in attempt
                 </td>
                 <td>Operation, troubleshooting and security</td>
                 <td>Legitimate interest (Art. 6(1)(f))</td>

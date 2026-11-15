@@ -167,11 +167,15 @@ describe("logger lifecycle", () => {
   const PENDING_KEY = "@stigvidd_pending_logs";
 
   let background!: () => void;
+  let foreground!: () => void;
 
   /** Drains microtasks so the chained flush -> persist promises have run. */
   const settle = async () => {
     for (let i = 0; i < 3; i++) await new Promise((resolve) => setImmediate(resolve));
   };
+
+  const persistedMessages = async () =>
+    (JSON.parse((await AsyncStorage.getItem(PENDING_KEY)) ?? "[]") as LogRecord[]).map((record) => record.message);
 
   beforeAll(() => {
     // startLogLifecycle() subscribes once per module instance, so the handler is captured here.
@@ -180,6 +184,7 @@ describe("logger lifecycle", () => {
       handler: (state: AppStateStatus) => void,
     ) => {
       background = () => handler("background" as AppStateStatus);
+      foreground = () => handler("active" as AppStateStatus);
 
       return { remove: jest.fn() };
     }) as typeof AppState.addEventListener);
@@ -228,6 +233,47 @@ describe("logger lifecycle", () => {
     const persisted = JSON.parse(stored as string) as LogRecord[];
     expect(persisted).toHaveLength(1);
     expect(persisted[0].message).toBe("boom");
+  });
+
+  it("persists a line logged after backgrounding while the flush is still in flight", async () => {
+    let deliver = () => {};
+    setLogSink(jest.fn().mockReturnValue(new Promise<void>((resolve) => (deliver = resolve))));
+
+    logger.error("boom");
+    background();
+    logger.info("Hike recording backgrounded");
+    await settle();
+
+    expect(await persistedMessages()).toEqual(["boom", "Hike recording backgrounded"]);
+
+    deliver();
+    await settle();
+
+    expect(await persistedMessages()).toEqual(["Hike recording backgrounded"]);
+  });
+
+  it("forgets a delivered batch whose flush settles after the app is back in front", async () => {
+    let deliver = () => {};
+    setLogSink(jest.fn().mockReturnValue(new Promise<void>((resolve) => (deliver = resolve))));
+
+    logger.error("boom");
+    background();
+    await settle();
+    foreground();
+    deliver();
+    await settle();
+
+    expect(await AsyncStorage.getItem(PENDING_KEY)).toBeNull();
+  });
+
+  it("leaves storage alone for lines logged in the foreground", async () => {
+    setLogSink(jest.fn().mockResolvedValue(undefined));
+    foreground();
+
+    logger.error("boom");
+    await settle();
+
+    expect(await AsyncStorage.getItem(PENDING_KEY)).toBeNull();
   });
 });
 

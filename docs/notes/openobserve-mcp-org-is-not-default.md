@@ -56,6 +56,14 @@ In the meantime, the same header works with plain curl on `$ORG/_search?type=log
 `url_path`, `http_request_method`, `http_response_status_code` and `user_agent_original`:
 that one query reconstructs who did what, in order.
 
+## A user's walk or hike recording went wrong (2026-11-15)
+
+Start with `stigvidd_app_events` (`event LIKE 'hike.%'`: `pointcount`, `durationseconds`,
+`backgroundpermission`, `sessionid`), then the recipe in
+[observability.md, "Troubleshooting one user's walk or recording"](../observability.md). App logs carry
+no user id by design (`telemetry.test.ts`); the account link is `enduser_id` on the API traces.
+A plain-curl helper needs Node `fetch`, since this machine has no `jq`.
+
 ## Staging is a second org, so a second MCP server (2026-10-13)
 
 Staging ([STAGING.md](../../STAGING.md)) ingests into its own org on the same instance,

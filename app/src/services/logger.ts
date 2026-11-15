@@ -138,6 +138,11 @@ let buffer: LogRecord[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let appStateSubscribed = false;
 let flushing = false;
+let inFlight: LogRecord[] = [];
+let inBackground = false;
+let persisting = false;
+let persistAgain = false;
+let storageHoldsRecords = false;
 // Consecutive sink failures back the retry interval off. Without this a device with no
 // connectivity, or an OpenObserve outage, costs one HTTP attempt per log line: a restored
 // batch keeps the buffer at or above BATCH_SIZE, so every subsequent emit() would flush.
@@ -154,6 +159,10 @@ export function resetLogger(): void {
   sink = null;
   buffer = [];
   flushing = false;
+  inFlight = [];
+  inBackground = false;
+  persistAgain = false;
+  storageHoldsRecords = false;
   failureStreak = 0;
 
   if (flushTimer) {
@@ -200,6 +209,7 @@ export async function flush(): Promise<void> {
 
   const batch = buffer;
   buffer = [];
+  inFlight = batch;
   flushing = true;
 
   try {
@@ -214,7 +224,9 @@ export async function flush(): Promise<void> {
     // BATCH_SIZE, and a restored batch is usually over it.
     scheduleFlush(retryDelayMs());
   } finally {
+    inFlight = [];
     flushing = false;
+    if (inBackground || storageHoldsRecords) persistUndelivered();
   }
 }
 
@@ -240,6 +252,9 @@ function emit(level: LogLevel, message: string, context?: LogContext): void {
 
   if (buffer.length > MAX_BUFFERED) buffer = buffer.slice(-MAX_BUFFERED);
 
+  // keep-comment: a line logged after the background transition would otherwise die with the process
+  if (inBackground) persistUndelivered();
+
   // While the sink is failing, the backoff timer owns retries — flushing straight from here
   // would be one HTTP attempt per log line against a known-broken endpoint.
   if (failureStreak === 0 && buffer.length >= BATCH_SIZE) void flush();
@@ -261,13 +276,28 @@ export const logger = {
  * usually the same incident, so replaying them on next launch is the whole point.
  */
 function handleAppStateChange(next: AppStateStatus): void {
-  if (next === "active") return;
+  inBackground = next !== "active";
+  if (!inBackground) return;
 
-  void flush().finally(() => {
-    // Whatever the flush did NOT deliver — nothing at all after a success. Persisting a
-    // snapshot taken before the flush instead would replay already-shipped records on the
-    // next launch, duplicating them on every single background/foreground cycle.
-    void persistPending(buffer.slice(-MAX_BUFFERED));
+  persistUndelivered();
+  void flush();
+}
+
+// keep-comment: the in-flight batch is stored too, and flush() re-stores once settled so a shipped batch is not replayed
+function persistUndelivered(): void {
+  if (persisting) {
+    persistAgain = true;
+    return;
+  }
+
+  persisting = true;
+  const records = [...inFlight, ...buffer].slice(-MAX_BUFFERED);
+  storageHoldsRecords = records.length > 0;
+  void persistPending(records).finally(() => {
+    persisting = false;
+    if (!persistAgain) return;
+    persistAgain = false;
+    persistUndelivered();
   });
 }
 
@@ -299,6 +329,8 @@ export function startLogLifecycle(): void {
   if (appStateSubscribed) return;
 
   appStateSubscribed = true;
+  // keep-comment: a background relaunch (location task after a kill) never gets a change event
+  inBackground = AppState.currentState === "background";
   AppState.addEventListener("change", handleAppStateChange);
   void replayPersistedLogs();
 }

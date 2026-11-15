@@ -28,6 +28,9 @@ stack    docker compose up -d, then /healthz and /readyz (checks the DB)
   To run one project: `dotnet test --project Tests/IntegrationTests/IntegrationTests.csproj --no-build`.
 - A new expo-router route fails `tsc` (TS2820) until `.expo/types/router.d.ts` (gitignored) is regenerated: run
   `CI=1 npx expo start --port 8099` in the background until the route appears in that file, then stop it.
+- Never `npx expo install` in `app/`: it resolves SDK 56 and reinstalls hundreds of packages. Use
+  `npm install <pkg>@<version from node_modules/expo/bundledNativeModules.json>`. `runtimeVersion` is fixed, so OTA
+  reaches old binaries: a new native module must be `require`d lazily in a try/catch (`services/recording-diagnostics.ts`).
 - A jest path with `(tabs)` is a regex: escape it (`"src/app/\(tabs\)/trails"`), or the run silently skips that file and reads green.
 - `npm test` type-checks nothing; `npm run build` / `npx tsc --noEmit` do. Pass `--silent` to app jest, whose
   console noise is 279 KB against a 7 KB summary.

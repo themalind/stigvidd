@@ -161,6 +161,13 @@ public class HikeSubmissionService : IHikeSubmissionService
                 : Result.Fail<HikeSubmissionResponse>(new Message(500, "An error occurred while saving the submission."));
         }
 
+        _logger.LogInformation(
+            "Hike submission {SubmissionId} created from hike {HikeId}: {ImageCount} images, {TrailLengthKm} km",
+            submission.Identifier,
+            hike.Identifier,
+            copied.Count,
+            Math.Round(submission.TrailLength, 2));
+
         return Result.Ok(new HikeSubmissionResponse
         {
             Identifier = submission.Identifier,
@@ -262,6 +269,8 @@ public class HikeSubmissionService : IHikeSubmissionService
             return Result.Fail(new Message(500, "An error occurred while withdrawing the submission."));
 
         await DeleteFilesAsync(result.Value, $"Withdrawn submission {identifier}");
+
+        _logger.LogInformation("Hike submission {SubmissionId} withdrawn", identifier);
 
         return Result.Ok();
     }

@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { getUserToken } from "@/api/users";
+import { CLIENT_HEADER, clientHeaderValue } from "@/services/client-header";
 import { logger } from "@/services/logger";
 import { API_REQUEST_TIMEOUT_MS, apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { apiErrorFrom, isApiStatus } from "./api-error";
@@ -45,6 +46,7 @@ export async function send(call: ApiCall): Promise<Response> {
 
   try {
     const headers = await authHeader(call.auth ?? "required");
+    headers[CLIENT_HEADER] = clientHeaderValue();
     if (call.form === undefined) headers["Content-Type"] = "application/json";
 
     const response = await apiFetch(

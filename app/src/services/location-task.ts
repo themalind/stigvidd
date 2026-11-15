@@ -11,6 +11,7 @@ import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import { getDistance } from "geolib";
 import { Platform } from "react-native";
+import type { RecordingStopReason } from "./event-catalogue";
 import { logger } from "./logger";
 
 export const LOCATION_TASK_NAME = "stigvidd-background-location";
@@ -65,6 +66,9 @@ export type FilterStats = {
   rejected: Partial<Record<RejectReason, number>>;
   accuracyBuckets: Partial<Record<AccuracyBucket, number>>;
   longestGapMs: number;
+  // Between fixes the OS delivered, accepted or not: a long one means the OS stopped sending GPS. keep-comment: tells OS throttling from filtering
+  longestFixGapMs?: number;
+  lastFixAt?: number;
   longestStepM: number;
   // Accepted steps the reported-speed rule this replaced would have dropped (Android). keep-comment: names the old rule
   reportedStillButMoving: number;
@@ -175,11 +179,11 @@ export async function dismissRecordingInfo(): Promise<void> {
 // value. Pure. Always finalizes — callers decide *whether* to: maybeFinalizeStaleHike
 // gates on staleness, and the cold-launch recovery path (use-location-tracking)
 // calls it directly to recover a killed recording as paused.
-export function finalizeActiveSegment(state: StoredHikeState): StoredHikeState {
+export function finalizeActiveSegment(state: StoredHikeState, reason: RecordingStopReason): StoredHikeState {
   const seg = state.currentSegment;
   if (!seg) return { isTracking: false, hike: state.hike, currentSegment: null };
 
-  if (state.filterStats) logFilterStats(state.filterStats, seg);
+  logSegmentEnded(state, reason);
 
   const lastMovementTime = seg.coordinates.at(-1)?.timeStamp ?? seg.startTime;
   const endTime = Math.min(lastMovementTime, seg.startTime + MAX_DURATION);
@@ -200,17 +204,29 @@ export function finalizeActiveSegment(state: StoredHikeState): StoredHikeState {
   return { isTracking: false, hike, currentSegment: null };
 }
 
-// Debug level, so production drops it; development and preview builds send it. keep-comment: where it is visible
-function logFilterStats(stats: FilterStats, seg: Segment): void {
-  logger.debug("Trail recording filter stats", {
-    platform: Platform.OS,
+export function logSegmentEnded(state: StoredHikeState, reason: RecordingStopReason, now: number = Date.now()): void {
+  const seg = state.currentSegment;
+  if (!seg) return;
+
+  const stats = state.filterStats ?? emptyFilterStats();
+  const received = stats.accepted + Object.values(stats.rejected).reduce((sum: number, n) => sum + (n ?? 0), 0);
+  const durationMinutes = Math.max(0, now - seg.startTime) / 60_000;
+
+  logger.info("Hike recording segment ended", {
+    reason,
+    segmentIndex: state.hike.segments.length,
+    durationSeconds: Math.round(durationMinutes * 60),
     points: seg.coordinates.length,
     segmentMetres: Math.round(seg.distance),
+    fixesReceived: received,
+    fixesPerMinute: durationMinutes > 0 ? Math.round((received / durationMinutes) * 10) / 10 : 0,
     accepted: stats.accepted,
     ...prefixed("rejected_", stats.rejected),
     ...prefixed("accuracy_", stats.accuracyBuckets),
     longestGapMs: stats.longestGapMs,
-    longestStepM: stats.longestStepM,
+    longestFixGapMs: stats.longestFixGapMs ?? 0,
+    msSinceLastFix: stats.lastFixAt === undefined ? null : now - stats.lastFixAt,
+    longestStepM: Math.round(stats.longestStepM),
     reportedStillButMoving: stats.reportedStillButMoving,
   });
 }
@@ -242,12 +258,16 @@ function recordFix(
   fix: RawFix,
   lastPoint: LocationData | undefined,
   decision: PointDecision,
+  segmentStart: number,
 ): FilterStats {
   const bucket = accuracyBucket(fix.accuracy);
+  const fixGapMs = Math.max(0, fix.timestamp - (stats.lastFixAt ?? segmentStart));
   const next: FilterStats = {
     ...stats,
     rejected: { ...stats.rejected },
     accuracyBuckets: { ...stats.accuracyBuckets, [bucket]: (stats.accuracyBuckets[bucket] ?? 0) + 1 },
+    longestFixGapMs: Math.max(stats.longestFixGapMs ?? 0, fixGapMs),
+    lastFixAt: Math.max(stats.lastFixAt ?? 0, fix.timestamp),
   };
 
   if (!decision.accept) {
@@ -281,7 +301,7 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
   const isOverCap = now - seg.startTime > MAX_DURATION;
   if (!isInactive && !isOverCap) return null;
 
-  return finalizeActiveSegment(state);
+  return finalizeActiveSegment(state, isOverCap ? "max_duration" : "inactivity");
 }
 
 export type RejectReason = "stale" | "accuracy" | "warmup" | "speed" | "teleport" | "noise";
@@ -416,7 +436,7 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
       const decision = evaluatePoint(lastPoint, newPoint, fix.accuracy, {
         trackStartedAt: currentSegment.startTime,
       });
-      filterStats = recordFix(filterStats, fix, lastPoint, decision);
+      filterStats = recordFix(filterStats, fix, lastPoint, decision, currentSegment.startTime);
       const { accept, distance } = decision;
       if (!accept) {
         continue;
