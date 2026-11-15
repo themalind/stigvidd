@@ -84,7 +84,7 @@ function NavGroupEntry({ item: { group, pages: children }, attention }: { item: 
                 <SidebarMenuSubButton asChild isActive={isUnder(pathname, path)}>
                   <NavLink to={path}>
                     <ChildIcon />
-                    <span>{title}</span>
+                    <span className="truncate">{title}</span>
                     <NavSubBadge count={badgeCount([child], attention)} />
                   </NavLink>
                 </SidebarMenuSubButton>

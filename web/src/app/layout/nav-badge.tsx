@@ -41,7 +41,7 @@ export function NavSubBadge({ count }: { count: number }) {
   return (
     <span
       className={cn(
-        "ml-auto flex h-5 min-w-5 items-center justify-center rounded-xs px-1 text-xs font-medium tabular-nums",
+        "ml-auto flex h-5 shrink-0 min-w-5 items-center justify-center rounded-xs px-1 text-xs font-medium tabular-nums",
         COLORS,
       )}
     >
