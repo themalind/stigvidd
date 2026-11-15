@@ -22,12 +22,15 @@ import { useAppState } from "@/hooks/useAppState";
 import { useUserTheme } from "@/hooks/theme/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
+import { track } from "@/services/analytics";
 import { initOnlineStatus } from "@/services/online-status";
 import { initTelemetry } from "@/services/telemetry";
 import { logger } from "@/services/logger";
 import {
   claimNotificationResponse,
   invalidateForPush,
+  isPushType,
+  NOTIFICATION_HANDLERS,
   notificationHandlerFor,
   registerForPushNotificationsAsync,
   releaseNotificationResponse,
@@ -98,13 +101,17 @@ function NotificationHandler() {
           if (handledNotificationId.current === notifId) handledNotificationId.current = null;
           return releaseNotificationResponse(notifId);
         }
-        const handler = notificationHandlerFor(data);
-        if (handler) {
+        if (isPushType(type)) {
+          const handler = NOTIFICATION_HANDLERS[type];
+          track("push.opened", { type, routed: true });
           invalidateForPush(queryClient, handler, data);
           await openPushRoute(handler, data, {
             currentPath: () => currentPath.current,
             rootState: () => navigation.getRootState(),
           });
+        } else {
+          track("push.opened", { type: "unknown", routed: false });
+          logger.warn("Unknown notification type", { type: String(type) });
         }
         Notifications.clearLastNotificationResponse();
       })

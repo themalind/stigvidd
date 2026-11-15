@@ -39,6 +39,18 @@ describe("inspectGeoJson", () => {
     expect(summary.fields).toContainEqual({ name: "url", samples: [], values: null });
   });
 
+  it("keeps the first three points' values as examples, without the empty ones", () => {
+    const features = ["Kype", "Öra", "Rya", "Tolken"].map((namn) =>
+      point({ namn, url: namn === "Öra" ? " " : "x.se" }),
+    );
+
+    expect(summaryOf(file(...features)).examples).toEqual([
+      { namn: "Kype", url: "x.se" },
+      { namn: "Öra" },
+      { namn: "Rya", url: "x.se" },
+    ]);
+  });
+
   it("gives no values for a field with too many to map one by one", () => {
     const features = Array.from({ length: MAX_TYPE_VALUES + 1 }, (_, i) => point({ namn: `Plats ${i}` }));
 

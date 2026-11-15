@@ -18,6 +18,8 @@ export interface FileField {
 export interface FileSummary {
   points: number;
   fields: FileField[];
+  // keep-comment: the first points' values by field, for showing how they will look
+  examples: Record<string, string>[];
 }
 
 export type Inspection = { ok: true; summary: FileSummary } | { ok: false; error: string };
@@ -52,17 +54,21 @@ export function inspectGeoJson(content: string): Inspection {
   const values = new Map<string, Set<string>>();
   const samples = new Map<string, string[]>();
   const filled = new Map<string, number>();
+  const examples: Record<string, string>[] = [];
   let points = 0;
 
   for (const feature of root.features) {
     if (!isObject(feature) || !isPoint(feature.geometry) || !isObject(feature.properties)) continue;
     points += 1;
+    const example: Record<string, string> = {};
+    if (examples.length < SAMPLES) examples.push(example);
 
     for (const [name, raw] of Object.entries(feature.properties)) {
       const value = text(raw);
       if (!values.has(name)) values.set(name, new Set());
       if (value === null) continue;
 
+      example[name] = value;
       filled.set(name, (filled.get(name) ?? 0) + 1);
       values.get(name)?.add(value);
       const shown = samples.get(name) ?? [];
@@ -84,5 +90,5 @@ export function inspectGeoJson(content: string): Inspection {
     };
   });
 
-  return { ok: true, summary: { points, fields } };
+  return { ok: true, summary: { points, fields, examples } };
 }

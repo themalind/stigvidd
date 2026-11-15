@@ -23,6 +23,7 @@ public class TrailService : ITrailService
     private readonly TrailContributionRanking _ranking;
     private readonly IMemoryCache _cache;
     private readonly ICityAreaMembershipService _cityAreaMembership;
+    private readonly IExampleImageService _exampleImages;
 
     private const string PopularContributionsCacheKey = "trails:popular-contributions";
 
@@ -34,10 +35,12 @@ public class TrailService : ITrailService
         TrailResponseFactory factory,
         TrailContributionRanking ranking,
         IMemoryCache cache,
-        ICityAreaMembershipService cityAreaMembership)
+        ICityAreaMembershipService cityAreaMembership,
+        IExampleImageService exampleImages)
     {
         _trailRepository = trailResponseRepository;
         _cityAreaMembership = cityAreaMembership;
+        _exampleImages = exampleImages;
         _ranking = ranking;
         _cache = cache;
         _webDavService = webDavService;
@@ -86,8 +89,7 @@ public class TrailService : ITrailService
                 City = row.Trail.City,
                 IsVerified = row.Trail.IsVerified,
                 HasImages = row.Trail.TrailImages!.Any(),
-                // keep-comment: the app badges an image as an example by this same rule (app/src/components/media/is-mock-image.ts)
-                HasExampleImages = row.Trail.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains("mock")),
+                HasExampleImages = row.Trail.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains(ExampleImageService.Folder)),
                 HasSymbol = row.Trail.TrailSymbolImage != "",
                 HasDescription = row.Trail.Description != "",
                 HasFullDescription = row.Trail.FullDescription != "",
@@ -484,6 +486,12 @@ public class TrailService : ITrailService
             }
 
             await _cityAreaMembership.TrailsMovedAsync([addResult.Value.Id], ctoken);
+
+            var examples = await _exampleImages.AddToTrailsAsync([addResult.Value.Id], ctoken);
+            if (examples.IsFailure)
+                _logger.LogWarning(
+                    "TrailService: Trail {trailId} created, but it got no example images: {reason}",
+                    addResult.Value.Id, examples.Message?.ResultMessage);
 
             return Result.Ok<TrailResponse?>(_trailResponseFactory.Create(addResult.Value));
         }

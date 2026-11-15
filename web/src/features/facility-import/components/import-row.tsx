@@ -9,6 +9,7 @@ import type {
 } from "@/api/generated/model";
 import { CheckboxField } from "@/components/form-field";
 import { ToneBadge, type Tone } from "@/components/tone-badge";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ImportRow as Row } from "@/features/facility-import/api/facility-import";
 import {
@@ -42,6 +43,8 @@ export function ImportRow({ row, candidates, taken, disabled, onChoose, onKeep }
   // keep-comment: only a value we hold can be kept; a created row holds none
   const keepable = (current: string | null | undefined) => Boolean(row.facilityIdentifier) && current != null;
   const sameType = candidates.filter((candidate) => (candidate.facilityType & row.facilityType) !== 0);
+  // keep-comment: a suggested twin is decided with two buttons; a row without one can still be linked by hand
+  const suggested = row.kind === "New" ? row.suggestedFacilityIdentifier : null;
 
   return (
     <li className="space-y-2 rounded-md border p-3">
@@ -58,7 +61,36 @@ export function ImportRow({ row, candidates, taken, disabled, onChoose, onKeep }
         )}
       </div>
 
-      {row.kind === "New" && (
+      {suggested && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            Looks like <span className="font-medium text-foreground">{row.suggestedFacilityName}</span>, which we have
+          </span>
+          <div role="group" aria-label={`Import ${row.name} as`} className="flex gap-1.5">
+            <Button
+              size="sm"
+              variant={row.facilityIdentifier === suggested ? "default" : "outline"}
+              aria-pressed={row.facilityIdentifier === suggested}
+              disabled={disabled || taken.has(suggested)}
+              title={taken.has(suggested) ? "Another place is already linked to it" : undefined}
+              onClick={() => onChoose(suggested)}
+            >
+              Link to ours
+            </Button>
+            <Button
+              size="sm"
+              variant={row.facilityIdentifier ? "outline" : "default"}
+              aria-pressed={!row.facilityIdentifier}
+              disabled={disabled}
+              onClick={() => onChoose(CREATE_NEW)}
+            >
+              Create new
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {row.kind === "New" && !suggested && (
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor={selectId} className="text-xs text-muted-foreground">
             Import as
@@ -78,7 +110,6 @@ export function ImportRow({ row, candidates, taken, disabled, onChoose, onKeep }
                 disabled={taken.has(candidate.identifier)}
               >
                 Link to {candidate.name}
-                {candidate.identifier === row.suggestedFacilityIdentifier ? " (suggested)" : ""}
               </option>
             ))}
           </select>

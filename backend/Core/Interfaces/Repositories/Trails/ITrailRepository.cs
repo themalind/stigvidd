@@ -18,6 +18,7 @@ public interface ITrailRepository
     Task<RepositoryResult<Trail>> AddTrailAsync(Trail trail, CancellationToken ctoken);
     Task<RepositoryResult<Trail>> UpdateTrailAsync(Trail trail, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<TrailImage>>> AddTrailImagesAsync(int trailId, IReadOnlyCollection<TrailImage> images, CancellationToken ctoken);
+    Task<RepositoryResult<int>> AddMissingTrailImagesAsync(IReadOnlyCollection<int> trailIds, IReadOnlyCollection<ExampleImageFile> files, CancellationToken ctoken);
     Task<RepositoryResult> DeleteTrailImageAsync(string imageIdentifier, CancellationToken ctoken);
     Task<RepositoryResult> UpdateTrailSymbolAsync(string trailIdentifier, string symbolPath, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetAllTrailsForAdminAsync<T>(Expression<Func<AdminTrailSource, T>> selector, CancellationToken ctoken);

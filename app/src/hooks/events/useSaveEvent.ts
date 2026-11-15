@@ -9,6 +9,7 @@ import { createEvent, deleteEventImage, inviteToEvent, setEventImage, updateEven
 import { showSuccessAtom, showWarningAtom } from "@/atoms/snackbar-atoms";
 import { HikingEvent } from "@/data/types";
 import { useRetryKey } from "@/hooks/useRetryKey";
+import { track } from "@/services/analytics";
 import { EventFormValues, toCreateEventRequest, toUpdateEventRequest } from "@/utils/event/event-form";
 import { useMutation } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
@@ -54,6 +55,17 @@ export function useSaveEvent(original?: HikingEvent) {
             )
           : true,
       ]);
+
+      track("event.saved", {
+        kind: original ? "update" : "create",
+        visibility: values.visibility,
+        route: values.route.kind,
+        hasMeetingPoint: values.meetingPoint !== null,
+        hasCapacity: values.maxParticipants.trim() !== "",
+        inviteCount: invites ? values.invitees.length : 0,
+        coverOk: imageOk,
+        invitesOk,
+      });
 
       if (!imageOk) setWarning(t("events.form.imageFailed"));
       else if (!invitesOk) setWarning(t("events.form.invitesFailed"));

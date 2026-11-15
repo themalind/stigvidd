@@ -44,6 +44,11 @@ function facility(overrides: Partial<AdminFacilityResponse>): AdminFacilityRespo
     location: "Vid parkeringen",
     description: "",
     url: "",
+    sourceId: null,
+    sourceKey: null,
+    nameKey: "",
+    areaNames: [],
+    lastUpdatedAt: "2026-11-01T00:00:00Z",
     ...overrides,
   };
 }

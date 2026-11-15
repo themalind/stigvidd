@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import type { PushType } from "./notifications";
+
 /**
  * Every analytics event the app may send, and the exact properties each carries.
  *
@@ -89,6 +91,41 @@ export type EventCatalogue = {
 
   /** A recipient reported a photo on a shared walk. No image, hike or author id (rule 2). */
   "hike.image_reported": Record<string, never>;
+
+  // keep-comment: the disclosure; coverOk/invitesOk say whether the follow-up uploads worked
+  "event.saved": {
+    kind: "create" | "update";
+    visibility: "Open" | "Private";
+    route: "none" | "trail" | "hike" | "kept";
+    hasMeetingPoint: boolean;
+    hasCapacity: boolean;
+    inviteCount: number;
+    coverOk: boolean;
+    invitesOk: boolean;
+  };
+
+  "event.membership_changed": {
+    action: "join" | "leave" | "accept" | "decline";
+  };
+
+  "event.post_created": Record<string, never>;
+
+  "event.route_followed": {
+    hasRoute: boolean;
+  };
+
+  "push.opened": {
+    type: PushType | "unknown";
+    routed: boolean;
+  };
+
+  "area.list_viewed": {
+    sort: "distance" | "popularity";
+    count: number;
+  };
+
+  // keep-comment: no counts, since an area's trail and facility counts can name it (rule 2)
+  "area.opened": Record<string, never>;
 
   /**
    * The user granted analytics consent. The only consent event there is — see the note above

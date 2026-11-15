@@ -40,7 +40,8 @@ Imports go one way only: shared → features → app.
 - `src/api/generated` is never edited by hand. Regenerate it after a backend contract change and
   commit it.
 - A new page is one row in `app/pages.ts`. Links go through `config/paths.ts`.
-- Reuse before writing: `useSearchState`, `Pager`, `useConfirm`, `ToneBadge`, `useMapLibre`, `underUrl`.
+- Reuse before writing: `useSearchState`, `Pager`, `useConfirm`, `ToneBadge`, `useMapLibre`, `underUrl`,
+  `DialogFrame` (a dialog with title, body and Close) and `MapDialog` (one with a map and the satellite toggle).
 - Tests are Vitest `*.test.ts(x)` beside the source. Mock the network (`createApiMock()`), not hooks.
 
 ## Checks

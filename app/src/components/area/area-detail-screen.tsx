@@ -11,6 +11,8 @@ import { FacilityType, hasFacilityType } from "@/data/types";
 import { useArea } from "@/hooks/area/useArea";
 import { asTranslationKey } from "@/i18n";
 import { AreaMapFocus } from "@/utils/area/area-map-shapes";
+import { useOnFirstLoad } from "@/hooks/useOnFirstLoad";
+import { track } from "@/services/analytics";
 import { guardedNavigate } from "@/utils/navigation";
 import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -52,6 +54,8 @@ export default function AreaDetailScreen({ routes }: Props) {
   const params = useLocalSearchParams<{ identifier: string }>();
 
   const { data: area, isLoading, error, refetch } = useArea(params.identifier);
+
+  useOnFirstLoad(area, () => track("area.opened", {}));
 
   if (isLoading) {
     return <LoadingIndicator />;

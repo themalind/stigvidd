@@ -113,7 +113,7 @@ public class FacilityImportService : IFacilityImportService
         if (FacilityImportMapping.Parse(source.Mapping) is not { } saved || saved.IdField == mapping.IdField)
             return null;
 
-        var prefix = source.Key + ":";
+        var prefix = FacilitySourceIds.PrefixOf(source.Key);
 
         if (!facilities.Any(f => f.SourceId?.StartsWith(prefix, StringComparison.Ordinal) == true))
             return null;

@@ -8,4 +8,5 @@ namespace Core.Interfaces.Services.Reporting;
 public interface IAdminDashboardService
 {
     Task<Result<AdminDashboardResponse>> GetDashboardAsync(CancellationToken ctoken);
+    Task<Result<AdminAttentionResponse>> GetAttentionAsync(CancellationToken ctoken);
 }

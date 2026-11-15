@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { CityArea, FacilityType } from "@/data/types";
+import { logger } from "@/services/logger";
 import { getByType } from "@/test/composites";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
@@ -28,6 +29,9 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args), back: jest.fn() },
   useRouter: () => ({ navigate: mockNavigate, back: jest.fn(), canGoBack: () => true }),
 }));
+
+const mockTrack = jest.fn();
+jest.mock("@/services/analytics", () => ({ track: (...args: unknown[]) => mockTrack(...args) }));
 
 let clock = 9_000_000;
 
@@ -126,6 +130,22 @@ it("narrows by search, municipality and feature, and says when nothing is left",
   expect(screen.getByTestId("area-list-empty")).toBeTruthy();
 });
 
+it("counts the list it showed and how it was sorted", async () => {
+  await show();
+
+  expect(mockTrack).toHaveBeenCalledWith("area.list_viewed", { sort: "distance", count: 3 });
+});
+
+it("warns when the list loads empty", async () => {
+  const warn = jest.spyOn(logger, "warn");
+  mockGetAreas.mockResolvedValue([]);
+  await renderWithProviders(<AreaListScreen />);
+  await flushUntil(() => mockTrack.mock.calls.length > 0);
+
+  expect(mockTrack).toHaveBeenCalledWith("area.list_viewed", { sort: "popularity", count: 0 });
+  expect(warn).toHaveBeenCalledWith("Area list loaded empty", { hasPosition: false });
+});
+
 it("calls the first sort popular without a position", async () => {
   mockLocation = { data: { latitude: 57.721, longitude: 12.94, isFallback: true }, isPending: false };
   await show();
@@ -150,6 +170,23 @@ it("keeps calling the kept popular list popular while the position's list loads"
   expect(screen.getByTestId("area-row-rya")).toBeTruthy();
   expect(screen.getByText("Populärast")).toBeTruthy();
   expect(screen.queryByText("Närmast")).toBeNull();
+});
+
+it("counts one view when the position's list replaces the popular one", async () => {
+  mockLocation = { data: { latitude: 57.721, longitude: 12.94, isFallback: true }, isPending: false };
+  mockGetAreas.mockResolvedValue(AREAS.map((a) => ({ ...a, distanceKm: null })));
+  const rendered = await renderWithProviders(<AreaListScreen />);
+  await flushUntil(() => screen.queryByTestId("area-row-rya"));
+
+  mockLocation = { data: { latitude: 57.721, longitude: 12.94, isFallback: false }, isPending: false };
+  mockGetAreas.mockResolvedValue(AREAS.slice(0, 2));
+  await act(async () => {
+    rendered.rerender(<AreaListScreen />);
+  });
+  await flushUntil(() => screen.getByText("Närmast"));
+
+  const views = mockTrack.mock.calls.filter(([event]) => event === "area.list_viewed");
+  expect(views).toEqual([["area.list_viewed", { sort: "popularity", count: 3 }]]);
 });
 
 it("opens a destination in its own stack", async () => {

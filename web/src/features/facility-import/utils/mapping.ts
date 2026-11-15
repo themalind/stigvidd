@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { FacilityImportMappingRequest, FacilityImportMappingResponse } from "@/api/generated/model";
-import type { FileField, FileSummary } from "./inspect";
+import { facilityTypeLabel } from "@/utils/facility-types";
+import { EMPTY_VALUE, type FileField, type FileSummary } from "./inspect";
 
 // keep-comment: the select value for "no field"; for the id it means matching on position
 export const NO_FIELD = "";
@@ -104,6 +105,34 @@ export function mappingProblem(draft: MappingDraft, summary: FileSummary): strin
     return "Give at least one value a facility type.";
   }
   return null;
+}
+
+export interface ExampleRow {
+  name: string;
+  kind: string;
+  id: string;
+  link: string;
+}
+
+function kindOf(draft: MappingDraft, example: Record<string, string>): string {
+  const type =
+    draft.typeField === NO_FIELD
+      ? draft.fixedType
+      : (draft.typeValues[example[draft.typeField] ?? EMPTY_VALUE] ?? LEAVE_OUT);
+  if (type !== LEAVE_OUT) return facilityTypeLabel(type);
+  return draft.typeField === NO_FIELD ? "No type chosen" : "Left out";
+}
+
+// keep-comment: the file's first points as the draft would import them
+export function exampleRows(summary: FileSummary, draft: MappingDraft): ExampleRow[] {
+  const value = (example: Record<string, string>, field: string) => (field === NO_FIELD ? "" : (example[field] ?? ""));
+
+  return summary.examples.map((example) => ({
+    name: value(example, draft.nameField),
+    kind: kindOf(draft, example),
+    id: value(example, draft.idField),
+    link: value(example, draft.urlField),
+  }));
 }
 
 export function toRequest(draft: MappingDraft): FacilityImportMappingRequest {

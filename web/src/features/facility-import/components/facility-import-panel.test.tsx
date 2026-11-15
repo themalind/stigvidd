@@ -124,6 +124,8 @@ const rows: FacilityImportRowResponse[] = [
 
 let hasWork = true;
 let allUnchanged = false;
+let suggest = true;
+let extraRows: FacilityImportRowResponse[] = [];
 let notes: string[] = [];
 let municipalities: MunicipalityResponse[] = [];
 let sources: FacilityImportSourceResponse[] = [];
@@ -135,12 +137,16 @@ function previewFor(request: FacilityImportRequest): FacilityImportPreviewRespon
 
   return {
     source: sources.find((s) => s.identifier === request.sourceIdentifier)?.key ?? "",
-    rows: rows.map((row) => {
+    rows: [...rows, ...extraRows].map((row) => {
       if (allUnchanged) return { ...row, kind: "Unchanged", changes: [] };
-      const changes = row.changes.map((change) => ({ ...change, kept: kept.has(`${row.sourceId}/${change.field}`) }));
-      return row.kind === "New" && chosen.has(row.sourceId)
-        ? { ...row, changes, facilityIdentifier: chosen.get(row.sourceId) ?? null }
-        : { ...row, changes };
+      const base =
+        suggest || row.kind !== "New"
+          ? row
+          : { ...row, suggestedFacilityIdentifier: null, suggestedFacilityName: null, facilityIdentifier: null };
+      const changes = base.changes.map((change) => ({ ...change, kept: kept.has(`${row.sourceId}/${change.field}`) }));
+      return base.kind === "New" && chosen.has(row.sourceId)
+        ? { ...base, changes, facilityIdentifier: chosen.get(row.sourceId) ?? null }
+        : { ...base, changes };
     }),
     unlinkedFacilities: [
       { identifier: "mock-almenas", name: "Almenäs", facilityType: SWIMMING },
@@ -152,8 +158,15 @@ function previewFor(request: FacilityImportRequest): FacilityImportPreviewRespon
 }
 
 const calls = (path: string) => api.mock.calls.filter((call) => call.method === "POST" && call.path === path);
-const previewButton = () => screen.getByRole("button", { name: "Preview" });
-const applyButton = () => screen.getByRole("button", { name: "Apply import" });
+const continueButton = () => screen.getByRole("button", { name: "Continue" });
+const compareButton = () => screen.getByRole("button", { name: "Compare with what we have" });
+const saveButton = () => screen.getByRole("button", { name: "Save import" });
+const linkButton = () => screen.getByRole("button", { name: "Link to ours" });
+const createButton = () => screen.getByRole("button", { name: "Create new" });
+
+function renderPanel() {
+  return renderWithProviders(<FacilityImportPanel />, { initialEntries: ["/facility-import"] });
+}
 
 function rowOf(name: string): HTMLElement {
   const row = screen.getByText(name).closest("li");
@@ -161,11 +174,8 @@ function rowOf(name: string): HTMLElement {
   return row;
 }
 
-async function chooseFile(content = GEOJSON) {
-  await userEvent.upload(
-    screen.getByLabelText("File"),
-    new File([content], "anlaggningar.geojson", { type: "application/geo+json" }),
-  );
+function group(title: string): HTMLElement {
+  return screen.getByRole("region", { name: title });
 }
 
 async function choose(label: string, name: string) {
@@ -176,23 +186,42 @@ async function choose(label: string, name: string) {
 
 async function chooseBadplatser() {
   await choose("Municipality", "Borås");
-  await choose("Data source", "Badplatser");
+  await userEvent.click(screen.getByRole("button", { name: /^Badplatser/ }));
+  await userEvent.click(continueButton());
 }
 
 async function addSource(name: string) {
   await choose("Municipality", "Borås");
-  await choose("Data source", "Add a data source…");
-  await userEvent.type(screen.getByLabelText("New data source"), name);
-  await userEvent.click(screen.getByRole("button", { name: "Add" }));
-  await waitFor(() => expect(screen.getByLabelText("Data source")).not.toHaveValue(""));
+  await userEvent.click(screen.getByRole("button", { name: /A new data source/ }));
+  await userEvent.type(screen.getByLabelText("Name it after what the file holds"), name);
+  await userEvent.click(continueButton());
+  await screen.findByLabelText("File");
+}
+
+async function chooseFile(content = GEOJSON) {
+  await userEvent.upload(
+    screen.getByLabelText("File"),
+    new File([content], "anlaggningar.geojson", { type: "application/geo+json" }),
+  );
+}
+
+async function continueToFields(content = GEOJSON) {
+  await chooseFile(content);
+  await waitFor(() => expect(continueButton()).toBeEnabled());
+  await userEvent.click(continueButton());
 }
 
 async function previewBoras() {
-  renderWithProviders(<FacilityImportPanel />);
+  renderPanel();
   await chooseBadplatser();
-  await chooseFile();
-  await userEvent.click(previewButton());
-  await screen.findByText("Almenäs badplats");
+  await continueToFields();
+  await userEvent.click(compareButton());
+  await screen.findByRole("heading", { name: "Check before saving" });
+}
+
+async function save() {
+  await userEvent.click(saveButton());
+  return answerConfirm("yes");
 }
 
 beforeEach(() => {
@@ -200,6 +229,8 @@ beforeEach(() => {
   api.mock.reset();
   hasWork = true;
   allUnchanged = false;
+  suggest = true;
+  extraRows = [];
   notes = [];
   municipalities = [BORAS];
   sources = [BADPLATSER];
@@ -231,26 +262,23 @@ beforeEach(() => {
   api.mock.on("POST", APPLY, () => ({ created: 0, linked: 1, updated: 1, unchanged: 1, missing: 0 }));
 });
 
-describe("FacilityImportPanel", () => {
-  it("asks for a municipality, a data source and a file before previewing", async () => {
-    renderWithProviders(<FacilityImportPanel />);
+describe("FacilityImportPanel, source and file", () => {
+  it("asks for a municipality and a data source before going on", async () => {
+    renderPanel();
 
-    expect(previewButton()).toBeDisabled();
-    expect(screen.getByText("Choose a municipality to preview.")).toBeInTheDocument();
+    expect(continueButton()).toBeDisabled();
+    expect(screen.getByText("Choose a municipality to continue.")).toBeInTheDocument();
     await choose("Municipality", "Borås");
-    expect(screen.getByText("Choose a data source to preview.")).toBeInTheDocument();
-    await choose("Data source", "Badplatser");
-    expect(screen.getByText("Choose a file to preview.")).toBeInTheDocument();
-    await chooseFile();
+    expect(screen.getByText("Choose a data source to continue.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /^Badplatser/ }));
 
-    expect(screen.getByText("anlaggningar.geojson")).toBeInTheDocument();
-    await waitFor(() => expect(previewButton()).toBeEnabled());
-    expect(screen.queryByText(/to preview\./)).not.toBeInTheDocument();
-    expect(calls(PREVIEW)).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /^Badplatser/ })).toHaveAttribute("aria-pressed", "true");
+    expect(continueButton()).toBeEnabled();
+    expect(screen.queryByLabelText("File")).not.toBeInTheDocument();
   });
 
   it("adds a municipality from the list and picks it", async () => {
-    renderWithProviders(<FacilityImportPanel />);
+    renderPanel();
 
     await choose("Municipality", "Add a municipality…");
     await userEvent.type(screen.getByLabelText("New municipality"), "Ulricehamn");
@@ -258,65 +286,109 @@ describe("FacilityImportPanel", () => {
 
     await waitFor(() => expect(screen.getByLabelText("Municipality")).toHaveValue("m-ulricehamn"));
     expect(calls(MUNICIPALITIES)[0]?.body).toEqual({ name: "Ulricehamn" });
-    expect(screen.getByText("Choose a data source to preview.")).toBeInTheDocument();
+    expect(screen.getByText("Choose a data source to continue.")).toBeInTheDocument();
   });
 
   it("lists only the chosen municipality's data sources", async () => {
     sources = [BADPLATSER, { ...BADPLATSER, identifier: "s-mark", name: "Markbad", municipalityIdentifier: "m-mark" }];
-    renderWithProviders(<FacilityImportPanel />);
+    renderPanel();
 
     await choose("Municipality", "Borås");
 
-    expect(screen.getByRole("option", { name: "Badplatser" })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: "Markbad" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^Badplatser/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Markbad/ })).not.toBeInTheDocument();
   });
 
-  it("adds a data source under the municipality and picks it", async () => {
-    renderWithProviders(<FacilityImportPanel />);
+  it("asks a new data source for a name, then adds it under the municipality", async () => {
+    renderPanel();
+    await choose("Municipality", "Borås");
+    await userEvent.click(screen.getByRole("button", { name: /A new data source/ }));
 
-    await addSource("Grillplatser");
+    expect(screen.getByText("Give the new data source a name to continue.")).toBeInTheDocument();
+    expect(continueButton()).toBeDisabled();
 
+    await userEvent.type(screen.getByLabelText("Name it after what the file holds"), "Grillplatser");
+    await userEvent.click(continueButton());
+
+    await screen.findByLabelText("File");
     expect(calls(SOURCES)[0]?.body).toEqual({ municipalityIdentifier: "m-boras", name: "Grillplatser" });
-    expect(screen.getByLabelText("Data source")).toHaveValue("s-grillplatser");
+    expect(screen.getByText("Borås · Grillplatser")).toBeInTheDocument();
   });
 
-  it("previews the file with the data source's saved fields and hides the unchanged rows", async () => {
-    await previewBoras();
+  it("asks for a file and says how many points it read", async () => {
+    renderPanel();
+    await chooseBadplatser();
 
-    expect(calls(PREVIEW)[0]?.body).toEqual({
-      sourceIdentifier: "s-badplatser",
-      geoJson: GEOJSON,
-      mapping: BATHING_MAPPING,
-      links: [],
-      kept: [],
-    });
-    expect(screen.getByText("Asklanda badplats")).toBeInTheDocument();
-    expect(screen.queryByText("Dalsjön badplats")).not.toBeInTheDocument();
-    expect(screen.getByText("replaces your edit")).toBeInTheDocument();
-    expect(screen.getByLabelText("Import as")).toHaveValue("mock-almenas");
-  });
-
-  it("offers to link only facilities of the row's type", async () => {
-    await previewBoras();
-
-    expect(screen.getByRole("option", { name: /Link to Almenäs/ })).toBeInTheDocument();
-    expect(screen.queryByRole("option", { name: /Almenäsgrillen/ })).not.toBeInTheDocument();
-  });
-
-  it("guesses a new data source's fields and maps each type value", async () => {
-    renderWithProviders(<FacilityImportPanel />);
-    await addSource("Grillplatser");
+    expect(screen.getByText("Choose a file to continue.")).toBeInTheDocument();
+    expect(continueButton()).toBeDisabled();
     await chooseFile(OUTDOOR);
 
-    await screen.findByText(/3 points in the file/);
-    expect(screen.getByLabelText("Name")).toHaveValue("namn");
-    expect(screen.getByLabelText("Id")).toHaveValue("");
-    expect(screen.getByLabelText("Facility type from")).toHaveValue("typ");
+    expect(await screen.findByText("3 points read.")).toBeInTheDocument();
+    expect(continueButton()).toBeEnabled();
+  });
+
+  it("says why a file cannot be read", async () => {
+    renderPanel();
+    await chooseBadplatser();
+
+    await chooseFile("not json");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("The file is not valid GeoJSON.");
+    expect(continueButton()).toBeDisabled();
+  });
+
+  it("keeps the newest file when an earlier one finishes reading last", async () => {
+    renderPanel();
+    await chooseBadplatser();
+    let finishFirst: (text: string) => void = () => {};
+    const slow = new File(["ignored"], "slow.geojson", { type: "application/geo+json" });
+    Object.defineProperty(slow, "text", {
+      value: () =>
+        new Promise<string>((resolve) => {
+          finishFirst = resolve;
+        }),
+    });
+
+    await userEvent.upload(screen.getByLabelText("File"), slow);
+    await chooseFile();
+    await waitFor(() => expect(continueButton()).toBeEnabled());
+    await act(async () => {
+      finishFirst("not json");
+      await Promise.resolve();
+    });
+
+    expect(continueButton()).toBeEnabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+});
+
+describe("FacilityImportPanel, fields", () => {
+  it("shows the first places as they will be imported", async () => {
+    renderPanel();
+    await chooseBadplatser();
+    await continueToFields();
+
+    const table = within(screen.getByRole("table", { name: "How the first places will look" }));
+    expect(table.getByText("Almenäs badplats")).toBeInTheDocument();
+    expect(table.getByText("Swimming area")).toBeInTheDocument();
+    expect(table.getByText("1490-6472")).toBeInTheDocument();
+  });
+
+  it("guesses a new data source's columns and maps each kind", async () => {
+    renderPanel();
+    await addSource("Grillplatser");
+    await continueToFields(OUTDOOR);
+
+    expect(screen.getByLabelText("Which column is the name?")).toHaveValue("namn");
+    expect(screen.getByLabelText("Which column is the place's own id?")).toHaveValue("");
+    expect(screen.getByRole("button", { name: /The kind is in a column/ })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByLabelText("Column with the kind")).toHaveValue("typ");
     expect(screen.getByLabelText("Grillplats")).toHaveValue("1");
     expect(screen.getByLabelText("Vindskydd")).toHaveValue("2");
     expect(screen.getByLabelText("Toalett")).toHaveValue("0");
+    expect(within(screen.getByRole("table")).getByText("Left out")).toBeInTheDocument();
 
-    await userEvent.click(previewButton());
+    await userEvent.click(compareButton());
 
     await waitFor(() => expect(calls(PREVIEW)).toHaveLength(1));
     expect(calls(PREVIEW)[0]?.body).toMatchObject({
@@ -335,35 +407,26 @@ describe("FacilityImportPanel", () => {
     });
   });
 
-  it("lists what the server adjusted to store the file", async () => {
-    notes = ['The link of Almenäs badplats is left out: "www.boras.se" is not a full web address.'];
+  it("asks for one type when every place is the same kind", async () => {
+    renderPanel();
+    await addSource("Bad");
+    await continueToFields();
 
-    await previewBoras();
+    expect(screen.getByText("Choose a facility type for the file.")).toBeInTheDocument();
+    expect(compareButton()).toBeDisabled();
 
-    expect(screen.getByText("Adjusted to fit")).toBeInTheDocument();
-    expect(screen.getByText(notes[0] ?? "")).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText("Every place in the file becomes"), "Swimming area");
+
+    expect(compareButton()).toBeEnabled();
   });
 
-  it("keeps a data source's id field and says when the file lacks it", async () => {
-    renderWithProviders(<FacilityImportPanel />);
-    await chooseBadplatser();
-
-    await chooseFile(fileOf(feature({ id: "1", name: "Almenäs badplats" })));
-
-    expect(await screen.findByText(/The file has no place_id/)).toBeInTheDocument();
-    expect(screen.getByLabelText("Id")).toHaveValue("place_id");
-    expect(screen.getByLabelText("Id")).toBeDisabled();
-    expect(previewButton()).toBeDisabled();
-  });
-
-  it("lets points without a type value be given a type or left out", async () => {
-    renderWithProviders(<FacilityImportPanel />);
+  it("lets points without a kind be given a type or left out", async () => {
+    renderPanel();
     await addSource("Grillplatser");
+    await continueToFields(fileOf(feature({ namn: "Grillen", typ: "Grillplats" }), feature({ namn: "Okänd" })));
 
-    await chooseFile(fileOf(feature({ namn: "Grillen", typ: "Grillplats" }), feature({ namn: "Okänd" })));
-
-    expect(await screen.findByLabelText("(no value)")).toHaveValue("0");
-    await userEvent.click(previewButton());
+    expect(screen.getByLabelText("(no value)")).toHaveValue("0");
+    await userEvent.click(compareButton());
     await waitFor(() => expect(calls(PREVIEW)).toHaveLength(1));
     expect(calls(PREVIEW)[0]?.body).toMatchObject({
       mapping: {
@@ -375,67 +438,80 @@ describe("FacilityImportPanel", () => {
     });
   });
 
-  it("keeps the newest file when an earlier one finishes reading last", async () => {
-    renderWithProviders(<FacilityImportPanel />);
-    await chooseBadplatser();
-    let finishFirst: (text: string) => void = () => {};
-    const slow = new File(["ignored"], "slow.geojson", { type: "application/geo+json" });
-    Object.defineProperty(slow, "text", {
-      value: () =>
-        new Promise<string>((resolve) => {
-          finishFirst = resolve;
-        }),
-    });
-
-    await userEvent.upload(screen.getByLabelText("File"), slow);
-    await chooseFile();
-    await waitFor(() => expect(previewButton()).toBeEnabled());
-    await act(async () => {
-      finishFirst("not json");
-      await Promise.resolve();
-    });
-
-    expect(previewButton()).toBeEnabled();
-    expect(screen.queryByText("Reading the file…")).not.toBeInTheDocument();
-  });
-
-  it("asks for a facility type when the file has no type field", async () => {
-    renderWithProviders(<FacilityImportPanel />);
-    await addSource("Bad");
-    await chooseFile();
-
-    expect(await screen.findByText("Choose a facility type for the file.")).toBeInTheDocument();
-    expect(previewButton()).toBeDisabled();
-
-    await userEvent.selectOptions(screen.getByLabelText("Facility type"), "Swimming area");
-
-    expect(previewButton()).toBeEnabled();
-  });
-
-  it("says why a file cannot be read", async () => {
-    renderWithProviders(<FacilityImportPanel />);
+  it("keeps a data source's id column and says when the file lacks it", async () => {
+    renderPanel();
     await chooseBadplatser();
 
-    await chooseFile("not json");
+    await continueToFields(fileOf(feature({ id: "1", name: "Almenäs badplats" })));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("The file is not valid GeoJSON.");
-    expect(previewButton()).toBeDisabled();
+    expect(screen.getByText(/The file has no place_id/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Which column is the place's own id?")).toHaveValue("place_id");
+    expect(screen.getByLabelText("Which column is the place's own id?")).toBeDisabled();
+    expect(compareButton()).toBeDisabled();
   });
 
-  it("counts and marks a row joining an existing facility as linked, not new", async () => {
+  it("shows the server's reason once when the preview is refused, and stays on the fields", async () => {
+    const reason = "The file uses the coordinate system EPSG:3006. Export it as WGS84 (EPSG:4326).";
+    api.mock.on("POST", PREVIEW, () => {
+      throw new ApiError(reason, 400);
+    });
+    renderPanel();
+    await chooseBadplatser();
+    await continueToFields();
+
+    await userEvent.click(compareButton());
+
+    await waitFor(() => expect(toasts.error).toHaveBeenCalledExactlyOnceWith(reason));
+    expect(compareButton()).toBeEnabled();
+  });
+});
+
+describe("FacilityImportPanel, review", () => {
+  it("compares with the data source's saved columns and leads with the places that might exist", async () => {
     await previewBoras();
 
+    expect(calls(PREVIEW)[0]?.body).toEqual({
+      sourceIdentifier: "s-badplatser",
+      geoJson: GEOJSON,
+      mapping: BATHING_MAPPING,
+      links: [],
+      kept: [],
+    });
+    expect(within(group("Might already exist: decide for each")).getByText("Almenäs badplats")).toBeInTheDocument();
+    expect(linkButton()).toHaveAttribute("aria-pressed", "true");
+    expect(within(group("Changed since the last import")).getByText("Asklanda badplats")).toBeInTheDocument();
+    expect(screen.queryByText("Dalsjön badplats")).not.toBeInTheDocument();
+    expect(screen.getByText("replaces our text")).toBeInTheDocument();
+  });
+
+  it("sums up the earlier steps, each with a way back", async () => {
+    await previewBoras();
+
+    expect(screen.getByText("Borås · Badplatser")).toBeInTheDocument();
+    expect(screen.getByText("anlaggningar.geojson · 1 point")).toBeInTheDocument();
+    expect(screen.getByText("Name from name · id from place_id · all Swimming area")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Change fields" }));
+    await userEvent.selectOptions(screen.getByLabelText("Description (optional)"), "None");
+    await userEvent.click(compareButton());
+
+    await waitFor(() => expect(calls(PREVIEW)).toHaveLength(2));
+    expect(calls(PREVIEW)[1]?.body).toMatchObject({ mapping: { descriptionField: null } });
+  });
+
+  it("counts a place that joins one of ours as linked, not new", async () => {
+    await previewBoras();
+
+    expect(screen.getByText("might already exist").previousElementSibling).toHaveTextContent("1");
     expect(screen.getByText("linked").previousElementSibling).toHaveTextContent("1");
     expect(screen.getByText("new").previousElementSibling).toHaveTextContent("0");
-    const almenas = within(rowOf("Almenäs badplats"));
-    expect(almenas.getByText("Link")).toBeInTheDocument();
-    expect(almenas.queryByText("New")).not.toBeInTheDocument();
+    expect(within(rowOf("Almenäs badplats")).getByText("Link")).toBeInTheDocument();
   });
 
-  it("previews again with the new choice so the changes shown are the ones applied", async () => {
+  it("previews again when a twin is created new, so the changes shown are the ones saved", async () => {
     await previewBoras();
 
-    await userEvent.selectOptions(screen.getByLabelText("Import as"), "A new facility");
+    await userEvent.click(createButton());
 
     await waitFor(() => expect(calls(PREVIEW)).toHaveLength(2));
     expect(calls(PREVIEW)[1]?.body).toEqual({
@@ -445,49 +521,65 @@ describe("FacilityImportPanel", () => {
       links: [{ sourceId: ALMENAS, facilityIdentifier: null }],
       kept: [],
     });
-    await waitFor(() => expect(screen.getByLabelText("Import as")).toHaveValue(""));
+    await waitFor(() => expect(createButton()).toHaveAttribute("aria-pressed", "true"));
+    expect(screen.getByText("new").previousElementSibling).toHaveTextContent("1");
   });
 
-  it("applies the suggestions shown without restating them, then previews again", async () => {
+  it("lets a new place be linked by hand, offering only facilities of its type", async () => {
+    suggest = false;
     await previewBoras();
 
-    await userEvent.click(applyButton());
-    const asked = await answerConfirm("yes");
-
-    expect(asked).toContain("0 created, 1 linked");
-    await waitFor(() => expect(calls(APPLY)).toHaveLength(1));
-    expect(calls(APPLY)[0]?.body).toEqual({
-      sourceIdentifier: "s-badplatser",
-      geoJson: GEOJSON,
-      mapping: BATHING_MAPPING,
-      links: [],
-      kept: [],
-    });
-    await waitFor(() => expect(calls(PREVIEW)).toHaveLength(2));
+    const row = within(group("New places"));
+    expect(row.getByRole("option", { name: "Link to Almenäs" })).toBeInTheDocument();
+    expect(row.queryByRole("option", { name: /Almenäsgrillen/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Link to ours" })).not.toBeInTheDocument();
   });
 
-  it("keeps our text when asked to, and applies with it kept", async () => {
+  it("does not link a twin to a facility another place has taken", async () => {
+    extraRows = [
+      {
+        sourceId: "boras-badplatser:1490-6475",
+        name: "Almenäs norra",
+        kind: "New",
+        facilityType: SWIMMING,
+        facilityIdentifier: null,
+        facilityName: null,
+        suggestedFacilityIdentifier: null,
+        suggestedFacilityName: null,
+        changes: [],
+      },
+    ];
     await previewBoras();
 
-    await userEvent.click(screen.getByLabelText("Keep our description"));
+    await userEvent.click(createButton());
+    await waitFor(() => expect(createButton()).toHaveAttribute("aria-pressed", "true"));
+    await userEvent.selectOptions(screen.getByLabelText("Import as"), "Link to Almenäs");
 
-    await waitFor(() => expect(calls(PREVIEW)).toHaveLength(2));
-    expect(calls(PREVIEW)[1]?.body).toMatchObject({
-      kept: [{ sourceId: "boras-badplatser:1490-6473", field: "Description" }],
-    });
-    await waitFor(() => expect(screen.getByLabelText("Keep our description")).toBeChecked());
-    expect(screen.getByText("replaces your edit")).toHaveClass("invisible");
-
-    await userEvent.click(applyButton());
-    await answerConfirm("yes");
-
-    await waitFor(() => expect(calls(APPLY)).toHaveLength(1));
-    expect(calls(APPLY)[0]?.body).toMatchObject({
-      kept: [{ sourceId: "boras-badplatser:1490-6473", field: "Description" }],
-    });
+    await waitFor(() => expect(screen.getByLabelText("Import as")).toHaveValue("mock-almenas"));
+    expect(linkButton()).toBeDisabled();
   });
 
-  it("shows a keep at once and leaves the page usable while the server re-plans", async () => {
+  it("lists what the server adjusted to store the file", async () => {
+    notes = ['The link of Almenäs badplats is left out: "www.boras.se" is not a full web address.'];
+
+    await previewBoras();
+
+    expect(screen.getByText("Adjusted to fit")).toBeInTheDocument();
+    expect(screen.getByText(notes[0] ?? "")).toBeInTheDocument();
+  });
+
+  it("offers to keep only a value we hold, and nothing on a place that becomes new", async () => {
+    await previewBoras();
+
+    expect(screen.getByLabelText("Keep our name")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Keep our position")).not.toBeInTheDocument();
+
+    await userEvent.click(createButton());
+
+    await waitFor(() => expect(screen.queryByLabelText("Keep our name")).not.toBeInTheDocument());
+  });
+
+  it("shows a keep at once and holds back saving while the server re-plans", async () => {
     await previewBoras();
     let answer: () => void = () => {};
     api.mock.on(
@@ -503,100 +595,100 @@ describe("FacilityImportPanel", () => {
 
     expect(screen.getByLabelText("Keep our description")).toBeChecked();
     expect(screen.getByLabelText("Keep our name")).toBeEnabled();
-    expect(screen.getByLabelText("Import as")).toBeEnabled();
-    expect(previewButton()).toBeEnabled();
-    expect(applyButton()).toBeDisabled();
+    expect(createButton()).toBeEnabled();
+    expect(saveButton()).toBeDisabled();
 
     answer();
 
-    await waitFor(() => expect(applyButton()).toBeEnabled());
+    await waitFor(() => expect(saveButton()).toBeEnabled());
     expect(screen.getByLabelText("Keep our description")).toBeChecked();
   });
+});
 
-  it("offers to keep only a value we hold, and nothing on a row that creates a facility", async () => {
+describe("FacilityImportPanel, saving", () => {
+  it("says what saving does, sends the suggestions without restating them and ends on a summary", async () => {
     await previewBoras();
 
-    expect(screen.getByLabelText("Keep our name")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Keep our position")).not.toBeInTheDocument();
+    const asked = await save();
 
-    await userEvent.selectOptions(screen.getByLabelText("Import as"), "A new facility");
+    expect(asked).toContain("0 new facilities are created");
+    expect(asked).toContain("1 is linked to facilities we already have");
+    expect(asked).toContain("Nothing is deleted.");
+    await screen.findByRole("heading", { name: "Imported" });
+    expect(calls(APPLY)[0]?.body).toEqual({
+      sourceIdentifier: "s-badplatser",
+      geoJson: GEOJSON,
+      mapping: BATHING_MAPPING,
+      links: [],
+      kept: [],
+    });
+    expect(
+      screen.getByText(/0 new, 1 linked to facilities we had and 1 updated, from Badplatser in Borås/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open them in Facilities" })).toHaveAttribute(
+      "href",
+      "/facilities?source=boras-badplatser",
+    );
+  });
 
-    await waitFor(() => expect(screen.getByLabelText("Import as")).toHaveValue(""));
-    expect(screen.queryByLabelText("Keep our name")).not.toBeInTheDocument();
+  it("saves with our text kept when asked to", async () => {
+    await previewBoras();
+
+    await userEvent.click(screen.getByLabelText("Keep our description"));
+    await waitFor(() => expect(calls(PREVIEW)).toHaveLength(2));
+    expect(calls(PREVIEW)[1]?.body).toMatchObject({
+      kept: [{ sourceId: "boras-badplatser:1490-6473", field: "Description" }],
+    });
+    await waitFor(() => expect(saveButton()).toBeEnabled());
+    expect(screen.getByText("replaces your edit")).toHaveClass("invisible");
+
+    await save();
+
+    await waitFor(() => expect(calls(APPLY)).toHaveLength(1));
+    expect(calls(APPLY)[0]?.body).toMatchObject({
+      kept: [{ sourceId: "boras-badplatser:1490-6473", field: "Description" }],
+    });
   });
 
   it("sends nothing when the confirmation is cancelled", async () => {
     await previewBoras();
 
-    await userEvent.click(applyButton());
+    await userEvent.click(saveButton());
     await answerConfirm("no");
 
     expect(calls(APPLY)).toHaveLength(0);
+    expect(saveButton()).toBeInTheDocument();
   });
 
-  it("offers nothing to apply when the server has no work", async () => {
+  it("offers nothing to save when the server has no work", async () => {
     hasWork = false;
 
     await previewBoras();
 
     expect(screen.getByText("Everything is up to date.")).toBeInTheDocument();
-    expect(applyButton()).toBeDisabled();
+    expect(screen.getByRole("status")).toHaveTextContent("Already imported");
+    expect(saveButton()).toBeDisabled();
   });
 
-  it("drops the review when another file is chosen", async () => {
-    await previewBoras();
-
-    await chooseFile(OUTDOOR);
-
-    expect(screen.queryByText("Almenäs badplats")).not.toBeInTheDocument();
-  });
-
-  it("drops the review when a field is changed", async () => {
-    await previewBoras();
-
-    await userEvent.selectOptions(screen.getByLabelText("Description"), "None");
-
-    expect(screen.queryByText("Almenäs badplats")).not.toBeInTheDocument();
-  });
-
-  it("shows the server's reason once when the preview is refused", async () => {
-    const reason = "The file uses the coordinate system EPSG:3006. Export it as WGS84 (EPSG:4326).";
-    api.mock.on("POST", PREVIEW, () => {
-      throw new ApiError(reason, 400);
-    });
-    renderWithProviders(<FacilityImportPanel />);
-    await chooseBadplatser();
-    await chooseFile();
-
-    await waitFor(() => expect(previewButton()).toBeEnabled());
-    await userEvent.click(previewButton());
-
-    await waitFor(() => expect(toasts.error).toHaveBeenCalledExactlyOnceWith(reason));
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-  });
-
-  it("has no municipality chosen while a new one is being added", async () => {
-    renderWithProviders(<FacilityImportPanel />);
-    await chooseBadplatser();
-    await chooseFile();
-
-    await choose("Municipality", "Add a municipality…");
-
-    expect(previewButton()).toBeDisabled();
-  });
-
-  it("says what applying does when only the baseline is refreshed", async () => {
+  it("says what saving does when only the baseline is refreshed", async () => {
     allUnchanged = true;
-    renderWithProviders(<FacilityImportPanel />);
-    await chooseBadplatser();
-    await chooseFile();
-    await waitFor(() => expect(previewButton()).toBeEnabled());
-    await userEvent.click(previewButton());
-    await screen.findByRole("button", { name: "Show 3 unchanged" });
+    await previewBoras();
+    expect(screen.getByRole("button", { name: "Show 3 unchanged" })).toBeInTheDocument();
 
-    await userEvent.click(applyButton());
+    await userEvent.click(saveButton());
     const asked = await answerConfirm("no");
 
     expect(asked).toContain("saved as the baseline");
+  });
+
+  it("starts another file from the same data source", async () => {
+    await previewBoras();
+    await save();
+    await screen.findByRole("heading", { name: "Imported" });
+
+    await userEvent.click(screen.getByRole("button", { name: "Import another file" }));
+
+    expect(screen.getByText("Choose a file to continue.")).toBeInTheDocument();
+    expect(screen.getByText("Borås · Badplatser")).toBeInTheDocument();
   });
 });

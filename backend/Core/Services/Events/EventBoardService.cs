@@ -4,6 +4,7 @@
 using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services.Push;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WebDataContracts.RequestModels.Event;
 using WebDataContracts.ResponseModels.Event;
@@ -16,17 +17,20 @@ public class EventBoardService : IEventBoardService
     private readonly IEventPostRepository _postRepository;
     private readonly IPushQueue _pushQueue;
     private readonly EventLimits _limits;
+    private readonly ILogger<EventBoardService> _logger;
 
     public EventBoardService(
         EventLoader loader,
         IEventPostRepository postRepository,
         IPushQueue pushQueue,
-        IOptions<EventLimits> limits)
+        IOptions<EventLimits> limits,
+        ILogger<EventBoardService> logger)
     {
         _loader = loader;
         _postRepository = postRepository;
         _pushQueue = pushQueue;
         _limits = limits.Value;
+        _logger = logger;
     }
 
     public async Task<Result<EventBoardResponse>> GetBoardAsync(string userIdentifier, string identifier, EventBoardQuery query, CancellationToken ctoken)
@@ -93,8 +97,14 @@ public class EventBoardService : IEventBoardService
 
         var post = created.Value.Post;
 
-        if (created.Value.NotifyUserIds.Count > 0 && post.NickName is not null)
+        var notified = post.NickName is null ? 0 : created.Value.NotifyUserIds.Count;
+
+        if (notified > 0 && post.NickName is not null)
             _pushQueue.Enqueue(EventPushes.Post(e.Identifier, e.Title, post.NickName, post.Body, created.Value.NotifyUserIds, loaded.Value.ViewerId));
+
+        _logger.LogInformation(
+            "EventBoardService: CreatePostAsync -> User {UserId} posted on event {EventIdentifier}, {Notified} notified.",
+            loaded.Value.ViewerId, identifier, notified);
 
         return Result.Ok(EventResponseFactory.CreatePost(post, loaded.Value.ViewerId, loaded.Value.Membership));
     }

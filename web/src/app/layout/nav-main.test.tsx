@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { paths } from "@/config/paths";
+import type { Attention } from "@/api/attention";
 import NavMain from "./nav-main";
 
 beforeEach(() => {
@@ -25,8 +26,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function renderAt(path: string, { collapsed = false } = {}) {
-  const router = createMemoryRouter([{ path: "*", element: <NavMain /> }], { initialEntries: [path] });
+const ATTENTION: Attention = { pendingHikeSubmissions: 2, pendingReports: 3, failedMails: 0, importsAwaitingReview: 0 };
+
+function renderAt(path: string, { collapsed = false, attention }: { collapsed?: boolean; attention?: Attention } = {}) {
+  const router = createMemoryRouter([{ path: "*", element: <NavMain attention={attention} /> }], {
+    initialEntries: [path],
+  });
   render(
     <SidebarProvider defaultOpen={!collapsed}>
       <RouterProvider router={router} />
@@ -79,6 +84,43 @@ describe("NavMain", () => {
 
     expect(screen.getByRole("button", { name: "Import" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Import" })).not.toBeInTheDocument();
+  });
+
+  it("shows a folded group with the work waiting on all its pages", () => {
+    renderAt(paths.dashboard, { attention: { ...ATTENTION, importsAwaitingReview: 1, failedMails: 4 } });
+
+    expect(screen.getByRole("button", { name: "Contributions" }).closest("li")).toHaveTextContent("2 waiting");
+    expect(screen.getByRole("button", { name: "Community" }).closest("li")).toHaveTextContent("3 waiting");
+    expect(screen.getByRole("button", { name: "Import" }).closest("li")).toHaveTextContent("1 waiting");
+    expect(screen.getByRole("button", { name: "Mail" }).closest("li")).toHaveTextContent("4 waiting");
+  });
+
+  it("shows each page's count once its group is open, not the group's sum as well", () => {
+    renderAt(paths.hikeSubmissions, { attention: ATTENTION });
+
+    expect(screen.getByRole("link", { name: /^Hike Submissions,\s*2\s*waiting$/ })).toBeVisible();
+    expect(screen.getByRole("link", { name: "User Walks" })).toBeVisible();
+    expect(screen.getAllByText(/waiting/)).toHaveLength(2);
+  });
+
+  it("shows no badge where nothing waits", () => {
+    renderAt(paths.dashboard, { attention: { ...ATTENTION, pendingHikeSubmissions: 0, pendingReports: 0 } });
+
+    expect(screen.queryByText(/waiting/)).not.toBeInTheDocument();
+  });
+
+  it("shows no badge while the counts are unknown", () => {
+    renderAt(paths.dashboard);
+
+    expect(screen.queryByText(/waiting/)).not.toBeInTheDocument();
+  });
+
+  it("keeps a collapsed group's count on its entry on the desktop", () => {
+    vi.stubGlobal("innerWidth", 1280);
+
+    renderAt(paths.dashboard, { collapsed: true, attention: ATTENTION });
+
+    expect(screen.getByRole("link", { name: "Community" }).closest("li")).toHaveTextContent("3 waiting");
   });
 
   it("shows a collapsed group as a link to its first page on the desktop", () => {

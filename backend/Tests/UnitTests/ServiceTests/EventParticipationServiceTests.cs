@@ -40,7 +40,8 @@ public class EventParticipationServiceTests : TestBase
             new EventParticipantRepository(factory, NullLogger<EventParticipantRepository>.Instance),
             new EventInvitationRepository(factory, NullLogger<EventInvitationRepository>.Instance),
             blocks,
-            _pushQueue.Object);
+            _pushQueue.Object,
+            NullLogger<EventParticipationService>.Instance);
     }
 
     private EventParticipationService ServiceWith(IDbContextFactory<StigViddDbContext> factory, IEventParticipantRepository participants)
@@ -55,7 +56,8 @@ public class EventParticipationServiceTests : TestBase
             participants,
             new EventInvitationRepository(factory, NullLogger<EventInvitationRepository>.Instance),
             blocks,
-            _pushQueue.Object);
+            _pushQueue.Object,
+            NullLogger<EventParticipationService>.Instance);
     }
 
     private static Event With(Event e, int userId, EventParticipantRole role = EventParticipantRole.Participant, EventParticipantStatus status = EventParticipantStatus.Joined)

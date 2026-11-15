@@ -26,9 +26,18 @@ public class FacilityServiceTests
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+        var repository = repo ?? new Mock<IFacilityRepository>();
+        repository
+            .Setup(r => r.GetAreaNamesAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>.Success(
+                new Dictionary<int, IReadOnlyCollection<string>>()));
+        repository
+            .Setup(r => r.GetAllAreaNamesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>.Success(
+                new Dictionary<int, IReadOnlyCollection<string>>()));
 
         return new FacilityService(
-            (repo ?? new Mock<IFacilityRepository>()).Object,
+            repository.Object,
             new FacilityResponseFactory(),
             (mediaUpload ?? Utilities.MockFactory.MediaUploadService()).Object,
             (webDav ?? Utilities.MockFactory.WebDavService()).Object,
@@ -80,6 +89,53 @@ public class FacilityServiceTests
         result.Success.Should().BeTrue();
         result.Value.Should().NotBeNull();
         result.Value.Name.Should().Be("Grillplats Tiveden");
+    }
+
+    [Fact]
+    public async Task GetAllIncludingUnmappedAsync_ReturnsEachFacilitysAreasAndKeys()
+    {
+        // Arrange
+        var facility = MakeFacility();
+        facility.Id = 7;
+        facility.SourceId = "boras:grillplatser:12:a";
+        var repo = new Mock<IFacilityRepository>();
+        repo.Setup(r => r.GetAllIncludingUnmappedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<Facility>>.Success([facility]));
+        var service = Build(repo);
+        repo.Setup(r => r.GetAllAreaNamesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>.Success(
+                new Dictionary<int, IReadOnlyCollection<string>> { [7] = ["Kypegården"] }));
+
+        // Act
+        var result = await service.GetAllIncludingUnmappedAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        var only = result.Value.Should().ContainSingle().Subject;
+        only.AreaNames.Should().Equal("Kypegården");
+        only.SourceKey.Should().Be("boras:grillplatser");
+        only.NameKey.Should().Be("tiveden");
+    }
+
+    [Fact]
+    public async Task GetAllIncludingUnmappedAsync_WhenAreaNamesFail_Returns500()
+    {
+        // Arrange
+        var repo = new Mock<IFacilityRepository>();
+        repo.Setup(r => r.GetAllIncludingUnmappedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyCollection<Facility>>.Success([MakeFacility()]));
+        var service = Build(repo);
+        repo.Setup(r => r.GetAllAreaNamesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>.Error());
+
+        // Act
+        var result = await service.GetAllIncludingUnmappedAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().NotBeNull();
+        result.Message.StatusCode.Should().Be(500);
     }
 
     [Fact]
@@ -262,6 +318,33 @@ public class FacilityServiceTests
         // Assert
         cityAreas.Verify(c => c.FacilitiesMovedAsync(
             It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 7 })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateFacilityAsync_ReturnsTheAreasItWasPutIn()
+    {
+        // Arrange
+        var facility = MakeFacility();
+        facility.Id = 7;
+        var repo = new Mock<IFacilityRepository>();
+        repo.Setup(r => r.CreateFacilityAsync(It.IsAny<Facility>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RepositoryResult<Facility>.Success(facility));
+        var moved = false;
+        var cityAreas = new Mock<ICityAreaMembershipService>();
+        cityAreas.Setup(c => c.FacilitiesMovedAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .Callback(() => moved = true);
+        var service = Build(repo, cityAreas: cityAreas);
+        repo.Setup(r => r.GetAreaNamesAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>.Success(
+                new Dictionary<int, IReadOnlyCollection<string>> { [7] = moved ? ["Kypegården"] : [] }));
+
+        // Act
+        var result = await service.CreateFacilityAsync(Request(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.AreaNames.Should().Equal("Kypegården");
     }
 
     [Fact]
@@ -453,7 +536,6 @@ public class FacilityServiceTests
         // Assert
         result.Success.Should().BeTrue();
         result.Value.Should().HaveCount(2);
-        // The response prefixes the stored path with the configured presentable base url.
         result.Value.Should().OnlyContain(i => i.ImageUrl.StartsWith("http://stigvidd.se/testing/"));
     }
 
@@ -578,7 +660,6 @@ public class FacilityServiceTests
         result.Success.Should().BeFalse();
         result.Message.Should().NotBeNull();
         result.Message.StatusCode.Should().Be(500);
-        // Both already-uploaded files must be cleaned up from WebDAV.
         webDav.Verify(w => w.DeleteFileAsync(It.IsAny<string>()), Times.Exactly(2));
     }
 

@@ -4,6 +4,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAdminCityAreasGetAllUrl } from "@/api/generated/admin-city-areas/admin-city-areas";
 import {
+  adminFacilitiesDelete,
   adminFacilitiesUpdate,
   getAdminFacilitiesGetAllQueryKey,
   getAdminFacilitiesGetAllSuspenseQueryOptions,
@@ -26,5 +27,19 @@ export function useSaveFacility(identifier: string) {
         queryClient.invalidateQueries(underUrl(getAdminCityAreasGetAllUrl())),
       ]),
     meta: { successMessage: "Facility saved.", errorMessage: "Could not save the facility." },
+  });
+}
+
+export function useDeleteFacility() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (identifier: string) => adminFacilitiesDelete(identifier),
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: getAdminFacilitiesGetAllQueryKey() }),
+        queryClient.invalidateQueries(underUrl(getAdminCityAreasGetAllUrl())),
+      ]),
+    meta: { successMessage: "Facility deleted.", errorMessage: "Could not delete the facility." },
   });
 }

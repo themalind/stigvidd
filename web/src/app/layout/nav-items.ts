@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type { LucideIcon } from "lucide-react";
+import type { Attention, AttentionKey } from "@/api/attention";
 import type { AppPage, NavGroup } from "../pages";
 
 export interface NavPage {
@@ -9,6 +10,7 @@ export interface NavPage {
   path: string;
   title: string;
   icon: LucideIcon;
+  badge?: AttentionKey;
 }
 
 export interface NavGroupItem {
@@ -24,10 +26,10 @@ export function buildNav(pages: readonly AppPage[]): NavItem[] {
   const items: NavItem[] = [];
   const groups = new Map<NavGroup, NavGroupItem>();
 
-  for (const { path, title, icon, group } of pages) {
+  for (const { path, title, icon, group, badge } of pages) {
     if (!icon) continue;
 
-    const page: NavPage = { kind: "page", path, title, icon };
+    const page: NavPage = { kind: "page", path, title, icon, badge };
 
     if (!group) {
       items.push(page);
@@ -46,6 +48,11 @@ export function buildNav(pages: readonly AppPage[]): NavItem[] {
   }
 
   return items;
+}
+
+// keep-comment: 0 while the counts are loading or failed, so a badge never shows a guess
+export function badgeCount(pages: readonly NavPage[], attention: Attention | undefined): number {
+  return pages.reduce((sum, { badge }) => sum + (badge && attention ? attention[badge] : 0), 0);
 }
 
 export function isUnder(pathname: string, path: string): boolean {

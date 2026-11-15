@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using System.Globalization;
-using System.Text;
 using Infrastructure.Data.Entities;
 using Infrastructure.Enums;
 using WebDataContracts.Enums;
@@ -14,9 +13,6 @@ public static class FacilityImportPlanner
 {
     public const double SuggestionRadiusMetres = 5_000;
 
-    private static readonly string[] NameNoise =
-        ["kommunala", "badplatsen", "badplats", "grillplatsen", "grillplats", "vindskyddet", "vindskydd"];
-
     // keep-comment: matchOnPosition is for files without a stable id; their sites carry position ids until matched
     public static Result<FacilityImportPlan> Plan(
         string sourceName,
@@ -26,7 +22,7 @@ public static class FacilityImportPlanner
         IReadOnlyCollection<FacilityImportKeep> kept,
         bool matchOnPosition)
     {
-        var prefix = sourceName + ":";
+        var prefix = FacilitySourceIds.PrefixOf(sourceName);
         var keep = kept.Select(k => (k.SourceId, k.Field)).ToHashSet();
         var importedTypes = sourceFacilities.Aggregate(FacilityType.None, (types, site) => types | site.Type);
         var bySourceId = new Dictionary<string, Facility>(StringComparer.Ordinal);
@@ -220,11 +216,11 @@ public static class FacilityImportPlanner
             }
         }
 
-        var facilityNames = unlinked.Select(f => (Facility: f, Name: NormalizeName(f.Name))).ToList();
+        var facilityNames = unlinked.Select(f => (Facility: f, Name: FacilityNames.Key(f.Name))).ToList();
 
         foreach (var site in open.Where(s => !suggestions.ContainsKey(s.SourceId)))
         {
-            var name = NormalizeName(site.Name);
+            var name = FacilityNames.Key(site.Name);
 
             if (name.Length == 0)
                 continue;
@@ -377,17 +373,4 @@ public static class FacilityImportPlanner
         return string.IsNullOrEmpty(trimmed) ? null : trimmed.ToLowerInvariant();
     }
 
-    private static string NormalizeName(string name)
-    {
-        var builder = new StringBuilder();
-
-        foreach (var c in name.ToLowerInvariant())
-            builder.Append(char.IsLetterOrDigit(c) ? c : ' ');
-
-        var words = builder.ToString()
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Where(w => !NameNoise.Contains(w));
-
-        return string.Join(' ', words);
-    }
 }

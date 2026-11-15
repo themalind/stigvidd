@@ -29,4 +29,11 @@ After any merge, rebase or cherry-pick that touches `web/src/api/generated`, run
 `cd backend && dotnet build`, then `cd web && npm run generate:api`, and commit whatever
 moves. Fix it the same way. Expect a one-line move in `model/index.ts` (or `index.ts`).
 
+## Removing an endpoint or DTO: orval leaves it behind
+
+Measured 2026-11-15: after deleting a controller and its DTOs, `generate:api` left the old
+`model/<dto>.ts` files and their `export *` lines in `model/index.ts` (and the endpoint's
+folder). `tsc` then fails with TS2307. Delete the stale files **and** `model/index.ts`, then
+run `generate:api` again; orval rebuilds the index from the current spec only.
+
 Related: [[diff-exit-code-pathspec-fails-open]], [[line-endings-and-generated-files]].

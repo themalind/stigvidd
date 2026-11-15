@@ -20,7 +20,7 @@ import type {
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 
-import type { AdminDashboardResponse } from "../model";
+import type { AdminAttentionResponse, AdminDashboardResponse } from "../model";
 
 import { customFetch } from "../../mutator";
 
@@ -216,6 +216,189 @@ export function useAdminDashboardGetDashboardSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getAdminDashboardGetDashboardSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminDashboardGetAttentionUrl = () => {
+  return `/api/v1/admin/dashboard/attention`;
+};
+
+export const adminDashboardGetAttention = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AdminAttentionResponse> => {
+  return customFetch<AdminAttentionResponse>(getAdminDashboardGetAttentionUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminDashboardGetAttentionQueryKey = () => {
+  return [`/api/v1/admin/dashboard/attention`] as const;
+};
+
+export const getAdminDashboardGetAttentionQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminDashboardGetAttentionQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminDashboardGetAttention>>> = ({ signal }) =>
+    adminDashboardGetAttention({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type AdminDashboardGetAttentionQueryResult = NonNullable<Awaited<ReturnType<typeof adminDashboardGetAttention>>>;
+export type AdminDashboardGetAttentionQueryError = unknown;
+
+export function useAdminDashboardGetAttention<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+          TError,
+          Awaited<ReturnType<typeof adminDashboardGetAttention>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetAttention<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+          TError,
+          Awaited<ReturnType<typeof adminDashboardGetAttention>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetAttention<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetAttention<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminDashboardGetAttentionQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getAdminDashboardGetAttentionSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminDashboardGetAttentionQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminDashboardGetAttention>>> = ({ signal }) =>
+    adminDashboardGetAttention({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & { throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never } };
+};
+
+export type AdminDashboardGetAttentionSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminDashboardGetAttention>>
+>;
+export type AdminDashboardGetAttentionSuspenseQueryError = unknown;
+
+export function useAdminDashboardGetAttentionSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetAttentionSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetAttentionSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAdminDashboardGetAttentionSuspense<
+  TData = Awaited<ReturnType<typeof adminDashboardGetAttention>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof adminDashboardGetAttention>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAdminDashboardGetAttentionSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;

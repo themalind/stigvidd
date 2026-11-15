@@ -225,4 +225,22 @@ public class AdminCityAreasControllerIntegrationTests : IClassFixture<StigViddWe
         facilities.Should().NotBeNull();
         facilities.Select(f => f.Identifier).Should().BeEquivalentTo([Firepit, Shelter, FishingArea]);
     }
+
+    [Fact]
+    public async Task AdminFacilities_NamesTheAreasEachFacilityIsLinkedTo()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+        var area = await GetAreaAsync(client, LinkedArea);
+
+        // Act
+        var facilities = await client.GetFromJsonAsync<List<AdminFacilityResponse>>("/api/v1/admin/facilities", TestContext.Current.CancellationToken);
+
+        // Assert
+        facilities.Should().NotBeNull();
+        var linkedIdentifiers = area.Facilities.Select(f => f.Identifier).ToList();
+        linkedIdentifiers.Should().NotBeEmpty();
+        facilities.Where(f => linkedIdentifiers.Contains(f.Identifier)).Should().OnlyContain(f => f.AreaNames.Contains(area.Name));
+        facilities.Where(f => !linkedIdentifiers.Contains(f.Identifier)).Should().OnlyContain(f => !f.AreaNames.Contains(area.Name));
+    }
 }

@@ -243,6 +243,37 @@ public class FacilityImportPlannerTests
     }
 
     [Fact]
+    public void Plan_SuggestsATwinWhoseNameIsInTheGenitive()
+    {
+        // Arrange
+        var handTyped = new Facility { Name = "Dalsjöns badplats", FacilityType = FacilityType.SwimmingArea };
+
+        // Act
+        var plan = Plan([Site(id: "1490-6474", name: "Dalsjön badplats")], [handTyped]);
+
+        // Assert
+        var suggested = plan.Rows.Should().ContainSingle().Which.SuggestedFacility;
+        suggested.Should().NotBeNull();
+        suggested.Identifier.Should().Be(handTyped.Identifier);
+        plan.Creates.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void Plan_SuggestsATwinWhoseNoiseWordIsInTheGenitive()
+    {
+        // Arrange
+        var handTyped = new Facility { Name = "Kype badplatsens", FacilityType = FacilityType.SwimmingArea };
+
+        // Act
+        var plan = Plan([Site(id: "1490-6480", name: "Kype badplats")], [handTyped]);
+
+        // Assert
+        var suggested = plan.Rows.Should().ContainSingle().Which.SuggestedFacility;
+        suggested.Should().NotBeNull();
+        suggested.Identifier.Should().Be(handTyped.Identifier);
+    }
+
+    [Fact]
     public void Plan_CreatesANewFacilityWhenTheChoiceSaysSo()
     {
         // Arrange

@@ -30,4 +30,15 @@ public class AdminDashboardController : StigViddController
 
         return Ok(result.Value);
     }
+
+    [HttpGet("attention")]
+    public async Task<ActionResult<AdminAttentionResponse>> GetAttention(CancellationToken ctoken)
+    {
+        var result = await _dashboardService.GetAttentionAsync(ctoken);
+
+        if (result.IsFailure && result.Message is not null)
+            return ToActionResult(result.Message);
+
+        return Ok(result.Value);
+    }
 }

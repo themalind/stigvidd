@@ -1,13 +1,13 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Dialog } from "radix-ui";
 import { useRef, useState } from "react";
 import { useMutationState, useSuspenseQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Images, X } from "lucide-react";
 import type { AdminTrailListItemResponse, TrailImageResponse } from "@/api/generated/model";
 import { useConfirm } from "@/components/confirm-dialog";
+import { DialogFrame } from "@/components/dialog-frame";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
@@ -25,49 +25,37 @@ export default function TrailImagesDialog({ data, selected, label }: Props) {
 
   return (
     <>
-      <Dialog.Root onOpenChange={(open) => !open && setEnlarged(null)}>
-        <Dialog.Trigger asChild>
-          {selected ? (
+      <DialogFrame
+        title={data.name}
+        description="Manage images for this trail."
+        onOpenChange={(open) => !open && setEnlarged(null)}
+        trigger={
+          selected ? (
             <Button variant={label ? "outline" : "ghost"} size={label ? "default" : "icon"}>
               <Images />
               {label}
             </Button>
-          ) : null}
-        </Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50" />
-          <Dialog.Content className="bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-1/2 left-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-xs border p-6 shadow-lg">
-            <Dialog.Title className="text-foreground mb-1 font-semibold">{data.name}</Dialog.Title>
-            <Dialog.Description className="text-muted-foreground mb-4 text-sm">
-              Manage images for this trail.
-            </Dialog.Description>
-
-            <QueryBoundary
-              fallback={<p className="text-muted-foreground text-sm">Loading...</p>}
-              errorFallback={({ retry }) => (
-                <div className="flex items-center gap-3">
-                  <p className="text-muted-foreground text-sm">Failed to load images.</p>
-                  <Button size="sm" variant="outline" onClick={retry}>
-                    Try again
-                  </Button>
-                </div>
-              )}
-            >
-              <ImageGrid
-                identifier={data.identifier}
-                onEnlarge={setEnlarged}
-                onDeleted={(id) => setEnlarged((current) => (current?.identifier === id ? null : current))}
-              />
-            </QueryBoundary>
-
-            <div className="mt-4 flex justify-end">
-              <Dialog.Close asChild>
-                <Button variant="outline">Close</Button>
-              </Dialog.Close>
+          ) : null
+        }
+      >
+        <QueryBoundary
+          fallback={<p className="text-muted-foreground text-sm">Loading...</p>}
+          errorFallback={({ retry }) => (
+            <div className="flex items-center gap-3">
+              <p className="text-muted-foreground text-sm">Failed to load images.</p>
+              <Button size="sm" variant="outline" onClick={retry}>
+                Try again
+              </Button>
             </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          )}
+        >
+          <ImageGrid
+            identifier={data.identifier}
+            onEnlarge={setEnlarged}
+            onDeleted={(id) => setEnlarged((current) => (current?.identifier === id ? null : current))}
+          />
+        </QueryBoundary>
+      </DialogFrame>
 
       <ImageLightbox image={enlarged} onClose={() => setEnlarged(null)} />
     </>

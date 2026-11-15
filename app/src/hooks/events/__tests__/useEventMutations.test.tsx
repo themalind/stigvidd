@@ -28,6 +28,9 @@ jest.mock("@/api/events", () => ({
   declineEventInvitation: (...args: unknown[]) => mockDecline(...args),
 }));
 
+const mockTrack = jest.fn();
+jest.mock("@/services/analytics", () => ({ track: (...args: unknown[]) => mockTrack(...args) }));
+
 const DETAIL = ["events", "detail", "e1"];
 const INVITATIONS = ["events", "invitations", "u1"];
 
@@ -87,6 +90,26 @@ describe("useEventMutations", () => {
     expect(invalidated(DETAIL)).toBe(true);
     expect(invalidated(INVITATIONS)).toBe(true);
     expect(store.get(snackbarAtom)).toMatchObject({ type: "success", message: "Du är med!" });
+  });
+
+  it.each([
+    ["joinMutation", "join"],
+    ["leaveMutation", "leave"],
+    ["acceptInvitationMutation", "accept"],
+    ["declineInvitationMutation", "decline"],
+  ] as const)("counts a successful %s as %s, without the event", async (name, action) => {
+    const { run } = await render();
+    await run(name, "e1");
+
+    expect(mockTrack).toHaveBeenCalledWith("event.membership_changed", { action });
+  });
+
+  it("counts nothing when the join fails", async () => {
+    mockJoin.mockRejectedValue(coded(409, "event_full"));
+    const { run } = await render();
+    await run("joinMutation", "e1");
+
+    expect(mockTrack).not.toHaveBeenCalled();
   });
 
   it("names a full event as the reason a join failed, and redraws", async () => {

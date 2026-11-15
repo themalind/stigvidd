@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { useAttention } from "@/api/attention";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +20,8 @@ import { NavUser } from "./nav-user";
 import { NavLink } from "react-router";
 
 export function AppSidebar() {
+  const attention = useAttention();
+
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
@@ -36,7 +39,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain />
+        <NavMain attention={attention.data} />
       </SidebarContent>
 
       <SidebarFooter>

@@ -24,6 +24,8 @@ import { Modal, Portal, Text } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import RootLayout from "../_layout";
 
+const mockLogWarn = jest.fn();
+const mockTrack = jest.fn();
 const mockInitAuth = jest.fn();
 const mockRegisterPush = jest.fn();
 const mockLoadUserTheme = jest.fn();
@@ -112,8 +114,15 @@ jest.mock("@/services/telemetry", () => {
 });
 
 jest.mock("@/services/logger", () => ({
-  logger: { error: (...args: unknown[]) => mockLogError(...args), warn: jest.fn(), info: jest.fn(), debug: jest.fn() },
+  logger: {
+    error: (...args: unknown[]) => mockLogError(...args),
+    warn: (...args: unknown[]) => mockLogWarn(...args),
+    info: jest.fn(),
+    debug: jest.fn(),
+  },
 }));
+
+jest.mock("@/services/analytics", () => ({ track: (...args: unknown[]) => mockTrack(...args) }));
 
 // Registers a background task with TaskManager at import; nothing here needs it.
 jest.mock("@/services/location-task", () => ({}));
@@ -467,6 +476,7 @@ it("opens the screen a tapped notification points at, and refreshes it", async (
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(profile-stack)/user/shared-hikes", ANCHORED);
   expect(QueryClient.prototype.invalidateQueries).toHaveBeenCalledWith({ queryKey: ["shared-hikes"] });
   expect(mockClearLastResponse).toHaveBeenCalledTimes(1);
+  expect(mockTrack).toHaveBeenCalledWith("push.opened", { type: "hike_share", routed: true });
 });
 
 function tapBoardPost(identifier: string) {
@@ -695,6 +705,8 @@ it("stays put for a tap that carries no type, and for one it cannot place", asyn
 
   expect(mockNavigate).not.toHaveBeenCalled();
   expect(QueryClient.prototype.invalidateQueries).not.toHaveBeenCalled();
+  expect(mockTrack).toHaveBeenCalledWith("push.opened", { type: "unknown", routed: false });
+  expect(mockLogWarn).toHaveBeenCalledWith("Unknown notification type", { type: "kaffepaus" });
 });
 
 // The tabs carry their own headers, so the stack draws none above them.

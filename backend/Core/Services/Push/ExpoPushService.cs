@@ -40,8 +40,7 @@ public class ExpoPushService : IPushNotificationService
         _configuration = configuration;
         _logger = logger;
 
-        // If an Expo access token is configured, attach it once on the shared client.
-        // Without it requests still work but are rate-limited more aggressively by Expo.
+        // Without an access token requests still work, but Expo rate-limits them harder. keep-comment: why the token is optional
         var accessToken = configuration["ExpoPush:AccessToken"];
         if (accessToken is not null)
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -49,7 +48,6 @@ public class ExpoPushService : IPushNotificationService
 
     public async Task<Result> RegisterTokenAsync(string userIdentifier, string expoToken, string platform, CancellationToken ctoken)
     {
-        // Step 1: Get user ID from identifier
         var userResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
         if (!userResult.IsSuccess)
         {
@@ -60,7 +58,6 @@ public class ExpoPushService : IPushNotificationService
             return Result.Fail(new Message(404, "User not found"));
         }
 
-        // Step 2: Upsert the push token for the user
         var upsertResult = await _userPushTokenRepository.UpsertAsync(userResult.Value, expoToken, platform, ctoken);
         if (!upsertResult.IsSuccess)
         {
@@ -75,7 +72,6 @@ public class ExpoPushService : IPushNotificationService
     {
         try
         {
-            // Step 1: Get user ID from identifier
             var userResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
             if (!userResult.IsSuccess)
             {
@@ -89,7 +85,6 @@ public class ExpoPushService : IPushNotificationService
             if (await RecipientHasBlockedSenderAsync(userResult.Value, fromUserIdentifier, ctoken))
                 return Result.Ok();
 
-            // Step 2: Get Expo push tokens for the user
             var tokensResult = await _userPushTokenRepository.GetTokensForUserAsync(userResult.Value, ctoken);
             if (!tokensResult.IsSuccess)
             {
@@ -134,9 +129,9 @@ public class ExpoPushService : IPushNotificationService
                 return Result.Fail(new Message(500, "Failed to get push tokens"));
             }
 
-            _logger.LogDebug(
-                "ExpoPushService: SendToUsersAsync -> {Recipients} recipients, {SkippedBlocked} skipped as blockers, {Tokens} devices",
-                recipients.Count, requested - recipients.Count, tokensResult.Value.Count);
+            _logger.LogInformation(
+                "ExpoPushService: SendToUsersAsync -> {PushType} to {Recipients} recipients, {SkippedBlocked} skipped as blockers, {Tokens} devices",
+                data.GetValueOrDefault("type"), recipients.Count, requested - recipients.Count, tokensResult.Value.Count);
 
             await SendToTokensAsync(tokensResult.Value, title, body, data, ctoken);
 
@@ -159,7 +154,7 @@ public class ExpoPushService : IPushNotificationService
             Data: data
         ))
         .ToList()
-        .Chunk(100); // Expo recommends batching messages in chunks of 100
+        .Chunk(100); // keep-comment: Expo's recommended batch size
 
         foreach (var batch in expoPushMsg)
         {
@@ -178,9 +173,7 @@ public class ExpoPushService : IPushNotificationService
             }
 
             // Correlate each ticket back to its message by index (Expo preserves order). keep-comment: ticket order is Expo's contract
-            // This lets us know which token caused a failure so we can act on it.
-            // batch.Zip pairs each sent message with its ticket by position — ticket.Id is Expo's
-            // receipt ID, not the token, so the zip is the only way to know which token failed.
+            // Tickets match messages by position; ticket.Id is a receipt id, not the token. keep-comment: why the zip names the failing token
             foreach (var (message, ticket) in batch.Zip(ticketsResponse.Data))
             {
                 if (ticket.Status == "ok") continue;
@@ -188,14 +181,13 @@ public class ExpoPushService : IPushNotificationService
                 var userId = userIdByToken[message.To];
                 if (ticket.Details?.Error == "DeviceNotRegistered")
                 {
-                    // App was uninstalled or the token was revoked — remove it so future sends skip it.
+                    // The app was uninstalled or the token revoked. keep-comment: what DeviceNotRegistered means
                     await _userPushTokenRepository.DeleteByTokenAsync(message.To, ctoken);
                     _logger.LogInformation("ExpoPushService: Removed a stale push token for user {UserId}", userId);
                 }
                 else
                 {
-                    // Other errors (InvalidCredentials, MessageTooBig, etc.) don't need token cleanup,
-                    // but do need attention — log at warning so they surface without failing the caller.
+                    // Other errors keep the token but need attention, so they warn without failing the caller. keep-comment: why only DeviceNotRegistered deletes
                     _logger.LogWarning("ExpoPushService: Push notification failed for a device of user {UserId}. Error: {Error} — {Message}",
                         userId, ticket.Details?.Error, ticket.Message);
                 }
@@ -203,7 +195,7 @@ public class ExpoPushService : IPushNotificationService
         }
     }
 
-    // Fails open: a failed lookup still sends.
+    // Fails open: a failed lookup still sends. keep-comment: deliberate
     private async Task<bool> RecipientHasBlockedSenderAsync(int recipientUserId, string? fromUserIdentifier, CancellationToken ctoken)
     {
         if (string.IsNullOrWhiteSpace(fromUserIdentifier))
@@ -221,7 +213,6 @@ public class ExpoPushService : IPushNotificationService
 
     public async Task<Result> UnregisterTokenAsync(string userIdentifier, string expoToken, CancellationToken ctoken)
     {
-        // Step 1: Get user ID from identifier
         var userIdResult = await _userRepository.GetUserIdByIdentifierAsync(userIdentifier, ctoken);
         if (!userIdResult.IsSuccess)
         {
@@ -232,7 +223,6 @@ public class ExpoPushService : IPushNotificationService
             return Result.Fail(new Message(404, "User not found"));
         }
 
-        // Verify that the token exists for the user before attempting deletion, to provide accurate feedback.
         var tokensResult = await _userPushTokenRepository.GetByTokenAndUserAsync(expoToken, userIdResult.Value, ctoken);
         if (!tokensResult.IsSuccess)
         {
@@ -247,7 +237,6 @@ public class ExpoPushService : IPushNotificationService
             return Result.Fail(new Message(404, "Push token not found for user."));
         };
 
-        // Step 2: Delete the push token for the user
         var deleteResult = await _userPushTokenRepository.DeleteByTokenAsync(expoToken, ctoken);
         if (!deleteResult.IsSuccess)
         {
@@ -262,7 +251,7 @@ public class ExpoPushService : IPushNotificationService
     string To, string Title, string Body,
     IReadOnlyDictionary<string, object> Data,
     string Sound = "default",
-    string ChannelId = "default");   // ignored on iOS, routes Android to the named channel
+    string ChannelId = "default");   // keep-comment: ignored on iOS, routes Android to the named channel
 
     private record ExpoTicket(string Status, string? Id, string? Message,
         ExpoTicketDetails? Details);
@@ -270,4 +259,4 @@ public class ExpoPushService : IPushNotificationService
     private record ExpoTicketsResponse(IReadOnlyList<ExpoTicket> Data);
 }
 
-// https://docs.expo.dev/push-notifications/sending-notifications/
+// https://docs.expo.dev/push-notifications/sending-notifications/ keep-comment: the API reference

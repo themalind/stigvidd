@@ -85,6 +85,12 @@ public class ImageProcessingService : IImageProcessingService
         };
     }
 
+    public ImageDimensions Measure(Stream input)
+    {
+        var info = new MagickImageInfo(input);
+        return new ImageDimensions((int)info.Width, (int)info.Height);
+    }
+
     private static void CropToAspect(MagickImage image, AspectCrop aspectCrop)
     {
         var width = image.Width;

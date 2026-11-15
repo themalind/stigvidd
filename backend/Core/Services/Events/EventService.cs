@@ -105,6 +105,10 @@ public class EventService : IEventService
         if (!created.IsSuccess)
             return Result.Fail<EventResponse>(new Message(500, "An error occurred while creating the event."));
 
+        _logger.LogInformation(
+            "EventService: CreateAsync -> User {UserId} created {Visibility} event {EventIdentifier} (trail {HasTrail}, own route {HasRoute}, max {MaxParticipants}).",
+            viewer.Value, newEvent.Visibility, created.Value, place.Value.TrailId is not null, place.Value.NewRoute is not null, request.MaxParticipants);
+
         return await GetAsync(userIdentifier, created.Value, ctoken);
     }
 
@@ -285,8 +289,14 @@ public class EventService : IEventService
             Moved(UtcDates.ToUtc(request.EndsAt), current.EndsAt),
             MetresBetween(current.Location, resolved.Location) >= MovedPlaceMetres);
 
-        if (change.Any() && updated.Value.NotifyUserIds.Count > 0)
+        var notified = change.Any() ? updated.Value.NotifyUserIds.Count : 0;
+
+        if (notified > 0)
             _pushQueue.Enqueue(EventPushes.Updated(identifier, request.Title.Trim(), change, updated.Value.NotifyUserIds, loaded.Value.ViewerId));
+
+        _logger.LogInformation(
+            "EventService: UpdateAsync -> User {UserId} updated event {EventIdentifier} (time moved {TimeMoved}, place moved {PlaceMoved}, {Notified} notified).",
+            loaded.Value.ViewerId, identifier, change.StartsAt is not null || change.EndsAt, change.Place, notified);
 
         return await GetAsync(userIdentifier, identifier, ctoken);
     }
@@ -367,6 +377,10 @@ public class EventService : IEventService
         if (cancelled.Value.NotifyUserIds.Count > 0)
             _pushQueue.Enqueue(EventPushes.Cancelled(identifier, cancelled.Value.Title, cancelled.Value.StartsAt, cancelled.Value.NotifyUserIds, loaded.Value.ViewerId));
 
+        _logger.LogInformation(
+            "EventService: CancelAsync -> User {UserId} cancelled event {EventIdentifier} ({Notified} notified).",
+            loaded.Value.ViewerId, identifier, cancelled.Value.NotifyUserIds.Count);
+
         return Result.Ok();
     }
 
@@ -393,6 +407,10 @@ public class EventService : IEventService
 
         if (deleted.Value.ImageUrl is not null)
             await EventImageFiles.DeleteAsync(_webDavService, _logger, deleted.Value.ImageUrl, identifier, "EventService: DeleteAsync");
+
+        _logger.LogInformation(
+            "EventService: DeleteAsync -> User {UserId} deleted event {EventIdentifier} ({Notified} notified).",
+            loaded.Value.ViewerId, identifier, deleted.Value.NotifyUserIds.Count);
 
         return Result.Ok();
     }

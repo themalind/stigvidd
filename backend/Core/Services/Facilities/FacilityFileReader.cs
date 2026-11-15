@@ -100,7 +100,7 @@ public static class FacilityFileReader
                 : null;
             var url = mapping.UrlField is { } urlField ? WebAddress(Value(properties, urlField), name, notes) : null;
 
-            sites.Add(new SourceFacility($"{sourceName}:{id}", name, description, url, longitude, latitude, type));
+            sites.Add(new SourceFacility(FacilitySourceIds.Of(sourceName, id), name, description, url, longitude, latitude, type));
         }
 
         if (sites.Count == 0)

@@ -39,7 +39,8 @@ public class EventBoardServiceTests : TestBase
                 blocks),
             new EventPostRepository(factory, NullLogger<EventPostRepository>.Instance),
             _pushQueue.Object,
-            Options.Create(new EventLimits()));
+            Options.Create(new EventLimits()),
+            NullLogger<EventBoardService>.Instance);
     }
 
     // User 1 organizes event-1; the others join as given. keep-comment: the seed every test starts from

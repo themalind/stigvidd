@@ -9,5 +9,6 @@ namespace Core.Interfaces.Repositories.Reporting;
 public interface IAdminDashboardRepository
 {
     Task<RepositoryResult<AdminDashboardCounts>> GetCountsAsync(DateTime since, CancellationToken ctoken);
+    Task<RepositoryResult<AdminAttentionCounts>> GetAttentionCountsAsync(CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetLatestReviewsAsync<T>(int take, Expression<Func<Review, T>> selector, CancellationToken ctoken);
 }

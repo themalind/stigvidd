@@ -36,6 +36,7 @@ public class TrailImportService : ITrailImportService
     private readonly TrailImportResponseFactory _responseFactory;
     private readonly ILogger<TrailImportService> _logger;
     private readonly ICityAreaMembershipService _cityAreaMembership;
+    private readonly IExampleImageService _exampleImages;
 
     public TrailImportService(
         ITrailImportRepository repository,
@@ -43,10 +44,12 @@ public class TrailImportService : ITrailImportService
         ITrailImportAnalysisQueue queue,
         TrailImportResponseFactory responseFactory,
         ILogger<TrailImportService> logger,
-        ICityAreaMembershipService cityAreaMembership)
+        ICityAreaMembershipService cityAreaMembership,
+        IExampleImageService exampleImages)
     {
         _repository = repository;
         _cityAreaMembership = cityAreaMembership;
+        _exampleImages = exampleImages;
         _fileStore = fileStore;
         _queue = queue;
         _responseFactory = responseFactory;
@@ -587,6 +590,13 @@ public class TrailImportService : ITrailImportService
             .Distinct()
             .ToList();
         await _cityAreaMembership.TrailsMovedAsync(movedTrails, ctoken);
+
+        // keep-comment: after the commit, and a failure only logs - missing example images must not undo a saved import
+        var examples = await _exampleImages.AddToTrailsAsync([.. applied.Value.Values], ctoken);
+        if (examples.IsFailure)
+            _logger.LogWarning(
+                "TrailImportService: Session {sessionId} applied, but its new trails got no example images: {reason}",
+                sessionId, examples.Message?.ResultMessage);
 
         _logger.LogInformation(
             "TrailImportService: Session {sessionId} applied. {created} trail(s) created, {updated} updated, {links} link(s) written, {conflicts} conflict(s).",

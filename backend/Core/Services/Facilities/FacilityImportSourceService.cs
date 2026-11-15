@@ -50,8 +50,7 @@ public class FacilityImportSourceService : IFacilityImportSourceService
             MunicipalityId = found.Id,
             Name = name,
             Slug = slug,
-            // keep-comment: a slug has no colon, so two municipalities' keys can never coincide
-            Key = $"{found.Slug}:{slug}",
+            Key = FacilitySourceIds.KeyFor(found.Slug, slug),
         };
 
         var result = await _sourceRepository.CreateAsync(source, ctoken);

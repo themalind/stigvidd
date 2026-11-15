@@ -60,16 +60,21 @@ public class StigViddControllerLoggingTests
     }
 
     [Fact]
-    public void ToActionResult_ForAClientError_LogsNothing()
+    public void ToActionResult_ForAClientError_LogsTheRefusalBelowError()
     {
         // Arrange
         var (controller, logger) = WithLogger();
 
         // Act
-        controller.Map(new Message(404, "Not found"));
+        controller.Map(new Message(409, "The event is full.", "event_full"));
 
         // Assert
-        logger.Entries.Should().BeEmpty();
+        var entry = logger.Entries.Should().ContainSingle().Subject;
+        entry.Level.Should().Be(LogLevel.Information);
+        entry.Values["StatusCode"].Should().Be(409);
+        entry.Values["Code"].Should().Be("event_full");
+        entry.Values["ResultMessage"].Should().Be("The event is full.");
+        entry.Values["Controller"].Should().Be(nameof(ProbeController));
     }
 
     [Fact]

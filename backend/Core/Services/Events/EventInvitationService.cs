@@ -5,6 +5,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services.Push;
 using Infrastructure.Enums;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using WebDataContracts.RequestModels.Event;
 using WebDataContracts.ResponseModels.Event;
@@ -24,6 +25,7 @@ public class EventInvitationService : IEventInvitationService
     private readonly IPushQueue _pushQueue;
     private readonly EventResponseFactory _factory;
     private readonly EventLimits _limits;
+    private readonly ILogger<EventInvitationService> _logger;
 
     public EventInvitationService(
         EventLoader loader,
@@ -32,7 +34,8 @@ public class EventInvitationService : IEventInvitationService
         IUserBlockService userBlockService,
         IPushQueue pushQueue,
         EventResponseFactory factory,
-        IOptions<EventLimits> limits)
+        IOptions<EventLimits> limits,
+        ILogger<EventInvitationService> logger)
     {
         _loader = loader;
         _invitationRepository = invitationRepository;
@@ -41,6 +44,7 @@ public class EventInvitationService : IEventInvitationService
         _pushQueue = pushQueue;
         _factory = factory;
         _limits = limits.Value;
+        _logger = logger;
     }
 
     public async Task<Result> InviteAsync(string userIdentifier, string identifier, EventInviteRequest request, CancellationToken ctoken)
@@ -104,6 +108,10 @@ public class EventInvitationService : IEventInvitationService
         if (invited.Value.NotifyUserIds.Count > 0)
             _pushQueue.Enqueue(EventPushes.Invited(e.Identifier, e.Title, invited.Value.InviterNickName, invited.Value.NotifyUserIds, loaded.Value.ViewerId));
 
+        _logger.LogInformation(
+            "EventInvitationService: InviteAsync -> User {UserId} invited {Requested} to event {EventIdentifier}, {Notified} notified.",
+            loaded.Value.ViewerId, names.Count, identifier, invited.Value.NotifyUserIds.Count);
+
         return Result.Ok();
     }
 
@@ -164,13 +172,21 @@ public class EventInvitationService : IEventInvitationService
 
         var accepted = await _participantRepository.AcceptInvitationAsync(loaded.Value.Detail.Event.Id, loaded.Value.ViewerId, DateTime.UtcNow, ctoken);
 
-        return accepted.Status switch
+        if (!accepted.IsSuccess)
         {
-            RepositoryResultStatus.Success => Result.Ok(),
-            RepositoryResultStatus.Conflict => await NotAcceptedAsync(userIdentifier, identifier, ctoken),
-            RepositoryResultStatus.NotFound => Result.Fail(new Message(409, "You cannot join this event.", EventErrorCodes.RemovedFromEvent)),
-            _ => Result.Fail(new Message(500, "An error occurred while accepting the invitation.")),
-        };
+            return accepted.Status switch
+            {
+                RepositoryResultStatus.Conflict => await NotAcceptedAsync(userIdentifier, identifier, ctoken),
+                RepositoryResultStatus.NotFound => Result.Fail(new Message(409, "You cannot join this event.", EventErrorCodes.RemovedFromEvent)),
+                _ => Result.Fail(new Message(500, "An error occurred while accepting the invitation.")),
+            };
+        }
+
+        _logger.LogInformation(
+            "EventInvitationService: AcceptAsync -> User {UserId} accepted the invitation to event {EventIdentifier}.",
+            loaded.Value.ViewerId, identifier);
+
+        return Result.Ok();
     }
 
     private async Task<Result> NotAcceptedAsync(string userIdentifier, string identifier, CancellationToken ctoken)

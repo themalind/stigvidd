@@ -260,6 +260,26 @@ public class TrailImportApplyIntegrationTests : IClassFixture<StigViddWebApplica
     }
 
     [Fact]
+    public async Task ApplyAsync_ForACreateNewFeature_ShouldGiveTheNewTrailTheExampleImages()
+    {
+        // Arrange
+        var (service, context) = Resolve();
+        var sessionId = CreateSession(context);
+        Decide(context, sessionId, ProposalDecision.CreateNew, decidedName: "Exempelleden", decidedLengthKm: 4m);
+
+        // Act
+        await service.ApplyAsync(sessionId, TestContext.Current.CancellationToken);
+
+        // Assert
+        var images = await context.TrailImages.AsNoTracking()
+            .Where(ti => ti.Trail != null && ti.Trail.Name == "Exempelleden")
+            .Select(ti => ti.ImageUrl)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        images.Should().Equal(StigViddWebApplicationFactory<Program>.ExampleImagePath);
+    }
+
+    [Fact]
     public async Task ApplyAsync_ForAnAcceptWithAChosenLength_ShouldWriteThatFigureAndOnlyThat()
     {
         // Arrange — the source's own length is never read for an existing trail.

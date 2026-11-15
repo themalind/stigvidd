@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { router } from "expo-router";
+import { logger } from "./logger";
 import type { NotificationHandler, PushData } from "./notifications";
 
 function navigateAnchored(route: string) {
@@ -29,7 +30,7 @@ export type PushNavigation = {
 // About two seconds. keep-comment: a screen that never lands must not swallow the tap
 const MAX_FRAMES_TO_LAND = 120;
 
-// A navigator that has not mounted holds its target in the params of the route above it.
+// A navigator that has not mounted holds its target in the params of the route above it. keep-comment: non-obvious react-navigation state
 function hasMountedTarget(root: unknown): boolean {
   let level = root as NavigationLevel | undefined;
   while (level) {
@@ -45,6 +46,7 @@ async function untilLanded(path: string, navigation: PushNavigation) {
     if (navigation.currentPath() === path && hasMountedTarget(navigation.rootState())) return;
     await nextFrame();
   }
+  logger.warn("Push route did not land", { path, currentPath: navigation.currentPath() });
 }
 
 // Without the anchor, a tab that has not mounted gets only this screen: back leaves the tab and a tab press does nothing. keep-comment: docs/notes/router-push-into-unmounted-tab-has-no-back.md

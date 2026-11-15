@@ -54,7 +54,7 @@ public class FacilityService : IFacilityService
 
         await _cityAreaMembership.FacilitiesMovedAsync([result.Value.Id], ctoken);
 
-        return Result.Ok(_facilityResponseFactory.CreateAdmin(result.Value));
+        return Result.Ok(await AdminResponseAsync(result.Value, ctoken));
     }
 
     public async Task<Result<IReadOnlyCollection<FacilityResponse>>> GetAllAsync(CancellationToken ctoken)
@@ -74,7 +74,13 @@ public class FacilityService : IFacilityService
         if (!result.IsSuccess)
             return Result.Fail<IReadOnlyCollection<AdminFacilityResponse>>(new Message(500, "An error occurred while retrieving facilities."));
 
-        return Result.Ok<IReadOnlyCollection<AdminFacilityResponse>>([.. result.Value.Select(_facilityResponseFactory.CreateAdmin)]);
+        var areaNames = await _facilityRepository.GetAllAreaNamesAsync(ctoken);
+
+        if (!areaNames.IsSuccess)
+            return Result.Fail<IReadOnlyCollection<AdminFacilityResponse>>(new Message(500, "An error occurred while retrieving facilities."));
+
+        return Result.Ok<IReadOnlyCollection<AdminFacilityResponse>>(
+            [.. result.Value.Select(f => _facilityResponseFactory.CreateAdmin(f, areaNames.Value.GetValueOrDefault(f.Id, [])))]);
     }
 
     public async Task<Result<FacilityResponse>> GetByIdentifierAsync(string identifier, CancellationToken ctoken)
@@ -110,7 +116,17 @@ public class FacilityService : IFacilityService
 
         await _cityAreaMembership.FacilitiesMovedAsync([updateResult.Value.Id], ctoken);
 
-        return Result.Ok(_facilityResponseFactory.CreateAdmin(updateResult.Value));
+        return Result.Ok(await AdminResponseAsync(updateResult.Value, ctoken));
+    }
+
+    // keep-comment: read after FacilitiesMovedAsync, which puts a saved facility in its areas; the save already
+    // keep-comment: succeeded, so a failed read (logged by the repository) shows no areas instead of failing it
+    private async Task<AdminFacilityResponse> AdminResponseAsync(Facility facility, CancellationToken ctoken)
+    {
+        var areaNames = await _facilityRepository.GetAreaNamesAsync([facility.Id], ctoken);
+        var names = areaNames.IsSuccess ? areaNames.Value.GetValueOrDefault(facility.Id, []) : [];
+
+        return _facilityResponseFactory.CreateAdmin(facility, names);
     }
 
     private static void Apply(Facility facility, SaveFacilityRequest request)

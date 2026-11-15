@@ -5,6 +5,7 @@ using Core.Interfaces.Repositories;
 using Core.Interfaces.Services;
 using Core.Services.Push;
 using Infrastructure.Enums;
+using Microsoft.Extensions.Logging;
 using WebDataContracts.RequestModels.Event;
 using WebDataContracts.ResponseModels.Event;
 
@@ -17,19 +18,22 @@ public class EventParticipationService : IEventParticipationService
     private readonly IEventInvitationRepository _invitationRepository;
     private readonly IUserBlockService _userBlockService;
     private readonly IPushQueue _pushQueue;
+    private readonly ILogger<EventParticipationService> _logger;
 
     public EventParticipationService(
         EventLoader loader,
         IEventParticipantRepository participantRepository,
         IEventInvitationRepository invitationRepository,
         IUserBlockService userBlockService,
-        IPushQueue pushQueue)
+        IPushQueue pushQueue,
+        ILogger<EventParticipationService> logger)
     {
         _loader = loader;
         _participantRepository = participantRepository;
         _invitationRepository = invitationRepository;
         _userBlockService = userBlockService;
         _pushQueue = pushQueue;
+        _logger = logger;
     }
 
     public async Task<Result> JoinAsync(string userIdentifier, string identifier, CancellationToken ctoken)
@@ -51,13 +55,21 @@ public class EventParticipationService : IEventParticipationService
 
         var joined = await _participantRepository.JoinAsync(loaded.Value.Detail.Event.Id, loaded.Value.ViewerId, DateTime.UtcNow, ctoken);
 
-        return joined.Status switch
+        if (!joined.IsSuccess)
         {
-            RepositoryResultStatus.Success => Result.Ok(),
-            RepositoryResultStatus.Conflict => await NoSpotTakenAsync(userIdentifier, identifier, ctoken),
-            RepositoryResultStatus.NotFound => Result.Fail(new Message(409, "You cannot join this event.", EventErrorCodes.RemovedFromEvent)),
-            _ => Result.Fail(new Message(500, "An error occurred while joining the event.")),
-        };
+            return joined.Status switch
+            {
+                RepositoryResultStatus.Conflict => await NoSpotTakenAsync(userIdentifier, identifier, ctoken),
+                RepositoryResultStatus.NotFound => Result.Fail(new Message(409, "You cannot join this event.", EventErrorCodes.RemovedFromEvent)),
+                _ => Result.Fail(new Message(500, "An error occurred while joining the event.")),
+            };
+        }
+
+        _logger.LogInformation(
+            "EventParticipationService: JoinAsync -> User {UserId} joined event {EventIdentifier}.",
+            loaded.Value.ViewerId, identifier);
+
+        return Result.Ok();
     }
 
     // The event changed between the check and the UPDATE; reloading names the reason, and with none left it was the last spot. keep-comment: why Conflict is not always event_full
@@ -137,6 +149,10 @@ public class EventParticipationService : IEventParticipationService
             foreach (var push in EventPushes.ForHandOver(left.Value.HandOver))
                 _pushQueue.Enqueue(push);
         }
+
+        _logger.LogInformation(
+            "EventParticipationService: LeaveAsync -> User {UserId} left event {EventIdentifier} (organizer hand-over {HandedOver}, new organizer {NewOrganizerUserId}).",
+            loaded.Value.ViewerId, identifier, left.Value.HandOver is not null, left.Value.HandOver?.NewOrganizerUserId);
 
         return Result.Ok();
     }
@@ -233,6 +249,13 @@ public class EventParticipationService : IEventParticipationService
         if (removed.Status == RepositoryResultStatus.Conflict)
             return Result.Fail(EventErrors.NotAllowed());
 
+        if (removed.IsSuccess)
+        {
+            _logger.LogInformation(
+                "EventParticipationService: RemoveParticipantAsync -> User {UserId} removed user {RemovedUserId} from event {EventIdentifier}.",
+                loaded.Value.ViewerId, target.Value.UserId, identifier);
+        }
+
         return removed.IsSuccess || removed.Status == RepositoryResultStatus.NotFound
             ? Result.Ok()
             : Result.Fail(new Message(500, "An error occurred while removing the participant."));
@@ -283,6 +306,10 @@ public class EventParticipationService : IEventParticipationService
 
         if (role == EventParticipantRole.CoHost)
             _pushQueue.Enqueue(EventPushes.PromotedToCoHost(e.Identifier, e.Title, target.Value.UserId, loaded.Value.ViewerId));
+
+        _logger.LogInformation(
+            "EventParticipationService: SetRoleAsync -> User {UserId} made user {TargetUserId} {Role} in event {EventIdentifier}.",
+            loaded.Value.ViewerId, target.Value.UserId, role, identifier);
 
         return Result.Ok();
     }

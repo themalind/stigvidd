@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { EyeOff, Flag, ImageOff, MailWarning, MessageSquareText, Mountain, Upload, Users } from "lucide-react";
+import { EyeOff, Flag, ImageOff, MailWarning, MessageSquareText, Mountain, Route, Upload, Users } from "lucide-react";
+import { useAttention } from "@/api/attention";
 import { dashboardQueryOptions } from "@/features/dashboard/api/dashboard";
 import { AttentionCard, HealthBar, MetricCard, SectionTitle } from "@/features/dashboard/components/dashboard-cards";
 import { ReviewRow } from "@/features/dashboard/components/review-row";
-import { importsAwaitingReview, share, trailStats } from "@/features/dashboard/utils/dashboard";
-import { outboxCountsQueryOptions } from "@/features/mail/api/mail-outbox";
-import { reportCountsQueryOptions } from "@/features/moderation/api/content-reports";
-import { sessionsQueryOptions } from "@/features/trail-import/api/trail-import";
+import { share, trailStats } from "@/features/dashboard/utils/dashboard";
 import { Page } from "@/components/page";
 import { paths } from "@/config/paths";
 import { trailsQueryOptions } from "@/features/trails/api/trail";
@@ -34,9 +32,7 @@ function greeting(hour: number): string {
 
 // keep-comment: useQuery, not suspense: every tile loads and fails on its own without blanking the rest
 export default function DashboardPage() {
-  const reports = useQuery({ ...reportCountsQueryOptions(), ...LIVE });
-  const outbox = useQuery({ ...outboxCountsQueryOptions(), ...LIVE });
-  const sessions = useQuery({ ...sessionsQueryOptions(), ...LIVE });
+  const attention = useAttention();
   const dashboard = useQuery({ ...dashboardQueryOptions(), ...LIVE });
   const trails = useQuery({ ...trailsQueryOptions(), select: trailStats });
   const stats = trails.data;
@@ -55,24 +51,30 @@ export default function DashboardPage() {
 
       <section className="flex flex-col gap-3">
         <SectionTitle>Needs attention</SectionTitle>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          <AttentionCard
+            label="Hike submissions to review"
+            value={pick(attention, (a) => a.pendingHikeSubmissions)}
+            to={paths.hikeSubmissions}
+            icon={Upload}
+          />
           <AttentionCard
             label="Reports to moderate"
-            value={pick(reports, (c) => c.pending)}
+            value={pick(attention, (a) => a.pendingReports)}
             to={paths.moderation}
             icon={Flag}
           />
           <AttentionCard
             label="Failed mails"
-            value={pick(outbox, (c) => c.failed)}
+            value={pick(attention, (a) => a.failedMails)}
             to={paths.mailOutbox({ status: "Failed" })}
             icon={MailWarning}
           />
           <AttentionCard
             label="Imports awaiting review"
-            value={pick(sessions, importsAwaitingReview)}
+            value={pick(attention, (a) => a.importsAwaitingReview)}
             to={paths.trailImport}
-            icon={Upload}
+            icon={Route}
           />
           <AttentionCard
             label="Trails with example images"

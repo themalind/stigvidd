@@ -51,7 +51,8 @@ public class EventInvitationServiceTests : TestBase
             blocks,
             queue.Object,
             new EventResponseFactory(configuration),
-            Options.Create(new EventLimits { InvitedPerDay = invitedPerDay }));
+            Options.Create(new EventLimits { InvitedPerDay = invitedPerDay }),
+            NullLogger<EventInvitationService>.Instance);
     }
 
     private static Event Private(int id = 1, int organizerId = 1, int startsInDays = 3)

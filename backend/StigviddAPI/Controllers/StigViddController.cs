@@ -14,8 +14,20 @@ public abstract class StigViddController : Controller
 {
     protected ActionResult ToActionResult(Message message)
     {
+        var refused = message.StatusCode is >= 400 and < 500;
+
+        if (refused)
+        {
+            Logger.LogInformation(
+                "{Controller}: refused with {StatusCode} {Code}: {ResultMessage}",
+                GetType().Name,
+                message.StatusCode,
+                message.Code,
+                message.ResultMessage);
+        }
+
         // Coded errors are ProblemDetails like [ApiController]'s 400s; uncoded ones stay plain strings, which shipped apps read. keep-comment: why two shapes remain
-        if (message.Code is not null && message.StatusCode is >= 400 and < 500)
+        if (refused && message.Code is not null)
         {
             var problem = new ProblemDetails { Status = message.StatusCode, Detail = message.ResultMessage };
             problem.Extensions["code"] = message.Code;

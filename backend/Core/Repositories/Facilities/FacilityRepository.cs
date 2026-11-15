@@ -79,6 +79,53 @@ public class FacilityRepository : IFacilityRepository
         }
     }
 
+    public Task<RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>> GetAllAreaNamesAsync(CancellationToken ctoken)
+    {
+        return AreaNamesAsync(null, ctoken);
+    }
+
+    public Task<RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>> GetAreaNamesAsync(
+        IReadOnlyCollection<int> facilityIds,
+        CancellationToken ctoken)
+    {
+        return AreaNamesAsync(facilityIds, ctoken);
+    }
+
+    // keep-comment: only the names, so a facility list never carries the areas' boundary polygons; null reads every facility's
+    private async Task<RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>> AreaNamesAsync(
+        IReadOnlyCollection<int>? facilityIds,
+        CancellationToken ctoken)
+    {
+        try
+        {
+            using var dbContext = await _dbContextFactory.CreateDbContextAsync(ctoken);
+
+            var query =
+                from link in dbContext.Set<Dictionary<string, object>>("CityAreaFacility")
+                join area in dbContext.CityAreas on EF.Property<int>(link, "CityAreaId") equals area.Id
+                let facilityId = EF.Property<int>(link, "FacilityId")
+                where facilityIds == null || facilityIds.Contains(facilityId)
+                select new { FacilityId = facilityId, area.Name };
+            var ordered = SwedishCollation.For(dbContext) is { } collation
+                ? query.OrderBy(link => EF.Functions.Collate(link.Name, collation))
+                : query.OrderBy(link => link.Name);
+            var links = await ordered.AsNoTracking().ToListAsync(ctoken);
+
+            IReadOnlyDictionary<int, IReadOnlyCollection<string>> names = links
+                .GroupBy(link => link.FacilityId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => (IReadOnlyCollection<string>)[.. group.Select(link => link.Name)]);
+
+            return RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>.Success(names);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "FacilityRepository: GetAreaNamesAsync -> Something went wrong when fetching the facilities' area names.");
+            return RepositoryResult<IReadOnlyDictionary<int, IReadOnlyCollection<string>>>.Error();
+        }
+    }
+
     public async Task<RepositoryResult<Facility>> GetByIdentifierAsync(string identifier, CancellationToken ctoken)
     {
         try
@@ -252,7 +299,7 @@ public class FacilityRepository : IFacilityRepository
             _logger.LogWarning(ex, "FacilityRepository: ApplyImportAsync -> A facility was deleted while the import ran.");
             return RepositoryResult.Conflict();
         }
-        catch (DbUpdateException ex) when (UniqueViolation.Is(ex))
+        catch (DbUpdateException ex) when (UniqueViolation.On(ex, "IX_Facilities_SourceId"))
         {
             _logger.LogWarning(ex, "FacilityRepository: ApplyImportAsync -> Another import created the same source facility first.");
             return RepositoryResult.Conflict();

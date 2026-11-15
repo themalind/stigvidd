@@ -21,9 +21,7 @@ vi.mock("sonner", () => toasts);
 
 import DashboardPage from "./dashboard";
 
-const REPORT_COUNTS = "/api/v1/admin/content-reports/counts";
-const OUTBOX_COUNTS = "/api/v1/admin/mail-outbox/counts";
-const SESSIONS = "/api/v1/admin/trail-import/sessions";
+const ATTENTION = "/api/v1/admin/dashboard/attention";
 const DASHBOARD = "/api/v1/admin/dashboard";
 const TRAILS = "/api/v1/admin/trails";
 
@@ -79,8 +77,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.mock.reset();
   pendingReports = 3;
-  api.mock.on("GET", REPORT_COUNTS, () => ({ pending: pendingReports, dismissed: 0, upheld: 0, contentExpired: 0 }));
-  api.mock.on("GET", OUTBOX_COUNTS, () => ({ pending: 2, sending: 0, sent: 0, failed: 0, cancelled: 0, total: 2 }));
+  api.mock.on("GET", ATTENTION, () => ({
+    pendingHikeSubmissions: 2,
+    pendingReports,
+    failedMails: 0,
+    importsAwaitingReview: 1,
+  }));
   api.mock.on("GET", TRAILS, () => [
     trailListItem({ identifier: "a", isVerified: true, hasImages: true, hasExampleImages: true, hasDescription: true }),
     trailListItem({
@@ -91,7 +93,6 @@ beforeEach(() => {
       hasDescription: false,
     }),
   ]);
-  api.mock.on("GET", SESSIONS, () => [{ status: "AwaitingReview" }, { status: "Applied" }]);
   api.mock.on("GET", DASHBOARD, () => dashboard);
 });
 
@@ -100,6 +101,8 @@ describe("DashboardPage", () => {
     renderPage();
 
     expect(await screen.findByText("3")).toBeInTheDocument();
+    expect(card("Hike submissions to review")).toHaveAttribute("href", "/hike-submissions");
+    expect(card("Hike submissions to review")).toHaveTextContent("2");
     expect(card("Reports to moderate")).toHaveAttribute("href", "/moderation");
     expect(card("Reports to moderate")).toHaveTextContent("3");
     expect(card("Failed mails")).toHaveTextContent("All clear");
@@ -139,13 +142,14 @@ describe("DashboardPage", () => {
   });
 
   it("shows a dash for a source that fails without hiding the others", async () => {
-    fail(REPORT_COUNTS);
+    fail(ATTENTION);
     fail(DASHBOARD);
     renderPage();
 
     expect(await screen.findByText("1 active in the app")).toBeInTheDocument();
     expect(card("Reports to moderate")).toHaveTextContent("—");
-    expect(card("Imports awaiting review")).toHaveTextContent("1");
+    expect(card("Imports awaiting review")).toHaveTextContent("—");
+    expect(card("Trails with example images")).toHaveTextContent("1");
     expect(await screen.findByText("The latest reviews could not be loaded.")).toBeInTheDocument();
   });
 
@@ -178,11 +182,11 @@ describe("DashboardPage", () => {
       renderPage();
       expect(await screen.findByText("3")).toBeInTheDocument();
 
-      fail(REPORT_COUNTS);
+      fail(ATTENTION);
       await act(() => vi.advanceTimersByTimeAsync(60_000));
 
       expect(card("Reports to moderate")).toHaveTextContent("3");
-      expect(toasts.toast.error).toHaveBeenCalledWith("offline");
+      expect(toasts.toast.error).toHaveBeenCalledWith("Could not count the work waiting for you.");
     });
   });
 });

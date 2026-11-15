@@ -22,10 +22,17 @@ public class TrailServiceTests
         Mock<ITrailRepository>? trailRepo = null,
         Mock<IWebDavService>? webDav = null,
         Mock<IMediaUploadService>? mediaUpload = null,
-        Mock<ICityAreaMembershipService>? cityAreas = null)
+        Mock<ICityAreaMembershipService>? cityAreas = null,
+        Mock<IExampleImageService>? exampleImages = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
+        if (exampleImages is null)
+        {
+            exampleImages = new Mock<IExampleImageService>();
+            exampleImages.Setup(e => e.AddToTrailsAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Ok());
+        }
 
         return new TrailService(
             (trailRepo ?? new Mock<ITrailRepository>()).Object,
@@ -35,7 +42,8 @@ public class TrailServiceTests
             new TrailResponseFactory(cfg.Object),
             new TrailContributionRanking(new ConfigurationBuilder().Build()),
             new MemoryCache(new MemoryCacheOptions()),
-            (cityAreas ?? new Mock<ICityAreaMembershipService>()).Object);
+            (cityAreas ?? new Mock<ICityAreaMembershipService>()).Object,
+            exampleImages.Object);
     }
 
     private static TrailResponse StubTrailResponse()
@@ -226,6 +234,30 @@ public class TrailServiceTests
 
         // Assert
         cityAreas.Verify(c => c.TrailsMovedAsync(
+            It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 42 })), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AddTrail_GivesTheNewTrailTheExampleImages_AndStillSucceedsIfThatFails()
+    {
+        // Arrange
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.AddTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Trail t, CancellationToken _) =>
+            {
+                t.Id = 42;
+                return RepositoryResult<Trail>.Success(t);
+            });
+        var exampleImages = new Mock<IExampleImageService>();
+        exampleImages.Setup(e => e.AddToTrailsAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail(new Message(502, "mock/ could not be listed")));
+
+        // Act
+        var result = await Build(repo, exampleImages: exampleImages).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        exampleImages.Verify(e => e.AddToTrailsAsync(
             It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 42 })), It.IsAny<CancellationToken>()), Times.Once);
     }
 

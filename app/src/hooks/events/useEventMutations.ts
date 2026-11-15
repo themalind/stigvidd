@@ -15,6 +15,7 @@ import {
 } from "@/api/events";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import { HikingEvent } from "@/data/types";
+import { track } from "@/services/analytics";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
@@ -29,6 +30,7 @@ export function useEventMutations() {
   const joinMutation = useMutation({
     mutationFn: (identifier: string) => joinEvent(identifier),
     onSuccess: () => {
+      track("event.membership_changed", { action: "join" });
       refresh();
       setSuccessMsg(t("events.joined"));
     },
@@ -45,6 +47,7 @@ export function useEventMutations() {
   const leaveMutation = useMutation({
     mutationFn: (identifier: string) => leaveEvent(identifier),
     onSuccess: (_data, identifier) => {
+      track("event.membership_changed", { action: "leave" });
       refreshAfterLeaving(identifier);
       setSuccessMsg(t("events.left"));
     },
@@ -61,6 +64,7 @@ export function useEventMutations() {
   const acceptInvitationMutation = useMutation({
     mutationFn: (identifier: string) => acceptEventInvitation(identifier),
     onSuccess: () => {
+      track("event.membership_changed", { action: "accept" });
       refresh();
       setSuccessMsg(t("events.accepted"));
     },
@@ -70,6 +74,7 @@ export function useEventMutations() {
   const declineInvitationMutation = useMutation({
     mutationFn: (identifier: string) => declineEventInvitation(identifier),
     onSuccess: (_data, identifier) => {
+      track("event.membership_changed", { action: "decline" });
       refreshAfterLeaving(identifier);
       setSuccessMsg(t("events.declined"));
     },

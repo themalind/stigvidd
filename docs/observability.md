@@ -479,6 +479,7 @@ Each query is `SQL` type and returns a row only when it should fire, so every tr
 | `api_errors` | production | logs `stigvidd_api_logs` | 15 min | `severity IN ('Error','Critical')` count >= 1 |
 | `app_unhandled_js_errors` | production | logs `stigvidd_app_logs` | 30 min | `message = 'Unhandled JS error'` count >= 3 |
 | `app_login_failures` | production | logs `stigvidd_app_logs` | 30 min | `message = 'Login failed'` count >= 10 |
+| `app_events_areas_failures` | production | logs `stigvidd_app_logs` | 30 min | count >= 3 of: `level = 'error'` with `message LIKE '%Event%failed'` or `'%Area%failed'` and `errormessage` not a 4xx (`NOT LIKE '%: 4__%'`), or `message IN ('Push route did not land', 'Event route unreadable', 'Area list loaded empty', 'Unknown notification type')` (2026-11-14, for the events + Utflyktsmål release) |
 | `api_not_reporting` | production | metrics `dotnet_process_cpu_time` | 10 min | `HAVING count(*) = 0`: the API exports ~2 samples/min, so none means it is down |
 | `host_disk_full` | production | metrics `system_filesystem_usage` | 15 min | used / (used + free) on `/` > 0.85 |
 | `host_memory_high` | production | metrics `system_memory_usage` | 15 min | `used` / all states > 0.9 |
@@ -852,6 +853,30 @@ stolen credential buys, and that is entirely decided by item 1 below.
    image build, and a third-party module in the TLS-terminating path. Not worth it
    on day one. The trigger should be evidence: anomalous volume growth or garbage
    streams.
+
+## Watching a new feature after a release
+
+The events and Utflyktsmål release (2026-11) added logging at the levels production already ships,
+so nothing has to be raised to see it:
+
+- **API** (`stigvidd_api_logs`, Information): every 4xx refusal from `StigViddController.ToActionResult`
+  (`refused with {StatusCode} {Code}`), each event created, updated, cancelled, deleted, joined, left,
+  accepted, posted on, re-roled and invited to, and each push batch (`ExpoPushService: SendToUsersAsync`,
+  with `PushType`, recipients and devices).
+- **App logs** (`stigvidd_app_logs`, warn; sent without consent, as error reports): `Push route did not
+  land`, `Unknown notification type`, `Event route unreadable`, `Area list loaded empty`. Every failed API
+  call was already logged by `api/core/request.ts` as `<call name> failed`.
+- **App events** (`stigvidd_app_events`, only with consent): `event.saved`, `event.membership_changed`,
+  `event.post_created`, `event.route_followed`, `push.opened`, `area.list_viewed`, `area.opened`
+  (`app/src/services/event-catalogue.ts`). Usage goes here, never into the logger, which has no consent gate.
+
+The alert `app_events_areas_failures` (above) watches the app side. Go deeper only for a while:
+
+- **App:** `EXPO_PUBLIC_LOG_LEVEL=debug` in the EAS `production` environment, then an OTA. The value is
+  inlined into the bundle, so removing it and publishing another OTA restores `info`.
+- **API:** a category level such as `Logging__LogLevel__Core.Services.Events=Debug` on the `api` service.
+  Compose passes only the variables listed under `environment:`, so put it in an override file on the host,
+  not in `.env`, and restart the API.
 
 ## Local development
 

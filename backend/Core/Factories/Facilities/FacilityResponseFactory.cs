@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+using Core.Services.Facilities;
 using Infrastructure.Data.Entities;
 using WebDataContracts.ResponseModels.Facility;
 
@@ -25,7 +26,7 @@ public class FacilityResponseFactory
         );
     }
 
-    public AdminFacilityResponse CreateAdmin(Facility facility)
+    public AdminFacilityResponse CreateAdmin(Facility facility, IReadOnlyCollection<string> areaNames)
     {
         return new AdminFacilityResponse
         {
@@ -38,6 +39,11 @@ public class FacilityResponseFactory
             Location = facility.Location ?? string.Empty,
             Description = facility.Description ?? string.Empty,
             Url = facility.Url ?? string.Empty,
+            SourceId = facility.SourceId,
+            SourceKey = FacilitySourceIds.KeyOf(facility.SourceId),
+            NameKey = FacilityNames.Key(facility.Name),
+            AreaNames = areaNames,
+            LastUpdatedAt = facility.LastUpdatedAt,
         };
     }
 

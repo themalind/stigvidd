@@ -1,86 +1,115 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { useState } from "react";
+import { StepList, StepSummary } from "@/components/step-list";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  useApplyImport,
-  usePreviewImport,
-  type Choices,
-  type ImportRow,
-  type Preview,
-  type SourceFile,
-} from "@/features/facility-import/api/facility-import";
-import { choicesOf, markChoice, markKept } from "@/features/facility-import/utils/facility-import";
+import { useImportWizard } from "@/features/facility-import/hooks/use-import-wizard";
+import { markChoice, markKept } from "@/features/facility-import/utils/facility-import";
+import { STEPS, stepIndex, type Step } from "@/features/facility-import/utils/import-wizard";
+import { NO_FIELD, type MappingDraft } from "@/features/facility-import/utils/mapping";
+import { facilityTypeLabel } from "@/utils/facility-types";
+import { FieldsStep } from "./fields-step";
+import { FileStep } from "./file-step";
+import { ImportDone } from "./import-done";
 import { ImportReview } from "./import-review";
-import { SourceForm } from "./source-form";
+import { SourceStep } from "./source-step";
 
-interface Shown {
-  file: SourceFile;
-  preview: Preview;
+function fieldsText(draft: MappingDraft): string {
+  const id = draft.idField === NO_FIELD ? "places by position" : `id from ${draft.idField}`;
+  const kind =
+    draft.typeField === NO_FIELD ? `all ${facilityTypeLabel(draft.fixedType)}` : `kind from ${draft.typeField}`;
+  return `Name from ${draft.nameField} · ${id} · ${kind}`;
 }
 
-const NO_CHOICES: Choices = { links: [], kept: [] };
-
 export function FacilityImportPanel() {
-  // keep-comment: kept apart from the mutation's data, which empties while the next preview is pending
-  const [shown, setShown] = useState<Shown | null>(null);
-  const load = usePreviewImport();
-  // keep-comment: a second mutation so re-planning after a choice leaves the file form and the rows alone
-  const replan = usePreviewImport();
-  const apply = useApplyImport();
-
-  // keep-comment: only for the file that is still shown; a reply after another file was chosen is dropped
-  function showFor(file: SourceFile, preview: Preview) {
-    setShown((current) => (current?.file === file ? { file, preview } : current));
-  }
-
-  function runLoad(file: SourceFile) {
-    load.mutate({ ...file, ...NO_CHOICES }, { onSuccess: (result) => setShown({ file, preview: result }) });
-  }
-
-  // keep-comment: the choice shows at once, then the server's plan for it replaces the rows
-  function runReplan(current: Shown, rows: ImportRow[]) {
-    setShown({ ...current, preview: { ...current.preview, rows } });
-    replan.mutate(
-      { ...current.file, ...choicesOf(rows) },
-      { onSuccess: (result) => showFor(current.file, result), onError: () => showFor(current.file, current.preview) },
-    );
-  }
-
-  function runApply({ file, preview: current }: Shown) {
-    apply.mutate(
-      { ...file, ...choicesOf(current.rows) },
-      { onSuccess: () => replan.mutate({ ...file, ...NO_CHOICES }, { onSuccess: (result) => showFor(file, result) }) },
-    );
-  }
+  const wizard = useImportWizard();
+  const { state, source, read, summary, draft } = wizard;
+  const { step, file, shown, result } = state;
+  const at = stepIndex(step);
+  const busy = wizard.comparing || wizard.applying;
+  const goTo = (target: Step) => () => wizard.goTo(target);
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Facility import</CardTitle>
         <CardDescription>
-          A GeoJSON file of facilities from a municipality&apos;s open data, such as catalog.boras.se. Choose which
-          fields hold the name, id and type. A field the file changed since the last import is taken, even over an edit
-          made here, unless you keep ours; everything else stays as it is.
+          Bring in places from a municipality&apos;s open data, such as catalog.boras.se. Nothing is saved until the
+          last step.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <SourceForm
-          busy={load.isPending || apply.isPending}
-          onPreview={(file) => runLoad(file)}
-          onChange={() => setShown(null)}
-        />
+      <CardContent className="space-y-5">
+        <StepList label="Import steps" steps={STEPS} current={at} />
 
-        {shown && (
+        {step !== "Source" && step !== "Done" && (
+          <div className="space-y-2">
+            <StepSummary label="Source" disabled={busy} onChange={goTo("Source")}>
+              {source ? `${source.municipalityName} · ${source.name}` : ""}
+            </StepSummary>
+            {at > stepIndex("File") && file && (
+              <StepSummary label="File" disabled={busy} onChange={goTo("File")}>
+                {file.name}
+                {summary ? ` · ${summary.points} ${summary.points === 1 ? "point" : "points"}` : ""}
+              </StepSummary>
+            )}
+            {at > stepIndex("Fields") && draft && (
+              <StepSummary label="Fields" disabled={busy} onChange={goTo("Fields")}>
+                {fieldsText(draft)}
+              </StepSummary>
+            )}
+          </div>
+        )}
+
+        {step === "Source" && (
+          <SourceStep
+            municipalityIdentifier={state.municipalityIdentifier}
+            sourceIdentifier={state.sourceIdentifier}
+            onMunicipality={wizard.chooseMunicipality}
+            onSource={wizard.chooseSource}
+            onContinue={goTo("File")}
+          />
+        )}
+
+        {step === "File" && (
+          <FileStep
+            file={file}
+            inspection={read?.inspection ?? null}
+            onFile={(chosen) => void wizard.chooseFile(chosen)}
+            onContinue={goTo("Fields")}
+          />
+        )}
+
+        {step === "Fields" && summary && draft && (
+          <FieldsStep
+            summary={summary}
+            draft={draft}
+            remembered={Boolean(source?.mapping)}
+            busy={wizard.comparing}
+            onChange={wizard.editMapping}
+            onCompare={wizard.compare}
+          />
+        )}
+
+        {step === "Review" && shown && (
           <ImportReview
             preview={shown.preview}
-            locked={load.isPending || apply.isPending}
-            busy={load.isPending || replan.isPending || apply.isPending}
-            applying={apply.isPending}
-            onChoose={(sourceId, choice) => runReplan(shown, markChoice(shown.preview.rows, sourceId, choice))}
-            onKeep={(sourceId, field, keep) => runReplan(shown, markKept(shown.preview.rows, sourceId, field, keep))}
-            onApply={() => runApply(shown)}
+            locked={busy}
+            busy={busy || wizard.replanning}
+            applying={wizard.applying}
+            onChoose={(sourceId, choice) => wizard.choose(shown, markChoice(shown.preview.rows, sourceId, choice))}
+            onKeep={(sourceId, field, keep) =>
+              wizard.choose(shown, markKept(shown.preview.rows, sourceId, field, keep))
+            }
+            onApply={() => wizard.save(shown)}
+          />
+        )}
+
+        {step === "Done" && result && shown && (
+          <ImportDone
+            result={result}
+            sourceKey={shown.preview.source}
+            sourceName={source ? `${source.name} in ${source.municipalityName}` : shown.preview.source}
+            onAnother={wizard.importAnother}
           />
         )}
       </CardContent>

@@ -37,7 +37,7 @@ public class TrailImportServiceTests
     private TrailImportService CreateService()
     {
         return new(_repository.Object, _fileStore.Object, _queue.Object, new TrailImportResponseFactory(),
-            NullLogger<TrailImportService>.Instance, _cityAreas.Object);
+            NullLogger<TrailImportService>.Instance, _cityAreas.Object, new Mock<IExampleImageService>().Object);
     }
 
     private static TrailImportSession Session(ImportSessionStatus status, string? storedPath = null)

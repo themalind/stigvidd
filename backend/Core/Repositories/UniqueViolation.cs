@@ -3,6 +3,7 @@
 
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Core.Repositories;
 
@@ -14,5 +15,11 @@ internal static class UniqueViolation
     public static bool Is(DbUpdateException exception)
     {
         return exception.InnerException is DbException { SqlState: PostgresUniqueViolation };
+    }
+
+    public static bool On(DbUpdateException exception, string indexName)
+    {
+        return exception.InnerException is PostgresException { SqlState: PostgresUniqueViolation } postgres
+            && postgres.ConstraintName == indexName;
     }
 }

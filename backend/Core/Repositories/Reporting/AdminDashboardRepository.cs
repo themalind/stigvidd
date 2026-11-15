@@ -4,6 +4,7 @@
 using Core.Interfaces.Repositories;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
+using Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
@@ -40,6 +41,27 @@ public class AdminDashboardRepository : IAdminDashboardRepository
         {
             _logger.LogError(ex, "AdminDashboardRepository: GetCountsAsync -> Something went wrong when counting users and reviews.");
             return RepositoryResult<AdminDashboardCounts>.Error();
+        }
+    }
+
+    public async Task<RepositoryResult<AdminAttentionCounts>> GetAttentionCountsAsync(CancellationToken ctoken)
+    {
+        try
+        {
+            using var context = await _context.CreateDbContextAsync(ctoken);
+
+            var submissions = await context.HikeSubmissions.CountAsync(s => s.Status == HikeSubmissionStatus.Pending, ctoken);
+            var reports = await context.ContentReports.CountAsync(r => r.Status == ReportStatus.Pending, ctoken);
+            var failedMails = await context.OutboxEmails.CountAsync(m => m.Status == OutboxEmailStatus.Failed, ctoken);
+            var imports = await context.TrailImportSessions.CountAsync(s => s.Status == ImportSessionStatus.AwaitingReview, ctoken);
+
+            return RepositoryResult<AdminAttentionCounts>.Success(
+                new AdminAttentionCounts(submissions, reports, failedMails, imports));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AdminDashboardRepository: GetAttentionCountsAsync -> Something went wrong when counting work waiting for an admin.");
+            return RepositoryResult<AdminAttentionCounts>.Error();
         }
     }
 

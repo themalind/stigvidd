@@ -109,10 +109,13 @@ export function invalidateForPush(queryClient: QueryClient, handler: Notificatio
   for (const queryKey of handler.queryKeys(data)) void queryClient.invalidateQueries({ queryKey });
 }
 
+export function isPushType(type: unknown): type is PushType {
+  return typeof type === "string" && Object.hasOwn(NOTIFICATION_HANDLERS, type);
+}
+
 export function notificationHandlerFor(data: PushData | undefined): NotificationHandler | undefined {
   const type = data?.type;
-  if (typeof type !== "string" || !Object.hasOwn(NOTIFICATION_HANDLERS, type)) return undefined;
-  return NOTIFICATION_HANDLERS[type as PushType];
+  return isPushType(type) ? NOTIFICATION_HANDLERS[type] : undefined;
 }
 
 const HANDLED_RESPONSES_KEY = "@stigvidd_handled_notifications";

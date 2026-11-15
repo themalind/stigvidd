@@ -18,4 +18,11 @@ export interface AdminFacilityResponse {
   location: string;
   description: string;
   url: string;
+  /** @nullable */
+  sourceId: string | null;
+  /** @nullable */
+  sourceKey: string | null;
+  nameKey: string;
+  areaNames: string[];
+  lastUpdatedAt: string;
 }

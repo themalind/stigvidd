@@ -13,6 +13,7 @@ export const paths = {
   trails: (search?: Search) => withSearch("/trails", search),
   userWalks: (search?: Search) => withSearch("/user-walks", search),
   areas: "/areas",
+  facilities: (search?: Search) => withSearch("/facilities", search),
   media: "/media",
   users: "/users",
   trailImport: "/trail-import",

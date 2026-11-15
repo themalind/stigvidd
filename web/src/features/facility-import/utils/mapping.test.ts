@@ -4,17 +4,31 @@
 import { describe, expect, it } from "vitest";
 import type { FacilityImportMappingResponse } from "@/api/generated/model";
 import type { FileSummary } from "./inspect";
-import { guessMapping, guessType, initialMapping, mappingProblem, toRequest, type MappingDraft } from "./mapping";
+import {
+  exampleRows,
+  guessMapping,
+  guessType,
+  initialMapping,
+  mappingProblem,
+  toRequest,
+  type MappingDraft,
+} from "./mapping";
 
 const field = (name: string, values: string[] | null = null) => ({ name, samples: [], values });
 
 const OUTDOOR: FileSummary = {
   points: 3,
   fields: [field("fid", null), field("Namn"), field("typ", ["Grillplats", "Toalett", "Vindskydd"])],
+  examples: [
+    { fid: "1", Namn: "Kypegrillen", typ: "Grillplats" },
+    { fid: "2", Namn: "Kypetoan", typ: "Toalett" },
+    { fid: "3", Namn: "Okänd" },
+  ],
 };
 const BATHING: FileSummary = {
   points: 2,
   fields: [field("place_id"), field("name"), field("description"), field("visit_url")],
+  examples: [{ place_id: "1490-6472", name: "Almenäs badplats", visit_url: "https://x.se" }],
 };
 
 const draft = (overrides: Partial<MappingDraft>): MappingDraft => ({
@@ -52,7 +66,7 @@ describe("guessMapping", () => {
   });
 
   it("does not sort on a type field with too many values", () => {
-    expect(guessMapping({ points: 1, fields: [field("typ", null)] }).typeField).toBe("");
+    expect(guessMapping({ points: 1, fields: [field("typ", null)], examples: [] }).typeField).toBe("");
   });
 });
 
@@ -96,7 +110,7 @@ describe("initialMapping", () => {
   });
 
   it("keeps the saved id field even when the file lacks it, instead of guessing another", () => {
-    const file: FileSummary = { points: 1, fields: [field("id"), field("Namn")] };
+    const file: FileSummary = { points: 1, fields: [field("id"), field("Namn")], examples: [] };
 
     expect(initialMapping(file, saved).idField).toBe("fid");
   });
@@ -117,6 +131,30 @@ describe("mappingProblem", () => {
     [{ idField: "objectid" }, "The file has no objectid, which this data source's facilities are matched by."],
   ])("%o gives %s", (overrides, problem) => {
     expect(mappingProblem(draft(overrides), BATHING)).toBe(problem);
+  });
+});
+
+describe("exampleRows", () => {
+  it("shows a fixed type and the chosen id and link", () => {
+    const mapping = draft({ idField: "place_id", urlField: "visit_url", fixedType: 8 });
+
+    expect(exampleRows(BATHING, mapping)).toEqual([
+      { name: "Almenäs badplats", kind: "Swimming area", id: "1490-6472", link: "https://x.se" },
+    ]);
+  });
+
+  it("types each point by its value, and says which are left out", () => {
+    const mapping = draft({ nameField: "Namn", typeField: "typ", typeValues: { Grillplats: 1, Toalett: 0 } });
+
+    expect(exampleRows(OUTDOOR, mapping).map((row) => [row.name, row.kind, row.id])).toEqual([
+      ["Kypegrillen", "Fire pit", ""],
+      ["Kypetoan", "Left out", ""],
+      ["Okänd", "Left out", ""],
+    ]);
+  });
+
+  it("says when the file has no type chosen yet", () => {
+    expect(exampleRows(BATHING, draft({ fixedType: 0 }))[0]?.kind).toBe("No type chosen");
   });
 });
 

@@ -4,6 +4,7 @@
 using System.Linq.Expressions;
 using Core;
 using Core.Repositories;
+using Core.Interfaces.Repositories.Trails.Models;
 using AwesomeAssertions;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -833,5 +834,32 @@ public class TrailRepositoryTests : TestBase
         trails.Select(t => t.Name).Should().Equal("Nyare", "Äldre");
         trails.First().ImageUrl.Should().Be("trails/first.jpg");
         trails.Last().ImageUrl.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task AddMissingTrailImagesAsync_AddsEachFileOnceAfterTheTrailsOwnImages()
+    {
+        var trail = new Trail
+        {
+            Identifier = "with-one",
+            Name = "Med en bild",
+            TrailLength = 3m,
+            TrailImages = [new TrailImage { ImageUrl = "/mock/a.jpg", SortOrder = 4 }],
+        };
+        var factory = CreateSeededFactory(db => db.Trails.Add(trail));
+        var repo = new TrailRepository(factory, NullLogger<TrailRepository>.Instance);
+        ExampleImageFile[] files = [new("mock/a.jpg", 10, 5, 100), new("mock/b.jpg", 8, 6, 200)];
+
+        var first = await repo.AddMissingTrailImagesAsync([trail.Id], files, TestContext.Current.CancellationToken);
+        var second = await repo.AddMissingTrailImagesAsync([trail.Id], files, TestContext.Current.CancellationToken);
+
+        first.Value.Should().Be(1);
+        second.Value.Should().Be(0);
+        using var context = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+        var added = context.TrailImages.Single(ti => ti.TrailId == trail.Id && ti.ImageUrl == "mock/b.jpg");
+        added.SortOrder.Should().Be(5);
+        added.Width.Should().Be(8);
+        added.Height.Should().Be(6);
+        added.SizeBytes.Should().Be(200);
     }
 }

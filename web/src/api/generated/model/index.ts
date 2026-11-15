@@ -10,6 +10,7 @@ export * from "./accountVerifyEmailByLinkParams";
 export * from "./addToUserFavoritesRequest";
 export * from "./addToUserWishlistRequest";
 export * from "./adminAreaSuggestionResponse";
+export * from "./adminAttentionResponse";
 export * from "./adminCityAreaBoundaryPreviewResponse";
 export * from "./adminCityAreaBoundaryResponse";
 export * from "./adminCityAreaFacilityResponse";

@@ -120,4 +120,57 @@ public class AdminDashboardRepositoryTests : TestBase
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().Equal("rev-hidden");
     }
+
+    [Fact]
+    public async Task GetAttentionCounts_CountsOnlyWorkWaitingForAnAdmin()
+    {
+        // Arrange
+        var factory = CreateSeededFactory();
+        var repo = new AdminDashboardRepository(factory, NullLogger<AdminDashboardRepository>.Instance);
+        var before = await repo.GetAttentionCountsAsync(TestContext.Current.CancellationToken);
+        using (var ctx = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken))
+        {
+            ctx.HikeSubmissions.AddRange(
+                new HikeSubmission { Name = "Väntar", UserId = 1, ConsentTextId = 1, Status = HikeSubmissionStatus.Pending },
+                new HikeSubmission { Name = "Klar", UserId = 1, ConsentTextId = 1, Status = HikeSubmissionStatus.Approved });
+            ctx.ContentReports.AddRange(Report(ReportStatus.Pending), Report(ReportStatus.Dismissed));
+            ctx.OutboxEmails.AddRange(Mail(OutboxEmailStatus.Failed), Mail(OutboxEmailStatus.Sent));
+            ctx.TrailImportSessions.AddRange(Session(ImportSessionStatus.AwaitingReview), Session(ImportSessionStatus.Applied));
+            await ctx.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        // Act
+        var after = await repo.GetAttentionCountsAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        before.Value.Should().NotBeNull();
+        after.IsSuccess.Should().BeTrue();
+        after.Value.Should().Be(new AdminAttentionCounts(
+            before.Value.PendingHikeSubmissions + 1,
+            before.Value.PendingReports + 1,
+            before.Value.FailedMails + 1,
+            before.Value.ImportsAwaitingReview + 1));
+    }
+
+    private static ContentReport Report(ReportStatus status)
+    {
+        return new ContentReport
+        {
+            ContentType = ReportedContentType.Review,
+            ContentId = 1,
+            ContentIdentifier = "rev",
+            Reason = ReportReason.Spam,
+            Status = status,
+        };
+    }
+
+    private static OutboxEmail Mail(OutboxEmailStatus status)
+    {
+        return new OutboxEmail { ToAddress = "a@example.com", Subject = "s", BodyHtml = "h", BodyText = "t", Status = status };
+    }
+
+    private static TrailImportSession Session(ImportSessionStatus status)
+    {
+        return new TrailImportSession { Source = "boras", FileName = "f.geojson", FileHash = "h", StoredPath = "p", Status = status };
+    }
 }

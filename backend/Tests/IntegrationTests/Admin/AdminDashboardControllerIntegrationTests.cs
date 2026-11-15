@@ -57,6 +57,37 @@ public class AdminDashboardControllerIntegrationTests : IClassFixture<StigViddWe
     }
 
     [Fact]
+    public async Task GetAttention_WithAdminRole_ReturnsTheCounts()
+    {
+        // Arrange
+        var client = CreateAdminClient();
+
+        // Act
+        var response = await client.GetAsync($"{DashboardRoute}/attention", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var attention = await response.Content.ReadFromJsonAsync<AdminAttentionResponse>(TestContext.Current.CancellationToken);
+        attention.Should().NotBeNull();
+        attention.PendingHikeSubmissions.Should().BeGreaterThanOrEqualTo(0);
+        attention.PendingReports.Should().BeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
+    public async Task GetAttention_WithoutTheAdminRole_IsForbidden()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "firebase-uid-12346");
+
+        // Act
+        var response = await client.GetAsync($"{DashboardRoute}/attention", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task GetDashboard_WithoutTheAdminRole_IsForbidden()
     {
         // Arrange

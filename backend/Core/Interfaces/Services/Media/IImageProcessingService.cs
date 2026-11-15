@@ -11,4 +11,6 @@ public interface IImageProcessingService
     /// owns a rewound stream ready to upload.
     /// </summary>
     ProcessedImage Process(Stream input, ImageProcessingOptions options);
+
+    ImageDimensions Measure(Stream input);
 }

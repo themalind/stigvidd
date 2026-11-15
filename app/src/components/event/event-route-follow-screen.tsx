@@ -7,6 +7,9 @@
 
 import RouteFollowView from "@/components/map/route-follow-view";
 import { useEvent } from "@/hooks/events/useEventQueries";
+import { useOnFirstLoad } from "@/hooks/useOnFirstLoad";
+import { track } from "@/services/analytics";
+import { logger } from "@/services/logger";
 import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
@@ -26,6 +29,12 @@ export default function EventRouteFollowScreen() {
   );
 
   const failed = !isLoading && path.length === 0 && (isError || event !== undefined);
+
+  useOnFirstLoad(event, () => {
+    const hasRoute = path.length > 0;
+    track("event.route_followed", { hasRoute });
+    if (coordinates != null && !hasRoute) logger.warn("Event route unreadable", { eventIdentifier: identifier });
+  });
 
   return (
     <RouteFollowView

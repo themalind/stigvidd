@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { ChoiceCard } from "@/components/choice-card";
 import { SelectField, type SelectOption } from "@/components/form-field";
 import { EMPTY_VALUE, type FileField, type FileSummary } from "@/features/facility-import/utils/inspect";
 import {
@@ -31,11 +32,13 @@ export function MappingForm({ summary, draft, remembered, disabled, onChange }: 
   const fields = summary.fields.map(fieldOption);
   const typeFields = summary.fields.filter((field) => field.values !== null).map(fieldOption);
   const none = (label: string): SelectOption[] => [{ value: NO_FIELD, label }, ...fields];
+  const noId = "None, recognise places by position";
   // keep-comment: a saved id the file lacks stays listed, so the select shows it and the form says what is wrong
   const idOptions =
     draft.idField === NO_FIELD || fields.some((field) => field.value === draft.idField)
-      ? none("None – match on position")
-      : [...none("None – match on position"), { value: draft.idField, label: `${draft.idField} (not in this file)` }];
+      ? none(noId)
+      : [...none(noId), { value: draft.idField, label: `${draft.idField} (not in this file)` }];
+  const oneType = draft.typeField === NO_FIELD;
 
   function set(patch: Partial<MappingDraft>) {
     onChange({ ...draft, ...patch });
@@ -46,44 +49,42 @@ export function MappingForm({ summary, draft, remembered, disabled, onChange }: 
   }
 
   return (
-    <fieldset className="space-y-4 rounded-md border p-4">
-      <legend className="px-1 text-sm font-medium">Fields</legend>
+    <div className="space-y-5">
       <p className="text-xs text-muted-foreground">
-        {summary.points} {summary.points === 1 ? "point" : "points"} in the file.{" "}
         {remembered
-          ? "The data source's fields from last time are chosen."
-          : "Common field names are guessed; check them."}
+          ? "The columns this data source used last time are chosen."
+          : "We guessed from the column names; check them."}
       </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <SelectField
-          label="Name"
+          label="Which column is the name?"
           value={draft.nameField}
-          options={none("Choose a field")}
+          options={none("Choose a column")}
           disabled={disabled}
           onChange={(nameField) => set({ nameField })}
         />
         <SelectField
-          label="Id"
+          label="Which column is the place's own id?"
           value={draft.idField}
           options={idOptions}
           disabled={disabled || remembered}
           hint={
             remembered
-              ? "Set by the first import. Another id would make every facility new."
-              : "An id that stays the same between exports. Without one, a point within 25 m of the last import is the same facility."
+              ? "Set by the first import. Another id would make every place new."
+              : "Kept as the facility's SourceId. It must stay the same in the next export: that is how the next file finds the same place. Without one, a point within 25 m of the last import is the same place."
           }
           onChange={(idField) => set({ idField })}
         />
         <SelectField
-          label="Description"
+          label="Description (optional)"
           value={draft.descriptionField}
           options={none("None")}
           disabled={disabled}
           onChange={(descriptionField) => set({ descriptionField })}
         />
         <SelectField
-          label="Link"
+          label="Link (optional)"
           value={draft.urlField}
           options={none("None")}
           disabled={disabled}
@@ -91,41 +92,70 @@ export function MappingForm({ summary, draft, remembered, disabled, onChange }: 
         />
       </div>
 
-      <SelectField
-        label="Facility type from"
-        value={draft.typeField}
-        options={[{ value: NO_FIELD, label: "One type for the whole file" }, ...typeFields]}
-        disabled={disabled}
-        onChange={setTypeField}
-      />
-
-      {draft.typeField === NO_FIELD ? (
-        <SelectField
-          label="Facility type"
-          value={String(draft.fixedType)}
-          options={[{ value: String(LEAVE_OUT), label: "Choose a type" }, ...TYPE_OPTIONS]}
-          disabled={disabled}
-          onChange={(value) => set({ fixedType: Number(value) })}
-        />
-      ) : (
-        <div className="space-y-2">
-          <p className="text-xs text-muted-foreground">
-            Each value in {draft.typeField} becomes a facility type. Points with a value left out are not imported.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {Object.entries(draft.typeValues).map(([value, type]) => (
-              <SelectField
-                key={value}
-                label={value === EMPTY_VALUE ? "(no value)" : value}
-                value={String(type)}
-                options={[{ value: String(LEAVE_OUT), label: "Leave out" }, ...TYPE_OPTIONS]}
-                disabled={disabled}
-                onChange={(next) => set({ typeValues: { ...draft.typeValues, [value]: Number(next) } })}
-              />
-            ))}
-          </div>
+      <div role="group" aria-label="What kind of places are these?" className="space-y-2">
+        <span className="text-sm font-medium">What kind of places are these?</span>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <ChoiceCard
+            title="All are the same kind"
+            description="For example a file of only bathing sites"
+            selected={oneType}
+            disabled={disabled}
+            onSelect={() => set({ typeField: NO_FIELD })}
+          />
+          <ChoiceCard
+            title="The kind is in a column"
+            description={
+              typeFields.length > 0
+                ? 'For example "Grillplats" or "Vindskydd" on each row'
+                : "No column in this file has few enough values"
+            }
+            selected={!oneType}
+            disabled={disabled || typeFields.length === 0}
+            onSelect={() => {
+              if (oneType && typeFields[0]) setTypeField(typeFields[0].value);
+            }}
+          />
         </div>
-      )}
-    </fieldset>
+
+        {oneType ? (
+          <div className="max-w-sm">
+            <SelectField
+              label="Every place in the file becomes"
+              value={String(draft.fixedType)}
+              options={[{ value: String(LEAVE_OUT), label: "Choose a type" }, ...TYPE_OPTIONS]}
+              disabled={disabled}
+              onChange={(value) => set({ fixedType: Number(value) })}
+            />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="max-w-sm">
+              <SelectField
+                label="Column with the kind"
+                value={draft.typeField}
+                options={typeFields}
+                disabled={disabled}
+                onChange={setTypeField}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Each value becomes a facility type. Places with a value left out are not imported.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {Object.entries(draft.typeValues).map(([value, type]) => (
+                <SelectField
+                  key={value}
+                  label={value === EMPTY_VALUE ? "(no value)" : value}
+                  value={String(type)}
+                  options={[{ value: String(LEAVE_OUT), label: "Leave out" }, ...TYPE_OPTIONS]}
+                  disabled={disabled}
+                  onChange={(next) => set({ typeValues: { ...draft.typeValues, [value]: Number(next) } })}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

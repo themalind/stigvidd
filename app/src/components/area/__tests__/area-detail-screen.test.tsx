@@ -25,6 +25,9 @@ jest.mock("@/api/areas", () => ({
   getAreaByIdentifier: (...args: unknown[]) => mockGetArea(...args),
 }));
 
+const mockTrack = jest.fn();
+jest.mock("@/services/analytics", () => ({ track: (...args: unknown[]) => mockTrack(...args) }));
+
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ identifier: "kransmossen" }),
   router: {
@@ -115,6 +118,20 @@ it("asks for the area named in the route", async () => {
   await show();
 
   expect(mockGetArea).toHaveBeenCalledWith("kransmossen");
+});
+
+it("counts the opening without saying which area", async () => {
+  await show();
+
+  expect(mockTrack).toHaveBeenCalledTimes(1);
+  expect(mockTrack).toHaveBeenCalledWith("area.opened", {});
+});
+
+it("counts nothing while the area cannot be fetched", async () => {
+  mockGetArea.mockReturnValue(new Promise(() => {}));
+  await renderWithProviders(<AreaDetailScreen routes={HOME_AREA_ROUTES} />);
+
+  expect(mockTrack).not.toHaveBeenCalled();
 });
 
 // A half-built hero over a missing name is worse than nothing to look at.

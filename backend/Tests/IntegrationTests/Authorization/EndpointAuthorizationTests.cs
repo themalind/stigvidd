@@ -83,6 +83,7 @@ public class EndpointAuthorizationTests : IClassFixture<StigViddWebApplicationFa
         "PUT /api/v1/admin/trails/{identifier}/verified",
         "GET /api/v1/admin/trails",
         "GET /api/v1/admin/dashboard",
+        "GET /api/v1/admin/dashboard/attention",
         "GET /api/v1/admin/trails/{identifier}",
         "GET /api/v1/admin/trails/{identifier}/path",
         "GET /api/v1/admin/facilities",

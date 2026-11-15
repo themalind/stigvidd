@@ -8,6 +8,9 @@
 import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import { useAreas } from "@/hooks/area/useAreas";
+import { useOnFirstLoad } from "@/hooks/useOnFirstLoad";
+import { track } from "@/services/analytics";
+import { logger } from "@/services/logger";
 import { DEFAULT_AREA_FILTERS, areaMunicipalities, groupAreas } from "@/utils/area/area-list";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
@@ -28,6 +31,12 @@ export default function AreaList({ routes }: Props) {
   const { t } = useTranslation();
   const { data: areas, isPending, isError, error, refetch, hasPosition } = useAreas();
   const [filters, setFilters] = useState(DEFAULT_AREA_FILTERS);
+
+  // keep-comment: for the first list shown; the position's list and refetches replace it later
+  useOnFirstLoad(areas, (loaded) => {
+    track("area.list_viewed", { sort: hasPosition ? "distance" : "popularity", count: loaded.length });
+    if (loaded.length === 0) logger.warn("Area list loaded empty", { hasPosition });
+  });
   const otherMunicipality = t("area.otherMunicipality");
   const sections = useMemo(
     () =>

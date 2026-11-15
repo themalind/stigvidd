@@ -56,6 +56,13 @@ export class FakeMap {
   fitBounds() {
     this.fits += 1;
   }
+  center: [number, number] | null = null;
+  jumpTo(options: { center: [number, number] }) {
+    this.center = options.center;
+  }
+  click(lng: number, lat: number) {
+    this.handlers.click?.forEach((fn) => fn({ lngLat: { lng, lat } }));
+  }
   getCanvas() {
     return { style: {} };
   }

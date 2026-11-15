@@ -20,6 +20,7 @@ import { userAtom } from "@/atoms/auth-atoms";
 import { EVENT_BOARD_STALE_TIME } from "@/constants/cache";
 import { EventBoard, EventPage, EventPost, HikingEvent } from "@/data/types";
 import { useRetryKey } from "@/hooks/useRetryKey";
+import { track } from "@/services/analytics";
 import { InfiniteData, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
@@ -91,6 +92,7 @@ export function useEventBoardMutations(identifier: string) {
   const createPostMutation = useMutation({
     mutationFn: (body: string) => createEventPost(identifier, body, keyFor(body)),
     onSuccess: () => {
+      track("event.post_created", {});
       forget();
       refreshBoard();
     },

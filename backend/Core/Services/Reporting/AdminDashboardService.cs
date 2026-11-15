@@ -55,4 +55,20 @@ public class AdminDashboardService : IAdminDashboardService
             LatestReviews = latest.Value,
         });
     }
+
+    public async Task<Result<AdminAttentionResponse>> GetAttentionAsync(CancellationToken ctoken)
+    {
+        var counts = await _repository.GetAttentionCountsAsync(ctoken);
+
+        if (!counts.IsSuccess)
+            return Result.Fail<AdminAttentionResponse>(new Message(500, "The work waiting for an admin could not be counted."));
+
+        return Result.Ok(new AdminAttentionResponse
+        {
+            PendingHikeSubmissions = counts.Value.PendingHikeSubmissions,
+            PendingReports = counts.Value.PendingReports,
+            FailedMails = counts.Value.FailedMails,
+            ImportsAwaitingReview = counts.Value.ImportsAwaitingReview,
+        });
+    }
 }

@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/sheet";
 import { useSaveFacility } from "@/features/facilities/api/facility";
 import { FACILITY_TYPES } from "@/utils/facility-types";
+import type { LngLat } from "@/utils/geometry-edit";
 import { isHttpUrl } from "@/utils/url";
+import { FacilityMap } from "./facility-map";
 
 // keep-comment: mirrors SaveFacilityRequestValidator; over one, the API rejects the whole save with a 400
 export const FACILITY_LIMITS = { name: 100, location: 200, description: 2000, url: 500 } as const;
@@ -64,6 +66,13 @@ export function facilityProblem(form: FacilityForm): string | null {
   if ((latitude === null) !== (longitude === null)) return "Fill in both latitude and longitude, or neither.";
   if (form.url.trim() !== "" && !isHttpUrl(form.url)) return "Enter a full address starting with https://";
   return null;
+}
+
+// keep-comment: the point the typed fields describe, or null while either is empty or out of range
+function formPosition(form: FacilityForm): LngLat | null {
+  const latitude = coordinate(form.latitude, 90);
+  const longitude = coordinate(form.longitude, 180);
+  return latitude != null && longitude != null ? [longitude, latitude] : null;
 }
 
 function toRequest(form: FacilityForm): SaveFacilityRequest {
@@ -159,8 +168,14 @@ function FacilityFormBody({ facility, onSaved }: { facility: AdminFacilityRespon
           </FormField>
         </div>
         <p className="text-muted-foreground -mt-3 text-xs">
-          Leave both empty for a place without a point, such as a fishing or swimming area.
+          Leave both empty for a place without a point, such as a fishing or swimming area. Click the map to place it.
         </p>
+        <FacilityMap
+          position={formPosition(form)}
+          satellite={false}
+          className="h-64"
+          onPick={([lng, lat]) => set({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) })}
+        />
 
         <TextField
           label="Location"

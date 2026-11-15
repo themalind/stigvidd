@@ -41,6 +41,7 @@ import { logger } from "@/services/logger";
 import { Platform } from "react-native";
 import {
   claimNotificationResponse,
+  isPushType,
   releaseNotificationResponse,
   NOTIFICATION_HANDLERS,
   notificationHandlerFor,
@@ -75,6 +76,15 @@ beforeEach(() => {
 });
 
 // ── Routing maps ──────────────────────────────────────────────────────────────
+
+describe("isPushType", () => {
+  it("accepts every handled type and nothing else", () => {
+    for (const type of Object.keys(NOTIFICATION_HANDLERS)) expect(isPushType(type)).toBe(true);
+    expect(isPushType("kaffepaus")).toBe(false);
+    expect(isPushType("toString")).toBe(false);
+    expect(isPushType(undefined)).toBe(false);
+  });
+});
 
 describe("notificationHandlerFor", () => {
   it("maps friend_request to the incoming friends query and the friends screen", () => {

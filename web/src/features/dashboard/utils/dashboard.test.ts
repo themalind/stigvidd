@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { describe, expect, it } from "vitest";
-import type { AdminTrailListItemResponse, ImportSessionStatus } from "@/api/generated/model";
-import { importsAwaitingReview, relativeTime, share, trailStats } from "./dashboard";
+import type { AdminTrailListItemResponse } from "@/api/generated/model";
+import { relativeTime, share, trailStats } from "./dashboard";
 
 function trail(overrides: Partial<AdminTrailListItemResponse>): AdminTrailListItemResponse {
   return {
@@ -23,10 +23,6 @@ function trail(overrides: Partial<AdminTrailListItemResponse>): AdminTrailListIt
     lastUpdatedAt: "2026-01-01T00:00:00Z",
     ...overrides,
   };
-}
-
-function session(status: ImportSessionStatus) {
-  return { status };
 }
 
 describe("trailStats", () => {
@@ -71,19 +67,6 @@ describe("trailStats", () => {
       withoutImages: 0,
       withoutDescription: 0,
     });
-  });
-});
-
-describe("importsAwaitingReview", () => {
-  it("counts only sessions waiting for a decision", () => {
-    expect(
-      importsAwaitingReview([
-        session("AwaitingReview"),
-        session("Applied"),
-        session("AwaitingReview"),
-        session("Failed"),
-      ]),
-    ).toBe(2);
   });
 });
 

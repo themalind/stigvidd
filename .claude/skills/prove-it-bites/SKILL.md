@@ -12,6 +12,10 @@ has several shapes where that happens quietly.
 The procedure is always the same and takes a minute: **break the thing the test guards,
 watch the test go red, restore it.** Not "reason about whether it would fail".
 
+Break and restore with Edit, **never `git stash`/`git stash pop`**: the tree is usually dirty and
+holds the user's own stashes, so a stash that fails (an untracked file) makes the `pop` apply *her*
+older stash, with conflicts, and restoring that is a `git checkout` the permission guard refuses.
+
 ## The shapes that go vacuously green here
 
 **An integration test whose route is never hit.** A wrong `[Route]`, a missing

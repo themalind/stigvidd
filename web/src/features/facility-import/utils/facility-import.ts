@@ -55,6 +55,55 @@ export function isLink(row: FacilityImportRowResponse): boolean {
   return row.kind === "New" && Boolean(row.facilityIdentifier);
 }
 
+export interface RowGroups {
+  // keep-comment: new rows the server thinks we already have; the admin decides each
+  twins: FacilityImportRowResponse[];
+  fresh: FacilityImportRowResponse[];
+  changed: FacilityImportRowResponse[];
+  missing: FacilityImportRowResponse[];
+  unchanged: FacilityImportRowResponse[];
+}
+
+export function groupRows(rows: readonly FacilityImportRowResponse[]): RowGroups {
+  const sorted = sortRows(rows);
+  const isNew = (row: FacilityImportRowResponse) => row.kind === "New";
+
+  return {
+    twins: sorted.filter((row) => isNew(row) && row.suggestedFacilityIdentifier),
+    fresh: sorted.filter((row) => isNew(row) && !row.suggestedFacilityIdentifier),
+    changed: sorted.filter((row) => row.kind === "Changed"),
+    missing: sorted.filter((row) => row.kind === "Missing"),
+    unchanged: sorted.filter((row) => row.kind === "Unchanged"),
+  };
+}
+
+export interface Outcome {
+  created: number;
+  linked: number;
+  changed: number;
+  missing: number;
+}
+
+export function outcomeOf(rows: readonly FacilityImportRowResponse[]): Outcome {
+  const counts = countByKind(rows);
+  const linked = rows.filter(isLink).length;
+
+  return { created: counts.New - linked, linked, changed: counts.Changed, missing: counts.Missing };
+}
+
+// keep-comment: one line per effect, for the confirmation before saving
+export function outcomeText({ created, linked, changed, missing }: Outcome): string {
+  const lines = [
+    `${created} new ${created === 1 ? "facility is" : "facilities are"} created`,
+    `${linked} ${linked === 1 ? "is" : "are"} linked to facilities we already have`,
+    `${changed} ${changed === 1 ? "is" : "are"} updated`,
+  ];
+  if (missing > 0)
+    lines.push(`${missing} of ours ${missing === 1 ? "is" : "are"} no longer in the file and left as is`);
+
+  return [...lines, "Nothing is deleted."].join("\n");
+}
+
 function chosenLinks(rows: readonly FacilityImportRowResponse[]): FacilityImportLinkRequest[] {
   return rows
     .filter((row) => row.kind === "New")
