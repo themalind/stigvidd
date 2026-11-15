@@ -22,17 +22,10 @@ public class TrailServiceTests
         Mock<ITrailRepository>? trailRepo = null,
         Mock<IWebDavService>? webDav = null,
         Mock<IMediaUploadService>? mediaUpload = null,
-        Mock<ICityAreaMembershipService>? cityAreas = null,
-        Mock<IExampleImageService>? exampleImages = null)
+        Mock<ICityAreaMembershipService>? cityAreas = null)
     {
         var cfg = new Mock<IConfiguration>();
         cfg.Setup(c => c["PresentableBaseUrl"]).Returns("http://stigvidd.se/testing/");
-        if (exampleImages is null)
-        {
-            exampleImages = new Mock<IExampleImageService>();
-            exampleImages.Setup(e => e.AddToTrailsAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Ok());
-        }
 
         return new TrailService(
             (trailRepo ?? new Mock<ITrailRepository>()).Object,
@@ -42,8 +35,7 @@ public class TrailServiceTests
             new TrailResponseFactory(cfg.Object),
             new TrailContributionRanking(new ConfigurationBuilder().Build()),
             new MemoryCache(new MemoryCacheOptions()),
-            (cityAreas ?? new Mock<ICityAreaMembershipService>()).Object,
-            exampleImages.Object);
+            (cityAreas ?? new Mock<ICityAreaMembershipService>()).Object);
     }
 
     private static TrailResponse StubTrailResponse()
@@ -238,27 +230,26 @@ public class TrailServiceTests
     }
 
     [Fact]
-    public async Task AddTrail_GivesTheNewTrailTheExampleImages_AndStillSucceedsIfThatFails()
+    public async Task AddTrail_PutsTheExampleImagesAfterTheUploadedOnes()
     {
         // Arrange
         var repo = new Mock<ITrailRepository>();
+        Trail? saved = null;
         repo.Setup(r => r.AddTrailAsync(It.IsAny<Trail>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Trail t, CancellationToken _) =>
-            {
-                t.Id = 42;
-                return RepositoryResult<Trail>.Success(t);
-            });
-        var exampleImages = new Mock<IExampleImageService>();
-        exampleImages.Setup(e => e.AddToTrailsAsync(It.IsAny<IReadOnlyCollection<int>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Fail(new Message(502, "mock/ could not be listed")));
+            .Callback((Trail t, CancellationToken _) => saved = t)
+            .ReturnsAsync((Trail t, CancellationToken _) => RepositoryResult<Trail>.Success(t));
 
         // Act
-        var result = await Build(repo, exampleImages: exampleImages).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
+        await Build(repo).AddTrailAsync(ValidRequest(), Utilities.Stubs.FakeFile(), Utilities.Stubs.TwoImages(), "user-id", TestContext.Current.CancellationToken);
 
         // Assert
-        result.Success.Should().BeTrue();
-        exampleImages.Verify(e => e.AddToTrailsAsync(
-            It.Is<IReadOnlyCollection<int>>(ids => ids.SequenceEqual(new[] { 42 })), It.IsAny<CancellationToken>()), Times.Once);
+        saved.Should().NotBeNull();
+        saved.TrailImages.Should().NotBeNull();
+        var images = saved.TrailImages.OrderBy(i => i.SortOrder).ToList();
+        images.Should().HaveCount(2 + ExampleTrailImages.Paths.Count);
+        images.Take(2).Should().AllSatisfy(i => i.ImageUrl.Should().NotStartWith("mock/"));
+        images.Skip(2).Select(i => i.ImageUrl).Should().Equal(ExampleTrailImages.Paths);
+        images.Select(i => i.SortOrder).Should().OnlyHaveUniqueItems();
     }
 
     [Fact]
@@ -445,8 +436,8 @@ public class TrailServiceTests
         capturedTrail.Should().NotBeNull();
         capturedTrail.TrailSymbolImage.Should().Be("symbols/symbol.jpg");
         capturedTrail.TrailImages.Should().NotBeNull();
-        capturedTrail.TrailImages.Should().HaveCount(2);
-        capturedTrail.TrailImages.Select(i => i.ImageUrl).Should().NotContain("symbols/symbol.jpg");
+        capturedTrail.TrailImages.Select(i => i.ImageUrl).Except(ExampleTrailImages.Paths)
+            .Should().Equal("trails/img1.jpg", "trails/img2.jpg");
         // The path is persisted, so it has to carry the schema's SRID, not the NTS default of 0.
         capturedTrail.GeoPath.Should().NotBeNull();
         capturedTrail.GeoPath.SRID.Should().Be(GeoPointFactory.Wgs84Srid);

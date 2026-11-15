@@ -8,7 +8,6 @@ public interface IWebDavService
     Task<Result<string?>> UploadFileAsync(Stream stream, string? subDirectory, string extension = "jpeg");
     Task<Result<bool>> DeleteFileAsync(string fileUrl);
     Task EnsureDirectoryExistsAsync(string directoryPath);
-    Task<Result<IReadOnlyCollection<string>>> ListFilesAsync(string directoryPath);
 
     // Data transfer (export/import): read a file's bytes by its exact stored
     // path, and write bytes back to an exact path (preserving the original

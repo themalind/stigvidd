@@ -23,7 +23,6 @@ public class TrailService : ITrailService
     private readonly TrailContributionRanking _ranking;
     private readonly IMemoryCache _cache;
     private readonly ICityAreaMembershipService _cityAreaMembership;
-    private readonly IExampleImageService _exampleImages;
 
     private const string PopularContributionsCacheKey = "trails:popular-contributions";
 
@@ -35,12 +34,10 @@ public class TrailService : ITrailService
         TrailResponseFactory factory,
         TrailContributionRanking ranking,
         IMemoryCache cache,
-        ICityAreaMembershipService cityAreaMembership,
-        IExampleImageService exampleImages)
+        ICityAreaMembershipService cityAreaMembership)
     {
         _trailRepository = trailResponseRepository;
         _cityAreaMembership = cityAreaMembership;
-        _exampleImages = exampleImages;
         _ranking = ranking;
         _cache = cache;
         _webDavService = webDavService;
@@ -89,7 +86,8 @@ public class TrailService : ITrailService
                 City = row.Trail.City,
                 IsVerified = row.Trail.IsVerified,
                 HasImages = row.Trail.TrailImages!.Any(),
-                HasExampleImages = row.Trail.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains(ExampleImageService.Folder)),
+                // keep-comment: the app badges an image as an example by this same rule (app/src/components/media/is-mock-image.ts)
+                HasExampleImages = row.Trail.TrailImages!.Any(img => img.ImageUrl.ToLower().Contains("mock")),
                 HasSymbol = row.Trail.TrailSymbolImage != "",
                 HasDescription = row.Trail.Description != "",
                 HasFullDescription = row.Trail.FullDescription != "",
@@ -468,14 +466,12 @@ public class TrailService : ITrailService
                 CreatedBy = userIdentifier,
                 IsVerified = false,
                 City = request.City ?? string.Empty,
+                TrailImages =
+                [
+                    .. trailImagePaths.Select((url, i) => new TrailImage { ImageUrl = url, SortOrder = i }),
+                    .. ExampleTrailImages.Create(trailImagePaths.Count),
+                ],
             };
-
-            if (trailImagePaths.Count != 0)
-            {
-                trail.TrailImages = trailImagePaths
-                    .Select(url => new TrailImage { ImageUrl = url, Trail = trail })
-                    .ToList();
-            }
 
             var addResult = await _trailRepository.AddTrailAsync(trail, ctoken);
 
@@ -486,12 +482,6 @@ public class TrailService : ITrailService
             }
 
             await _cityAreaMembership.TrailsMovedAsync([addResult.Value.Id], ctoken);
-
-            var examples = await _exampleImages.AddToTrailsAsync([addResult.Value.Id], ctoken);
-            if (examples.IsFailure)
-                _logger.LogWarning(
-                    "TrailService: Trail {trailId} created, but it got no example images: {reason}",
-                    addResult.Value.Id, examples.Message?.ResultMessage);
 
             return Result.Ok<TrailResponse?>(_trailResponseFactory.Create(addResult.Value));
         }

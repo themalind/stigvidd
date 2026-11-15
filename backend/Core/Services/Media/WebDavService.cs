@@ -122,33 +122,6 @@ public class WebDavService : IWebDavService
         }
     }
 
-    // keep-comment: the paths are rebuilt from the folder and each file name, since an href is rooted at the server and the base URL may carry a prefix of its own
-    public async Task<Result<IReadOnlyCollection<string>>> ListFilesAsync(string directoryPath)
-    {
-        var directory = directoryPath.Trim('/');
-
-        using var client = _clientFactory();
-        var response = await client.Propfind($"{directory}/");
-
-        if (response.StatusCode == 404)
-            return Result.Ok<IReadOnlyCollection<string>>([]);
-
-        if (!response.IsSuccessful)
-        {
-            _logger.LogWarning("ListFilesAsync: {Directory} -> {Status}", directory, response.StatusCode);
-            return Result.Fail<IReadOnlyCollection<string>>(new Message(response.StatusCode, $"Could not list {directory}."));
-        }
-
-        IReadOnlyCollection<string> files = response.Resources
-            .Where(resource => !resource.IsCollection)
-            .Select(resource => Uri.UnescapeDataString((resource.Uri ?? "").TrimEnd('/').Split('/')[^1]))
-            .Where(name => name.Length > 0)
-            .Select(name => $"{directory}/{name}")
-            .ToList();
-
-        return Result.Ok(files);
-    }
-
     public async Task<Stream?> DownloadFileAsync(string relativePath)
     {
         var result = await DownloadAsync(relativePath);

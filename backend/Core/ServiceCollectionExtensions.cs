@@ -98,7 +98,6 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IImageProcessingService, ImageProcessingService>();
         services.AddTransient<IMediaUploadService, MediaUploadService>();
         services.AddTransient<IMediaService, MediaService>();
-        services.AddTransient<IExampleImageService, ExampleImageService>();
         services.AddTransient<IMediaReprocessService, MediaReprocessService>();
         services.AddSingleton<IMediaReprocessQueue, MediaReprocessQueue>();
         services.AddTransient<MediaReprocessItemProcessor>();

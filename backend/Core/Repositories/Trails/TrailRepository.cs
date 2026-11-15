@@ -305,53 +305,6 @@ public class TrailRepository : ITrailRepository
         }
     }
 
-    // keep-comment: a file the trail already shows, under either spelling, is skipped so running it twice adds nothing
-    public async Task<RepositoryResult<int>> AddMissingTrailImagesAsync(
-        IReadOnlyCollection<int> trailIds, IReadOnlyCollection<ExampleImageFile> files, CancellationToken ctoken)
-    {
-        try
-        {
-            using var context = await _context.CreateDbContextAsync(ctoken);
-
-            var existing = await context.TrailImages
-                .Where(ti => trailIds.Contains(ti.TrailId))
-                .Select(ti => new { ti.TrailId, ti.ImageUrl, ti.SortOrder })
-                .ToListAsync(ctoken);
-
-            var added = 0;
-
-            foreach (var trailId in trailIds.Distinct())
-            {
-                var own = existing.Where(e => e.TrailId == trailId).ToList();
-                var shown = own.Select(e => e.ImageUrl.TrimStart('/')).ToHashSet();
-                var sortOrder = own.Count == 0 ? 0 : own.Max(e => e.SortOrder) + 1;
-
-                foreach (var file in files.Where(f => !shown.Contains(f.Path.TrimStart('/'))))
-                {
-                    context.TrailImages.Add(new TrailImage
-                    {
-                        TrailId = trailId,
-                        ImageUrl = file.Path,
-                        Width = file.Width,
-                        Height = file.Height,
-                        SizeBytes = file.SizeBytes,
-                        SortOrder = sortOrder++,
-                    });
-                    added++;
-                }
-            }
-
-            await context.SaveChangesAsync(ctoken);
-
-            return RepositoryResult<int>.Success(added);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "TrailRepository: AddMissingTrailImagesAsync -> Something went wrong when adding images to {count} trail(s).", trailIds.Count);
-            return RepositoryResult<int>.Error();
-        }
-    }
-
     public async Task<RepositoryResult> UpdateTrailSymbolAsync(string trailIdentifier, string symbolPath, CancellationToken ctoken)
     {
         try

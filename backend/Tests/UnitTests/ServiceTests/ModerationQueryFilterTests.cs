@@ -54,8 +54,7 @@ public class ModerationQueryFilterTests : TestBase
             new TrailResponseFactory(cfg.Object),
             new TrailContributionRanking(new ConfigurationBuilder().Build()),
             new MemoryCache(new MemoryCacheOptions()),
-            new Mock<ICityAreaMembershipService>().Object,
-            new Mock<IExampleImageService>().Object);
+            new Mock<ICityAreaMembershipService>().Object);
     }
 
     [Fact]
@@ -150,8 +149,7 @@ public class ModerationQueryFilterTests : TestBase
             new TrailResponseFactory(cfg.Object),
             new TrailContributionRanking(new ConfigurationBuilder().Build()),
             new MemoryCache(new MemoryCacheOptions()),
-            new Mock<ICityAreaMembershipService>().Object,
-            new Mock<IExampleImageService>().Object);
+            new Mock<ICityAreaMembershipService>().Object);
     }
 
     private static (int High, int Low) PositionsIn(IReadOnlyCollection<TrailOverviewResponse?> overviews)

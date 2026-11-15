@@ -533,6 +533,7 @@ public class TrailImportRepository : ITrailImportRepository
                 // An imported trail is not published until someone has looked at it: the app
                 // only lists trails that are verified and carry a route.
                 IsVerified = false,
+                TrailImages = ExampleTrailImages.Create(0),
             };
 
             context.Trails.Add(trail);

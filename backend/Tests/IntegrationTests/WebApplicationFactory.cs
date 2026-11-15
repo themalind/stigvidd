@@ -43,16 +43,6 @@ public class StigViddWebApplicationFactory<TProgram>
     /// </summary>
     public List<byte[]> UploadedFileBytes { get; } = [];
 
-    // keep-comment: the one example image the mocked WebDAV holds in mock/, a 4x3 PNG
-    public const string ExampleImagePath = "mock/example-a.png";
-
-    private static byte[] ExampleImagePng()
-    {
-        using var image = new ImageMagick.MagickImage(new ImageMagick.MagickColor("#335533"), 4, 3);
-        image.Format = ImageMagick.MagickFormat.Png;
-        return image.ToByteArray();
-    }
-
     /// <summary>
     /// Every mail the test host "sent", in order. Lives as long as the factory, so tests that
     /// read it clear it first.
@@ -129,12 +119,6 @@ public class StigViddWebApplicationFactory<TProgram>
             mockWebDavService
                 .Setup(x => x.DeleteFileAsync(It.IsAny<string>()))
                 .ReturnsAsync(Result.Ok(true));
-            mockWebDavService
-                .Setup(x => x.ListFilesAsync("mock"))
-                .ReturnsAsync(Result.Ok<IReadOnlyCollection<string>>([ExampleImagePath, "mock/readme.txt"]));
-            mockWebDavService
-                .Setup(x => x.DownloadAsync(ExampleImagePath))
-                .ReturnsAsync(() => Result.Ok<Stream>(new MemoryStream(ExampleImagePng())));
 
             services.AddSingleton(mockWebDavService.Object);
 
