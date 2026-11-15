@@ -476,7 +476,7 @@ Each query is `SQL` type and returns a row only when it should fire, so every tr
 |---|---|---|---|---|
 | `jwt_issuer_mismatch` | production, staging | logs `stigvidd_api_logs` | 15 min | `body LIKE 'JWT rejected (issuer)%'` count >= 3: a build talks to the wrong API for its realm (2026-11-05) |
 | `app_environment_mismatch` | production, staging | logs `stigvidd_app_logs` | 60 min | `message = 'App environment mismatch'` count >= 1 |
-| `api_errors` | production | logs `stigvidd_api_logs` | 15 min | `severity IN ('Error','Critical')` count >= 1 |
+| `api_errors` | production | logs `stigvidd_api_logs` | 15 min | `severity IN ('Error','Critical')` count >= 1, leaving out every error in a trace that has an `exception_type = 'OperationCanceledException'` (a cancelled request also logs a controller "500 from the service layer" in the same trace): `coalesce(trace_id, '') NOT IN (SELECT trace_id ... )` (2026-11-15) |
 | `app_unhandled_js_errors` | production | logs `stigvidd_app_logs` | 30 min | `message = 'Unhandled JS error'` count >= 3 |
 | `app_login_failures` | production | logs `stigvidd_app_logs` | 30 min | `message = 'Login failed'` count >= 10 |
 | `app_events_areas_failures` | production | logs `stigvidd_app_logs` | 30 min | count >= 3 of: `level = 'error'` with `message LIKE '%Event%failed'` or `'%Area%failed'` and `errormessage` not a 4xx (`NOT LIKE '%: 4__%'`), or `message IN ('Push route did not land', 'Event route unreadable', 'Area list loaded empty', 'Unknown notification type')` (2026-11-14, for the events + Utflyktsmål release) |
