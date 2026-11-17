@@ -5,11 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { MAP_FADE_MS } from "@/components/map/map";
 import RouteFollowView from "@/components/map/route-follow-view";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { act, fireEvent, screen } from "@testing-library/react-native";
+import { Animated } from "react-native";
 
 const mockBack = jest.fn();
 const mockUseLiveUserLocation = jest.fn();
@@ -61,6 +63,25 @@ it("draws no line and no start marker for an empty route", async () => {
 
   expect(layer("hike-route-line")).toBeFalsy();
   expect(layer("hike-start-point")).toBeFalsy();
+});
+
+it("keeps the map covered while the route loads, so its jump to the route is not seen", async () => {
+  const timing = jest.spyOn(Animated, "timing");
+  const coverFades = () =>
+    timing.mock.calls.filter(([, config]) => config.toValue === 0 && config.duration === MAP_FADE_MS);
+  const rendered = () => screen.getByTestId("maplibre-Map").props.onDidFinishRenderingMapFully();
+  try {
+    const { rerender } = await renderWithProviders(<RouteFollowView idPrefix="hike" path={[]} isLoading />);
+    await act(async () => rendered());
+    expect(coverFades()).toHaveLength(0);
+
+    await rerender(<RouteFollowView idPrefix="hike" path={PATH} />);
+    await act(async () => rendered());
+
+    expect(coverFades()).toHaveLength(1);
+  } finally {
+    timing.mockRestore();
+  }
 });
 
 // One point is a real route — a recording with a single fix — and it has a trailhead but no line.

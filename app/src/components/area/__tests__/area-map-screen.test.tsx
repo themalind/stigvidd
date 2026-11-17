@@ -7,11 +7,13 @@
 
 import AreaMapScreen from "@/components/area/area-map-screen";
 import { HOME_AREA_ROUTES } from "@/components/area/area-routes";
+import { MAP_FADE_MS } from "@/components/map/map";
 import { CityArea, FacilityType } from "@/data/types";
 import { flushUntil } from "@/test/flush";
 import { cameraHandles, sourceHandle } from "@/test/maplibre";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { Animated } from "react-native";
 
 const maplibre = jest.requireMock("@maplibre/maplibre-react-native");
 const mockGetArea = jest.fn();
@@ -218,6 +220,28 @@ it("opens on the area instead of jumping there once the map has loaded", async (
   expect(screen.getByTestId("maplibre-Camera").props.initialViewState).toEqual(
     expect.objectContaining({ bounds: [12.9, 57.7, 13.0, 57.8] }),
   );
+});
+
+it("keeps the map covered while the area loads, so its jump to the area is not seen", async () => {
+  const timing = jest.spyOn(Animated, "timing");
+  const coverFades = () =>
+    timing.mock.calls.filter(([, config]) => config.toValue === 0 && config.duration === MAP_FADE_MS);
+  const rendered = () => screen.getByTestId("maplibre-Map").props.onDidFinishRenderingMapFully();
+  let resolve: (area: CityArea) => void = () => {};
+  mockGetArea.mockReturnValue(new Promise<CityArea>((r) => (resolve = r)));
+  try {
+    await renderWithProviders(<AreaMapScreen routes={HOME_AREA_ROUTES} />);
+    await act(async () => rendered());
+    expect(coverFades()).toHaveLength(0);
+
+    await act(async () => resolve(AREA));
+    await flushUntil(() => screen.queryByText(AREA.name));
+    await act(async () => rendered());
+
+    expect(coverFades()).toHaveLength(1);
+  } finally {
+    timing.mockRestore();
+  }
 });
 
 it("puts the user's position above the area", async () => {

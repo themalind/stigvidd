@@ -121,6 +121,7 @@ export default function AreaMapScreen({ routes }: Props) {
       <Map
         style={StyleSheet.absoluteFill}
         showsUserLocation={false}
+        contentReady={!isLoading}
         onDidFinishLoadingMap={handleMapReady}
         onPress={closeAll}
       >

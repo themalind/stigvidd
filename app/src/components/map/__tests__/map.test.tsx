@@ -104,6 +104,54 @@ describe("loading cover", () => {
     expect(fadeOuts()).toHaveLength(1);
   });
 
+  it("still fades the cover when the caller listens for the full render too", async () => {
+    const onRendered = jest.fn();
+    await render(<Map onDidFinishRenderingMapFully={onRendered} />);
+
+    await act(async () => {
+      map().props.onDidFinishRenderingMapFully("rendered");
+    });
+
+    expect(fadeOuts()).toHaveLength(1);
+    expect(onRendered).toHaveBeenCalledWith("rendered");
+  });
+
+  it("still fades the cover when the caller listens for a failed load too", async () => {
+    const onFailed = jest.fn();
+    await render(<Map onDidFailLoadingMap={onFailed} />);
+
+    await act(async () => {
+      map().props.onDidFailLoadingMap("failed");
+    });
+
+    expect(fadeOuts()).toHaveLength(1);
+    expect(onFailed).toHaveBeenCalledWith("failed");
+  });
+
+  it("waits for a render after the content arrives, so the camera's jump to it stays behind the cover", async () => {
+    const { rerender } = await render(<Map contentReady={false} />);
+
+    await act(async () => {
+      map().props.onDidFinishRenderingMapFully();
+    });
+    expect(fadeOuts()).toHaveLength(0);
+
+    await rerender(<Map contentReady />);
+    await act(async () => {
+      map().props.onDidFinishRenderingMapFully();
+    });
+
+    expect(fadeOuts()).toHaveLength(1);
+  });
+
+  it("shows the map anyway when the content never arrives", async () => {
+    await render(<Map contentReady={false} />);
+
+    await advance(MAP_REVEAL_FALLBACK_MS);
+
+    expect(fadeOuts()).toHaveLength(1);
+  });
+
   it("lets touches through to the map", async () => {
     await render(<Map />);
 

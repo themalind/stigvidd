@@ -18,6 +18,8 @@ import { getMapStyle } from "./map-style";
 type Props = Partial<Omit<MapProps, "mapStyle" | "ref" | "style">> & {
   style?: StyleProp<ViewStyle>;
   showsUserLocation?: boolean;
+  // keep-comment: false while the route or area is still loading, so the camera's jump to it happens behind the cover
+  contentReady?: boolean;
   children?: React.ReactNode;
 };
 
@@ -51,7 +53,16 @@ export function ornamentPositions(position: OrnamentPosition) {
 // bar already clears the home indicator. Callers can still override via props —
 // the embedded previews move it to the top, where their pills aren't.
 export default forwardRef<MapRef, Props>(function Map(
-  { style, showsUserLocation = true, attributionPosition = DEFAULT_ATTRIBUTION_POSITION, children, ...rest },
+  {
+    style,
+    showsUserLocation = true,
+    attributionPosition = DEFAULT_ATTRIBUTION_POSITION,
+    contentReady = true,
+    onDidFinishRenderingMapFully,
+    onDidFailLoadingMap,
+    children,
+    ...rest
+  },
   ref,
 ) {
   const basemap = useAtomValue(basemapAtom);
@@ -59,6 +70,12 @@ export default forwardRef<MapRef, Props>(function Map(
   const positions = ornamentPositions(attributionPosition);
   const cover = useRef(new Animated.Value(1)).current;
   const revealed = useRef(false);
+  const contentReadyRef = useRef(contentReady);
+
+  // keep-comment: a render that finished before the content arrived shows the default view, so only a later one reveals
+  useEffect(() => {
+    contentReadyRef.current = contentReady;
+  }, [contentReady]);
 
   const reveal = useCallback(() => {
     if (revealed.current) return;
@@ -82,8 +99,14 @@ export default forwardRef<MapRef, Props>(function Map(
         attribution
         attributionPosition={positions.attribution}
         compass={false}
-        onDidFinishRenderingMapFully={reveal}
-        onDidFailLoadingMap={reveal}
+        onDidFinishRenderingMapFully={(event) => {
+          if (contentReadyRef.current) reveal();
+          onDidFinishRenderingMapFully?.(event);
+        }}
+        onDidFailLoadingMap={(event) => {
+          reveal();
+          onDidFailLoadingMap?.(event);
+        }}
         {...rest}
       >
         {showsUserLocation && <UserLocation />}

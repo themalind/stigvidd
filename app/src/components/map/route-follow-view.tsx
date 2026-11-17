@@ -95,7 +95,12 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
 
   return (
     <View style={s.container}>
-      <Map style={StyleSheet.absoluteFill} showsUserLocation={false} onDidFinishLoadingMap={handleMapReady}>
+      <Map
+        style={StyleSheet.absoluteFill}
+        showsUserLocation={false}
+        contentReady={!isLoading}
+        onDidFinishLoadingMap={handleMapReady}
+      >
         <Camera ref={cameraRef} initialViewState={initialViewFor(bounds, FIT_PADDING)} />
         {path.length > 1 && (
           <GeoJSONSource id={`${idPrefix}-route`} data={lineShape}>
