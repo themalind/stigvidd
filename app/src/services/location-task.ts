@@ -130,7 +130,6 @@ function notifyHikeStateChange(): void {
 
 export async function writeHikeState(state: StoredHikeState): Promise<void> {
   await AsyncStorage.setItem(HIKE_STORAGE_KEY, JSON.stringify(state));
-  notifyHikeStateChange();
 }
 
 // Serializes read-modify-write access to the stored hike state. The background
@@ -161,6 +160,8 @@ export async function mutateHikeState(
     const current = await readHikeState();
     const next = mutator(current);
     if (next) await writeHikeState(next);
+    // keep-comment: only on start, pause and resume, not on each GPS batch
+    if (next && next.isTracking !== current.isTracking) notifyHikeStateChange();
     return next ?? current;
   });
 }

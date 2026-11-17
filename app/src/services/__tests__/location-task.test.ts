@@ -1113,16 +1113,36 @@ describe("hasHikeInProgress", () => {
 describe("onHikeStateChange", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("tells listeners after a write and after a clear, until they unsubscribe", async () => {
+  it("tells listeners when the hike is cleared, not on every write, until they unsubscribe", async () => {
     mockGetItem.mockResolvedValue(null);
     mockSetItem.mockResolvedValue(undefined);
     const listener = jest.fn();
     const unsubscribe = onHikeStateChange(listener);
 
     await mutateHikeState(() => defaultHikeState);
+    expect(listener).not.toHaveBeenCalled();
     await clearHikeState();
     unsubscribe();
     await clearHikeState();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("tells listeners when recording starts and pauses, but not when points are added", async () => {
+    let stored: string | null = null;
+    mockGetItem.mockImplementation(async () => stored);
+    mockSetItem.mockImplementation(async (_key: string, value: string) => {
+      stored = value;
+    });
+    const listener = jest.fn();
+    const unsubscribe = onHikeStateChange(listener);
+
+    await mutateHikeState((state) => ({ ...state, isTracking: true }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    await mutateHikeState((state) => ({ ...state, hike: { ...state.hike, totalDistance: 120 } }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    await mutateHikeState((state) => ({ ...state, isTracking: false }));
+    unsubscribe();
 
     expect(listener).toHaveBeenCalledTimes(2);
   });
