@@ -66,6 +66,7 @@ interface MarkersMapProps {
   ) => void;
   onMapPress: () => void;
   onMapReady: () => void;
+  tracksUser?: boolean;
 }
 
 // The map has its own suite; this stub covers the wiring — what the screen hands it, and what comes back.
@@ -302,6 +303,22 @@ describe("MapScreen — leaving and returning to the tab", () => {
     expect(screen.queryByTestId("map-cover")).toBeNull();
   });
 
+  it("stops tracking the user under a pushed screen, and resumes on return", async () => {
+    await show();
+    await mapReady();
+    expect(map().tracksUser).toBe(true);
+
+    await act(async () => {
+      emit(mockScreen, "blur");
+    });
+    expect(map().tracksUser).toBe(false);
+
+    await act(async () => {
+      emit(mockScreen, "focus");
+    });
+    expect(map().tracksUser).toBe(true);
+  });
+
   it("stops listening to the tab once the screen is gone", async () => {
     const rendered = await show();
 
@@ -309,6 +326,8 @@ describe("MapScreen — leaving and returning to the tab", () => {
 
     expect(mockTab.listeners.focus?.size ?? 0).toBe(0);
     expect(mockTab.listeners.blur?.size ?? 0).toBe(0);
+    expect(mockScreen.listeners.focus?.size ?? 0).toBe(0);
+    expect(mockScreen.listeners.blur?.size ?? 0).toBe(0);
   });
 
   it("covers the empty space left behind", async () => {

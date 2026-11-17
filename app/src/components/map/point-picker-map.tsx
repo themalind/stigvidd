@@ -33,7 +33,6 @@ export default function PointPickerMap({ value, onChange, label, hint, testID }:
       <Map
         style={s.map}
         showsUserLocation={false}
-        androidView="texture"
         attributionPosition={{ top: SCREEN_PADDING, left: SCREEN_PADDING }}
         onPress={(event) => onChange(event.nativeEvent.lngLat)}
       >

@@ -41,6 +41,7 @@ export default function MapScreen() {
 
   const [isMapReady, setIsMapReady] = useState(false);
   const [isFocused, setIsFocused] = useState(true);
+  const [isOnTop, setIsOnTop] = useState(true);
   const [returnViewState, setReturnViewState] = useState<InitialViewState | null>(null);
   const [filters, setFilters] = useState<MapMarkerFilter>({
     trails: true,
@@ -131,6 +132,15 @@ export default function MapScreen() {
     };
   }, [navigation]);
 
+  useEffect(() => {
+    const offFocus = navigation.addListener("focus", () => setIsOnTop(true));
+    const offBlur = navigation.addListener("blur", () => setIsOnTop(false));
+    return () => {
+      offFocus();
+      offBlur();
+    };
+  }, [navigation]);
+
   // A cached fix seeds the camera so a warm return skips the Borås flash. keep-comment: why seed
   const seededViewState: InitialViewState | undefined =
     returnViewState ??
@@ -155,6 +165,7 @@ export default function MapScreen() {
           onClusterOpen={openCarousel}
           onMapPress={closeCarousel}
           onMapReady={handleMapReady}
+          tracksUser={isOnTop}
         />
       )}
       {(!isMapReady || !isFocused) && (

@@ -81,8 +81,7 @@ export default function RouteTrimmer({ idPrefix, path, trim, onTrimChange, testI
     <View testID={testID} style={s.section}>
       {path.length > 1 && (
         <View style={s.mapContainer}>
-          {/* keep-comment: a SurfaceView lags behind the keyboard lift and leaves a stale copy of the map */}
-          <Map style={s.map} androidView="texture" showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
+          <Map style={s.map} showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
             <Camera ref={cameraRef} />
             <GeoJSONSource id={`${idPrefix}-route-full`} data={fullShape}>
               <Layer

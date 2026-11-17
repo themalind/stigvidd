@@ -100,6 +100,7 @@ export default forwardRef<MapRef, Props>(function Map(
         attributionPosition={positions.attribution}
         compass={false}
         // keep-comment: a GLSurfaceView ignores the stack transition's fade and pops in raw before its tiles
+        // keep-comment: and lags behind a keyboard lift, leaving a stale copy of the map
         androidView="texture"
         onDidFinishRenderingMapFully={(event) => {
           if (contentReadyRef.current) reveal();
@@ -114,7 +115,6 @@ export default forwardRef<MapRef, Props>(function Map(
         {showsUserLocation && <UserLocation />}
         {children}
       </MapLibreMap>
-      {/* A cover that fades out, not the map: Android draws the map on a GL surface that ignores a parent's opacity. keep-comment: why not fade the map itself */}
       <Animated.View
         testID="map-loading-cover"
         pointerEvents="none"

@@ -111,6 +111,30 @@ beforeEach(() => {
   mockUseUserLocation.mockReturnValue({ data: { isFallback: true } });
 });
 
+describe("tracking the user", () => {
+  const { useCurrentPosition } = jest.requireMock("@maplibre/maplibre-react-native");
+
+  beforeEach(() => {
+    mockUseUserLocation.mockReturnValue({ data: { isFallback: false, latitude: 57.7, longitude: 12.9 } });
+  });
+
+  it("shows the puck and listens for a fix by default", async () => {
+    await show();
+
+    expect(screen.getByTestId("maplibre-UserLocation")).toBeTruthy();
+    expect(useCurrentPosition).toHaveBeenLastCalledWith({ enabled: true });
+    expect(screen.getByText("Hittar din position…")).toBeTruthy();
+  });
+
+  it("drops the puck, the listener and the locating pill when told not to track", async () => {
+    await show({}, { tracksUser: false });
+
+    expect(screen.queryByTestId("maplibre-UserLocation")).toBeNull();
+    expect(useCurrentPosition).toHaveBeenLastCalledWith({ enabled: false });
+    expect(screen.queryByText("Hittar din position…")).toBeNull();
+  });
+});
+
 // Each filter owns its own source, so a layer left on with the filter off is an unexplained pin.
 it("mounts a source only for the kinds the filter asks for", async () => {
   const { unmount } = await show({ trails: true, firePits: false, shelters: false });

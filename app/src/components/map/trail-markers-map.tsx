@@ -76,6 +76,8 @@ interface Props {
   onRegionDidChange?: (event: NativeSyntheticEvent<ViewStateChangeEvent>) => void;
   onMapPress?: () => void;
   onMapReady?: () => void;
+  // keep-comment: false while covered, since each subscriber keeps MapLibre's location engine running
+  tracksUser?: boolean;
 }
 
 const BORAS_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
@@ -102,6 +104,7 @@ export default function TrailMarkersMap({
   onRegionDidChange,
   onMapPress,
   onMapReady,
+  tracksUser = true,
 }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -115,8 +118,8 @@ export default function TrailMarkersMap({
   // We gate the "locating…" pill on a fix actually being expected: useUserLocation tells
   // us we have a real (non-fallback) position — when permission is denied none ever comes.
   const { data: userLocation } = useUserLocation();
-  const currentPosition = useCurrentPosition();
-  const isLocating = !!userLocation && !userLocation.isFallback && !currentPosition;
+  const currentPosition = useCurrentPosition({ enabled: tracksUser });
+  const isLocating = tracksUser && !!userLocation && !userLocation.isFallback && !currentPosition;
   // Facility sources cluster like trails; their refs let a cluster tap resolve the
   // zoom at which it breaks apart.
   const firePitSourceRef = useRef<GeoJSONSourceRef>(null);
@@ -269,7 +272,7 @@ export default function TrailMarkersMap({
     <View style={style}>
       <Map
         style={StyleSheet.absoluteFill}
-        showsUserLocation
+        showsUserLocation={tracksUser}
         // Spread conditionally: passing the key as undefined would override the
         // map's own default rather than fall back to it.
         {...(attributionPosition ? { attributionPosition } : {})}
