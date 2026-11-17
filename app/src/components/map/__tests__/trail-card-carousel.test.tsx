@@ -19,6 +19,13 @@ jest.mock("@/hooks/trail/useTrailCard", () => ({
   useTrailCards: (identifiers: string[]) => mockUseTrailCards(identifiers),
 }));
 
+const mockUseTrailCoordinates = jest.fn();
+
+jest.mock("@/hooks/trail/useTrailCoordinates", () => ({
+  useTrailCoordinates: (identifier: string | undefined, options?: { enabled?: boolean }) =>
+    mockUseTrailCoordinates(identifier, options),
+}));
+
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const PEEK = 44;
 const CARD_WIDTH = SCREEN_WIDTH - SCREEN_PADDING * 2 - PEEK;
@@ -191,4 +198,23 @@ it("hands the pressed card's identifier to the caller", async () => {
 
   expect(onReadMore).toHaveBeenCalledWith("a");
   expect(onShowOnMap).toHaveBeenCalledWith("a");
+});
+
+it("loads the coordinates of the card that is showing, so the follow map has them when it opens", async () => {
+  await show(["a", "b", "c"]);
+  expect(mockUseTrailCoordinates).toHaveBeenLastCalledWith("a", { enabled: true });
+
+  await fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
+    nativeEvent: { contentOffset: { x: CARD_WIDTH + SCREEN_PADDING }, contentSize: {}, layoutMeasurement: {} },
+  });
+
+  expect(mockUseTrailCoordinates).toHaveBeenLastCalledWith("b", { enabled: true });
+  expect(mockUseTrailCoordinates).not.toHaveBeenCalledWith("c", expect.anything());
+});
+
+it("does not load the coordinates of a trail whose card could not be found", async () => {
+  mockUseTrailCards.mockReturnValue(state([], { notFound: new Set(["gone"]) }));
+  await show(["gone"]);
+
+  expect(mockUseTrailCoordinates).toHaveBeenLastCalledWith("gone", { enabled: false });
 });

@@ -9,6 +9,7 @@ import ExampleImageOverlay from "@/components/media/example-image-overlay";
 import { SCREEN_PADDING, SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailCard } from "@/data/types";
 import { useTrailCards } from "@/hooks/trail/useTrailCard";
+import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
 import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -50,6 +51,10 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
 
   // One batched fetch for the whole cluster instead of one request per card.
   const { cards, isError, notFound, refetch } = useTrailCards(identifiers);
+
+  // keep-comment: warms the cache "Se på karta" reads; only for a card that loaded, so a deleted trail is not fetched
+  const activeIdentifier = identifiers[activeIndex];
+  useTrailCoordinates(activeIdentifier, { enabled: !!activeIdentifier && !!cards[activeIdentifier] });
 
   // Reset to the first card whenever a different cluster is opened — otherwise the
   // list keeps its previous scroll offset / index (e.g. lands on "3/4").
