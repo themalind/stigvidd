@@ -46,9 +46,12 @@ jest.mock("@/components/hike/recorder/hike-recorder", () => {
 });
 
 // location-task registers a background task at import; only the dialog's two limits are needed.
+const mockHasHikeInProgress = jest.fn();
+
 jest.mock("@/services/location-task", () => ({
   INACTIVITY_TIMEOUT: 60 * 60 * 1000,
   MAX_DURATION: 12 * 60 * 60 * 1000,
+  hasHikeInProgress: () => mockHasHikeInProgress(),
 }));
 
 // A plain atom lets each test state the user's load outcome directly.
@@ -77,6 +80,7 @@ beforeEach(() => {
   onAppState = null;
   mockCanGoBack.mockReturnValue(false);
   mockGetBackgroundPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
+  mockHasHikeInProgress.mockResolvedValue(false);
   jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
     onAppState = listener as (state: AppStateStatus) => void;
     return { remove: mockRemoveListener };
@@ -187,6 +191,16 @@ describe("on Android", () => {
 
     expect(screen.getByText("Stigvidd behöver din plats")).toBeTruthy();
     expect(screen.queryByTestId("hike-recorder")).toBeNull();
+  });
+
+  it("leaves a hike under way on screen when background is not granted", async () => {
+    mockGetBackgroundPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
+    mockHasHikeInProgress.mockResolvedValue(true);
+
+    await showGranted();
+
+    expect(screen.getByTestId("hike-recorder")).toBeTruthy();
+    expect(screen.queryByText("Stigvidd behöver din plats")).toBeNull();
   });
 
   it("opens the creator after Fortsätt without a second disclosure", async () => {

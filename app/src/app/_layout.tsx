@@ -19,6 +19,7 @@ import { APP_ENVIRONMENT } from "@/utils/app-environment";
 import { GlobalSnackbar } from "@/components/status/global-snackbar";
 import { ConsentDialog } from "@/components/settings/consent-dialog";
 import { useAppState } from "@/hooks/useAppState";
+import { useOpenActiveRecording } from "@/hooks/hike/useOpenActiveRecording";
 import { useUserTheme } from "@/hooks/theme/useUserTheme";
 import { loadStoredLanguage } from "@/i18n";
 import "@/services/location-task";
@@ -124,6 +125,12 @@ function NotificationHandler() {
   return null;
 }
 
+function ActiveRecordingHandler() {
+  const { user } = useAuth();
+  useOpenActiveRecording(!!user);
+  return null;
+}
+
 export default function RootLayout() {
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
@@ -197,6 +204,7 @@ export default function RootLayout() {
           <View testID="root-container" style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <PaperProvider theme={theme}>
               <NotificationHandler />
+              <ActiveRecordingHandler />
               <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               </Stack>

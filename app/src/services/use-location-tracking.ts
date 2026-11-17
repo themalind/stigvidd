@@ -11,7 +11,7 @@ import * as Location from "expo-location";
 import { useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AppState, AppStateStatus, Linking } from "react-native";
+import { AppState, AppStateStatus, Linking, Platform } from "react-native";
 import {
   LOCATION_TASK_NAME,
   MIN_DISTANCE,
@@ -26,6 +26,7 @@ import {
   maybeFinalizeStaleHike,
   mutateHikeState,
   readHikeState,
+  survivedRestart,
 } from "./location-task";
 import { isBackgroundTaskRunning, logRecordingEnvironment } from "./recording-diagnostics";
 import {
@@ -145,6 +146,11 @@ export function useLocationTracking() {
 
     const current = await readHikeState();
     if (!current.isTracking || !current.currentSegment) return;
+
+    if (Platform.OS === "android" && !useNativeRef.current) {
+      const taskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
+      if (survivedRestart(current, taskRunning, Date.now())) return;
+    }
 
     logger.warn("Hike recording interrupted: the app was restarted while recording", {
       points: current.currentSegment.coordinates.length,
@@ -324,8 +330,12 @@ export function useLocationTracking() {
     // memory pressure mid-hike, only "Always" relaunches it. So we surface a firm,
     // actionable prompt (Open Settings) rather than a transient snackbar, while still
     // letting the recording start provisionally.
-    const { status: bgPermission } = await Location.requestBackgroundPermissionsAsync();
-    if (bgPermission !== "granted") {
+    // Resume only reads it: on Android 11+ a request leaves the app for the settings page. keep-comment: platform behaviour behind the read
+    const isNewHike = (await readHikeState()).hike.segments.length === 0;
+    const { status: bgPermission } = isNewHike
+      ? await Location.requestBackgroundPermissionsAsync()
+      : await Location.getBackgroundPermissionsAsync();
+    if (isNewHike && bgPermission !== "granted") {
       showDialog({
         title: t("createHike.bgPermissionTitle"),
         message: t("createHike.bgPermissionMessage"),

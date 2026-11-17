@@ -33,6 +33,7 @@ jest.mock("expo-task-manager", () => ({ defineTask: jest.fn() }));
 
 const mockRequestForeground = jest.fn();
 const mockRequestBackground = jest.fn();
+const mockGetBackground = jest.fn();
 const mockHasStarted = jest.fn();
 const mockStartUpdates = jest.fn();
 const mockStopUpdates = jest.fn();
@@ -41,6 +42,7 @@ const mockWatchPosition = jest.fn();
 jest.mock("expo-location", () => ({
   requestForegroundPermissionsAsync: (...args: unknown[]) => mockRequestForeground(...args),
   requestBackgroundPermissionsAsync: (...args: unknown[]) => mockRequestBackground(...args),
+  getBackgroundPermissionsAsync: (...args: unknown[]) => mockGetBackground(...args),
   hasStartedLocationUpdatesAsync: (...args: unknown[]) => mockHasStarted(...args),
   startLocationUpdatesAsync: (...args: unknown[]) => mockStartUpdates(...args),
   stopLocationUpdatesAsync: (...args: unknown[]) => mockStopUpdates(...args),
@@ -119,6 +121,7 @@ beforeEach(async () => {
 
   mockRequestForeground.mockResolvedValue({ status: "granted" });
   mockRequestBackground.mockResolvedValue({ status: "granted" });
+  mockGetBackground.mockResolvedValue({ status: "granted" });
   mockHasStarted.mockResolvedValue(false);
   mockStartUpdates.mockResolvedValue(undefined);
   mockStopUpdates.mockResolvedValue(undefined);
@@ -205,6 +208,25 @@ describe("startTracking", () => {
       expect(dialog.actions.map((a) => a.label)).toEqual(["Öppna inställningar", "Fortsätt ändå"]);
       await act(async () => dialog.actions[0].onPress?.());
       expect(openSettings).toHaveBeenCalled();
+    });
+
+    it("neither asks for background access nor warns again on resume", async () => {
+      mockRequestBackground.mockResolvedValue({ status: "denied" });
+      mockGetBackground.mockResolvedValue({ status: "denied" });
+      const paused = state({
+        hike: {
+          segments: [segment({ distance: 400, endTime: NOW - 30_000 })],
+          totalDistance: 400,
+          totalTime: 30_000,
+        },
+      });
+      const harness = await mount(paused);
+
+      await act(async () => harness.hook().startTracking());
+
+      expect(mockRequestBackground).not.toHaveBeenCalled();
+      expect(getDialog()).toBeNull();
+      expect(harness.hook().isTracking).toBe(true);
     });
 
     it("says nothing when both permissions are granted", async () => {

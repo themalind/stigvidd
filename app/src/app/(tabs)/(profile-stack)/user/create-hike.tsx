@@ -11,6 +11,7 @@ import LocationDisclosureDialog from "@/components/hike/recorder/location-disclo
 import RecordingInfoDialog from "@/components/hike/recorder/recording-info-dialog";
 import HikeRecorder from "@/components/hike/recorder/hike-recorder";
 import { USER_LOCATION_KEY } from "@/hooks/location/useUserLocation";
+import { hasHikeInProgress } from "@/services/location-task";
 import { logger } from "@/services/logger";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
@@ -31,6 +32,7 @@ async function readPermissionPhase(): Promise<PermissionPhase> {
   if (!granted) return "disclosure";
   // Play requires the disclosure before the background prompt the recording raises on Android. keep-comment: store policy
   if (Platform.OS !== "android") return "granted";
+  if (await hasHikeInProgress()) return "granted";
   const background = await Location.getBackgroundPermissionsAsync();
   return background.granted ? "granted" : "disclosure";
 }

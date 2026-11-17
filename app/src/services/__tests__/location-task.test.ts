@@ -25,9 +25,12 @@ import {
   evaluatePoint,
   finalizeActiveSegment,
   ingestFixes,
+  hasHikeInProgress,
   maybeFinalizeStaleHike,
   mutateHikeState,
   readHikeState,
+  RESTART_GRACE,
+  survivedRestart,
 } from "../location-task";
 
 // Capture the background task callback when the module registers it
@@ -1048,5 +1051,59 @@ describe("ingestFixes", () => {
     const written = JSON.parse(mockSetItem.mock.calls[0][1]);
     expect(written.isTracking).toBe(false);
     expect(written.hike.segments).toHaveLength(1);
+  });
+});
+
+describe("survivedRestart", () => {
+  const point = (timeStamp: number) => ({ data: { latitude: 57.7, longitude: 11.97 }, timeStamp });
+  const withLastFix = (timeStamp: number): StoredHikeState => ({
+    ...activeState,
+    currentSegment: { coordinates: [point(timeStamp)], distance: 50, startTime: timeStamp - 1000 },
+  });
+
+  it("keeps a running task whose last fix is within the grace", () => {
+    expect(survivedRestart(withLastFix(NOW - RESTART_GRACE), true, NOW)).toBe(true);
+  });
+
+  // Restored only at this launch, its next fix may come from far away. keep-comment: the straight-line case the pause guards
+  it("pauses a running task whose last fix is older than the grace", () => {
+    expect(survivedRestart(withLastFix(NOW - RESTART_GRACE - 1), true, NOW)).toBe(false);
+  });
+
+  it("pauses when the task is not running", () => {
+    expect(survivedRestart(withLastFix(NOW), false, NOW)).toBe(false);
+  });
+
+  it("measures from the segment start before the first fix", () => {
+    const state: StoredHikeState = { ...activeState, currentSegment: { ...baseSegment, startTime: NOW - 1000 } };
+    expect(survivedRestart(state, true, NOW)).toBe(true);
+  });
+
+  it("has nothing to keep when not tracking", () => {
+    expect(survivedRestart({ ...defaultHikeState }, true, NOW)).toBe(false);
+  });
+});
+
+describe("hasHikeInProgress", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("is false with nothing stored", async () => {
+    mockGetItem.mockResolvedValue(null);
+    expect(await hasHikeInProgress()).toBe(false);
+  });
+
+  it("is true while recording", async () => {
+    mockGetItem.mockResolvedValue(JSON.stringify(activeState));
+    expect(await hasHikeInProgress()).toBe(true);
+  });
+
+  it("is true for a paused hike with walked segments", async () => {
+    const paused: StoredHikeState = {
+      isTracking: false,
+      currentSegment: null,
+      hike: { segments: [{ ...baseSegment, endTime: NOW }], totalDistance: 400, totalTime: 1000 },
+    };
+    mockGetItem.mockResolvedValue(JSON.stringify(paused));
+    expect(await hasHikeInProgress()).toBe(true);
   });
 });

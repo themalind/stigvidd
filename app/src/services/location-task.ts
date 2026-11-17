@@ -304,6 +304,21 @@ export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): Sto
   return finalizeActiveSegment(state, isOverCap ? "max_duration" : "inactivity");
 }
 
+export const RESTART_GRACE = 10 * 60 * 1000;
+
+export async function hasHikeInProgress(): Promise<boolean> {
+  const state = await readHikeState();
+  return state.isTracking || state.currentSegment !== null || state.hike.segments.length > 0;
+}
+
+// True when a running task wrote recently: Android restarts the task with the process, so it kept recording. keep-comment: why a new process is not always a dead engine
+export function survivedRestart(state: StoredHikeState, taskRunning: boolean, now: number): boolean {
+  if (!taskRunning || !state.isTracking || !state.currentSegment) return false;
+  const seg = state.currentSegment;
+  const lastActivity = seg.coordinates.at(-1)?.timeStamp ?? seg.startTime;
+  return now - lastActivity <= RESTART_GRACE;
+}
+
 export type RejectReason = "stale" | "accuracy" | "warmup" | "speed" | "teleport" | "noise";
 
 export type PointDecision = { accept: boolean; distance: number; reason?: RejectReason };
