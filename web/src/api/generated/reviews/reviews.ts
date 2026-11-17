@@ -518,11 +518,16 @@ export const reviewsCreateReview = async (
           return formData;
         })();
 
-  return customFetch<Blob>(getReviewsCreateReviewUrl(), {
+  const requestInit: { body?: unknown } & NonNullable<Parameters<typeof customFetch>[1]> = {
     ...options,
     method: "POST",
-    body: formData,
-  });
+  };
+  if (formData === undefined) {
+    delete requestInit.body;
+  } else {
+    requestInit.body = formData;
+  }
+  return customFetch<Blob>(getReviewsCreateReviewUrl(), requestInit);
 };
 
 export const getReviewsCreateReviewMutationKey = () => ["reviewsCreateReview"] as const;

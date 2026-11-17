@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="!$(MSBuildProjectName.EndsWith('Tests'))">
-    <PackageReference Include="Meziantou.Analyzer" Version="3.0.324">
+    <PackageReference Include="Meziantou.Analyzer" Version="3.0.341">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
