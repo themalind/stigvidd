@@ -10,6 +10,8 @@ import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/display/count-badge";
 import Header from "@/components/layout/header";
 import OfflineBanner from "@/components/status/offline-banner";
+import RecordingBar from "@/components/hike/recording-bar";
+import { BottomTabBar } from "expo-router/tabs";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs, usePathname, useSegments } from "expo-router";
 import { useAtomValue } from "jotai";
@@ -54,6 +56,12 @@ export default function TabsLayout() {
       {shouldShowHeader && <Header />}
       <OfflineBanner clearStatusBar={!shouldShowHeader} />
       <Tabs
+        tabBar={(props) => (
+          <>
+            <RecordingBar signedIn={isAuthenticated} />
+            <BottomTabBar {...props} />
+          </>
+        )}
         screenOptions={{
           tabBarStyle: {
             backgroundColor: theme.dark ? "#000000" : "#ffffff",
