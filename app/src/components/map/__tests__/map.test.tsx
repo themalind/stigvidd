@@ -46,6 +46,12 @@ it("moves a right-anchored attribution button inwards, away from the logo", asyn
   expect(map().props.attributionPosition).toEqual({ bottom: 8, right: 8 + 67 + 4 });
 });
 
+it("renders as a TextureView on Android, so it fades with the screen transition", async () => {
+  await render(<Map />);
+
+  expect(map().props.androidView).toBe("texture");
+});
+
 describe("loading cover", () => {
   let timing: jest.SpyInstance;
 
