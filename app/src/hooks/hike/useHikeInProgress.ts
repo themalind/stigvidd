@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { readHikeState } from "@/services/location-task";
+import { onHikeStateChange, readHikeState } from "@/services/location-task";
 import { logger } from "@/services/logger";
 import { usePathname } from "expo-router";
 import { useEffect, useState } from "react";
@@ -30,10 +30,12 @@ export function useHikeInProgress(enabled: boolean): HikeInProgress {
   useEffect(() => {
     if (!enabled) return;
     let active = true;
+    let latest = 0;
     const refresh = () => {
+      const request = ++latest;
       readInProgress()
         .then((next) => {
-          if (active) setInProgress(next);
+          if (active && request === latest) setInProgress(next);
         })
         .catch((error: unknown) => logger.warn("Reading the hike in progress failed", { errorMessage: String(error) }));
     };
@@ -43,11 +45,13 @@ export function useHikeInProgress(enabled: boolean): HikeInProgress {
     const subscription = AppState.addEventListener("change", (next) => {
       if (next === "active") refresh();
     });
+    const unsubscribe = onHikeStateChange(refresh);
 
     return () => {
       active = false;
       clearInterval(interval);
       subscription.remove();
+      unsubscribe();
     };
   }, [enabled, pathname]);
 

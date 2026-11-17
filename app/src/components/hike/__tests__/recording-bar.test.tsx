@@ -22,8 +22,14 @@ jest.mock("expo-router", () => ({
   useNavigationContainerRef: () => ({ isReady: () => true }),
 }));
 
+const mockHikeStateListeners = new Set<() => void>();
+
 jest.mock("@/services/location-task", () => ({
   readHikeState: () => mockReadHikeState(),
+  onHikeStateChange: (listener: () => void) => {
+    mockHikeStateListeners.add(listener);
+    return () => mockHikeStateListeners.delete(listener);
+  },
 }));
 
 const SEGMENT = { coordinates: [], distance: 1200, startTime: 0, endTime: 1000 };
@@ -63,6 +69,17 @@ it("says a hike with walked segments is paused", async () => {
 
   expect(screen.getByText("Pausad")).toBeTruthy();
   expect(screen.getByText("1.20 km")).toBeTruthy();
+});
+
+it("goes away as soon as the saved hike is cleared, not on the next poll", async () => {
+  stored({ segments: 1, totalDistance: 1200 });
+  await show();
+
+  stored();
+  mockHikeStateListeners.forEach((listener) => listener());
+  await settle();
+
+  expect(screen.queryByTestId("recording-bar")).toBeNull();
 });
 
 it("is not there without a hike in progress", async () => {

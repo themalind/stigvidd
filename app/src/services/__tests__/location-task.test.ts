@@ -11,6 +11,7 @@ import * as Location from "expo-location";
 import { getDistance } from "geolib";
 import {
   ACCURACY_STALL_MS,
+  clearHikeState,
   CORRUPT_HIKE_STORAGE_KEY,
   HIKE_STORAGE_KEY,
   INACTIVITY_TIMEOUT,
@@ -28,6 +29,7 @@ import {
   hasHikeInProgress,
   maybeFinalizeStaleHike,
   mutateHikeState,
+  onHikeStateChange,
   readHikeState,
   RESTART_GRACE,
   survivedRestart,
@@ -1105,5 +1107,23 @@ describe("hasHikeInProgress", () => {
     };
     mockGetItem.mockResolvedValue(JSON.stringify(paused));
     expect(await hasHikeInProgress()).toBe(true);
+  });
+});
+
+describe("onHikeStateChange", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("tells listeners after a write and after a clear, until they unsubscribe", async () => {
+    mockGetItem.mockResolvedValue(null);
+    mockSetItem.mockResolvedValue(undefined);
+    const listener = jest.fn();
+    const unsubscribe = onHikeStateChange(listener);
+
+    await mutateHikeState(() => defaultHikeState);
+    await clearHikeState();
+    unsubscribe();
+    await clearHikeState();
+
+    expect(listener).toHaveBeenCalledTimes(2);
   });
 });

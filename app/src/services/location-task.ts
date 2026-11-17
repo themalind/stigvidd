@@ -115,8 +115,22 @@ export async function readHikeState(): Promise<StoredHikeState> {
   }
 }
 
+const hikeStateListeners = new Set<() => void>();
+
+export function onHikeStateChange(listener: () => void): () => void {
+  hikeStateListeners.add(listener);
+  return () => {
+    hikeStateListeners.delete(listener);
+  };
+}
+
+function notifyHikeStateChange(): void {
+  hikeStateListeners.forEach((listener) => listener());
+}
+
 export async function writeHikeState(state: StoredHikeState): Promise<void> {
   await AsyncStorage.setItem(HIKE_STORAGE_KEY, JSON.stringify(state));
+  notifyHikeStateChange();
 }
 
 // Serializes read-modify-write access to the stored hike state. The background
@@ -153,6 +167,7 @@ export async function mutateHikeState(
 
 export async function clearHikeState(): Promise<void> {
   await withHikeStateLock(() => AsyncStorage.removeItem(HIKE_STORAGE_KEY));
+  notifyHikeStateChange();
 }
 
 // Whether the recording-info dialog should be shown before starting. Hidden only
