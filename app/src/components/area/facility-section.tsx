@@ -77,7 +77,7 @@ const s = StyleSheet.create({
   },
   name: {
     fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
+    fontWeight: "500",
   },
   meta: {
     fontSize: 13,

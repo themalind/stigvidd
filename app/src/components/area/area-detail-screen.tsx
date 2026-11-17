@@ -39,9 +39,9 @@ const COUNTED_FACILITY_GROUPS = [
 ] as const;
 
 const FACILITY_GROUPS = [
-  { type: FacilityType.FishingArea, countKey: "area.fishingCount", icon: FACILITY_ICONS.fishing },
-  { type: FacilityType.SwimmingArea, countKey: "area.swimmingCount", icon: FACILITY_ICONS.swimming },
-  { type: FacilityType.NatureReserve, countKey: "area.natureReserveCount", icon: FACILITY_ICONS.natureReserve },
+  { type: FacilityType.FishingArea, kindKey: "area.fishingKind", icon: FACILITY_ICONS.fishing },
+  { type: FacilityType.SwimmingArea, kindKey: "area.swimmingKind", icon: FACILITY_ICONS.swimming },
+  { type: FacilityType.NatureReserve, kindKey: "area.natureReserveKind", icon: FACILITY_ICONS.natureReserve },
 ] as const;
 
 interface Props {
@@ -178,7 +178,7 @@ export default function AreaDetailScreen({ routes }: Props) {
                 {namedGroups.map((group) => (
                   <FacilitySection
                     key={group.type}
-                    label={t(group.countKey, { count: group.items.length })}
+                    label={t(group.kindKey, { count: group.items.length })}
                     icon={group.icon}
                     items={group.items}
                   />

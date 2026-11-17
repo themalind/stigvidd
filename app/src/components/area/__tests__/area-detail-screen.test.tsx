@@ -425,8 +425,9 @@ it("names each group and heads it with its own icon", async () => {
     ],
   });
 
-  expect(screen.getByText("1 fiskevatten")).toBeTruthy();
-  expect(screen.getByText("1 naturreservat")).toBeTruthy();
+  expect(screen.getByText("1 grillplats")).toBeTruthy();
+  expect(screen.getByText("Fiskevatten")).toBeTruthy();
+  expect(screen.getByText("Naturreservat")).toBeTruthy();
   expect(screen.getByTestId("icon-campfire")).toBeTruthy();
   expect(screen.getByTestId("icon-fish")).toBeTruthy();
   expect(screen.getByTestId("icon-pine-tree")).toBeTruthy();
@@ -453,7 +454,8 @@ it("lists every kind of facility on one surface, split by hairlines", async () =
   expect(screen.getByTestId("facility-count-campfire")).not.toHaveStyle({ borderWidth: 1 });
 });
 
-it("heads a named group with its icon and count inside the card, like the counted rows", async () => {
+// keep-comment: named places are listed, not counted, as the trails are; only fire pits and shelters get a number
+it("heads a named group with its kind, not a count, above the places it lists", async () => {
   await show({
     facilities: [
       facility({ identifier: "f-1", name: "Svalesjön", facilityType: FacilityType.SwimmingArea }),
@@ -462,11 +464,20 @@ it("heads a named group with its icon and count inside the card, like the counte
   });
 
   const card = screen.getByTestId("facility-section-swim");
-  expect(within(card).getByText("2 badplatser")).toBeTruthy();
+  expect(within(card).getByText("Badplatser")).toBeTruthy();
   expect(within(card).getByTestId("icon-swim")).toBeTruthy();
   expect(within(card).getByText("Svalesjön")).toBeTruthy();
   expect(within(card).getByText("Kypebadet")).toBeTruthy();
-  expect(screen.queryByText("Badplatser")).toBeNull();
+  expect(screen.queryByText(/\d badplats/)).toBeNull();
+  expect(within(card).getByText("Badplatser")).toHaveStyle({ fontFamily: "Inter_600SemiBold" });
+  expect(within(card).getByText("Svalesjön")).toHaveStyle({ fontWeight: "500" });
+  expect(within(card).getByText("Svalesjön")).not.toHaveStyle({ fontFamily: "Inter_600SemiBold" });
+});
+
+it("uses the singular kind for a single place", async () => {
+  await show({ facilities: [facility({ name: "Hofsnäs badplats", facilityType: FacilityType.SwimmingArea })] });
+
+  expect(within(screen.getByTestId("facility-section-swim")).getByText("Badplats")).toBeTruthy();
 });
 
 it("shows a facility's description as written, colon and all", async () => {
