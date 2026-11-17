@@ -8,6 +8,7 @@
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { lineStringFromPositions } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
+import { initialViewFor } from "@/utils/map/initial-view";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useCallback, useMemo, useRef } from "react";
 import { Dimensions, StyleSheet, View } from "react-native";
@@ -24,6 +25,7 @@ interface TrailMapProps {
 }
 
 const HEIGHT = Dimensions.get("screen").height;
+const FIT_PADDING = { top: 40, right: 40, bottom: 40, left: 40 };
 
 // Static map preview on the trail detail screen: shows the route and the user's
 // position, but is not pannable — the whole surface is a button that opens the
@@ -33,15 +35,10 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
   const { t } = useTranslation();
 
   const bounds = useMemo(() => getBoundsFromTrail(trail), [trail]);
-  const center = useMemo<[number, number] | undefined>(
-    () => (bounds ? [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2] : undefined),
-    [bounds],
-  );
   const lineShape = useMemo(() => lineStringFromPositions(trail), [trail]);
 
   const fitToTrail = useCallback(() => {
-    if (bounds)
-      cameraRef.current?.fitBounds(bounds, { padding: { top: 40, right: 40, bottom: 40, left: 40 }, duration: 0 });
+    if (bounds) cameraRef.current?.fitBounds(bounds, { padding: FIT_PADDING, duration: 0 });
   }, [bounds]);
 
   return (
@@ -61,7 +58,7 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
             doubleTapZoom={false}
             onDidFinishLoadingMap={fitToTrail}
           >
-            <Camera ref={cameraRef} initialViewState={center ? { center, zoom: 12 } : undefined} />
+            <Camera ref={cameraRef} initialViewState={initialViewFor(bounds, FIT_PADDING)} />
             {trail.length > 1 && (
               <GeoJSONSource id="trail-route" data={lineShape}>
                 <Layer

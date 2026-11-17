@@ -25,6 +25,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
+import { initialViewFor } from "@/utils/map/initial-view";
 import { type AreaMapFilter, areaFilterItems, initialAreaFilter } from "./area-map-filter";
 import AreaMapLayers, { AREA_TOP_LAYER } from "./area-map-layers";
 import AreaMapLegend from "./area-map-legend";
@@ -123,7 +124,7 @@ export default function AreaMapScreen({ routes }: Props) {
         onDidFinishLoadingMap={handleMapReady}
         onPress={closeAll}
       >
-        <Camera ref={cameraRef} />
+        <Camera ref={cameraRef} initialViewState={initialViewFor(bounds, FIT_PADDING)} />
         {shapes && (
           <AreaMapLayers
             shapes={shapes}

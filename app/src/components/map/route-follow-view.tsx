@@ -16,6 +16,7 @@ import UserLocationMarker from "@/components/map/user-location-marker";
 import { useLiveUserLocation } from "@/hooks/location/useLiveUserLocation";
 import { lineStringFromPositions } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
+import { SINGLE_POINT_ZOOM, initialViewFor } from "@/utils/map/initial-view";
 import { MeetingPoint, openDirectionsToStart } from "@/utils/map/open-directions";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -27,8 +28,6 @@ import { useTranslation } from "react-i18next";
 // screen and the hike follow screen so the two can't drift apart visually — each of
 // those owns only its own data fetching and passes the finished path in here.
 const FIT_PADDING = { top: 100, right: 60, bottom: 120, left: 60 };
-// Zoom used when a route has a single point, where bounds are a zero-area box.
-const SINGLE_POINT_ZOOM = 15;
 
 interface Props {
   // Unique prefix for this view's map source/layer ids.
@@ -97,7 +96,7 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
   return (
     <View style={s.container}>
       <Map style={StyleSheet.absoluteFill} showsUserLocation={false} onDidFinishLoadingMap={handleMapReady}>
-        <Camera ref={cameraRef} />
+        <Camera ref={cameraRef} initialViewState={initialViewFor(bounds, FIT_PADDING)} />
         {path.length > 1 && (
           <GeoJSONSource id={`${idPrefix}-route`} data={lineShape}>
             <Layer

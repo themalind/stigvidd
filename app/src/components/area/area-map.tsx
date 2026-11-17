@@ -10,6 +10,7 @@ import MapPreviewOverlay from "@/components/map/map-preview-overlay";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { CityArea } from "@/data/types";
 import { areaMapShapes } from "@/utils/area/area-map-shapes";
+import { initialViewFor } from "@/utils/map/initial-view";
 import { Camera, type CameraRef } from "@maplibre/maplibre-react-native";
 import { ReactNode, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +21,7 @@ import AreaMapLegend from "./area-map-legend";
 
 const MAP_HEIGHT = 220;
 const PADDING = 24;
+const FRAME_PADDING = { top: PADDING, right: PADDING, bottom: PADDING, left: PADDING };
 // keep-comment: the page scrolls, so the map does not take pan or zoom gestures
 const STATIC_GESTURES = {
   dragPan: false,
@@ -45,10 +47,7 @@ export default function AreaMap({ area, onOpen, heading, style }: Props) {
 
   const frame = useCallback(() => {
     if (shapes.bounds) {
-      cameraRef.current?.fitBounds(shapes.bounds, {
-        padding: { top: PADDING, right: PADDING, bottom: PADDING, left: PADDING },
-        duration: 0,
-      });
+      cameraRef.current?.fitBounds(shapes.bounds, { padding: FRAME_PADDING, duration: 0 });
     }
   }, [shapes.bounds]);
 
@@ -66,7 +65,7 @@ export default function AreaMap({ area, onOpen, heading, style }: Props) {
             onDidFinishLoadingMap={frame}
             {...STATIC_GESTURES}
           >
-            <Camera ref={cameraRef} />
+            <Camera ref={cameraRef} initialViewState={initialViewFor(shapes.bounds, FRAME_PADDING)} />
             <AreaMapLayers shapes={shapes} />
           </Map>
           <MapPreviewOverlay label={t("area.openMap")} onPress={onOpen} />

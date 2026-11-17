@@ -12,14 +12,14 @@ import StartMarker from "@/components/map/start-marker";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { lineStringFromPositions } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
+import { SINGLE_POINT_ZOOM, initialViewFor } from "@/utils/map/initial-view";
 import { MeetingPoint, openDirectionsToStart } from "@/utils/map/open-directions";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
 import { useCallback, useMemo, useRef } from "react";
 import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { useTranslation } from "react-i18next";
 
-// Zoom used when a route has a single point, where bounds are a zero-area box.
-const SINGLE_POINT_ZOOM = 15;
+const FIT_PADDING = { top: 20, right: 20, bottom: 20, left: 20 };
 // Turning the preview into a button means it can't also be panned — the full-cover
 // Pressable would swallow the drag. Mirrors the trail detail screen, where the static
 // map is itself the entry point to the fullscreen view.
@@ -78,8 +78,7 @@ export default function RoutePreviewMap({
     // zoom; centre on it at a sane level instead.
     if (shown.length === 1)
       cameraRef.current?.jumpTo({ center: shown[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
-    else if (bounds)
-      cameraRef.current?.fitBounds(bounds, { padding: { top: 20, right: 20, bottom: 20, left: 20 }, duration: 0 });
+    else if (bounds) cameraRef.current?.fitBounds(bounds, { padding: FIT_PADDING, duration: 0 });
   }, [bounds, shown]);
 
   return (
@@ -94,7 +93,7 @@ export default function RoutePreviewMap({
           onDidFinishLoadingMap={handleMapReady}
           {...(onOpen ? STATIC_GESTURES : {})}
         >
-          <Camera ref={cameraRef} />
+          <Camera ref={cameraRef} initialViewState={initialViewFor(bounds, FIT_PADDING)} />
           {path.length > 1 && (
             <GeoJSONSource id={`${idPrefix}-route`} data={routeShape}>
               <Layer

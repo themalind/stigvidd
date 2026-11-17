@@ -71,6 +71,15 @@ it("marks the start of a one-point route without drawing a line", async () => {
   expect(layer("hike-start-point")).toBeTruthy();
 });
 
+it("opens on the route instead of jumping there once the map has loaded", async () => {
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH} />);
+
+  expect(screen.getByTestId("maplibre-Camera").props.initialViewState).toEqual({
+    bounds: [12.94, 57.72, 12.95, 57.73],
+    padding: { top: 100, right: 60, bottom: 120, left: 60 },
+  });
+});
+
 it("goes back when the chip is pressed", async () => {
   await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} title="Kvarnstigen" />);
 

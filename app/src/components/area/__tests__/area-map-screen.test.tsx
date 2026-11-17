@@ -212,6 +212,14 @@ it("frames the area once both the map and the area are there", async () => {
   );
 });
 
+it("opens on the area instead of jumping there once the map has loaded", async () => {
+  await show();
+
+  expect(screen.getByTestId("maplibre-Camera").props.initialViewState).toEqual(
+    expect.objectContaining({ bounds: [12.9, 57.7, 13.0, 57.8] }),
+  );
+});
+
 it("puts the user's position above the area", async () => {
   mockUseLiveUserLocation.mockReturnValue({ position: [12.94, 57.73], heading: null });
   await show();
