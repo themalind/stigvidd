@@ -20,6 +20,7 @@
                                  slutar logga det
     §2 konto-id, telefonmodell   RequestLoggingMiddleware och X-Stigvidd-Client
                                  (app/src/services/client-header.ts); apploggarna är anonyma
+    §2 driftsuppgifter, inspeln. logRecordingEnvironment i app/src/services/recording-diagnostics.ts
     §2 §3 §5 evenemang           EventMembership (vem ser vad), EventAccountDeletionStep
                                  (kontoradering), UserActionLogs (gräns per dygn)
     §3 vidaredelning, e-post     AllowResharing, FriendResponse
@@ -224,7 +225,7 @@
     <main id="top">
       <header>
         <h1>Integritetspolicy för Stigvidd</h1>
-        <p class="updated">Senast uppdaterad: 15 november 2026</p>
+        <p class="updated">Senast uppdaterad: 17 november 2026</p>
         <p class="lang-nav"><strong>Svenska</strong> · <a href="#english">In English</a></p>
       </header>
 
@@ -371,6 +372,14 @@
         – samlas in även om du tackar nej till statistiken, eftersom de behövs för att hålla
         tjänsten igång och säker (berättigat intresse, artikel 6.1 f). De innehåller heller
         aldrig din position och raderas efter 7 dagar.
+      </p>
+
+      <p>
+        Medan du spelar in en vandring skickar appen också driftsuppgifter när inspelningen startar,
+        stoppas och när appen hamnar i bakgrunden: batterinivå, om energisparläge och
+        batterioptimering är på och vilka positionsbehörigheter appen har. De innehåller aldrig din
+        position, är inte kopplade till ditt konto och raderas efter 7 dagar. De behövs för att vi
+        ska kunna felsöka inspelningar som avbryts (berättigat intresse, artikel 6.1 f).
       </p>
 
       <p>
@@ -624,7 +633,7 @@
       <section class="lang-section" id="english" lang="en">
         <header>
           <h1>Privacy Policy for Stigvidd</h1>
-          <p class="updated">Last updated: 15 November 2026</p>
+          <p class="updated">Last updated: 17 November 2026</p>
           <p class="lang-nav"><a href="#top">På svenska</a> · <strong>English</strong></p>
         </header>
 
@@ -769,6 +778,14 @@
           server – are collected even if you decline the statistics, because they are needed to
           keep the service working and secure (legitimate interest, Article 6(1)(f)). They never
           include your position either, and are deleted after 7 days.
+        </p>
+
+        <p>
+          While you record a walk the app also sends operational data when the recording starts,
+          stops and when the app goes into the background: the battery level, whether low power
+          mode and battery optimisation are on, and which location permissions the app has. It
+          never includes your position, is not linked to your account and is deleted after 7 days.
+          We need it to troubleshoot recordings that stop (legitimate interest, Article 6(1)(f)).
         </p>
 
         <p>
