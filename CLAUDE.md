@@ -32,6 +32,7 @@ stack    docker compose up -d, then /healthz and /readyz (checks the DB)
   `npm install <pkg>@<version from node_modules/expo/bundledNativeModules.json>`. `runtimeVersion` is fixed, so OTA
   reaches old binaries: a new native module must be `require`d lazily in a try/catch (`services/recording-diagnostics.ts`).
 - A jest path with `(tabs)` is a regex: escape it (`"src/app/\(tabs\)/trails"`), or the run silently skips that file and reads green.
+- RNTL 14's `render`/`renderHook` are async: without `await`, effects never run in any test after the file's first.
 - `npm test` type-checks nothing; `npm run build` / `npx tsc --noEmit` do. Pass `--silent` to app jest, whose
   console noise is 279 KB against a 7 KB summary.
 - Node >=22.18 and not 26 (CI uses `node:24`); on 26 the web suite stops at global setup. Linux geometry tests
@@ -47,7 +48,8 @@ is stale), then commit `src/api/generated`. `generate:api` needs a backend build
 which does both. Any `[ProducesResponseType]` on an action or controller drops the inferred 200, and orval then
 types the success as `unknown`. Errors with a `Message.Code` are ProblemDetails + `code`; without one they're plain strings (shipped apps read those).
 Never hand-edit generated/EF-owned files (the guard denies it); a migration's own `.cs` body is
-editable while unapplied. Migrations: `cd backend && dotnet ef migrations add <Name> --project Infrastructure`.
+editable while unapplied. Is develop's API safe for the shipped app: diff `main`'s and develop's exported specs
+([note](docs/notes/api-backward-compat-check-before-main.md)). Migrations: `cd backend && dotnet ef migrations add <Name> --project Infrastructure`.
 
 ## Backend rules
 

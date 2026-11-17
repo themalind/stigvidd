@@ -912,6 +912,14 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
   app/ form modals (obstacle, share hike, edit/publish hike, report, reset password): Skicka/Spara button disappears while the
   keyboard is up. Android is softwareKeyboardLayoutMode pan + edgeToEdgeEnabled, not resize; keyboardDidShow height excludes
   the nav bar. Fix: useModalKeyboardLift modalStyle + maxHeight, ScrollView, button pinned below. No dev build needed.
+- [On Android a new app process does not mean the hike recording died, and its notification tap carries nothing](android-recording-survives-process-restart.md) —
+  Tapping the recording notification "Spelar in vandring" (statusbaren, notisen) lands on a random screen or the start
+  page (hamnar på olika ställen), the hike pauses by itself, or location popups (positionsrutor, Alltid) appear mid-recording.
+  expo-location LocationTaskService contentIntent is a plain launcher intent (getLaunchIntentForPackage, SINGLE_TOP), so
+  JS cannot tell it from the app icon; useOpenActiveRecording opens create-hike while isTracking. expo-task-manager
+  restoreTasks and START_REDELIVER_INTENT restart the foreground service in every new process, headless in the same
+  reactHost, so use-location-tracking recoverInterruptedHike keeps it (survivedRestart, RESTART_GRACE).
+  requestBackgroundPermissionsAsync opens settings on Android 11+: only on a new hike, never on resume.
 - [A router.push into a tab that has not mounted yet builds its stack with only the target screen](router-push-into-unmounted-tab-has-no-back.md) —
   app/ stuck (låst) on a profile screen (Mina delade promenader, vänner) after a push notification (notis) tap or overnight
   resume (bakgrunden, förgrunden): back (bakåt) goes to the start tab (startskärmen) and the profile tab (profilfliken)
@@ -947,3 +955,7 @@ src/api/generated` then fails with "the generated API client is stale" for reaso
 - [npm audit tells you to go back to ESLint 9: the minimatch override is why it does not](npm-audit-suggests-eslint-9-minimatch-override-instead.md) —
   ESLint 10 and typescript-eslint use minimatch 10.2.6, covered by GHSA-g3hv-75wg-m249, so npm audit in web/ and site/ reports moderate and offers eslint@9.39.5 as the fix.
   package.json overrides minimatch to ^11.0.5 instead; audit reports 0 and eslint.config.js no-restricted-imports feature boundaries still apply (measured). Remove the override once npm ls minimatch shows nothing below 11.0.1.
+- [Whether develop's API still serves the shipped app is answered by diffing two exported OpenAPI specs](api-backward-compat-check-before-main.md) —
+  Backward compatibility (bakåtkompatibel, bakåtkompatibilitet) check before merging develop into main / deploying the backend before an app rebuild: git worktree add origin/main, dotnet build writes its web/openapi.json,
+  diff against develop's (removed endpoints/params, newly required request fields, removed or retyped or nullable response fields, enum values), and run it reversed to prove it bites.
+  By hand: Message.Code ProblemDetails, moved validators, push data.type vs NOTIFICATION_ROUTES, migrations, staging.api.stigvidd.se cityareas data vs old app; i18next t() colon trap.
