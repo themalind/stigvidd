@@ -348,6 +348,12 @@ it("hides the facility section for an area that has none", async () => {
   expect(screen.queryByText("Faciliteter")).toBeNull();
 });
 
+it("leaves out the facility heading when no facility falls into a group", async () => {
+  await show({ facilities: [facility({ facilityType: FacilityType.None })] });
+
+  expect(screen.queryByText("Faciliteter")).toBeNull();
+});
+
 it("groups the named facilities under the kind they are", async () => {
   await show({
     facilities: [

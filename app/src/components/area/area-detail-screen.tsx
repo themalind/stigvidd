@@ -161,7 +161,7 @@ export default function AreaDetailScreen({ routes }: Props) {
           </View>
         )}
 
-        {area.facilities.length > 0 && (
+        {countedGroups.length + namedGroups.length > 0 && (
           <View style={s.section}>
             <Text style={[s.sectionHeading, { color: theme.colors.onBackground }]}>{t("area.facilities")}</Text>
             <View style={s.countRows}>

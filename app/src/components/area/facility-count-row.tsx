@@ -12,6 +12,11 @@ import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
+// keep-comment: shared with FacilitySection, whose rows sit on the same FacilityList and must line up with these
+export const FACILITY_ICON_SIZE = 20;
+export const FACILITY_ICON_GAP = 10;
+export const FACILITY_ROW_PADDING = 12;
+
 interface FacilityCountRowProps {
   icon: FacilityIconName;
   label: string;
@@ -39,7 +44,7 @@ export default function FacilityCountRow({
       accessibilityHint={linked ? t("area.accessibleOnMap") : undefined}
       style={({ pressed }) => [s.row, { opacity: pressed ? 0.7 : 1 }]}
     >
-      <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
+      <MaterialCommunityIcons name={icon} size={FACILITY_ICON_SIZE} color={theme.colors.primary} />
       <View style={s.body}>
         <Text style={[s.label, { color: theme.colors.onSurface }]}>{label}</Text>
         {accessibleCount > 0 && <AccessibleTag testID={`facility-count-${icon}-accessible`} count={accessibleCount} />}
@@ -53,8 +58,8 @@ const s = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    padding: 12,
+    gap: FACILITY_ICON_GAP,
+    padding: FACILITY_ROW_PADDING,
   },
   body: {
     flex: 1,

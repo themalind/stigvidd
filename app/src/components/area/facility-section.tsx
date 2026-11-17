@@ -6,14 +6,12 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AccessibleTag from "@/components/area/accessible-tag";
+import { FACILITY_ICON_GAP, FACILITY_ICON_SIZE, FACILITY_ROW_PADDING } from "@/components/area/facility-count-row";
 import { FacilityIconName } from "@/constants/facility-icons";
 import { Facility } from "@/data/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
-
-const ICON_SIZE = 20;
-const ICON_GAP = 10;
 
 interface FacilitySectionProps {
   label: string;
@@ -28,7 +26,7 @@ export default function FacilitySection({ label, icon, items }: FacilitySectionP
   return (
     <View testID={`facility-section-${icon}`} style={s.row}>
       <View style={s.header}>
-        <MaterialCommunityIcons name={icon} size={ICON_SIZE} color={theme.colors.primary} />
+        <MaterialCommunityIcons name={icon} size={FACILITY_ICON_SIZE} color={theme.colors.primary} />
         <Text style={[s.label, { color: theme.colors.onSurface }]}>{label}</Text>
       </View>
       {items.map((item, index) => (
@@ -55,20 +53,20 @@ export default function FacilitySection({ label, icon, items }: FacilitySectionP
 
 const s = StyleSheet.create({
   row: {
-    padding: 12,
+    padding: FACILITY_ROW_PADDING,
     gap: 10,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    gap: ICON_GAP,
+    gap: FACILITY_ICON_GAP,
   },
   label: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
   },
   place: {
-    paddingLeft: ICON_SIZE + ICON_GAP,
+    paddingLeft: FACILITY_ICON_SIZE + FACILITY_ICON_GAP,
     gap: 4,
   },
   divided: {
