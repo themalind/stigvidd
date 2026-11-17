@@ -176,6 +176,13 @@ it("shows the area's name, place and description", async () => {
   expect(screen.getByText("Ett friluftsområde med spår året runt.")).toBeTruthy();
 });
 
+it("shows a place and description containing a colon as written", async () => {
+  await show({ location: "Vy:n", description: "Läs mer:https://boras.se/friluftsliv" });
+
+  expect(screen.getByText("Vy:n")).toBeTruthy();
+  expect(screen.getByText("Läs mer:https://boras.se/friluftsliv")).toBeTruthy();
+});
+
 it("leaves the place row out when the area has no place", async () => {
   await show({ location: "" });
 

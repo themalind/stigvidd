@@ -9,7 +9,6 @@ import { SCREEN_PADDING } from "@/constants/constants";
 import { FACILITY_ICONS } from "@/constants/facility-icons";
 import { FacilityType, hasFacilityType } from "@/data/types";
 import { useArea } from "@/hooks/area/useArea";
-import { asTranslationKey } from "@/i18n";
 import { AreaMapFocus } from "@/utils/area/area-map-shapes";
 import { useOnFirstLoad } from "@/hooks/useOnFirstLoad";
 import { track } from "@/services/analytics";
@@ -100,7 +99,7 @@ export default function AreaDetailScreen({ routes }: Props) {
               <View style={s.locationRow}>
                 <Icon source="map-marker" size={16} color="rgba(255,255,255,0.9)" />
                 <Text style={s.locationText} numberOfLines={1}>
-                  {t(asTranslationKey(area.location))}
+                  {area.location}
                 </Text>
               </View>
             )}
@@ -140,9 +139,7 @@ export default function AreaDetailScreen({ routes }: Props) {
         )}
 
         {area.description ? (
-          <Text style={[s.description, { color: theme.colors.onSurfaceVariant }]}>
-            {t(asTranslationKey(area.description))}
-          </Text>
+          <Text style={[s.description, { color: theme.colors.onSurfaceVariant }]}>{area.description}</Text>
         ) : null}
 
         <AreaMap
