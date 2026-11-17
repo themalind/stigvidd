@@ -8,8 +8,9 @@
 import { Map as MapLibreMap, type MapProps, type MapRef, UserLocation } from "@maplibre/maplibre-react-native";
 import { Image } from "expo-image";
 import { useAtomValue } from "jotai";
-import React, { forwardRef } from "react";
-import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import React, { forwardRef, useCallback, useEffect, useRef } from "react";
+import { Animated, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import { useTheme } from "react-native-paper";
 import { basemapAtom } from "@/atoms/basemap-atom";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { getMapStyle } from "./map-style";
@@ -26,6 +27,8 @@ const LOGO_WIDTH = 67;
 const LOGO_HEIGHT = 20;
 const LOGO_GAP = 4;
 const DEFAULT_ATTRIBUTION_POSITION: OrnamentPosition = { bottom: SCREEN_PADDING, left: SCREEN_PADDING };
+export const MAP_FADE_MS = 150;
+export const MAP_REVEAL_FALLBACK_MS = 3000;
 
 export function ornamentPositions(position: OrnamentPosition) {
   const offset = LOGO_WIDTH + LOGO_GAP;
@@ -52,7 +55,23 @@ export default forwardRef<MapRef, Props>(function Map(
   ref,
 ) {
   const basemap = useAtomValue(basemapAtom);
+  const theme = useTheme();
   const positions = ornamentPositions(attributionPosition);
+  const cover = useRef(new Animated.Value(1)).current;
+  const revealed = useRef(false);
+
+  const reveal = useCallback(() => {
+    if (revealed.current) return;
+    revealed.current = true;
+    Animated.timing(cover, { toValue: 0, duration: MAP_FADE_MS, useNativeDriver: true }).start();
+  }, [cover]);
+
+  // Shows the map anyway if it never reports a full render, e.g. offline with tiles missing. keep-comment: the cover must never trap the map
+  useEffect(() => {
+    const timer = setTimeout(reveal, MAP_REVEAL_FALLBACK_MS);
+    return () => clearTimeout(timer);
+  }, [reveal]);
+
   return (
     <View style={style}>
       <MapLibreMap
@@ -63,11 +82,19 @@ export default forwardRef<MapRef, Props>(function Map(
         attribution
         attributionPosition={positions.attribution}
         compass={false}
+        onDidFinishRenderingMapFully={reveal}
+        onDidFailLoadingMap={reveal}
         {...rest}
       >
         {showsUserLocation && <UserLocation />}
         {children}
       </MapLibreMap>
+      {/* A cover that fades out, not the map: Android draws the map on a GL surface that ignores a parent's opacity. keep-comment: why not fade the map itself */}
+      <Animated.View
+        testID="map-loading-cover"
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.surfaceVariant, opacity: cover }]}
+      />
       <Image
         testID="maptiler-logo"
         source={require("../../assets/map/maptiler-logo.svg")}
