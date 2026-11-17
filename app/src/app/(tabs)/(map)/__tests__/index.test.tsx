@@ -23,27 +23,30 @@ let mockLocation: UserLocation | null = null;
 // guardedNavigate debounces on Date.now() in module state, so the tests drive a fake clock.
 let mockNow = 1_700_000_000_000;
 
-// useFocusEffect tells the screen the tab was left: the map unmounts on blur, the screen does not.
-const mockFocus: { run: (() => void | (() => void)) | null; cleanup: void | (() => void) } = {
-  run: null,
-  cleanup: undefined,
-};
+type Listeners = Record<string, Set<() => void>>;
 
-jest.mock("expo-router", () => {
-  const ReactActual = jest.requireActual("react");
+function emitter() {
+  const listeners: Listeners = {};
   return {
-    useRouter: () => ({ navigate: (...args: unknown[]) => mockNavigate(...args) }),
-    useFocusEffect: (callback: () => void | (() => void)) => {
-      mockFocus.run = callback;
-      ReactActual.useEffect(() => {
-        mockFocus.cleanup = callback();
-        return () => {
-          if (typeof mockFocus.cleanup === "function") mockFocus.cleanup();
-        };
-      }, [callback]);
+    listeners,
+    addListener: (event: string, listener: () => void) => {
+      (listeners[event] ??= new Set()).add(listener);
+      return () => listeners[event]?.delete(listener);
     },
   };
-});
+}
+
+const mockTab = emitter();
+const mockScreen = { ...emitter(), getParent: () => mockTab };
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({ navigate: (...args: unknown[]) => mockNavigate(...args) }),
+  useNavigation: () => mockScreen,
+}));
+
+function emit(target: { listeners: Listeners }, event: string) {
+  target.listeners[event]?.forEach((listener) => listener());
+}
 
 jest.mock("@/hooks/location/useUserLocation", () => ({
   useUserLocation: () => ({ data: mockLocation }),
@@ -114,8 +117,6 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockMap.props = null;
   mockCarousel.props = null;
-  mockFocus.run = null;
-  mockFocus.cleanup = undefined;
   mockLocation = HERE;
   // Past every debounce window the previous test may have opened.
   mockNow += 10_000;
@@ -146,13 +147,13 @@ async function mapReady() {
 
 async function blur() {
   await act(async () => {
-    if (typeof mockFocus.cleanup === "function") mockFocus.cleanup();
+    emit(mockTab, "blur");
   });
 }
 
 async function refocus() {
   await act(async () => {
-    mockFocus.cleanup = mockFocus.run?.();
+    emit(mockTab, "focus");
   });
 }
 
@@ -280,13 +281,34 @@ describe("MapScreen — offline", () => {
 });
 
 describe("MapScreen — leaving and returning to the tab", () => {
-  it("unmounts the map on blur", async () => {
+  it("unmounts the map when the tab is left", async () => {
     await show();
     await mapReady();
 
     await blur();
 
     expect(screen.queryByTestId("trail-markers-map")).toBeNull();
+  });
+
+  it("keeps the map while a screen is pushed over it in the same tab", async () => {
+    await show();
+    await mapReady();
+
+    await act(async () => {
+      emit(mockScreen, "blur");
+    });
+
+    expect(screen.getByTestId("trail-markers-map")).toBeOnTheScreen();
+    expect(screen.queryByTestId("map-cover")).toBeNull();
+  });
+
+  it("stops listening to the tab once the screen is gone", async () => {
+    const rendered = await show();
+
+    await rendered.unmount();
+
+    expect(mockTab.listeners.focus?.size ?? 0).toBe(0);
+    expect(mockTab.listeners.blur?.size ?? 0).toBe(0);
   });
 
   it("covers the empty space left behind", async () => {

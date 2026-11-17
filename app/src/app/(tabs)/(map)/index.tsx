@@ -18,7 +18,7 @@ import { useUserLocation } from "@/hooks/location/useUserLocation";
 import { type ClusterZoomBand, clusterZoomBand, isZoomOutsideBand } from "@/utils/map/cluster-zoom-band";
 import { guardedNavigate } from "@/utils/navigation";
 import { type CameraRef, type InitialViewState, type ViewStateChangeEvent } from "@maplibre/maplibre-react-native";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { NativeSyntheticEvent, StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
@@ -26,10 +26,11 @@ import { useTheme } from "react-native-paper";
 export default function MapScreen() {
   const theme = useTheme();
   const router = useRouter();
+  const navigation = useNavigation();
   const isOnline = useIsOnline();
 
   const cameraRef = useRef<CameraRef>(null);
-  // The map unmounts on blur and this screen does not, so the camera is re-seeded from here; a ref so panning never re-renders. keep-comment: hidden lifecycle
+  // The map unmounts when the tab is left and this screen does not, so the camera is re-seeded from here; a ref so panning never re-renders. keep-comment: hidden lifecycle
   const lastViewState = useRef<InitialViewState | null>(null);
   // Zooms within which the open cluster still matches the map; null when nothing is open. See cluster-zoom-band.ts. keep-comment: non-obvious invariant
   const clusterZoomRange = useRef<ClusterZoomBand | null>(null);
@@ -115,13 +116,20 @@ export default function MapScreen() {
     [router],
   );
 
-  useFocusEffect(
-    useCallback(() => {
+  // keep-comment: the tab's events, not this screen's: a screen pushed over the map must not blank it mid-transition
+  useEffect(() => {
+    const tab = navigation.getParent();
+    if (!tab) return;
+    const offFocus = tab.addListener("focus", () => {
       setReturnViewState(lastViewState.current);
       setIsFocused(true);
-      return () => startTransition(() => setIsFocused(false));
-    }, []),
-  );
+    });
+    const offBlur = tab.addListener("blur", () => startTransition(() => setIsFocused(false)));
+    return () => {
+      offFocus();
+      offBlur();
+    };
+  }, [navigation]);
 
   // A cached fix seeds the camera so a warm return skips the Borås flash. keep-comment: why seed
   const seededViewState: InitialViewState | undefined =
