@@ -27,6 +27,7 @@ import AreaMap from "./area-map";
 import { AreaStackRoutes } from "./area-routes";
 import AreaTrailSection from "./area-trail-section";
 import FacilityCountRow from "./facility-count-row";
+import FacilityList from "./facility-list";
 import FacilitySection from "./facility-section";
 
 const HERO_HEIGHT = 260;
@@ -38,9 +39,9 @@ const COUNTED_FACILITY_GROUPS = [
 ] as const;
 
 const FACILITY_GROUPS = [
-  { type: FacilityType.FishingArea, titleKey: "area.fishing", icon: FACILITY_ICONS.fishing },
-  { type: FacilityType.SwimmingArea, titleKey: "area.swimming", icon: FACILITY_ICONS.swimming },
-  { type: FacilityType.NatureReserve, titleKey: "area.natureReserve", icon: FACILITY_ICONS.natureReserve },
+  { type: FacilityType.FishingArea, countKey: "area.fishingCount", icon: FACILITY_ICONS.fishing },
+  { type: FacilityType.SwimmingArea, countKey: "area.swimmingCount", icon: FACILITY_ICONS.swimming },
+  { type: FacilityType.NatureReserve, countKey: "area.natureReserveCount", icon: FACILITY_ICONS.natureReserve },
 ] as const;
 
 interface Props {
@@ -73,6 +74,10 @@ export default function AreaDetailScreen({ routes }: Props) {
     const accessible = members.filter((f) => f.isAccessible && f.longitude != null && f.latitude != null);
     return { ...group, count: members.length, accessibleCount: accessible.length };
   }).filter((group) => group.count > 0);
+  const namedGroups = FACILITY_GROUPS.map((group) => ({
+    ...group,
+    items: area.facilities.filter((f) => hasFacilityType(f.facilityType, group.type)),
+  })).filter((group) => group.items.length > 0);
   const openMap = (focus?: AreaMapFocus) =>
     guardedNavigate(() =>
       router.navigate({
@@ -159,8 +164,8 @@ export default function AreaDetailScreen({ routes }: Props) {
         {area.facilities.length > 0 && (
           <View style={s.section}>
             <Text style={[s.sectionHeading, { color: theme.colors.onBackground }]}>{t("area.facilities")}</Text>
-            {countedGroups.length > 0 && (
-              <View style={s.countRows}>
+            <View style={s.countRows}>
+              <FacilityList>
                 {countedGroups.map((group) => (
                   <FacilityCountRow
                     key={group.type}
@@ -170,16 +175,16 @@ export default function AreaDetailScreen({ routes }: Props) {
                     onShowAccessible={() => openMap(group.focus)}
                   />
                 ))}
-              </View>
-            )}
-            {FACILITY_GROUPS.map((group) => (
-              <FacilitySection
-                key={group.type}
-                title={t(group.titleKey)}
-                icon={group.icon}
-                items={area.facilities.filter((f) => hasFacilityType(f.facilityType, group.type))}
-              />
-            ))}
+                {namedGroups.map((group) => (
+                  <FacilitySection
+                    key={group.type}
+                    label={t(group.countKey, { count: group.items.length })}
+                    icon={group.icon}
+                    items={group.items}
+                  />
+                ))}
+              </FacilityList>
+            </View>
           </View>
         )}
       </ScrollView>

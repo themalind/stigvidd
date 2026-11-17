@@ -15,7 +15,7 @@ import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen, within } from "@testing-library/react-native";
 import { Image } from "expo-image";
-import { ActivityIndicator, Platform, Text } from "react-native";
+import { ActivityIndicator, Platform, StyleSheet, Text } from "react-native";
 
 const mockGetArea = jest.fn();
 const mockNavigate = jest.fn();
@@ -425,11 +425,56 @@ it("names each group and heads it with its own icon", async () => {
     ],
   });
 
-  expect(screen.getByText("Fiske")).toBeTruthy();
-  expect(screen.getByText("Naturreservat")).toBeTruthy();
+  expect(screen.getByText("1 fiskevatten")).toBeTruthy();
+  expect(screen.getByText("1 naturreservat")).toBeTruthy();
   expect(screen.getByTestId("icon-campfire")).toBeTruthy();
   expect(screen.getByTestId("icon-fish")).toBeTruthy();
   expect(screen.getByTestId("icon-pine-tree")).toBeTruthy();
+});
+
+it("lists every kind of facility on one surface, split by hairlines", async () => {
+  await show({
+    facilities: [
+      facility({ identifier: "f-1", facilityType: FacilityType.FirePit }),
+      facility({ identifier: "f-2", facilityType: FacilityType.Shelter }),
+      facility({ identifier: "f-3", name: "Svalesjön", facilityType: FacilityType.SwimmingArea }),
+    ],
+  });
+
+  const list = screen.getByTestId("facility-list");
+  expect(within(list).getByTestId("facility-count-campfire")).toBeTruthy();
+  expect(within(list).getByTestId("facility-count-tent")).toBeTruthy();
+  expect(within(list).getByTestId("facility-section-swim")).toBeTruthy();
+  const rows = within(list).getAllByTestId("facility-list-row");
+  expect(rows).toHaveLength(3);
+  expect(rows[0]).not.toHaveStyle({ borderTopWidth: StyleSheet.hairlineWidth });
+  expect(rows[1]).toHaveStyle({ borderTopWidth: StyleSheet.hairlineWidth });
+  expect(rows[2]).toHaveStyle({ borderTopWidth: StyleSheet.hairlineWidth });
+  expect(screen.getByTestId("facility-count-campfire")).not.toHaveStyle({ borderWidth: 1 });
+});
+
+it("heads a named group with its icon and count inside the card, like the counted rows", async () => {
+  await show({
+    facilities: [
+      facility({ identifier: "f-1", name: "Svalesjön", facilityType: FacilityType.SwimmingArea }),
+      facility({ identifier: "f-2", name: "Kypebadet", facilityType: FacilityType.SwimmingArea }),
+    ],
+  });
+
+  const card = screen.getByTestId("facility-section-swim");
+  expect(within(card).getByText("2 badplatser")).toBeTruthy();
+  expect(within(card).getByTestId("icon-swim")).toBeTruthy();
+  expect(within(card).getByText("Svalesjön")).toBeTruthy();
+  expect(within(card).getByText("Kypebadet")).toBeTruthy();
+  expect(screen.queryByText("Badplatser")).toBeNull();
+});
+
+it("shows a facility's description as written, colon and all", async () => {
+  await show({
+    facilities: [facility({ name: "Svalesjön", facilityType: FacilityType.SwimmingArea, description: "Brygga:ja" })],
+  });
+
+  expect(screen.getByText("Brygga:ja")).toBeTruthy();
 });
 
 it("tags an accessible trail where it is listed", async () => {

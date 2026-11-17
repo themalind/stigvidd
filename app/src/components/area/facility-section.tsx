@@ -5,56 +5,47 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
-import { Facility } from "@/data/types";
-import { asTranslationKey } from "@/i18n";
 import AccessibleTag from "@/components/area/accessible-tag";
 import { FacilityIconName } from "@/constants/facility-icons";
+import { Facility } from "@/data/types";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { useTranslation } from "react-i18next";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
+const ICON_SIZE = 20;
+const ICON_GAP = 10;
+
 interface FacilitySectionProps {
-  title: string;
+  label: string;
   icon: FacilityIconName;
   items: Facility[];
 }
 
-export default function FacilitySection({ title, icon, items }: FacilitySectionProps) {
+// A FacilityList row like FacilityCountRow, with the named places listed under its heading. keep-comment: why it mirrors the count row
+export default function FacilitySection({ label, icon, items }: FacilitySectionProps) {
   const theme = useTheme();
-  const { t } = useTranslation();
   if (items.length === 0) return null;
   return (
-    <View testID={`facility-section-${icon}`} style={s.section}>
-      <View style={s.sectionHeader}>
-        <MaterialCommunityIcons name={icon} size={20} color={theme.colors.primary} />
-        <Text style={[s.sectionTitle, { color: theme.colors.onBackground }]}>{title}</Text>
+    <View testID={`facility-section-${icon}`} style={s.row}>
+      <View style={s.header}>
+        <MaterialCommunityIcons name={icon} size={ICON_SIZE} color={theme.colors.primary} />
+        <Text style={[s.label, { color: theme.colors.onSurface }]}>{label}</Text>
       </View>
       {items.map((item, index) => (
         <View
-          key={index}
-          style={[
-            s.facilityCard,
-            {
-              backgroundColor: theme.colors.elevation.level1,
-              borderColor: theme.colors.outlineVariant,
-              borderWidth: 1,
-            },
-          ]}
+          key={item.identifier}
+          style={[s.place, index > 0 && [s.divided, { borderTopColor: theme.colors.outlineVariant }]]}
         >
-          <Text style={[s.facilityName, { color: theme.colors.onSurface }]}>{item.name}</Text>
+          <Text style={[s.name, { color: theme.colors.onSurface }]}>{item.name}</Text>
           {item.isAccessible && <AccessibleTag testID={`facility-accessible-${item.identifier}`} />}
           {item.location ? (
             <View style={s.locationRow}>
               <MaterialCommunityIcons name="map-marker" size={14} color={theme.colors.onSurfaceVariant} />
-              <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>{item.location}</Text>
+              <Text style={[s.meta, { color: theme.colors.onSurfaceVariant }]}>{item.location}</Text>
             </View>
           ) : null}
           {item.description ? (
-            <Text style={[s.facilityMeta, { color: theme.colors.onSurfaceVariant }]}>
-              {t(asTranslationKey(item.description))}
-            </Text>
+            <Text style={[s.meta, { color: theme.colors.onSurfaceVariant }]}>{item.description}</Text>
           ) : null}
         </View>
       ))}
@@ -63,30 +54,33 @@ export default function FacilitySection({ title, icon, items }: FacilitySectionP
 }
 
 const s = StyleSheet.create({
-  facilityCard: {
-    borderRadius: BORDER_RADIUS,
+  row: {
     padding: 12,
-    gap: 4,
+    gap: 10,
   },
-  facilityName: {
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: ICON_GAP,
+  },
+  label: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
   },
-  facilityMeta: {
-    fontSize: 13,
+  place: {
+    paddingLeft: ICON_SIZE + ICON_GAP,
+    gap: 4,
   },
-  section: {
-    paddingHorizontal: SCREEN_PADDING,
-    gap: 8,
+  divided: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 10,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  sectionTitle: {
-    fontSize: 15,
+  name: {
+    fontSize: 14,
     fontFamily: "Inter_600SemiBold",
+  },
+  meta: {
+    fontSize: 13,
   },
   locationRow: {
     flexDirection: "row",
