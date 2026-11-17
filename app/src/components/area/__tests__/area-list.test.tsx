@@ -183,7 +183,7 @@ it("counts one view when the position's list replaces the popular one", async ()
   await act(async () => {
     rendered.rerender(<AreaListScreen />);
   });
-  await flushUntil(() => screen.getByText("Närmast"));
+  await flushUntil(() => screen.queryByText("Närmast"));
 
   const views = mockTrack.mock.calls.filter(([event]) => event === "area.list_viewed");
   expect(views).toEqual([["area.list_viewed", { sort: "popularity", count: 3 }]]);
