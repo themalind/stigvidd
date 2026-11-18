@@ -203,10 +203,7 @@ describe("EventsListScreen", () => {
     expect(mockAccept).toHaveBeenCalledWith("inv");
   });
 
-  it("loads past events only on the Tidigare tab, and pages them at the list's end", async () => {
-    await show();
-    expect(mockGetMine).not.toHaveBeenCalledWith(expect.objectContaining({ past: true }));
-
+  it("loads past events before the Tidigare tab is opened, and pages them at the list's end", async () => {
     mockGetMine.mockImplementation(({ past, cursor }: { past: boolean; cursor?: string }) => {
       if (!past) return Promise.resolve({ items: [], nextCursor: null });
       return Promise.resolve(
@@ -215,7 +212,11 @@ describe("EventsListScreen", () => {
           : { items: [summary("old1", "Höstpromenaden")], nextCursor: "c1" },
       );
     });
+    await show();
+    expect(mockGetMine).toHaveBeenCalledWith(expect.objectContaining({ past: true }));
+
     await fireEvent.press(screen.getByTestId("events-tabs-past"));
+    expect(screen.queryByTestId("events-search")).toBeTruthy();
     await flushUntil(() => screen.queryByText("Höstpromenaden") !== null);
 
     expect(screen.queryByText("Fikapromenad")).toBeNull();
@@ -428,7 +429,7 @@ describe("EventsListScreen", () => {
       await settleOn(() => screen.queryByTestId("events-filter-button-count") !== null);
 
       await fireEvent.press(screen.getByTestId("events-tabs-past"));
-      await settleOn(() => mockGetMine.mock.lastCall?.[0]?.past === true);
+      await settleOn(() => screen.queryByTestId("event-past-tag") !== null);
 
       expect(screen.queryByTestId("events-filter-button-count")).toBeNull();
       expect(screen.queryByTestId("events-clear-filters")).toBeNull();

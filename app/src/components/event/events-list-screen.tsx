@@ -54,7 +54,7 @@ export default function EventsListScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const feed = useEventFeed(search.upcoming);
   const mine = useMyEvents(false, true, search.upcoming);
-  const past = useMyEvents(true, isPast, search.past);
+  const past = useMyEvents(true, true, search.past);
   const { acceptInvitationMutation, declineInvitationMutation } = useEventMutations();
   const answering = acceptInvitationMutation.isPending || declineInvitationMutation.isPending;
   const invitationCount = invitations.data?.length ?? 0;
@@ -80,7 +80,7 @@ export default function EventsListScreen() {
     if (isAuthenticated) {
       void invitations.refetch();
       void mine.refetch();
-      if (isPast) void past.refetch();
+      void past.refetch();
     }
     void feed.refetch();
   };
