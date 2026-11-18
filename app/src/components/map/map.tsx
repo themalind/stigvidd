@@ -8,9 +8,9 @@
 import { Map as MapLibreMap, type MapProps, type MapRef, UserLocation } from "@maplibre/maplibre-react-native";
 import { Image } from "expo-image";
 import { useAtomValue } from "jotai";
-import React, { forwardRef, useCallback, useEffect, useRef } from "react";
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { Animated, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { useTheme } from "react-native-paper";
+import { ActivityIndicator, useTheme } from "react-native-paper";
 import { basemapAtom } from "@/atoms/basemap-atom";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { getMapStyle } from "./map-style";
@@ -40,18 +40,10 @@ export function ornamentPositions(position: OrnamentPosition) {
   return { logo: position, attribution: { ...position, right: position.right + offset } };
 }
 
-// Shared MapLibre base map: applies the chosen MapTiler basemap and
-// the user-location puck, and forwards a MapRef. Callers add their own <Camera>,
-// <GeoJSONSource> and <Layer> children. The logo and compass ornaments are
-// hidden so the app can lay out its own controls, but the attribution button is
-// kept on: MapTiler + OpenStreetMap attribution is required by the data licence
-// on every screen, so it defaults on here rather than being opt-in per screen.
+// MapTiler + OpenStreetMap attribution is required by the data licence on every screen. keep-comment: licence, not inferable
 // MapTiler's Free plan also requires its logo visible, not just the text. keep-comment: contractual, not inferable
-// It sits bottom-left (the one corner no custom control uses — the recenter
-// button is bottom-right, the filter menu top-right, the back button top-left).
-// No safe-area offset: fullscreen maps live inside the tab navigator, whose tab
-// bar already clears the home indicator. Callers can still override via props —
-// the embedded previews move it to the top, where their pills aren't.
+// Bottom-left is the one corner no custom control uses. keep-comment: layout constraint across screens
+// No safe-area offset: the tab bar already clears the home indicator. keep-comment: hidden layout dependency
 export default forwardRef<MapRef, Props>(function Map(
   {
     style,
@@ -70,6 +62,7 @@ export default forwardRef<MapRef, Props>(function Map(
   const positions = ornamentPositions(attributionPosition);
   const cover = useRef(new Animated.Value(1)).current;
   const revealed = useRef(false);
+  const [covered, setCovered] = useState(true);
   const contentReadyRef = useRef(contentReady);
 
   // keep-comment: a render that finished before the content arrived shows the default view, so only a later one reveals
@@ -80,6 +73,7 @@ export default forwardRef<MapRef, Props>(function Map(
   const reveal = useCallback(() => {
     if (revealed.current) return;
     revealed.current = true;
+    setCovered(false);
     Animated.timing(cover, { toValue: 0, duration: MAP_FADE_MS, useNativeDriver: true }).start();
   }, [cover]);
 
@@ -120,6 +114,11 @@ export default forwardRef<MapRef, Props>(function Map(
         pointerEvents="none"
         style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.surfaceVariant, opacity: cover }]}
       />
+      {(covered || !contentReady) && (
+        <View testID="map-loading-spinner" style={s.spinner} pointerEvents="none">
+          <ActivityIndicator color={theme.colors.primary} />
+        </View>
+      )}
       <Image
         testID="maptiler-logo"
         source={require("../../assets/map/maptiler-logo.svg")}
@@ -134,4 +133,5 @@ export default forwardRef<MapRef, Props>(function Map(
 
 const s = StyleSheet.create({
   logo: { position: "absolute", width: LOGO_WIDTH, height: LOGO_HEIGHT },
+  spinner: { ...StyleSheet.absoluteFill, alignItems: "center", justifyContent: "center" },
 });

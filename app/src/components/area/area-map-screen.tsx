@@ -153,7 +153,7 @@ export default function AreaMapScreen({ routes }: Props) {
         <MapBackChip title={area?.name} inline />
         {shapes && <MapFilterMenu filter={filter} onChange={changeFilter} items={filterItems} />}
       </View>
-      <MapStatusOverlay isLoading={isLoading} errorMessage={failed ? t("map.loadError") : undefined} />
+      <MapStatusOverlay errorMessage={failed ? t("map.loadError") : undefined} />
 
       {carouselIds ? (
         <TrailCardCarousel identifiers={carouselIds} onClose={closeAll} onReadMore={readMore} onShowOnMap={showOnMap} />

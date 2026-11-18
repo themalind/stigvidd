@@ -158,6 +158,28 @@ describe("loading cover", () => {
     expect(fadeOuts()).toHaveLength(1);
   });
 
+  it("shows a spinner while covered and removes it once the map has rendered", async () => {
+    await render(<Map />);
+    expect(screen.getByTestId("map-loading-spinner")).toBeTruthy();
+
+    await act(async () => {
+      map().props.onDidFinishRenderingMapFully();
+    });
+
+    expect(screen.queryByTestId("map-loading-spinner")).toBeNull();
+  });
+
+  it("keeps the spinner while the content is still loading after the fallback reveal", async () => {
+    const { rerender } = await render(<Map contentReady={false} />);
+
+    await advance(MAP_REVEAL_FALLBACK_MS);
+    expect(screen.getByTestId("map-loading-spinner")).toBeTruthy();
+
+    await rerender(<Map contentReady />);
+
+    expect(screen.queryByTestId("map-loading-spinner")).toBeNull();
+  });
+
   it("lets touches through to the map", async () => {
     await render(<Map />);
 

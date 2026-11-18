@@ -143,6 +143,7 @@ it("shows the spinner while loading, and no error", async () => {
     <RouteFollowView idPrefix="hike" path={[]} isLoading errorMessage="Kunde inte hämta rutten" />,
   );
 
+  expect(screen.getByTestId("map-loading-spinner")).toBeTruthy();
   expect(screen.queryByText("Kunde inte hämta rutten")).toBeNull();
 });
 

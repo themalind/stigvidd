@@ -7,23 +7,14 @@
 
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { StyleSheet, View } from "react-native";
-import { ActivityIndicator, Text, useTheme } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 
 interface Props {
-  isLoading?: boolean;
   errorMessage?: string;
 }
 
-export default function MapStatusOverlay({ isLoading, errorMessage }: Props) {
+export default function MapStatusOverlay({ errorMessage }: Props) {
   const theme = useTheme();
-
-  if (isLoading) {
-    return (
-      <View style={s.centreOverlay} pointerEvents="none">
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
 
   if (!errorMessage) return null;
 

@@ -146,7 +146,7 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
 
       <MapBackChip title={title} />
 
-      <MapStatusOverlay isLoading={isLoading} errorMessage={errorMessage} />
+      <MapStatusOverlay errorMessage={isLoading ? undefined : errorMessage} />
 
       <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
       <BasemapToggle />
