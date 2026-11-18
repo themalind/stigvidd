@@ -51,8 +51,6 @@ type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
 interface SelectedFacility {
   name: string;
   coordinates: [number, number];
-  // Which filter/layer this facility was tapped in, so its label can be dismissed
-  // the moment that layer stops rendering.
   type: FacilityTypeValue;
   isAccessible: boolean;
 }
@@ -61,33 +59,23 @@ interface Props {
   style?: StyleProp<ViewStyle>;
   filter: MapMarkerFilter;
   cameraRef: RefObject<CameraRef | null>;
-  // The tapped cluster/trail to ring on the map while its carousel is open.
   highlight?: MapHighlight | null;
-  // Seeds the camera on mount. The screen remembers the last view here so the map
-  // reopens where the user left it (instead of resetting) after navigating away.
   initialViewState?: InitialViewState;
-  // Overrides where the attribution button sits, so the screen can lift it above
-  // whatever it has floating over the map. Omit for the map's own default corner.
   attributionPosition?: MapProps["attributionPosition"];
-  // expansionZoom is the level at which this cluster breaks apart, so the screen can
-  // dismiss the carousel once a zoom moves out of the range where the cluster holds
-  // together. Omitted for a single trail, which never splits or merges.
+  // keep-comment: expansionZoom is where the cluster splits; a single trail has none
   onClusterOpen: (identifiers: string[], highlight: MapHighlight, expansionZoom?: number) => void;
   onRegionDidChange?: (event: NativeSyntheticEvent<ViewStateChangeEvent>) => void;
-  onMapPress?: () => void;
+  // keep-comment: any press that opens no cards: the map itself, a zooming cluster or a facility pin
+  onDismiss?: () => void;
   onMapReady?: () => void;
   // keep-comment: false while covered, since each subscriber keeps MapLibre's location engine running
   tracksUser?: boolean;
 }
 
 const BORAS_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
-// Where the camera opens the first time, before any view has been remembered.
 const DEFAULT_VIEW_STATE: InitialViewState = { center: BORAS_CENTER, zoom: 9.5 };
-// Gap between the marker edge and the selection ring.
 const RING_GAP = 5;
 
-// The tapped cluster/trail to ring on the map while its carousel is open. The
-// radius sizes the ring to hug that specific marker.
 export interface MapHighlight {
   coordinate: [number, number];
   radius: number;
@@ -102,7 +90,7 @@ export default function TrailMarkersMap({
   attributionPosition,
   onClusterOpen,
   onRegionDidChange,
-  onMapPress,
+  onDismiss,
   onMapReady,
   tracksUser = true,
 }: Props) {
@@ -112,30 +100,21 @@ export default function TrailMarkersMap({
   const trailSourceRef = useRef<GeoJSONSourceRef>(null);
   const contributionSourceRef = useRef<GeoJSONSourceRef>(null);
 
-  // The location-puck has its own native GPS engine that can take tens of seconds for
-  // a first fix. useCurrentPosition subscribes to that same engine (a shared singleton,
-  // safe to use alongside the puck), so it turns non-null exactly when the puck appears.
-  // We gate the "locating…" pill on a fix actually being expected: useUserLocation tells
-  // us we have a real (non-fallback) position — when permission is denied none ever comes.
+  // useCurrentPosition shares the puck's engine, so it fills exactly when the puck appears. keep-comment: hidden coupling
+  // The pill waits only for a real fix; with permission denied none ever comes. keep-comment: why the fallback check
   const { data: userLocation } = useUserLocation();
   const currentPosition = useCurrentPosition({ enabled: tracksUser });
   const isLocating = tracksUser && !!userLocation && !userLocation.isFallback && !currentPosition;
-  // Facility sources cluster like trails; their refs let a cluster tap resolve the
-  // zoom at which it breaks apart.
   const firePitSourceRef = useRef<GeoJSONSourceRef>(null);
   const shelterSourceRef = useRef<GeoJSONSourceRef>(null);
-  // Facilities have no detail screen yet, so a tap on a single pin just shows the
-  // name in a bubble.
   const [selectedFacility, setSelectedFacility] = useState<SelectedFacility | null>(null);
 
   const handleMapPress = useCallback(() => {
     setSelectedFacility(null);
-    onMapPress?.();
-  }, [onMapPress]);
+    onDismiss?.();
+  }, [onDismiss]);
 
-  // Dismiss a facility's name bubble as soon as its marker stops rendering — when
-  // its type filter is turned off, or the accessibility filter hides it. Without
-  // this the label lingers over an empty spot after the pin disappears.
+  // keep-comment: the bubble goes with its pin when a filter hides it, or it floats over nothing
   if (selectedFacility) {
     const typeVisible =
       (selectedFacility.type === FacilityType.FirePit && filter.firePits) ||
@@ -158,10 +137,8 @@ export default function TrailMarkersMap({
     staleTime: TRAIL_MARKERS_STALE_TIME,
   });
 
-  // Surface load failures without blanking the map: keep whatever tiles/markers
-  // are already shown and report the error via the global snackbar.
   useEffect(() => {
-    // Read, not subscribed: a reconnect must not replay a failure the offline notice covered.
+    // Read, not subscribed: a reconnect must not replay a failure the offline notice covered. keep-comment: race
     if ((trailMarkersError || facilitiesError) && onlineManager.isOnline()) {
       showError(t("map.loadError"));
     }
@@ -191,10 +168,6 @@ export default function TrailMarkersMap({
     return featureCollectionFromFacilities(items);
   }, [facilities, filter.accessibility]);
 
-  // A thin ring around the tapped cluster/trail while its carousel is open. Set once
-  // on tap (not per swipe) so co-located trails — whose ring would never visibly
-  // move — don't make the map look like it's stuttering. The radius travels in the
-  // feature so the ring layer can hug markers of any size.
   const highlightFC = useMemo<GeoJSON.FeatureCollection<GeoJSON.Point>>(() => {
     if (!highlight) return { type: "FeatureCollection", features: [] };
     const feature = pointFeatureFromPosition(highlight.coordinate);
@@ -218,6 +191,7 @@ export default function TrailMarkersMap({
         const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
         const action = decideClusterAction(pointCount, expansionZoom, TRAIL_CLUSTER_ACTION);
         if (action.kind === "zoom") {
+          onDismiss?.();
           cameraRef.current?.flyTo({ center: [lng, lat], zoom: action.zoom, duration: 500 });
           return;
         }
@@ -237,21 +211,19 @@ export default function TrailMarkersMap({
         onClusterOpen([props.identifier as string], { coordinate: [lng, lat], radius: markerRadius(null) });
       }
     },
-    [cameraRef, onClusterOpen],
+    [cameraRef, onClusterOpen, onDismiss],
   );
 
   const handleFacilityPress = useCallback(
     (type: FacilityTypeValue) =>
       async (event: NativeSyntheticEvent<PressEventWithFeatures>, sourceRef: RefObject<GeoJSONSourceRef | null>) => {
-        // Stop the press from dismissing the map.
         event.stopPropagation();
         const feature = event.nativeEvent.features?.[0];
         if (!feature) return;
         const props = feature.properties ?? {};
         const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+        onDismiss?.();
 
-        // Cluster tap: facilities have no carousel, so just zoom in to the level
-        // where the cluster breaks apart into its members.
         if (props.point_count != null) {
           setSelectedFacility(null);
           const clusterId = props.cluster_id as number;
@@ -260,12 +232,11 @@ export default function TrailMarkersMap({
           return;
         }
 
-        // Single pin: show its name in a bubble.
         const name = props.name as string | undefined;
         const isAccessible = Boolean(props.isAccessible);
         if (name) setSelectedFacility({ name, coordinates: [lng, lat], type, isAccessible });
       },
-    [cameraRef],
+    [cameraRef, onDismiss],
   );
 
   return (
@@ -273,8 +244,7 @@ export default function TrailMarkersMap({
       <Map
         style={StyleSheet.absoluteFill}
         showsUserLocation={tracksUser}
-        // Spread conditionally: passing the key as undefined would override the
-        // map's own default rather than fall back to it.
+        // keep-comment: an undefined key would override Map's default instead of falling back to it
         {...(attributionPosition ? { attributionPosition } : {})}
         onPress={handleMapPress}
         onDidFinishLoadingMap={onMapReady}
@@ -328,11 +298,8 @@ export default function TrailMarkersMap({
           />
         )}
 
-        {/* Declared last so the selection ring draws above every trail/cluster/
-            facility layer. It's a stroke-only ring sized just outside the tapped
-            marker, so it hugs the selection without covering a cluster's count.
-            Built as a plain circle layer (never a view-hosted <Marker>), the
-            iOS/Fabric-safe path used throughout the map. */}
+        {/* keep-comment: last, so the ring draws above every marker layer */}
+        {/* keep-comment: a circle layer, never a view-hosted <Marker>, which is unsafe on iOS/Fabric */}
         {highlightFC.features.length > 0 && (
           <GeoJSONSource id="trail-highlight" data={highlightFC}>
             <Layer

@@ -141,6 +141,33 @@ it("marks each trail at its start, as on the map tab", async () => {
   ).toBe(false);
 });
 
+it("closes the filter when the map or a place on it is pressed", async () => {
+  await show();
+
+  await fireEvent.press(screen.getByTestId("map-filter-trigger"));
+  expect(screen.getByTestId("map-filter-panel")).toBeTruthy();
+  await act(async () => {
+    screen.getByTestId("maplibre-Map").props.onPress();
+  });
+  expect(screen.queryByTestId("map-filter-panel")).toBeNull();
+
+  await fireEvent.press(screen.getByTestId("map-filter-trigger"));
+  expect(screen.getByTestId("map-filter-panel")).toBeTruthy();
+  await act(async () => {
+    source("area-swimming")?.props.onPress(press([{ name: "Kypebadet", coordinates: [12.93, 57.71] }]));
+  });
+  expect(screen.queryByTestId("map-filter-panel")).toBeNull();
+});
+
+it("keeps the filter open while its own rows are toggled", async () => {
+  await show();
+
+  await fireEvent.press(screen.getByTestId("map-filter-trigger"));
+  await fireEvent.press(screen.getByTestId("map-filter-row-trails"));
+
+  expect(screen.getByTestId("map-filter-panel")).toBeTruthy();
+});
+
 it("opens the trail card on a tapped trail and goes on to the trail", async () => {
   await show();
 

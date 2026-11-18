@@ -64,7 +64,7 @@ interface MarkersMapProps {
     highlight: { coordinate: [number, number]; radius: number },
     expansionZoom?: number,
   ) => void;
-  onMapPress: () => void;
+  onDismiss: () => void;
   onMapReady: () => void;
   tracksUser?: boolean;
 }
@@ -225,6 +225,47 @@ describe("MapScreen — the map and its cover", () => {
     await show(AppDarkTheme);
 
     expect(screen.getByTestId("map-cover")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.background });
+  });
+});
+
+describe("MapScreen — the filter menu", () => {
+  async function openFilter() {
+    await fireEvent.press(screen.getByTestId("map-filter-trigger"));
+    await settle();
+    expect(screen.getByTestId("map-filter-panel")).toBeOnTheScreen();
+  }
+
+  it("closes when the map is pressed", async () => {
+    await show();
+    await mapReady();
+    await openFilter();
+
+    await act(async () => {
+      map().onDismiss();
+    });
+
+    expect(screen.queryByTestId("map-filter-panel")).toBeNull();
+  });
+
+  it("closes when a marker opens its cards", async () => {
+    await show();
+    await mapReady();
+    await openFilter();
+
+    await openCluster(["t1"]);
+
+    expect(screen.queryByTestId("map-filter-panel")).toBeNull();
+  });
+
+  it("stays open while its own rows are toggled", async () => {
+    await show();
+    await mapReady();
+    await openFilter();
+
+    await fireEvent.press(screen.getByTestId("map-filter-row-shelters"));
+    await settle();
+
+    expect(screen.getByTestId("map-filter-panel")).toBeOnTheScreen();
   });
 });
 
@@ -530,7 +571,7 @@ describe("MapScreen — the carousel", () => {
     await mapReady();
     await openCluster(["t-1"]);
 
-    await act(async () => map().onMapPress());
+    await act(async () => map().onDismiss());
 
     expect(screen.queryByTestId("trail-card-carousel")).toBeNull();
   });

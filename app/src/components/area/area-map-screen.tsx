@@ -53,10 +53,6 @@ export default function AreaMapScreen({ routes }: Props) {
   const [filter, setFilter] = useState(() => initialAreaFilter(mapFocus));
   const filterItems = useMemo(() => (shapes ? areaFilterItems(shapes, filter) : []), [shapes, filter]);
 
-  const zoomTo = useCallback((center: [number, number], zoom: number) => {
-    cameraRef.current?.flyTo({ center, zoom, duration: 500 });
-  }, []);
-
   // keep-comment: the map and the area load independently; whichever is last frames the area
   const frame = useCallback(() => {
     if (mapReadyRef.current && bounds) {
@@ -77,29 +73,45 @@ export default function AreaMapScreen({ routes }: Props) {
 
   const [carouselIds, setCarouselIds] = useState<string[] | null>(null);
   const [bubble, setBubble] = useState<{ name: string; coordinates: [number, number] } | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const openTrails = useCallback((identifiers: string[]) => {
+    setFilterOpen(false);
     setBubble(null);
     setCarouselIds(identifiers);
   }, []);
 
   const showName = useCallback((name: string, coordinates: [number, number]) => {
+    setFilterOpen(false);
     setCarouselIds(null);
     setBubble({ name, coordinates });
   }, []);
 
-  const closeAll = useCallback(() => {
+  const closeSelection = useCallback(() => {
     setCarouselIds(null);
     setBubble(null);
   }, []);
 
+  const closeAll = useCallback(() => {
+    setFilterOpen(false);
+    closeSelection();
+  }, [closeSelection]);
+
+  const zoomTo = useCallback(
+    (center: [number, number], zoom: number) => {
+      closeAll();
+      cameraRef.current?.flyTo({ center, zoom, duration: 500 });
+    },
+    [closeAll],
+  );
+
   // keep-comment: an open card or name may belong to a place the new filter hides
   const changeFilter = useCallback(
     (next: AreaMapFilter) => {
-      closeAll();
+      closeSelection();
       setFilter(next);
     },
-    [closeAll],
+    [closeSelection],
   );
 
   const readMore = useCallback(
@@ -151,12 +163,25 @@ export default function AreaMapScreen({ routes }: Props) {
       {/* keep-comment: one row, so a long area name shortens with an ellipsis beside the filter instead of running under it */}
       <View testID="area-map-top-bar" style={s.topBar}>
         <MapBackChip title={area?.name} inline />
-        {shapes && <MapFilterMenu filter={filter} onChange={changeFilter} items={filterItems} />}
+        {shapes && (
+          <MapFilterMenu
+            filter={filter}
+            onChange={changeFilter}
+            items={filterItems}
+            open={filterOpen}
+            onOpenChange={setFilterOpen}
+          />
+        )}
       </View>
       <MapStatusOverlay errorMessage={failed ? t("map.loadError") : undefined} />
 
       {carouselIds ? (
-        <TrailCardCarousel identifiers={carouselIds} onClose={closeAll} onReadMore={readMore} onShowOnMap={showOnMap} />
+        <TrailCardCarousel
+          identifiers={carouselIds}
+          onClose={closeSelection}
+          onReadMore={readMore}
+          onShowOnMap={showOnMap}
+        />
       ) : (
         <>
           {shapes && <AreaMapLegend shapes={shapes} style={[s.legend, { backgroundColor: theme.colors.surface }]} />}

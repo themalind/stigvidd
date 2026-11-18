@@ -59,6 +59,8 @@ it("matches the filter trigger's padding, corners and colour when inline", async
         filter={{ trails: true }}
         onChange={jest.fn()}
         items={[{ key: "trails", label: "filter.trails" }]}
+        open={false}
+        onOpenChange={jest.fn()}
       />
     </>,
   );

@@ -31,7 +31,7 @@ jest.mock("@/hooks/location/useUserLocation", () => ({
 }));
 
 const onClusterOpen = jest.fn();
-const onMapPress = jest.fn();
+const onDismiss = jest.fn();
 
 const ALL_OFF: MapMarkerFilter = {
   trails: false,
@@ -91,7 +91,7 @@ async function show(filter: Partial<MapMarkerFilter> = {}, props: Record<string,
       filter={{ ...ALL_OFF, trails: true, ...filter }}
       cameraRef={cameraRef}
       onClusterOpen={onClusterOpen}
-      onMapPress={onMapPress}
+      onDismiss={onDismiss}
       {...props}
     />,
   );
@@ -247,6 +247,42 @@ it("opens a small cluster as a carousel and zooms a large one", async () => {
   );
 });
 
+it("closes the open selection when a single facility is named", async () => {
+  await show({ firePits: true });
+
+  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await settle();
+
+  expect(onDismiss).toHaveBeenCalledTimes(1);
+  expect(screen.getByText("Grillplatsen")).toBeTruthy();
+});
+
+it("closes the open selection when a trail or facility cluster is zoomed instead", async () => {
+  await show({ firePits: true });
+  sourceHandle("trails").getClusterExpansionZoom.mockResolvedValue(12);
+  sourceHandle("firepits").getClusterExpansionZoom.mockResolvedValue(14);
+
+  await fireEvent(source("trails")!, "press", clusterFeature(40));
+  await settle();
+  expect(onDismiss).toHaveBeenCalledTimes(1);
+
+  await fireEvent(source("firepits")!, "press", clusterFeature(4));
+  await settle();
+  expect(onDismiss).toHaveBeenCalledTimes(2);
+});
+
+it("keeps the selection to the carousel it opens when a cluster opens one", async () => {
+  await show();
+  sourceHandle("trails").getClusterExpansionZoom.mockResolvedValue(12);
+  sourceHandle("trails").getClusterLeaves.mockResolvedValue([{ properties: { identifier: "t1" } }]);
+
+  await fireEvent(source("trails")!, "press", clusterFeature(3));
+  await settle();
+
+  expect(onClusterOpen).toHaveBeenCalled();
+  expect(onDismiss).not.toHaveBeenCalled();
+});
+
 // A cluster that cannot break apart further opens whatever its size, or the trails inside are unreachable.
 it("opens a large cluster that cannot be zoomed apart", async () => {
   await show();
@@ -297,7 +333,7 @@ it("takes the name bubble down with the pin it belongs to", async () => {
       filter={{ ...ALL_OFF, trails: true, firePits: false }}
       cameraRef={createRef<CameraRef>()}
       onClusterOpen={onClusterOpen}
-      onMapPress={onMapPress}
+      onDismiss={onDismiss}
     />,
   );
 
@@ -312,7 +348,7 @@ it("clears the bubble when the map itself is pressed", async () => {
   await fireEvent(screen.getByTestId("maplibre-Map"), "press");
 
   expect(screen.queryByText("Grillplatsen")).toBeNull();
-  expect(onMapPress).toHaveBeenCalled();
+  expect(onDismiss).toHaveBeenCalled();
 });
 
 // A failed marker fetch keeps the map as it is; the failure goes to the snackbar.

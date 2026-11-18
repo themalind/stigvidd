@@ -12,6 +12,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { MapMarkerFilter } from "@/data/types";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
+import { useState } from "react";
 
 const onChange = jest.fn();
 
@@ -30,14 +31,24 @@ const ALL_ON: MapMarkerFilter = {
   accessibility: true,
 };
 
+function Menu({ filter }: { filter: MapMarkerFilter }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <MapFilterMenu
+      filter={filter}
+      onChange={onChange}
+      items={MAP_TAB_FILTER_ITEMS}
+      open={open}
+      onOpenChange={setOpen}
+    />
+  );
+}
+
 function show(
   filter: Partial<MapMarkerFilter> = {},
   theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme,
 ) {
-  return renderWithProviders(
-    <MapFilterMenu filter={{ ...NOTHING_ON, ...filter }} onChange={onChange} items={MAP_TAB_FILTER_ITEMS} />,
-    { theme },
-  );
+  return renderWithProviders(<Menu filter={{ ...NOTHING_ON, ...filter }} />, { theme });
 }
 
 async function open() {

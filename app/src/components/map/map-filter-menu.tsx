@@ -10,7 +10,6 @@ import { FACILITY_ICONS } from "@/constants/facility-icons";
 import { MapMarkerFilter } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
-import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
@@ -29,6 +28,9 @@ interface Props<K extends string> {
   filter: Record<K, boolean>;
   onChange: (filter: Record<K, boolean>) => void;
   items: MapFilterItem<K>[];
+  // keep-comment: owned by the screen, so a press on its map or markers can close the panel
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
 export const MAP_TAB_FILTER_ITEMS: MapFilterItem<keyof MapMarkerFilter>[] = [
@@ -40,10 +42,9 @@ export const MAP_TAB_FILTER_ITEMS: MapFilterItem<keyof MapMarkerFilter>[] = [
 ];
 
 // keep-comment: depth comes from the elevation colour, not a shadow
-export default function MapFilterMenu<K extends string>({ filter, onChange, items }: Props<K>) {
+export default function MapFilterMenu<K extends string>({ filter, onChange, items, open, onOpenChange }: Props<K>) {
   const theme = useTheme();
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
 
   const surface = theme.colors.elevation.level2;
   const activeCount = items.filter((item) => filter[item.key]).length;
@@ -52,7 +53,7 @@ export default function MapFilterMenu<K extends string>({ filter, onChange, item
     <View style={s.container}>
       <Pressable
         testID="map-filter-trigger"
-        onPress={() => setOpen((v) => !v)}
+        onPress={() => onOpenChange(!open)}
         style={[s.trigger, { backgroundColor: surface }]}
       >
         <MaterialCommunityIcons name="tune-variant" size={18} color={theme.colors.onSurface} />

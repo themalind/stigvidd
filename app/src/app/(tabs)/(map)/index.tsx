@@ -54,6 +54,7 @@ export default function MapScreen() {
   // Measured, since card height varies, so the attribution button can sit above the cards. keep-comment: why measured
   const [carouselHeight, setCarouselHeight] = useState(0);
   const [highlight, setHighlight] = useState<MapHighlight | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   const handleMapReady = useCallback(() => setIsMapReady(true), []);
   // Offline the style never loads, so there is no map to filter or centre. keep-comment: hidden native behaviour
@@ -69,6 +70,7 @@ export default function MapScreen() {
 
   // The ring sits where the user tapped, so it stays put while the cards are swiped. keep-comment: non-obvious choice
   const openCarousel = useCallback((ids: string[], tapped: MapHighlight, expansionZoom?: number) => {
+    setFilterOpen(false);
     setCarouselIds(ids);
     setHighlight(tapped);
     clusterZoomRange.current = clusterZoomBand(lastViewState.current?.zoom, expansionZoom);
@@ -79,6 +81,11 @@ export default function MapScreen() {
     setHighlight(null);
     clusterZoomRange.current = null;
   }, []);
+
+  const closeAll = useCallback(() => {
+    setFilterOpen(false);
+    closeCarousel();
+  }, [closeCarousel]);
 
   const handleRegionDidChange = useCallback(
     (event: NativeSyntheticEvent<ViewStateChangeEvent>) => {
@@ -163,7 +170,7 @@ export default function MapScreen() {
           }}
           onRegionDidChange={handleRegionDidChange}
           onClusterOpen={openCarousel}
-          onMapPress={closeCarousel}
+          onDismiss={closeAll}
           onMapReady={handleMapReady}
           tracksUser={isOnTop}
         />
@@ -182,7 +189,13 @@ export default function MapScreen() {
       {/* No safe-area offset: the app header already clears the status bar. keep-comment: layout constraint */}
       {!offlineScreen && (
         <View testID="map-top-bar" style={s.topBar}>
-          <MapFilterMenu filter={filters} onChange={setFilters} items={MAP_TAB_FILTER_ITEMS} />
+          <MapFilterMenu
+            filter={filters}
+            onChange={setFilters}
+            items={MAP_TAB_FILTER_ITEMS}
+            open={filterOpen}
+            onOpenChange={setFilterOpen}
+          />
         </View>
       )}
 
