@@ -10,60 +10,27 @@ import { setEventSink } from "./analytics";
 import { getAppInfo } from "./app-info";
 import { loadConsent } from "./consent";
 
-/**
- * Telemetry bootstrap: one call, safe to make unconditionally.
- *
- * Every piece inside no-ops when its `EXPO_PUBLIC_OO_*` variables are absent, so local
- * development, Jest and CI are unaffected — nothing is buffered and no network call is made.
- *
- * Called at module scope from app/_layout.tsx rather than in an effect, because RootLayout
- * returns null until fonts and the session have resolved; an effect would miss startup errors
- * entirely, which are exactly the ones worth having.
- */
+// keep-comment: no-ops without the EXPO_PUBLIC_OO_* variables, so dev, Jest and CI send nothing
+// keep-comment: called at module scope in app/_layout.tsx, since an effect would miss startup errors
 
 const LOGS_URL = process.env.EXPO_PUBLIC_OO_LOGS_URL;
 const LOGS_TOKEN = process.env.EXPO_PUBLIC_OO_LOGS_TOKEN;
 
-// Analytics events go to their OWN stream, because stream is the only erasure granularity
-// OpenObserve has: `stigvidd_app_events` can be dropped wholesale on a policy change without
-// taking the 7-day error logs with it. It reuses LOGS_TOKEN deliberately — same ingest
-// account, both already public in the bundle, and a second credential would be a second thing
-// to rotate for no security gain.
+// keep-comment: its own stream, OpenObserve's only erasure unit; reuses LOGS_TOKEN, public in the bundle anyway
 const EVENTS_URL = process.env.EXPO_PUBLIC_OO_EVENTS_URL;
 
-// Deliberately shorter than the logger's SINK_TIMEOUT_MS watchdog, so a stalled request is
-// normally cancelled here — where the socket can actually be released — and the watchdog stays
-// a backstop for a sink that misbehaves in some other way.
+// keep-comment: shorter than the logger's SINK_TIMEOUT_MS, so the socket is released here and the watchdog is a backstop
 const REQUEST_TIMEOUT_MS = 15_000;
 
 let initialised = false;
 
-/**
- * Ships batches to OpenObserve's bulk JSON ingest: POST /api/<org>/<stream>/_json with a JSON
- * array body.
- *
- * NOTE ON THE CREDENTIAL: anything in an EXPO_PUBLIC_* var is inlined into the JS bundle by
- * Metro and is trivially extractable from an installed APK or IPA. So the value here MUST be
- * an INGESTION TOKEN — base64 of "user:passcode", copied from OpenObserve's Ingestion page —
- * and never base64 of a login PASSWORD.
- *
- * The distinction is the whole security model, because OpenObserve OSS has no RBAC: every
- * account is an admin, and the passcode is the only thing that scopes a credential to
- * ingest. Measured against v0.92.2 with the same account: the passcode ingests (200) but
- * answers 401 on /_search and /users, while the password reads every stream and creates
- * further admin users. A password in this file would therefore hand full control of the
- * observatory to anyone who unzips the APK. See docs/notes/openobserve-oss-has-no-rbac.md.
- *
- * Treat it as public and rotatable regardless: rotating means a new app build and release,
- * so it is worth getting right the first time.
- */
+// keep-comment: the token is in the bundle, so it MUST be an ingestion token (base64 user:passcode), never a password:
+// keep-comment: OpenObserve OSS has no RBAC and a password reads every stream (docs/notes/openobserve-oss-has-no-rbac.md)
 function createHttpSink(url: string, token: string) {
   const appInfo = getAppInfo();
 
   return async (records: LogRecord[]) => {
-    // React Native's fetch has no default timeout, so a stalled connection — a captive portal,
-    // or dead-air TCP on a patchy mobile network — would otherwise hold this request open
-    // indefinitely and, through the logger's `flushing` guard, stop log shipping for good.
+    // keep-comment: RN fetch has no timeout; a stalled request would stop log shipping for good
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
@@ -76,13 +43,11 @@ function createHttpSink(url: string, token: string) {
           Authorization: `Basic ${token}`,
         },
         body: JSON.stringify(
-          // Context is spread FIRST so a context key named `level`, `message` or `_timestamp`
-          // cannot shadow the record's own fields. Call sites use `errorMessage` for exactly
-          // this reason, but nothing enforces that at the type level.
+          // keep-comment: context first, so a key named `level` or `message` cannot shadow the record
           records.map((record) => ({
             ...record.context,
             ...appInfo,
-            _timestamp: new Date(record.timestamp).getTime() * 1000, // OpenObserve wants microseconds
+            _timestamp: new Date(record.timestamp).getTime() * 1000, // keep-comment: OpenObserve wants microseconds
             level: record.level,
             message: record.message,
           })),
@@ -98,13 +63,6 @@ function createHttpSink(url: string, token: string) {
   };
 }
 
-/**
- * Ships analytics batches, to a different stream than the logs.
- *
- * Records arrive already redacted and enveloped by analytics.ts, so this only posts them. Note
- * there is no retry on the caller's side either: a failed analytics batch is dropped rather
- * than re-queued, which is the opposite of the log sink's contract and is intentional.
- */
 function createEventSink(url: string, token: string) {
   return async (events: Record<string, unknown>[]) => {
     const controller = new AbortController();
@@ -130,13 +88,7 @@ function createEventSink(url: string, token: string) {
   };
 }
 
-/**
- * Installs the global JS error and unhandled-rejection handlers.
- *
- * Both CHAIN rather than replace: whatever handler is already installed (React Native's red
- * box, and the RUM SDK's own once it is added) still runs after ours. Replacing them would
- * silently disable crash reporting to gain logging, which is a bad trade.
- */
+// keep-comment: chains, never replaces, so the red box and any crash reporter still run
 function installGlobalErrorHandlers(): void {
   const previousHandler = ErrorUtils.getGlobalHandler();
 
@@ -151,8 +103,7 @@ function installGlobalErrorHandlers(): void {
     previousHandler?.(error, isFatal);
   });
 
-  // Promise rejections never reach ErrorUtils. React Native bundles a tracker for exactly
-  // this; there are no types for it, hence the require.
+  // keep-comment: rejections never reach ErrorUtils; RN's tracker has no types, hence require
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const rejectionTracking = require("promise/setimmediate/rejection-tracking");
 
@@ -168,7 +119,7 @@ function installGlobalErrorHandlers(): void {
       });
     },
     onHandled: () => {
-      // A rejection handled late is not an incident — deliberately silent.
+      // keep-comment: a late-handled rejection is not an incident
     },
   });
 }
@@ -187,9 +138,7 @@ export function initTelemetry(): void {
     setEventSink(createEventSink(EVENTS_URL, LOGS_TOKEN));
   }
 
-  // Hydrates the consent cache. Reading it is NOT asking for it — the prompt is a dialog in
-  // the layout tree, gated on this having resolved to "unknown". Until it resolves the gate
-  // in analytics.ts holds events without transmitting, which is the safe direction.
+  // keep-comment: reads consent, never asks; until it resolves, analytics holds events unsent
   void loadConsent();
 
   installGlobalErrorHandlers();

@@ -11,22 +11,16 @@ import { apiFetch, BASE_URL } from "./core/api-config";
 import { ApiError } from "./core/api-error";
 import { logger } from "@/services/logger";
 
-/** Reads the conflict code from a 409 body; an unrecognised body is a generic conflict. */
 async function readConflictCode(response: Response): Promise<string> {
   try {
     const body = (await response.text()).trim().replace(/^"|"$/g, "");
     if (body === "nickname-taken" || body === "email-taken") return body;
   } catch {
-    // fall through to the generic code
+    // keep-comment: an unreadable body is a generic conflict
   }
   return "registration-conflict";
 }
 
-/**
- * Provision a new account: the backend creates the Keycloak user (via the
- * Keycloak Admin API) and the matching StigVidd DB record in one call.
- * A 409 throws ApiError carrying the code for the field that collided.
- */
 export async function registerAccount(data: RegisterData): Promise<void> {
   try {
     const response = await apiFetch(`${BASE_URL}/account/register`, {
@@ -55,13 +49,7 @@ export async function registerAccount(data: RegisterData): Promise<void> {
   }
 }
 
-/**
- * Settle the email verification with the six-digit code from the mail. Unauthenticated:
- * until this succeeds the Keycloak user is disabled, so there is no token to send.
- *
- * Throws ApiError carrying the backend's code — "invalid-code", "code-expired" or
- * "too-many-attempts" — so the screen can say which of the three happened.
- */
+// keep-comment: unauthenticated, since the account stays disabled until this succeeds
 export async function verifyEmailCode(email: string, code: string): Promise<void> {
   try {
     const response = await apiFetch(`${BASE_URL}/account/verify-email`, {
@@ -84,22 +72,17 @@ export async function verifyEmailCode(email: string, code: string): Promise<void
   }
 }
 
-/** Reads the verification failure code from the body; an unrecognised body is a generic failure. */
 async function readVerificationCode(response: Response): Promise<string> {
   try {
     const body = (await response.text()).trim().replace(/^"|"$/g, "");
     if (body === "invalid-code" || body === "code-expired" || body === "too-many-attempts") return body;
   } catch {
-    // fall through to the generic code
+    // keep-comment: an unreadable body is a generic failure
   }
   return "verification-failed";
 }
 
-/**
- * Ask for a fresh verification mail. The backend always answers 204 — it does not reveal
- * whether the address is registered, already verified, or still inside its resend cooldown —
- * so this resolves unless the network or server fails.
- */
+// keep-comment: always 204, so nothing reveals whether the address is registered
 export async function resendVerification(email: string): Promise<void> {
   try {
     const response = await apiFetch(`${BASE_URL}/account/resend-verification`, {
@@ -120,11 +103,7 @@ export async function resendVerification(email: string): Promise<void> {
   }
 }
 
-/**
- * Ask the backend to trigger a Keycloak password-reset email.
- * The backend always responds 2xx (it does not reveal whether the email exists),
- * so this resolves successfully unless the network/server fails.
- */
+// keep-comment: always 2xx, so nothing reveals whether the address exists
 export async function userPasswordReset(email: string): Promise<UpdateUserResult> {
   try {
     const response = await apiFetch(`${BASE_URL}/account/forgot-password`, {

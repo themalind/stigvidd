@@ -7,58 +7,25 @@
 
 import type { PushType } from "./notifications";
 
-/**
- * Every analytics event the app may send, and the exact properties each carries.
- *
- * This file IS the disclosure. What the privacy policy promises under "usage statistics"
- * (web/public/privacy-policy/index.html §2) is whatever is written here, so adding an entry is
- * a privacy decision before it is an engineering one. Three rules, none of them negotiable:
- *
- * 1. **No position, ever.** Not a coordinate, not a bounding box, not a map centre — a
- *    viewport IS a position. Log shape only: point counts, distances, accuracies. The
- *    redactor in logger.ts drops location-shaped KEYS, and `track()` additionally rounds every
- *    number to two decimals so a coordinate cannot survive as a numeric value either. Neither
- *    is permission to try.
- * 2. **No identifiers beyond the per-launch session id.** No trail id on browsing events, no
- *    friend or recipient id, no reported-content id. "Which trail did this person look at" is
- *    a location inference about that person; a friend id builds a social graph inside
- *    telemetry. Those belong in the database, not in a 7-day stream.
- * 3. **Free text never leaves the device.** No review body, no obstacle description, no search
- *    term, no URL. Bounded enums or counts only — which is why every property below is either
- *    a number, a boolean, or a union of literals.
- *
- * There is deliberately NO `consent.denied` and NO `consent.revoked` event. Transmitting an
- * event that says "I do not consent to events" is self-contradictory, and doing it anyway is
- * the kind of thing that makes the whole consent mechanism indefensible. A decline is recorded
- * on the device only.
- *
- * Naming: `domain.action`, lowercase, a dot between domain and action and snake_case within a
- * segment, so `event LIKE 'hike.%'` works as a query.
- */
+// keep-comment: this file IS the privacy disclosure (privacy policy §2); adding an event is a privacy decision. Rules:
+// keep-comment: 1. no position ever, not even a map centre or bounding box; shape only (counts, distances)
+// keep-comment: 2. no id beyond the session id: a trail id infers location, a friend id builds a social graph
+// keep-comment: 3. no free text (reviews, searches, URLs); only numbers, booleans and literal unions
+// keep-comment: no consent.denied or consent.revoked: sending "I do not consent" would be self-contradictory
+// keep-comment: names are domain.action, snake_case within a part, so `event LIKE 'hike.%'` works
 
-/** Why a recording ended. */
 export type RecordingStopReason = "user" | "inactivity" | "max_duration" | "recovery";
 
-/** Which engine actually produced the fixes. */
 export type RecordingEngine = "native_ios" | "expo_task";
 
 export type EventCatalogue = {
-  /**
-   * A walk recording started. Says which engine is in use and whether background permission
-   * was granted, which together explain most "my track has holes" reports.
-   */
+  // keep-comment: engine and background permission explain most "holes in my track" reports
   "hike.recording_started": {
     engine: RecordingEngine;
     backgroundPermission: "granted" | "denied";
   };
 
-  /**
-   * A walk recording ended. The shape of the track, never the track.
-   *
-   * `distanceMeters` plus `durationSeconds` plus a timestamp is a weak fingerprint of one
-   * specific walk. It carries no position, so it cannot locate anyone, and it ages out with
-   * the 7-day stream — recorded here as a known and accepted residual rather than an oversight.
-   */
+  // keep-comment: distance + duration + time weakly fingerprints one walk; no position, 7-day stream: accepted residual
   "hike.recording_stopped": {
     reason: RecordingStopReason;
     durationSeconds: number;
@@ -66,10 +33,7 @@ export type EventCatalogue = {
     pointCount: number;
   };
 
-  /**
-   * A share or reshare of a walk finished. How many friends were picked, never who, and no
-   * hike id (rule 2). `outcome` says whether sharing works, which is what the event is for.
-   */
+  // keep-comment: how many friends, never who (rule 2)
   "hike.shared": {
     kind: "share" | "reshare";
     outcome: "success" | "recipient_unavailable" | "not_allowed" | "error";
@@ -77,19 +41,15 @@ export type EventCatalogue = {
     allowResharing: boolean;
   };
 
-  /**
-   * One batch of photos picked for a walk finished uploading. `uploaded < requested` means
-   * some failed; no image, hike or file data is carried.
-   */
+  // keep-comment: uploaded < requested means some failed
   "hike.images_added": {
     requested: number;
     uploaded: number;
   };
 
-  /** The owner deleted a photo from their walk. */
   "hike.image_removed": Record<string, never>;
 
-  /** A recipient reported a photo on a shared walk. No image, hike or author id (rule 2). */
+  // keep-comment: no image, hike or author id (rule 2)
   "hike.image_reported": Record<string, never>;
 
   // keep-comment: the disclosure; coverOk/invitesOk say whether the follow-up uploads worked
@@ -127,10 +87,6 @@ export type EventCatalogue = {
   // keep-comment: no counts, since an area's trail and facility counts can name it (rule 2)
   "area.opened": Record<string, never>;
 
-  /**
-   * The user granted analytics consent. The only consent event there is — see the note above
-   * about why the other direction is not recorded.
-   */
   "consent.granted": Record<string, never>;
 };
 

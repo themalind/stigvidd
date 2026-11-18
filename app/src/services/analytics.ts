@@ -10,61 +10,26 @@ import { getConsentSync, subscribeConsent, type ConsentState } from "./consent";
 import { redact } from "./logger";
 import type { EventCatalogue, EventName } from "./event-catalogue";
 
-/**
- * Consent-gated product analytics.
- *
- * ── Why this is not a `track()` method on `logger` ──────────────────────────────────────
- *
- * The logger already solves batching, offline replay, backoff and redaction, so reusing it
- * looks free. Four of its behaviours are actively wrong here:
- *
- *  - It PERSISTS unsent records to AsyncStorage on background. An event held pending consent
- *    and written to disk is storage on terminal equipment before consent, which is the exact
- *    thing ePrivacy Art. 5(3) governs. Sharing a buffer would make that automatic.
- *  - It RETRIES with backoff. An error log is not droppable; an analytics event is. Retrying
- *    analytics only keeps non-consented data alive longer.
- *  - It has ONE buffer. A decline has to DISCARD what is buffered, and partitioning a mixed
- *    buffer at flush time would put the consent check on the hot path — precisely where it
- *    would later break quietly.
- *  - It has ONE sink, and therefore one stream. Stream is the only erasure granularity
- *    OpenObserve has, so events get their own: `stigvidd_app_events` can be dropped wholesale
- *    without destroying the 7-day error safety net.
- *
- * What IS shared is `redact()`, imported from the logger. One redaction implementation, two
- * egress paths through it.
- *
- * ── Why this is duplicated in web/ rather than extracted ────────────────────────────────
- *
- * `web/src/services/analytics.ts` is a near-twin and must stay one. Do not "helpfully" extract
- * a shared package:
- *
- *  - LICENCE. This area is MPL-2.0 with Exhibit B deliberately omitted; `web/` is
- *    AGPL-3.0-or-later. A shared AGPL module linked from here recreates the App Store conflict
- *    the split exists to avoid, and a shared MPL module lands where REUSE.toml's catch-all
- *    assigns AGPL. See docs/notes/licence-is-per-area-not-repo-wide.md.
- *  - LEGAL BASIS. This catalogue is consumer behavioural data under OPT-IN CONSENT. The web
- *    one is operational data about admin actions under LEGITIMATE INTEREST. Merging them
- *    merges two legal bases into one code path, and the first refactor that adds a page-view
- *    event to the shared catalogue silently makes this app collect without consent.
- */
+// keep-comment: not logger.track(): the logger persists unsent records (storage before consent, ePrivacy 5(3)),
+// keep-comment: retries (keeps unconsented data alive), has one buffer (a decline must discard events only)
+// keep-comment: and one stream (events need their own, OpenObserve's only erasure unit). redact() is shared.
+// keep-comment: never extract a package shared with web/analytics.ts: the licences differ (MPL vs AGPL,
+// keep-comment: docs/notes/licence-is-per-area-not-repo-wide.md) and so do the legal bases (consent vs
+// keep-comment: legitimate interest); a shared catalogue would let the app collect without consent
 
 type AnalyticsEvent = Record<string, unknown>;
 
 export type EventSink = (events: AnalyticsEvent[]) => void | Promise<void>;
 
-/**
- * Held while consent is "unknown". Small and lossy on purpose: this is the pre-consent window,
- * so the right failure is to forget, never to accumulate.
- */
+// keep-comment: held while consent is unknown; small and lossy, since before consent the right failure is to forget
 const MAX_PENDING = 50;
 
-/** Held after a grant, waiting for a flush. Drop-oldest; an event is not worth memory pressure. */
 const MAX_BUFFERED = 100;
 
 const BATCH_SIZE = 20;
 const FLUSH_INTERVAL_MS = 10_000;
 
-/** Bumped when the envelope shape changes, so old records stay interpretable. */
+// keep-comment: bump when the envelope shape changes
 const SCHEMA_VERSION = 1;
 
 let pending: AnalyticsEvent[] = [];
@@ -74,13 +39,7 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 let flushing = false;
 let unsubscribe: (() => void) | undefined;
 
-/**
- * Regenerated every launch and NEVER persisted.
- *
- * That is what keeps it out of "persistent identifier" territory: it correlates the events of
- * one app run, which is what makes a funnel readable, and correlates nothing across runs,
- * devices or reinstalls.
- */
+// keep-comment: new every launch and never persisted, so it is not a persistent identifier
 let sessionId = newSessionId();
 
 const appInfo = getAppInfo();
@@ -89,16 +48,7 @@ function newSessionId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-/**
- * Rounds every numeric property to two decimals.
- *
- * This closes a real hole rather than being tidiness. `redact()` scrubs coordinate-shaped
- * text, but its COORD_PATTERN only ever runs on strings — and event properties are mostly
- * numbers, so a mis-named numeric property (`startPoint: 57.70891`) would sail through
- * untouched. Two decimals is ~1.1 km, which is useless as a position, and nothing in the
- * catalogue needs more precision than that. It makes a coordinate unrepresentable rather than
- * merely discouraged.
- */
+// keep-comment: redact() only scrubs strings, so a numeric coordinate would pass; two decimals is ~1.1 km
 function coarsen(props: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
 
@@ -118,27 +68,19 @@ function schedule(): void {
   }, FLUSH_INTERVAL_MS);
 }
 
-/**
- * Records one event.
- *
- * Synchronous by design: consent is read from the in-memory cache, so no call site becomes
- * async and no call site can accidentally `await` telemetry.
- */
+// keep-comment: synchronous, so no call site can await telemetry
 export function track<N extends EventName>(event: N, props: EventCatalogue[N]): void {
   const consent = getConsentSync();
 
-  // The front door. A declined user's event is dropped HERE — before redaction, before the
-  // envelope is built, before anything is buffered — so there is no code path on which it
-  // could later be flushed. Checking at flush time instead is the shape of this that breaks.
+  // keep-comment: dropped here, before anything is buffered; a check at flush time is the version that breaks
   if (consent === "denied") return;
 
   const record: AnalyticsEvent = {
-    // Props spread FIRST so that a property named `event`, `level` or `sessionId` cannot
-    // shadow the envelope. Same reasoning as the context spread in telemetry.ts.
+    // keep-comment: first, so a prop named `event` or `level` cannot shadow the envelope
     ...(redact(coarsen(props as Record<string, unknown>)) ?? {}),
-    _timestamp: Date.now() * 1000, // OpenObserve wants microseconds
+    _timestamp: Date.now() * 1000, // keep-comment: OpenObserve wants microseconds
     level: "info",
-    message: event, // so an ad-hoc query against the stream still reads
+    message: event,
     event,
     schema: SCHEMA_VERSION,
     app: "stigvidd-app",
@@ -167,12 +109,7 @@ export function track<N extends EventName>(event: N, props: EventCatalogue[N]): 
   schedule();
 }
 
-/**
- * Applies a consent decision to whatever is already held.
- *
- * A grant releases the pending events; a decline destroys them. The decline branch is the one
- * that matters legally — "held until they say yes" is not what a decline means.
- */
+// keep-comment: a decline destroys what is held; holding it "until yes" is not what a decline means
 export function setAnalyticsConsent(state: ConsentState): void {
   if (state === "granted") {
     buffer = buffer.concat(pending);
@@ -193,20 +130,14 @@ export function setAnalyticsConsent(state: ConsentState): void {
 export function setEventSink(next: EventSink): void {
   sink = next;
 
-  // Consent may have been decided before the sink existed (hydration races bootstrap), so
-  // adopt the current state rather than waiting for the next change.
+  // keep-comment: hydration can beat the sink, so adopt the current state now
   setAnalyticsConsent(getConsentSync());
 
   unsubscribe?.();
   unsubscribe = subscribeConsent(setAnalyticsConsent);
 }
 
-/**
- * Ships what is buffered. Unlike the logger there is no retry: a failed batch is DROPPED.
- *
- * That is deliberate. Re-queuing would hold non-consented-retention data longer for a signal
- * whose whole value is statistical, and a lost batch costs a rounding error in a dashboard.
- */
+// keep-comment: no retry: a failed batch is dropped, since a lost batch costs only a rounding error
 export async function flushEvents(): Promise<void> {
   if (timer !== undefined) {
     clearTimeout(timer);
@@ -223,7 +154,7 @@ export async function flushEvents(): Promise<void> {
   try {
     await sink(batch);
   } catch {
-    // Dropped on purpose — see above.
+    // keep-comment: dropped on purpose
   } finally {
     flushing = false;
 
@@ -231,7 +162,6 @@ export async function flushEvents(): Promise<void> {
   }
 }
 
-/** Test seam, mirroring resetLogger(). */
 export function resetAnalytics(): void {
   if (timer !== undefined) {
     clearTimeout(timer);
@@ -247,7 +177,7 @@ export function resetAnalytics(): void {
   unsubscribe = undefined;
 }
 
-/** Exposed for assertions; there is no reason for product code to read these. */
+// keep-comment: for tests only
 export function analyticsBufferSizes(): { pending: number; buffered: number } {
   return { pending: pending.length, buffered: buffer.length };
 }

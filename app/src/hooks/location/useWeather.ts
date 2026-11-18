@@ -46,7 +46,7 @@ async function fetchWeather(lat: number, lon: number): Promise<WeatherData | nul
 export function useWeather(lat?: number, lon?: number) {
   return useQuery<WeatherData | null>({
     queryKey: ["weather", lat, lon],
-    queryFn: () => fetchWeather(lat!, lon!),
+    queryFn: () => (lat != null && lon != null ? fetchWeather(lat, lon) : null),
     enabled: lat != null && lon != null,
     staleTime: WEATHER_STALE_TIME,
     retry: false,

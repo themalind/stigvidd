@@ -13,7 +13,6 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { logger } from "./logger";
 
-// Show banners while the app is open in the foreground.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
@@ -178,13 +177,9 @@ async function claimNext(identifier: string): Promise<boolean> {
 let _currentExpoToken: string | null = null;
 let _tokenListener: Notifications.Subscription | null = null;
 
-// Requests notification permissions, fetches an Expo push token, and sends it
-// to the backend so the server can target this device. Safe to call on every
-// app launch — it's a no-op on simulators and re-registers gracefully if the
-// token has already been stored.
+// keep-comment: safe on every launch
 export async function registerForPushNotificationsAsync(): Promise<void> {
-  // Android requires an explicit notification channel before any notification
-  // can be displayed. The channel must be created before permission is requested.
+  // keep-comment: Android needs the channel before the permission request
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
@@ -194,15 +189,13 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
     });
   }
 
-  // Expo push tokens are only issued for physical devices; simulators/emulators
-  // have no APNs/FCM identity and will throw if we proceed past this guard.
+  // keep-comment: simulators have no APNs/FCM identity and throw past this point
   if (!Device.isDevice) {
     logger.debug("Push registration skipped — not a physical device");
     return;
   }
 
-  // Check the current permission status before prompting. iOS only shows the
-  // system dialog once — if the user previously denied we cannot re-prompt.
+  // keep-comment: iOS shows the system dialog only once
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
 
@@ -212,18 +205,14 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   }
 
   if (finalStatus !== "granted") {
-    // A real product signal, not noise: how many users decline push?
     logger.info("Push registration declined by user");
     return;
   }
 
-  // The project ID links the token to our EAS project so Expo can route
-  // notifications through the correct APNs/FCM credentials.
+  // keep-comment: the EAS project, which picks the APNs/FCM credentials
   const projectId = "f436d9c7-ff9c-4a60-b51f-1aefd5672205";
 
-  // Fetching the token hits Expo's servers (exp.host). A transient network
-  // failure here is not fatal — bail out quietly so it can be retried on the
-  // next launch instead of surfacing as an unhandled error.
+  // keep-comment: a network failure at exp.host is retried next launch, not thrown
   let expoToken: string;
   try {
     const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
@@ -234,12 +223,9 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   }
   _currentExpoToken = expoToken;
 
-  // Persist the token in the backend so the server knows where to send pushes.
   await registerPushToken(expoToken, Platform.OS);
 
-  // Re-register automatically if the token rotates (rare but possible).
-  // Remove any previous listener before adding a new one to avoid duplicates
-  // across login/logout cycles.
+  // keep-comment: re-registers on rotation; the old listener goes first, or login cycles stack them
   _tokenListener?.remove();
   _tokenListener = Notifications.addPushTokenListener(async ({ data: newToken }) => {
     _currentExpoToken = newToken;
@@ -247,9 +233,6 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
   });
 }
 
-// Removes the current device's push token from the backend and cleans up the
-// local listener. Called on logout so the user stops receiving notifications
-// on this device.
 export async function unregisterForPushNotificationsAsync(): Promise<void> {
   _tokenListener?.remove();
   _tokenListener = null;

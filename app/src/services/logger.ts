@@ -8,22 +8,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AppState, AppStateStatus } from "react-native";
 
-/**
- * Central structured logger.
- *
- * Used in error paths instead of `console.log`: it (a) always keeps the console output
- * developers rely on, and (b) additionally ships to OpenObserve when — and only when — a
- * sink has been registered. With no sink this is a thin wrapper around
- * console: nothing buffered, nothing scheduled, nothing sent. That is what keeps
- * `npx expo start` and CI unchanged, and it is why the API tests can keep asserting exact
- * `fetch` call counts.
- *
- * The sink is registered by `initTelemetry()`; see services/telemetry.ts.
- *
- * Everything logged passes through `redact()` first. That is not a nicety — this app handles
- * Keycloak tokens, user emails and continuous GPS traces, and a hike trace identifies where
- * someone lives. See docs/observability.md.
- */
+// keep-comment: without a sink this is only console, so dev, CI and the API tests' fetch counts are unchanged
+// keep-comment: everything goes through redact(): tokens, emails and GPS traces (a trace shows where someone lives)
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -43,9 +29,7 @@ const LEVEL_ORDER: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, e
 function resolveMinLevel(): LogLevel {
   const configured = process.env.EXPO_PUBLIC_LOG_LEVEL;
 
-  // Validated rather than cast. An unrecognised value would make every LEVEL_ORDER lookup
-  // below compare against `undefined` — always false — silently promoting a production build
-  // to debug logging, which is the opposite of what a typo here should do.
+  // keep-comment: validated, since a typo would compare against undefined and turn on debug logging in production
   if (configured && configured in LEVEL_ORDER) return configured as LogLevel;
 
   return __DEV__ ? "debug" : "info";
@@ -53,30 +37,18 @@ function resolveMinLevel(): LogLevel {
 
 const MIN_LEVEL = resolveMinLevel();
 
-// Small enough that a crash loses little, large enough that a chatty screen does not become
-// one request per line on a mobile connection.
 const BATCH_SIZE = 20;
 const FLUSH_INTERVAL_MS = 10_000;
-// Hard ceiling so a device offline on a long hike cannot grow the buffer without bound.
+// keep-comment: so a device offline on a long hike cannot grow the buffer without bound
 const MAX_BUFFERED = 200;
 const PENDING_STORAGE_KEY = "@stigvidd_pending_logs";
-// A sink is arbitrary caller-supplied code, and the HTTP one wraps fetch, which on React
-// Native is XHR-backed and has NO default timeout. If a sink never settles, `flushing` never
-// clears and every later flush — timer, batch and background alike — returns at the guard in
-// flush(), so log shipping stops silently for the rest of the process lifetime. Bounding it
-// here turns a stall into an ordinary failure, which the retry and backoff path already
-// handles. Exported so the test can advance to it rather than wait it out.
+// keep-comment: RN fetch has no timeout; a sink that never settles keeps `flushing` set and stops shipping for good
 export const SINK_TIMEOUT_MS = 30_000;
 
-// ---- Redaction (GDPR) -------------------------------------------------------------------
-
-// Keys whose values never leave the device. Matched as substrings, case-insensitively, so one
-// entry covers `refresh_token`, `refreshToken` and `Authorization` alike.
+// keep-comment: substrings, case-insensitive, so one entry covers refresh_token, refreshToken and Authorization
 const DENIED_KEY_PATTERNS = ["token", "password", "secret", "authorization", "credential", "cookie"];
 
-// Coordinates are pseudonymous only in aggregate: a single hiker's trace is identifying, and a
-// home address is wherever the trace starts. Dropped outright rather than rounded — two
-// decimals is still ~1.1km, which is a neighbourhood.
+// keep-comment: dropped, not rounded: a trace starts at someone's home, and two decimals is still a neighbourhood
 const LOCATION_KEY_PATTERNS = ["latitude", "longitude", "coordinate", "location", "geometry"];
 
 const BEARER_PATTERN = /Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi;
@@ -92,8 +64,7 @@ function matches(key: string, patterns: string[]): boolean {
   return patterns.some((pattern) => lower.includes(pattern));
 }
 
-/** Scrubs identifying data out of free-form strings, which is where it usually hides — an
- * upstream error message that embedded the request it failed on. */
+// keep-comment: free text is where it hides, such as an error message quoting its request
 export function redactString(value: string): string {
   return value
     .replace(BEARER_PATTERN, `Bearer ${REDACTED}`)
@@ -115,7 +86,7 @@ function redactObject(context: LogContext, depth: number): LogContext {
   const output: LogContext = {};
 
   for (const [key, value] of Object.entries(context)) {
-    // Dropped entirely, never truncated: a token prefix is still a fingerprint.
+    // keep-comment: never truncated, since a token prefix is still a fingerprint
     if (matches(key, DENIED_KEY_PATTERNS) || matches(key, LOCATION_KEY_PATTERNS)) {
       output[key] = REDACTED;
       continue;
@@ -131,8 +102,6 @@ export function redact(context?: LogContext): LogContext | undefined {
   return context ? redactObject(context, 0) : undefined;
 }
 
-// ---- Buffering + emit -------------------------------------------------------------------
-
 let sink: LogSink | null = null;
 let buffer: LogRecord[] = [];
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -143,18 +112,14 @@ let inBackground = false;
 let persisting = false;
 let persistAgain = false;
 let storageHoldsRecords = false;
-// Consecutive sink failures back the retry interval off. Without this a device with no
-// connectivity, or an OpenObserve outage, costs one HTTP attempt per log line: a restored
-// batch keeps the buffer at or above BATCH_SIZE, so every subsequent emit() would flush.
+// keep-comment: backoff, or offline every log line costs a request (a restored batch keeps the buffer full)
 let failureStreak = 0;
 const MAX_BACKOFF_MULTIPLIER = 16;
 
-/** Registers the transport that receives batched records. Called once by initTelemetry(). */
 export function setLogSink(next: LogSink): void {
   sink = next;
 }
 
-/** Test seam: drops the sink and any buffered records. */
 export function resetLogger(): void {
   sink = null;
   buffer = [];
@@ -184,7 +149,6 @@ function retryDelayMs(): number {
   return FLUSH_INTERVAL_MS * Math.min(2 ** failureStreak, MAX_BACKOFF_MULTIPLIER);
 }
 
-/** Resolves with the sink, or rejects once SINK_TIMEOUT_MS passes, so `flushing` always clears. */
 function settleWithin(result: void | Promise<void>, timeoutMs: number): Promise<void> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error("log sink timed out")), timeoutMs);
@@ -203,8 +167,7 @@ function settleWithin(result: void | Promise<void>, timeoutMs: number): Promise<
 }
 
 export async function flush(): Promise<void> {
-  // Overlapping flushes would let a failed batch be prepended to a buffer a concurrent flush
-  // has already taken, reordering records for no gain.
+  // keep-comment: one flush at a time, or a failed batch is put back out of order
   if (flushing || !sink || buffer.length === 0) return;
 
   const batch = buffer;
@@ -216,12 +179,10 @@ export async function flush(): Promise<void> {
     await settleWithin(sink(batch), SINK_TIMEOUT_MS);
     failureStreak = 0;
   } catch {
-    // Telemetry failure must never surface to the user or to the caller. Put the batch back
-    // at the front so the next flush retries it, then let MAX_BUFFERED trim the oldest.
+    // keep-comment: never surfaces to the user; the batch goes back for the next flush
     buffer = [...batch, ...buffer].slice(-MAX_BUFFERED);
     failureStreak += 1;
-    // Nothing else re-arms the timer: emit() only schedules when the buffer is under
-    // BATCH_SIZE, and a restored batch is usually over it.
+    // keep-comment: nothing else re-arms the timer, since emit() only schedules below BATCH_SIZE
     scheduleFlush(retryDelayMs());
   } finally {
     inFlight = [];
@@ -233,9 +194,6 @@ export async function flush(): Promise<void> {
 function emit(level: LogLevel, message: string, context?: LogContext): void {
   if (LEVEL_ORDER[level] < LEVEL_ORDER[MIN_LEVEL]) return;
 
-  // Console output is unconditional, not a fallback: the Metro logs developers already read
-  // stay exactly as informative as before, which is what makes migrating call sites off
-  // `console.log` a no-op behaviourally.
   const write = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
 
   if (context) write(message, context);
@@ -255,8 +213,7 @@ function emit(level: LogLevel, message: string, context?: LogContext): void {
   // keep-comment: a line logged after the background transition would otherwise die with the process
   if (inBackground) persistUndelivered();
 
-  // While the sink is failing, the backoff timer owns retries — flushing straight from here
-  // would be one HTTP attempt per log line against a known-broken endpoint.
+  // keep-comment: while failing, the backoff timer owns retries
   if (failureStreak === 0 && buffer.length >= BATCH_SIZE) void flush();
   else scheduleFlush(failureStreak > 0 ? retryDelayMs() : FLUSH_INTERVAL_MS);
 }
@@ -268,13 +225,7 @@ export const logger = {
   error: (message: string, context?: LogContext) => emit("error", message, context),
 };
 
-// ---- Lifecycle --------------------------------------------------------------------------
-
-/**
- * Backgrounding is the app's last reliable moment before the OS may kill it, so flush there
- * and persist whatever did not make it. The crash and the last few lines before it are
- * usually the same incident, so replaying them on next launch is the whole point.
- */
+// keep-comment: backgrounding is the last reliable moment before the OS may kill the app; the rest replays next launch
 function handleAppStateChange(next: AppStateStatus): void {
   inBackground = next !== "active";
   if (!inBackground) return;
@@ -306,7 +257,7 @@ async function persistPending(records: LogRecord[]): Promise<void> {
     if (records.length === 0) await AsyncStorage.removeItem(PENDING_STORAGE_KEY);
     else await AsyncStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(records));
   } catch {
-    // Nothing useful to do if the device cannot even persist a log batch.
+    // keep-comment: nothing to do if even storage fails
   }
 }
 
@@ -320,11 +271,10 @@ async function replayPersistedLogs(): Promise<void> {
     buffer = [...(JSON.parse(stored) as LogRecord[]), ...buffer].slice(-MAX_BUFFERED);
     void flush();
   } catch {
-    // A corrupt cache is not worth reporting — drop it and move on.
+    // keep-comment: a corrupt cache is dropped unreported
   }
 }
 
-/** Starts the flush-on-background and replay-on-launch behaviour. Idempotent. */
 export function startLogLifecycle(): void {
   if (appStateSubscribed) return;
 

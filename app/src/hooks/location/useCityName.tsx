@@ -15,7 +15,8 @@ export function useCityName(latitude?: number, longitude?: number) {
   return useQuery<string | null>({
     queryKey: ["reverseGeocode", latitude, longitude],
     queryFn: async () => {
-      const [place] = await Location.reverseGeocodeAsync({ latitude: latitude!, longitude: longitude! });
+      if (latitude == null || longitude == null) return null;
+      const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
       // keep-comment: expo-location does not always give the town as a field of its own
       const fromAddress = place?.formattedAddress?.split(",")[1]?.replace(/\d+/g, "").trim();
       return place?.city ?? place?.district ?? place?.subregion ?? fromAddress ?? null;
