@@ -40,8 +40,7 @@ interface Props {
 }
 
 const saveHikeFields = z.object({
-  // No required message: the field defaults to "", so it is never undefined and min(3) is
-  // what an untouched form trips.
+  // keep-comment: no required message, since the field defaults to "" and min(3) catches it
   hikeName: z.string().min(3, "hike.nameTooShort").max(40, "hike.nameTooLong"),
 });
 
@@ -76,22 +75,18 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
     defaultValues: { hikeName: "" },
   });
 
-  // Total recorded points across all segments — the trim slider's domain.
   const totalPoints = useMemo(
     () => hike.segments.reduce((sum, segment) => sum + segment.coordinates.length, 0),
     [hike.segments],
   );
 
-  // Inclusive [start, end] index window the user keeps. Defaults to the full route.
   const [trim, setTrim] = useState<[number, number]>(() => [0, Math.max(0, totalPoints - 1)]);
 
-  // Distance, duration and coordinates recomputed for the kept window.
   const trimmed = useMemo(() => recomputeTrimmedHike(hike.segments, trim[0], trim[1]), [hike.segments, trim]);
 
   const canTrim = totalPoints > 2;
 
-  // The backend rejects a hike with no distance or duration; guard here so the user
-  // gets a clear message instead of a generic save error after a too-tight trim.
+  // keep-comment: the API rejects zero distance or duration, so a too-tight trim gets a clear message
   const canSave = trimmed.distance > 0 && trimmed.duration > 0;
 
   const submit: SubmitHandler<SaveHikeFormData> = async (data) => {
@@ -105,7 +100,6 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
     mutate(newHike);
   };
 
-  // Full route shown faded for context; the kept portion drawn solid on top.
   const fullPositions = useMemo<GeoJSON.Position[]>(
     () =>
       hike.segments.flatMap((segment) =>
@@ -176,7 +170,6 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
         <View style={s.mapContainer}>
           <Map style={s.map} showsUserLocation={false} onDidFinishLoadingMap={fitToRoute}>
             <Camera ref={cameraRef} />
-            {/* Full route, faded — the trimmed-away portions stay visible for context. */}
             <GeoJSONSource id="save-hike-route-full" data={fullShape}>
               <Layer
                 type="line"
@@ -191,7 +184,6 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
                 paint={{ "line-color": theme.colors.outline, "line-width": 3 }}
               />
             </GeoJSONSource>
-            {/* Kept portion drawn solid on top. */}
             {keptPositions.length > 1 && (
               <GeoJSONSource id="save-hike-route-kept" data={keptShape}>
                 <Layer

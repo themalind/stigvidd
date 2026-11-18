@@ -16,19 +16,8 @@ interface Props {
   onDecline: () => void;
 }
 
-/**
- * Prominent disclosure shown BEFORE the system location prompt.
- *
- * Google Play requires an in-app disclosure ahead of the runtime permission dialog for
- * background location: what is collected, that it continues in the background, what it is
- * used for, and an affirmative action to proceed. It may not live in the privacy policy —
- * it has to stand in the way. Deliberately not dismissable by tapping outside, so the
- * user makes an explicit choice.
- *
- * Distinct from RecordingInfoDialog on purpose: that one explains how recording behaves
- * (auto-stop, trimming) and can be silenced with "don't show again". This one is consent
- * information and is shown until the permission is granted.
- */
+// keep-comment: Google Play requires this before the system prompt for background location,
+// keep-comment: not dismissable by tapping outside, and never silenced like RecordingInfoDialog
 export default function LocationDisclosureDialog({ visible, onContinue, onDecline }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();

@@ -33,8 +33,6 @@ import { useTranslation } from "react-i18next";
 import RecordingInfoDialog from "./recording-info-dialog";
 import SaveHikeModal from "./save-hike-modal";
 
-// Map center used until a real position is available — keeps the map from
-// rendering over the ocean while the first GPS fix resolves.
 const FALLBACK_CENTER: [number, number] = [START_COORDINATE_BORAS.longitude, START_COORDINATE_BORAS.latitude];
 
 export default function HikeRecorder() {
@@ -56,10 +54,8 @@ export default function HikeRecorder() {
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
-  // Pre-start info dialog that gates the first start.
   const [showStartInfo, setShowStartInfo] = useState(false);
   const [initialCenter, setInitialCenter] = useState<[number, number] | undefined>(undefined);
-  // True while we're still waiting on a precise GPS fix after the map first renders.
   const [isLocating, setIsLocating] = useState(false);
   const theme = useTheme();
   const { t } = useTranslation();
@@ -69,10 +65,8 @@ export default function HikeRecorder() {
 
     const finished = hike.segments.flatMap((segment) => segment.coordinates.map(toPos));
 
-    // Active segment: the persisted (background-task) points are the committed base;
-    // on top we append live foreground points newer than the last persisted one.
-    // The live tail makes the line follow the dot in real time, while the persisted
-    // base fills in whatever was recorded while the app was backgrounded.
+    // keep-comment: background-task points are the base (they hold what was recorded while backgrounded);
+    // keep-comment: newer live points go on top so the line keeps up with the dot
     const persistedActive = currentSegment?.coordinates ?? [];
     const lastPersistedTs = persistedActive.at(-1)?.timeStamp ?? 0;
     const liveTail = isTracking ? liveCoordinates.filter((l) => l.timeStamp > lastPersistedTs) : [];
@@ -82,26 +76,18 @@ export default function HikeRecorder() {
 
   const routeShape = useMemo(() => lineStringFromPositions(routePositions), [routePositions]);
 
-  // Kept in a ref so the one-shot load effect can read the latest route without
-  // re-running when points come in.
   const routePositionsRef = useRef(routePositions);
   useEffect(() => {
     routePositionsRef.current = routePositions;
   });
 
-  // Camera commands sent before the native map has finished loading hit a view
-  // whose tag can't be resolved yet (ReactTagResolver: resolved to null). Gate
-  // every move on this flag and, if the map isn't ready, remember the latest
-  // target and apply it once it is — so no centering is lost to the load race.
+  // keep-comment: a camera command before the map loads fails ("ReactTagResolver: resolved to null"), so the latest waits
   const mapReadyRef = useRef(false);
   const pendingCenterRef = useRef<{ center: [number, number]; zoom?: number } | null>(null);
 
-  // Auto-follow the recorded route until the user pans/zooms the map themselves;
-  // recentering (the locate button) turns it back on. Keeps the camera from
-  // yanking away from a user who is inspecting the map mid-hike.
+  // keep-comment: a user pan stops auto-follow until recentred, so the camera does not yank away mid-look
   const followRef = useRef(true);
 
-  // zoom is optional: omit it to recenter without overriding the user's zoom level.
   const moveCamera = useCallback((center: [number, number], zoom?: number) => {
     if (mapReadyRef.current) {
       cameraRef.current?.easeTo({ center, ...(zoom !== undefined ? { zoom } : {}), duration: 500 });
@@ -119,8 +105,6 @@ export default function HikeRecorder() {
     }
   }, []);
 
-  // A user-driven pan/zoom (never a programmatic easeTo) hands camera control to
-  // the user by disabling auto-follow.
   const handleRegionDidChange = useCallback((event: NativeSyntheticEvent<ViewStateChangeEvent>) => {
     if (event.nativeEvent.userInteraction) followRef.current = false;
   }, []);
@@ -147,22 +131,18 @@ export default function HikeRecorder() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Foreground permission is already granted (the screen gates on it). Render
-      // the map immediately from the cached last-known position (instant, no GPS
-      // lock) — or a fallback center — instead of blocking on a cold fix.
+      // keep-comment: last-known first, so the map does not wait on a cold GPS fix
       const last = await Location.getLastKnownPositionAsync().catch(() => null);
       if (cancelled) return;
       setInitialCenter(last ? [last.coords.longitude, last.coords.latitude] : FALLBACK_CENTER);
 
-      // Refine with a precise fix in the background and nudge the camera there,
-      // unless the user has already started moving (then the route drives it).
       setIsLocating(true);
       try {
         const precise = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         if (cancelled || routePositionsRef.current.length > 0) return;
         moveCamera([precise.coords.longitude, precise.coords.latitude], 16);
       } catch {
-        // Keep the last-known / fallback center if the precise fix never arrives.
+        // keep-comment: no precise fix keeps the last-known centre
       } finally {
         if (!cancelled) setIsLocating(false);
       }
@@ -190,7 +170,6 @@ export default function HikeRecorder() {
     if (!followRef.current) return;
     const last = routePositions.at(-1);
     if (!last) return;
-    // No zoom argument: follow the route at whatever zoom the user last set.
     moveCamera(last);
   }, [routePositions, moveCamera]);
 
@@ -208,7 +187,6 @@ export default function HikeRecorder() {
           onRegionDidChange={handleRegionDidChange}
         >
           <Camera ref={cameraRef} initialViewState={{ center: initialCenter, zoom: 16 }} />
-          {/* A LineString needs >= 2 points; while tracking starts (0–1 nodes) the line isn't drawn yet. */}
           {routePositions.length > 1 && (
             <GeoJSONSource id="hike-route" data={routeShape}>
               <Layer

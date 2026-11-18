@@ -10,7 +10,7 @@ import uuid from "react-native-uuid";
 
 const NAMESPACE = "6f1c8a52-3d47-4e0b-9a16-2b7d5c9e8f30";
 
-// Derived from the points, so it survives closing the form or the app and changes when the recording goes on.
+// keep-comment: from the points, so it survives an app restart and changes when recording resumes
 export function recordingRequestKey(hike: ActiveHike): string {
   const points = hike.segments.flatMap((segment) => segment.coordinates);
   const name = `${hike.segments[0]?.startTime}:${points.length}:${points.at(-1)?.timeStamp}`;

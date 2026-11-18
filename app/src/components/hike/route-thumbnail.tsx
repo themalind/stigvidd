@@ -17,17 +17,15 @@ import Svg, { Circle, Path } from "react-native-svg";
 const DEFAULT_SIZE = 52;
 
 interface Props {
-  /** The hike's raw coordinate payload; absent or unparseable falls back to the icon. */
+  // keep-comment: absent or unparseable shows the icon
   coordinates?: string;
   identifier: string;
   size?: number;
-  /** Overrides the tint, for a list that keeps the accent for something else. */
   background?: string;
   stroke?: string;
 }
 
-// The hike's own outline, drawn in the list row's icon slot. Memoized because a row
-// remounts on every sort and the parse is the expensive part.
+// keep-comment: memoized, since a row remounts on every sort and the parse is costly
 function RouteThumbnail({ coordinates, identifier, size = DEFAULT_SIZE, background, stroke }: Props) {
   const theme = useTheme();
   const tint = background ?? theme.colors.secondaryContainer;
@@ -41,14 +39,13 @@ function RouteThumbnail({ coordinates, identifier, size = DEFAULT_SIZE, backgrou
   return (
     <View
       style={[s.box, { width: size, height: size, backgroundColor: tint }]}
-      // One image to a screen reader; the shape itself carries no label.
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
       {route ? (
         <Svg width={size} height={size}>
           <Path d={route.d} stroke={line} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" fill="none" />
-          {/* Trailhead, so an out-and-back reads in the direction it was walked. */}
+          {/* keep-comment: the start dot shows which way an out-and-back was walked */}
           <Circle cx={route.start[0]} cy={route.start[1]} r={3} fill={line} />
         </Svg>
       ) : (

@@ -13,10 +13,6 @@ import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-// Fullscreen "follow" view for a single trail. Reached from the carousel's "show on
-// map" and by tapping the embedded map on a trail's detail screen. Pushed within the
-// current stack, so back returns where you came from. All presentation lives in
-// RouteFollowView, which hikes share — this file is only the trail's data path.
 export default function TrailFollowScreen() {
   const { t } = useTranslation();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();

@@ -19,17 +19,12 @@ import { Linking, Pressable, StyleSheet } from "react-native";
 
 interface Props {
   cameraRef: RefObject<CameraRef | null>;
-  // Optional extra action run when the button is pressed, in addition to centering
-  // (e.g. re-enabling auto-follow on a screen that pauses following on user pan).
   onPress?: () => void;
-  // When provided, fly to this live [longitude, latitude] instead of the button's
-  // own one-shot fix. The follow screen already watches the user's position, so it
-  // passes that through to keep the recenter target exactly on the puck.
+  // keep-comment: a live position, so the target is exactly the puck rather than this button's one-shot fix
   position?: GeoJSON.Position | null;
 }
 
-// Map controls sit on the always-light basemap, so they use the fixed light
-// palette — never useTheme(), which would turn the button orange in dark mode.
+// keep-comment: the light palette, since the basemap stays light in dark mode
 const CONTROL_COLORS = AppDefaultTheme.colors;
 
 export default function CenterOnUserButton({ cameraRef, onPress, position }: Props) {
@@ -38,28 +33,24 @@ export default function CenterOnUserButton({ cameraRef, onPress, position }: Pro
   const showWarning = useSetAtom(showWarningAtom);
   const { t } = useTranslation();
 
-  // Prefer a live position passed by the caller; otherwise fall back to this
-  // button's own one-shot fix (ignoring the Borås fallback, which isn't the user).
+  // keep-comment: the Borås fallback is not the user, so it is never a target
   const center: GeoJSON.Position | null =
     position ?? (fetched && !fetched.isFallback ? [fetched.longitude, fetched.latitude] : null);
 
-  // With no position to fly to, the press asks for the permission instead.
   const recover = async () => {
     const current = await Location.getForegroundPermissionsAsync();
     if (current.granted) {
-      // Permitted but no fix yet; a refetch is all this can usefully do.
       await queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
       return;
     }
 
-    // Requesting is safe here because the press is user-initiated, not AppState-driven.
+    // Safe: a press, not AppState, so no permission-dialog loop. keep-comment: Android livelock
     if (current.canAskAgain) {
       const requested = await Location.requestForegroundPermissionsAsync();
       if (requested.granted) await queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
       return;
     }
 
-    // Refused for good; only the settings app can undo it, so say why before going there.
     showWarning(t("map.locationBlocked"));
     Linking.openSettings().catch(() => undefined);
   };
@@ -101,8 +92,7 @@ export default function CenterOnUserButton({ cameraRef, onPress, position }: Pro
 const s = StyleSheet.create({
   center: {
     position: "absolute",
-    // No safe-area offset: every map that mounts this sits inside the tab navigator,
-    // and the tab bar below already clears the home indicator.
+    // No safe-area offset: the tab bar already clears the home indicator. keep-comment: hidden layout dependency
     bottom: 18,
     right: 15,
     padding: 12,

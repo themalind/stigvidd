@@ -36,8 +36,7 @@ export default function MapPreviewOverlay({ label, onPress, startPosition, direc
           <Text style={[s.badgeText, { color: theme.colors.onSurface }]}>{label}</Text>
         </View>
       </Pressable>
-      {/* Sits on top of the overlay so its tap opens directions instead of the
-          follow view; rendered last to win the touch in its corner. */}
+      {/* keep-comment: last, so its tap opens directions instead of the follow view */}
       {startPosition && (
         <Pressable
           style={[s.directions, { backgroundColor: theme.colors.surface }]}

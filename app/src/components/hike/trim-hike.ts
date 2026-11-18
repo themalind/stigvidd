@@ -16,9 +16,7 @@ export type TrimmedHike = {
 
 type FlatPoint = { data: LatLng; timeStamp: number; segment: number };
 
-// Flattens a hike's segments into a single ordered list of points, tagging each
-// with the index of the segment it came from. The segment tag lets the trim
-// recompute avoid treating a pause gap (the jump between two segments) as travel.
+// keep-comment: the segment tag stops a pause gap from counting as travel
 export function flattenSegments(segments: Segment[]): FlatPoint[] {
   const flat: FlatPoint[] = [];
   segments.forEach((seg, segment) => {
@@ -27,16 +25,7 @@ export function flattenSegments(segments: Segment[]): FlatPoint[] {
   return flat;
 }
 
-// Recomputes a hike restricted to the [startIndex, endIndex] window (inclusive)
-// over the flattened coordinate list — the model behind "trim the start/end".
-//
-// - distance sums only consecutive kept points from the same original segment, so
-//   the gap between two paused segments is never counted as travelled.
-// - duration sums each segment's kept span (lastKept - firstKept), which naturally
-//   excludes time the user was paused between segments.
-//
-// Indices are clamped to the valid range and ordered, so callers can pass raw
-// slider values without guarding the edges.
+// keep-comment: distance and duration are summed per segment, so paused time and gaps never count
 export function recomputeTrimmedHike(segments: Segment[], startIndex: number, endIndex: number): TrimmedHike {
   const flat = flattenSegments(segments);
   if (flat.length === 0) return { coordinates: [], distance: 0, duration: 0 };
@@ -52,7 +41,6 @@ export function recomputeTrimmedHike(segments: Segment[], startIndex: number, en
     }
   }
 
-  // Per-segment kept span (max timestamp - min timestamp), summed across segments.
   const spans = new Map<number, { min: number; max: number }>();
   for (const p of kept) {
     const span = spans.get(p.segment);
@@ -67,9 +55,6 @@ export function recomputeTrimmedHike(segments: Segment[], startIndex: number, en
   let duration = 0;
   for (const span of spans.values()) duration += span.max - span.min;
 
-  // The backend's Duration is an int (ms). On iOS location.timestamp carries
-  // fractional milliseconds, so span sums come out non-integer and the API
-  // rejects the payload (400) before saving — round to keep it a whole number.
-  // On Android timestamps are already integers, so this is a no-op there.
+  // keep-comment: iOS timestamps carry fractional ms and the API's int Duration answers 400
   return { coordinates: kept.map((p) => p.data), distance, duration: Math.round(duration) };
 }

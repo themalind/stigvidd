@@ -12,9 +12,7 @@ import { Linking, Platform } from "react-native";
 // A place directions lead to instead of the route's start, such as an event's meeting point. keep-comment: where people gather
 export type MeetingPoint = { position: GeoJSON.Position; label: string; directionsMessage: string };
 
-// Hands off to the device's maps app for turn-by-turn directions to a coordinate —
-// Apple Maps on iOS, Google Maps elsewhere (both accept the same daddr/destination
-// query). Confirms first so an accidental tap doesn't yank the user out of the app.
+// keep-comment: asks first, so a stray tap does not throw the user out of the app
 export function openDirectionsToStart(position: GeoJSON.Position, t: TFunction, message?: string) {
   const [lng, lat] = position;
   const url = Platform.select({

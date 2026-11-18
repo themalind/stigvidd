@@ -26,20 +26,16 @@ interface Props {
   onClose: () => void;
   onReadMore: (identifier: string) => void;
   onShowOnMap: (identifier: string) => void;
-  // How much of the screen bottom this carousel covers, reported on layout so the
-  // map can lift its attribution button clear of it. Card height varies with content.
+  // keep-comment: the covered height, so the map can lift its attribution clear of cards of varying height
   onMeasure?: (coveredHeight: number) => void;
 }
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-// Leave a sliver of the next card visible (peek) so it's obvious the list scrolls.
+// keep-comment: a sliver of the next card shows that the list scrolls
 const PEEK = 44;
 const CARD_WIDTH = SCREEN_WIDTH - SCREEN_PADDING * 2 - PEEK;
 const SNAP_INTERVAL = CARD_WIDTH + SCREEN_PADDING;
-// A lone card has no next card to peek at, so it fills the width (minus padding)
-// and reads as centered instead of left-aligned with an empty gap.
 const SINGLE_CARD_WIDTH = SCREEN_WIDTH - SCREEN_PADDING * 2;
-// Gap between the carousel and the screen bottom.
 const BOTTOM_OFFSET = 16;
 
 export default function TrailCardCarousel({ identifiers, onClose, onReadMore, onShowOnMap, onMeasure }: Props) {
@@ -49,15 +45,13 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
   const multiple = identifiers.length > 1;
   const cardWidth = multiple ? CARD_WIDTH : SINGLE_CARD_WIDTH;
 
-  // One batched fetch for the whole cluster instead of one request per card.
   const { cards, isError, notFound, refetch } = useTrailCards(identifiers);
 
   // keep-comment: warms the cache "Se på karta" reads; only for a card that loaded, so a deleted trail is not fetched
   const activeIdentifier = identifiers[activeIndex];
   useTrailCoordinates(activeIdentifier, { enabled: !!activeIdentifier && !!cards[activeIdentifier] });
 
-  // Reset to the first card whenever a different cluster is opened — otherwise the
-  // list keeps its previous scroll offset / index (e.g. lands on "3/4").
+  // keep-comment: a new cluster starts at its first card, or the list keeps the old index ("3/4")
   const [shownIdentifiers, setShownIdentifiers] = useState(identifiers);
   if (identifiers !== shownIdentifiers) {
     setShownIdentifiers(identifiers);
@@ -72,9 +66,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
     setActiveIndex(Math.max(0, Math.min(index, identifiers.length - 1)));
   };
 
-  // Stable renderItem + memoized cards: scrolling only changes activeIndex (the
-  // dots), so without this every card — and its <Image> — would re-render on each
-  // scroll. Cards depend only on the identifier list and the (stable) callbacks.
+  // keep-comment: stable, or every card and its image re-renders on each swipe
   const renderItem = useCallback(
     ({ item, index }: { item: string; index: number }) => (
       <CarouselCard
@@ -92,7 +84,6 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
     [cards, cardWidth, isError, notFound, refetch, identifiers.length, onReadMore, onShowOnMap],
   );
 
-  // Fixed-width cards → give the list their geometry so it doesn't measure them.
   const getItemLayout = useCallback(
     (_: ArrayLike<string> | null | undefined, index: number) => ({
       length: cardWidth,
@@ -188,16 +179,13 @@ const CarouselCard = memo(function CarouselCard({
       style={[s.card, { width: cardWidth, backgroundColor: theme.colors.surface }]}
     >
       {!card && isNotFound ? (
-        // The server returned successfully but omitted this trail (e.g. it was
-        // unverified/removed after its marker loaded) — there is nothing to retry.
+        // keep-comment: the trail was removed after its marker loaded, so there is nothing to retry
         <View style={s.stateBox}>
           <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
             {t("map.cardNotFound")}
           </Text>
         </View>
       ) : !card && isError ? (
-        // The batched fetch failed and this card has no cached data — offer a retry
-        // instead of an indefinite spinner.
         <View style={s.stateBox}>
           <Text style={[s.errorText, { color: theme.colors.onSurfaceVariant }]} numberOfLines={2}>
             {t("map.cardError")}
@@ -287,8 +275,7 @@ const CarouselCard = memo(function CarouselCard({
 const s = StyleSheet.create({
   wrapper: {
     position: "absolute",
-    // No safe-area offset: the map tab sits inside the tab navigator, whose tab bar
-    // already clears the home indicator.
+    // No safe-area offset: the tab bar already clears the home indicator. keep-comment: hidden layout dependency
     bottom: BOTTOM_OFFSET,
     left: 0,
     right: 0,

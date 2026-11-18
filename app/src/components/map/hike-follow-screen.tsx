@@ -14,14 +14,8 @@ import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-// Fullscreen "follow" view for a recorded hike — your own, or one a friend shared with
-// you (the API authorises both through the same endpoint). This is what makes a shared
-// hike walkable: the friend gets the route plus their own live position.
-//
-// The route is fetched by identifier rather than handed over through navigation, so the
-// screen stands on its own (deep link, cold start). In practice the details screen that
-// opens it already holds the geometry and primes this query's cache, so the normal path
-// paints immediately without a request.
+// keep-comment: own and shared hikes both come through one endpoint, which authorises either
+// keep-comment: fetched by id so a deep link works; the details screen primes this cache first
 export default function HikeFollowScreen() {
   const { t } = useTranslation();
   const { identifier, name } = useLocalSearchParams<{ identifier: string; name?: string }>();
@@ -34,9 +28,7 @@ export default function HikeFollowScreen() {
     isError,
   } = useQuery({
     queryKey: hikeRouteQueryKey(hikeIdentifier),
-    // Only the coordinates are cached: they're the immutable part of a hike, and both
-    // the own-hike and shared-hike payloads carry them in the same shape, so either
-    // screen can prime this key.
+    // keep-comment: only coordinates, the part that never changes and that both payloads share
     queryFn: async () => (await getHikeByIdentifier(hikeIdentifier)).coordinates ?? "",
     enabled: !!hikeIdentifier,
     staleTime: HIKE_GEOMETRY_STALE_TIME,

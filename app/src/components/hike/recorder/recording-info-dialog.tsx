@@ -16,9 +16,7 @@ import { useTranslation } from "react-i18next";
 interface Props {
   visible: boolean;
   onDismiss: () => void;
-  // When provided, the dialog is shown before recording starts: it offers a
-  // "don't show again" checkbox and a Start button (the boolean reports the
-  // checkbox state). When omitted, the dialog is purely informational (OK only).
+  // keep-comment: given, the dialog gates the start with "don't show again"; omitted, it is OK only
   onStart?: (dontShowAgain: boolean) => void;
 }
 

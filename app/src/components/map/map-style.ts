@@ -7,39 +7,20 @@
 
 import { LogManager, TransformRequestManager } from "@maplibre/maplibre-react-native";
 
-// MapTiler vector basemap. The style is selected by id from an env var and is
-// currently the built-in "Outdoor" (outdoor-v2). The planned end state is a
-// *custom* clone published in MapTiler's Customize editor with the marked
-// hiking-route relation layers hidden (keeping contours, hillshade and
-// footpaths) so the app's own trail overlays are the only routes drawn — that
-// only requires swapping the published style id into the env var. Both the key
-// and the style id are read from EXPO_PUBLIC_* env vars, the same mechanism as
-// BASE_URL in api-config — never hard-coded.
+// The style id swaps to a custom clone with MapTiler's hiking routes hidden, so ours are the only ones. keep-comment: planned change, not in code
 const MAPTILER_API_KEY = process.env.EXPO_PUBLIC_MAPTILER_API_KEY;
 const MAPTILER_STYLE_ID = process.env.EXPO_PUBLIC_MAPTILER_STYLE_ID;
 
-// The restricted key in MapTiler Cloud has an "Allowed user-agent header"
-// filter set to "stigvidd". MapTiler rejects any request whose User-Agent
-// doesn't contain this value (case-sensitive), leaving the map blank, so this
-// constant must stay in sync with the dashboard value. We send exactly
-// "stigvidd" to match it 1:1.
+// Must match the key's "Allowed user-agent header" in MapTiler Cloud, or every tile is refused. keep-comment: external config
 const MAP_USER_AGENT = "stigvidd";
 
-// The key is baked into the style URL. It already ships in the JS bundle via
-// the EXPO_PUBLIC_* mechanism, so keeping it out of the URL buys no real
-// security — the protection is the User-Agent restriction plus the monthly
-// spending limit on the key. Baking it in also avoids a duplicate `?key=`
-// param that injecting it via a transform would produce. MapTiler serves its
-// own glyphs and sprite from this style, so no separate glyph URL is needed:
-// the cluster-count / start-marker SymbolLayers request "Noto Sans Regular",
-// which MapTiler's font endpoint provides.
+// The key ships in the bundle anyway; the user-agent and spending limit protect it. keep-comment: security reasoning
 function styleUrl(styleId: string | undefined): string {
   return `https://api.maptiler.com/maps/${styleId}/style.json?key=${MAPTILER_API_KEY}`;
 }
 
 export type Basemap = "outdoor" | "satellite";
 
-// Hybrid: satellite imagery with roads, paths and place names on top.
 const STYLE_URLS: Record<Basemap, string> = {
   outdoor: styleUrl(MAPTILER_STYLE_ID),
   satellite: styleUrl("hybrid-v4"),
@@ -55,16 +36,13 @@ export function getMapLoadingColours(basemap: Basemap = "outdoor") {
   return LOADING_COLOURS[basemap];
 }
 
-// Outdoor stays light in the app's dark mode: a legible dark topographic map needs a separately
-// tuned custom style (MapTiler's "Outdoor Dark" is night-vision dark and hard to read).
+// Stays light in dark mode: MapTiler's "Outdoor Dark" is too dark to read. keep-comment: deliberate, not an oversight
 export function getMapStyle(basemap: Basemap = "outdoor"): string {
   return STYLE_URLS[basemap];
 }
 
-// Run once at app startup, before any map mounts.
+// Before any map mounts. keep-comment: ordering constraint
 export function initMapTiler(): void {
-  // 1. Send the User-Agent the restricted key requires on every MapTiler
-  //    request. Stable id so re-registration is an in-place update.
   TransformRequestManager.addHeader({
     id: "maptiler-user-agent",
     match: "api\\.maptiler\\.com",
@@ -72,10 +50,6 @@ export function initMapTiler(): void {
     value: MAP_USER_AGENT,
   });
 
-  // 2. Silence the benign "ParseStyle" warnings MapLibre-native emits for
-  //    MapTiler style properties its (older) build doesn't recognize — the map
-  //    renders correctly without them. Returning true suppresses that log;
-  //    false lets everything else (e.g. the "Canceled" cache-corruption
-  //    warnings we rely on) log as normal.
+  // Hides MapLibre's harmless "ParseStyle" warnings about MapTiler properties; "Canceled" must still log. keep-comment: map-cache relies on it
   LogManager.onLog((log) => log.level === "warn" && log.message.includes("ParseStyle"));
 }

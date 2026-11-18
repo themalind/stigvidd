@@ -11,20 +11,14 @@ import { useMemo } from "react";
 import { START_MARKER_COLORS } from "./marker-styles";
 
 interface Props {
-  // Unique id prefix for this marker's source/layers within its map.
   id: string;
   position: GeoJSON.Position;
   label: string;
-  // When provided, the marker becomes tappable (e.g. to open directions) and an
-  // invisible, finger-sized hit circle is added so the small dot is easy to hit.
+  // keep-comment: also adds an invisible finger-sized hit circle around the small dot
   onPress?: () => void;
 }
 
-// The route's start point (trailhead) drawn as GeoJSON layers — a circle, a halo
-// ring, and a label — never a view-hosted <Marker>. View annotations are the most
-// fragile path on iOS under the New Architecture (Fabric), so this stays on the
-// same layer pipeline as the route. Colours come from the fixed light palette
-// (the basemap is always light, even in the app's dark mode).
+// Layers, never a view-hosted <Marker>, which is fragile on iOS/Fabric. keep-comment: platform bug
 export default function StartMarker({ id, position, label, onPress }: Props) {
   const shape = useMemo(() => pointFeatureFromPosition(position), [position]);
 

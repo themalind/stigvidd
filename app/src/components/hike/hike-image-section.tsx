@@ -17,7 +17,6 @@ const THUMB_WIDTH = Dimensions.get("screen").width * 0.28;
 interface Props {
   images: HikeImage[];
   onOpen: (index: number) => void;
-  // Only for the owner, who can add photos.
   edit?: { max: number; uploadingCount: number; onAdd: () => void };
 }
 

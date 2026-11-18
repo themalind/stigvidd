@@ -23,21 +23,15 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
-// The fullscreen "follow" view: one route drawn cleanly with the user's live position,
-// nothing else (no clusters, other trails or facility pins). Shared by the trail follow
-// screen and the hike follow screen so the two can't drift apart visually — each of
-// those owns only its own data fetching and passes the finished path in here.
+// Shared by trail and hike follow so the two cannot drift apart; each passes in its own path. keep-comment: why shared
 const FIT_PADDING = { top: 100, right: 60, bottom: 120, left: 60 };
 
 interface Props {
-  // Unique prefix for this view's map source/layer ids.
   idPrefix: string;
-  // The route to walk, as [longitude, latitude] positions.
+  // [longitude, latitude] keep-comment: GeoJSON order, easy to swap
   path: GeoJSON.Position[];
-  // Shown on the surface beside the back button.
   title?: string;
   isLoading?: boolean;
-  // Shown centred when the route could not be loaded. Mutually exclusive with isLoading.
   errorMessage?: string;
   meetingPoint?: MeetingPoint;
 }
@@ -48,8 +42,7 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
   const cameraRef = useRef<CameraRef>(null);
   const mapReadyRef = useRef(false);
 
-  // The puck is driven by the app's own location watcher, not MapLibre's built-in
-  // engine, which freezes the dot mid-walk on both platforms (see the hook).
+  // Our own watcher, since MapLibre's engine freezes the puck mid-walk. keep-comment: platform bug
   const userLocation = useLiveUserLocation();
 
   const lineShape = useMemo(() => lineStringFromPositions(path), [path]);
@@ -57,28 +50,18 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
   const bounds = useMemo(() => getBoundsFromTrail(shown), [shown]);
 
   const lineLayerId = `${idPrefix}-route-line`;
-  // The layer the puck is pinned above — but only once that layer actually exists. The
-  // route is rendered conditionally below, and the GPS fix usually lands before the
-  // coordinates do, so naming an anchor unconditionally would leave the puck waiting on
-  // a layer that might never appear.
-  //
-  // Anchor to the start marker's *label* (its topmost layer), not the route line: the
-  // marker is mounted after the line and so ends up above it, and anchoring to the line
-  // buries the puck under the trailhead circle — where you are standing when you set off.
-  // A one-point route still has a marker, so this covers that case too.
+  // Named only once the route exists: the GPS fix usually arrives first, and the puck would wait on a missing layer. keep-comment: race
+  // The start label, not the line, so the puck is not buried under the trailhead you stand on. keep-comment: layer order
   const puckAnchor = path.length > 0 ? `${idPrefix}-start-label` : undefined;
 
-  // Tapping the trailhead hands off to the device's maps app for directions.
   const openDirections = useCallback(() => {
     if (path.length > 0) openDirectionsToStart(path[0], t);
   }, [path, t]);
 
-  // Fit to the route once both the map and the coordinates are ready — whichever
-  // arrives last triggers the fit (map-ready callback, or this effect on bounds).
+  // Whichever of the map and the route arrives last does the fit. keep-comment: two triggers on purpose
   const fitToRoute = useCallback(() => {
     if (!mapReadyRef.current) return;
-    // A single point has a zero-area bounding box, which fitBounds resolves to maximum
-    // zoom; centre on it at a sane level instead.
+    // fitBounds zooms a single point to the maximum. keep-comment: MapLibre edge case
     if (shown.length === 1)
       cameraRef.current?.jumpTo({ center: shown[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
     else if (bounds) cameraRef.current?.fitBounds(bounds, { padding: FIT_PADDING, duration: 0 });
@@ -131,10 +114,7 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
         )}
         {userLocation && (
           <UserLocationMarker
-            // Remount instead of mutating when the anchor appears. Changing
-            // aboveLayerId in place makes the native side remove the layer and re-add
-            // the same object, and it dereferences the new anchor with `!!` — see the
-            // prop's docs in UserLocationMarker.
+            // keep-comment: remount, not mutate, when the anchor appears (see UserLocationMarker)
             key={puckAnchor ?? "no-anchor"}
             id={`${idPrefix}-user`}
             position={userLocation.position}
