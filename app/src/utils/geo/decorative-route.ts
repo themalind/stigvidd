@@ -5,11 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// The winding line on the get-started card and the stats heroes. Decoration, not data:
-// the shape is generated. Sampled as a polyline so the draw-on animation gets the exact
-// path length for strokeDashoffset by summing segments.
-
-// Two sine waves of unrelated frequency read as wandering; one alone looks like a wave.
+// keep-comment: two waves of unrelated frequency read as wandering; one alone looks like a wave
 const PRIMARY_WAVES = 2.1;
 const SECONDARY_WAVES = 4.7;
 const PRIMARY_PHASE = 0.4;
@@ -20,7 +16,7 @@ const SAMPLES = 64;
 
 export interface DecorativeRoute {
   d: string;
-  /** Exact path length, for strokeDasharray / strokeDashoffset. */
+  // keep-comment: exact, for the draw-on animation's strokeDashoffset
   length: number;
   start: [number, number];
   end: [number, number];
@@ -28,7 +24,7 @@ export interface DecorativeRoute {
 
 export function buildDecorativeRoute(width: number, height: number, padding = 16): DecorativeRoute {
   const innerWidth = Math.max(width - padding * 2, 0);
-  // Amplitude is shared between the two waves, so their sum still fits the box.
+  // keep-comment: shared by both waves, so their sum still fits the box
   const amplitude = Math.max(height - padding * 2, 0) / 2 / (1 + SECONDARY_WEIGHT);
   const midY = height / 2;
 

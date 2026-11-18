@@ -25,8 +25,7 @@ import { z } from "zod";
 
 const WIDTH = Dimensions.get("screen").width;
 
-// Mirrors EmailVerification:ResendCooldownSeconds on the backend. A shorter value here would
-// only produce a request the backend silently ignores, which would look like a broken button.
+// keep-comment: mirrors the backend's EmailVerification:ResendCooldownSeconds, which ignores earlier resends
 const RESEND_COOLDOWN_SECONDS = 60;
 
 const verifyFields = z.object({
@@ -44,7 +43,6 @@ const addOpacity = (color: string, opacity: number): string => {
   return color;
 };
 
-/** Maps the backend's failure code onto the field, so the message lands under the input. */
 function messageForCode(code: string): string {
   if (code === "invalid-code") return "auth.validation.codeIncorrect";
   if (code === "code-expired") return "auth.validation.codeExpired";
@@ -73,8 +71,7 @@ export default function VerifyEmailScreen() {
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({ resolver: zodResolver(verifyFields) });
 
-  // One interval for the whole countdown rather than one timeout per tick, so a re-render
-  // mid-countdown cannot leave two of them running.
+  // keep-comment: one interval, so a re-render mid-countdown cannot start a second
   useEffect(() => {
     if (cooldown <= 0) return;
 
@@ -101,8 +98,7 @@ export default function VerifyEmailScreen() {
       return;
     }
 
-    // Verified, but still signed out: the account was only just enabled at Keycloak, and the
-    // password is not held anywhere on this screen. Log in is the next step, not a session.
+    // keep-comment: still signed out, since this screen never holds the password
     showSuccess(t("auth.emailVerifiedPleaseLogin"));
     router.replace("./login");
   };
@@ -115,8 +111,7 @@ export default function VerifyEmailScreen() {
 
     try {
       await resendVerification(email);
-      // The backend answers 204 whether or not it actually sent anything, so this message
-      // deliberately promises nothing more than that the request was made.
+      // keep-comment: the backend answers 204 whether it sent or not, so the message promises no mail
       showSuccess(t("auth.verificationResent"));
       setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch {
@@ -219,8 +214,7 @@ const s = StyleSheet.create({
     flexGrow: 1,
   },
   backgroundImage: {
-    // flexGrow (not flex: 1) for the same reason as the register screen: the basis stays
-    // "auto", so a surface taller than the viewport actually scrolls instead of clipping.
+    // keep-comment: not flex: 1, whose 0 basis clips a tall form instead of scrolling it
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -270,8 +264,7 @@ const s = StyleSheet.create({
     paddingTop: 4,
   },
   errorContainer: {
-    // Same reasoning as the register screen: minHeight keeps the spacing without reserving
-    // a full row for a message that is usually absent.
+    // keep-comment: doubles as the gap between fields, growing only when there is a message
     minHeight: 12,
     justifyContent: "center",
   },

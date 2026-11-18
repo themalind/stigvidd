@@ -17,14 +17,8 @@ interface RawCoordinate {
   longitude: number;
 }
 
-// Parses the backend coordinate string (a JSON array of { latitude, longitude })
-// into GeoJSON positions ([longitude, latitude]). This is the single boundary
-// where the wire format is mapped to the app's GeoJSON-native render model.
-//
-// Defensive on purpose: the payload is untrusted JSON, so a non-array shape or
-// any point with a missing / non-finite coordinate is dropped rather than
-// producing NaN positions that would later corrupt the route line and the
-// computed camera bounds. Done in a single pass for large trails.
+// keep-comment: the one place { latitude, longitude } becomes [longitude, latitude]
+// keep-comment: drops bad points, since a NaN would corrupt the route line and the camera bounds
 export default function CoordinateParser({ data, identifier }: Props): GeoJSON.Position[] {
   try {
     const raw: unknown = JSON.parse(data);

@@ -19,8 +19,7 @@ export default function ProfileStackLayout() {
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen name="login" options={{ animation: "none" }} />
         <Stack.Screen name="register" options={{ animation: "none" }} />
-        {/* Reached straight after registering, when the account exists but is still
-            disabled — so it belongs on the signed-OUT side of the guard. */}
+        {/* keep-comment: signed-out side, since it follows registering while the account is still disabled */}
         <Stack.Screen name="verify-email" options={{ animation: "none" }} />
       </Stack.Protected>
       <Stack.Protected guard={isAuthenticated}>

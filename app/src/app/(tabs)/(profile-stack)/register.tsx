@@ -90,7 +90,6 @@ export default function RegisterScreen() {
     try {
       await register(data);
     } catch (error) {
-      // The 409 code says which field collided.
       if (error instanceof ApiError && error.message === "nickname-taken") {
         setError("nickName", { message: "auth.validation.nicknameTaken" });
         return;
@@ -103,9 +102,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    // The account exists but is disabled until the mailed link or code is used, so there is
-    // no session to land in. Carry the address forward: the verification screen needs it for
-    // both the code check and the resend, and asking the user to retype it would be absurd.
+    // keep-comment: the account stays disabled until verified, so there is no session; the address goes along
     showSuccess(t("auth.registeredCheckYourEmail"));
     router.replace({ pathname: "./verify-email", params: { email: data.email } });
   };
@@ -310,10 +307,7 @@ const s = StyleSheet.create({
     flexGrow: 1,
   },
   backgroundImage: {
-    // flexGrow (not flex: 1) so the basis stays "auto": a surface taller than the screen
-    // makes this taller than the viewport and the ScrollView actually scrolls. With
-    // flex: 1 the basis is 0, the content never exceeds one screen, and anything too tall
-    // is clipped equally at top and bottom with no way to reach it.
+    // keep-comment: not flex: 1, whose 0 basis clips a tall form instead of scrolling it
     flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
@@ -346,7 +340,7 @@ const s = StyleSheet.create({
   },
   textInputContainer: {
     flex: 1,
-    // Pinned to the field width so a long error message wraps instead of widening the column.
+    // keep-comment: a long error wraps instead of widening the column
     width: WIDTH * 0.65,
   },
   textInput: {
@@ -380,9 +374,7 @@ const s = StyleSheet.create({
     lineHeight: 17,
   },
   errorContainer: {
-    // Doubles as the gap between fields, so it can't collapse to nothing — but a fixed
-    // height reserved 30px per field for a message that is usually absent. minHeight
-    // keeps the spacing and lets the row grow only when there is something to show.
+    // keep-comment: doubles as the gap between fields, growing only when there is a message
     minHeight: 12,
     justifyContent: "center",
   },

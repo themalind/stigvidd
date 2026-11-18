@@ -23,21 +23,15 @@ interface Auth {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  /** Re-verify the password, delete the account (DB + Keycloak), then sign out. */
   deleteAccount: (password: string) => Promise<void>;
 }
 
-/**
- * Keycloak Direct Access Grant auth, backed by Jotai atoms (a global store, no React
- * Context), so it can also be read from a component that renders the bootstrap itself.
- */
+// keep-comment: jotai, not Context, so the component rendering the providers can read it too
 export function useAuth(): Auth {
   const user = useAtomValue(userAtom);
   const isLoading = useAtomValue(authLoadingAtom);
   const setUser = useSetAtom(userAtom);
-  // Read the QueryClient from the jotai atom (set in the root layout) rather than
-  // useQueryClient(): useAuth() also runs in RootLayout, which renders the
-  // QueryClientProvider and therefore sits above it — useQueryClient() would throw.
+  // keep-comment: not useQueryClient(), which throws in RootLayout above the provider
   const queryClient = useAtomValue(queryClientAtom);
 
   const login = async (email: string, password: string) => {
@@ -45,12 +39,7 @@ export function useAuth(): Auth {
   };
 
   const register = async (data: RegisterData) => {
-    // Backend provisions the Keycloak user (DISABLED) and the StigVidd DB record, then
-    // mails a verification link and code.
-    //
-    // There is deliberately no auto-login here: the account cannot log in until the
-    // address is verified, so a password grant would only fail. The caller routes to the
-    // verification screen instead.
+    // keep-comment: no auto-login: the account is disabled until the address is verified
     await registerAccount(data);
   };
 
@@ -58,8 +47,7 @@ export function useAuth(): Auth {
     await unregisterForPushNotificationsAsync().catch(() => {});
     await logoutKeycloak();
     setUser(null);
-    // Drop the signed-out user's cached data from memory. Correctness is already
-    // guaranteed by user-scoped query keys; this is memory hygiene.
+    // keep-comment: memory hygiene only; user-scoped keys already keep data apart
     queryClient.clear();
   };
 
@@ -67,9 +55,7 @@ export function useAuth(): Auth {
     if (!user) {
       throw new Error("not-authenticated");
     }
-    // Re-verify identity before the destructive action (throws InvalidCredentialsError).
     await passwordGrant(user.email, password, "delete-account");
-    // Backend removes the StigVidd DB record and the Keycloak user.
     await deleteStigViddUser();
     await logout();
   };
@@ -77,19 +63,13 @@ export function useAuth(): Auth {
   return { user, isAuthenticated: !!user, isLoading, login, register, logout, deleteAccount };
 }
 
-/**
- * Restores a session on app start: load stored tokens and refresh once.
- * Call once near the root, OUTSIDE any conditional render, so it runs even
- * while the first paint is gated on auth resolving.
- */
+// keep-comment: call outside any conditional render, since the first paint waits on it
 export function useInitAuth(): void {
   const setUser = useSetAtom(userAtom);
   const setIsLoading = useSetAtom(authLoadingAtom);
   const queryClient = useAtomValue(queryClientAtom);
 
-  // When a refresh fails mid-session, drop back to the signed-out state so the
-  // route guards swap to the login screen instead of stranding the user on a
-  // screen whose API calls all 401.
+  // keep-comment: a failed refresh signs out, or the user is stranded on a screen of 401s
   useEffect(() => {
     setSessionExpiredHandler(() => {
       setUser(null);

@@ -65,9 +65,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
     try {
       await login(data.email, data.password);
     } catch (error) {
-      // Must come FIRST: AccountNotVerifiedError extends InvalidCredentialsError, so the
-      // broader check would swallow it and tell a user with the right password that their
-      // password is wrong.
+      // keep-comment: first, since it extends InvalidCredentialsError and would read as a wrong password
       if (error instanceof AccountNotVerifiedError) {
         router.push({ pathname: "./verify-email", params: { email: data.email } });
         return;
@@ -251,7 +249,7 @@ const s = StyleSheet.create({
   },
   textInputContainer: {
     flex: 1,
-    // Pinned to the field width so a long error message wraps instead of widening the column.
+    // keep-comment: a long error wraps instead of widening the column
     width: WIDTH * 0.65,
   },
   textInput: {
@@ -286,9 +284,7 @@ const s = StyleSheet.create({
     borderRadius: BORDER_RADIUS,
   },
   errorContainer: {
-    // Doubles as the gap between fields, so it can't collapse to nothing — but a fixed
-    // height reserved 30px per field for a message that is usually absent. minHeight
-    // keeps the spacing and lets the row grow only when there is something to show.
+    // keep-comment: doubles as the gap between fields, growing only when there is a message
     minHeight: 12,
     justifyContent: "center",
   },

@@ -13,32 +13,17 @@ import { DialogText } from "@/components/dialog/dialog-section";
 import { track } from "@/services/analytics";
 import { getConsentSync, isConsentHydrated, setConsent, subscribeConsent, type ConsentState } from "@/services/consent";
 
-/**
- * Asks for analytics consent, once.
- *
- * Consent must be FREELY GIVEN, which is a constraint on the presentation and not only on the
- * wording: the two buttons are the same kind, the same size and the same colour, in the
- * reading order accept-then-decline, with nothing pre-selected. A styled-up "Yes" beside a
- * greyed-out "No" is the single most common finding against a consent dialog, and it would
- * make the consent invalid rather than merely ugly.
- *
- * It is also not dismissible by tapping outside: an accidental dismissal is not a decision,
- * and treating it as one in either direction would be wrong. Unanswered stays "unknown", which
- * holds events without transmitting them.
- *
- * Never mention location here: App Review rejects text ahead of the permission prompt whose buttons are not "Continue". keep-comment: store policy
- *
- * Rendered inside the layout's provider tree beside GlobalSnackbar. It waits for hydration —
- * without that, a returning user who already answered would be asked again on every launch,
- * because the consent cache reads "unknown" for the moment before the stored value lands.
- */
+// keep-comment: GDPR "freely given": both buttons alike in kind, size and colour, nothing pre-selected
+// keep-comment: not dismissable by tapping outside; unanswered stays "unknown", which holds events unsent
+// keep-comment: never mention location: App Review rejects text before the prompt whose buttons are not "Continue"
+// keep-comment: waits for hydration, or a returning user is asked again on every launch
 export function ConsentDialog() {
   const { t } = useTranslation();
   const [consent, setConsentState] = React.useState<ConsentState>(getConsentSync());
   const [hydrated, setHydrated] = React.useState(isConsentHydrated());
 
   React.useEffect(() => {
-    // subscribeConsent fires on hydration too, which is what flips `hydrated` below.
+    // keep-comment: it also fires on hydration, which flips `hydrated`
     return subscribeConsent((next) => {
       setConsentState(next);
       setHydrated(isConsentHydrated());
@@ -49,8 +34,7 @@ export function ConsentDialog() {
     setConsentState(granted ? "granted" : "denied");
     await setConsent(granted ? "granted" : "denied");
 
-    // Recorded only on a grant. There is deliberately no event for a decline: transmitting
-    // "I do not consent to events" would be self-contradictory. See event-catalogue.ts.
+    // keep-comment: no event for a decline, which would send data about refusing to send data
     if (granted) track("consent.granted", {});
   }
 

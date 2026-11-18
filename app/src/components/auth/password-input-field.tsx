@@ -16,7 +16,7 @@ interface FieldProps {
   label: string;
   onSubmitEditing?: () => void;
   returnKeyType?: ReturnKeyTypeOptions;
-  /** Shorter field. Used on register, where four fields have to fit without scrolling. */
+  // keep-comment: register needs four fields to fit without scrolling
   dense?: boolean;
   testID?: string;
 }

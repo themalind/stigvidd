@@ -13,9 +13,6 @@ import { Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SettingsDrawer from "@/components/settings/drawer";
 
-// https://www.youtube.com/watch?v=yzkTDFErTec
-// https://www.reddit.com/r/reactnative/comments/jbk2fh/animate_icon_and_expand_text_input_similar_to/
-
 export default function Header() {
   const [visible, setVisible] = useState(false);
   const theme = useTheme();

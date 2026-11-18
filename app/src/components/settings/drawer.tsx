@@ -57,15 +57,13 @@ export default function SettingsDrawer({ visible, onDismiss }: Props) {
       setError(t("auth.couldNotLogout"));
     }
     onDismiss();
-    // No navigation needed: logout() flips userAtom → the (profile-stack) guard
-    // swaps the protected screens for the login screen in place.
+    // keep-comment: no navigation: the (profile-stack) guard swaps in the login screen
   }
 
   function handleLogin() {
     setActive("login");
     onDismiss();
-    // Send login into the profile stack so the auth guard lands on the profile
-    // page once signed in. The (settings) stack has no post-login destination.
+    // keep-comment: the profile stack, since the (settings) stack has nowhere to land after login
     router.navigate("/(tabs)/(profile-stack)/login");
   }
 

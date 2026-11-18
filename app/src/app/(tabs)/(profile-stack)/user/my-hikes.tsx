@@ -25,7 +25,7 @@ import { useTranslation } from "react-i18next";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
 
-// Module level: a fresh object literal each render would recompute the hook's memos.
+// keep-comment: module level, or the hook's memos recompute every render
 const ACCESSORS: HikeAccessors<Hike> = {
   name: (h) => h.name,
   length: (h) => h.hikeLength,
@@ -35,7 +35,6 @@ const ACCESSORS: HikeAccessors<Hike> = {
 
 const SORT_FIELDS: SortField[] = [
   { key: "name", labelKey: "filter.fieldName" },
-  // Dates sort newest first on the first tap.
   { key: "date", labelKey: "filter.fieldDate", defaultDirection: "desc" },
   { key: "length", labelKey: "filter.fieldLength" },
   { key: "duration", labelKey: "filter.fieldDuration" },
@@ -46,7 +45,6 @@ interface HikeRowProps {
   onPress: (hike: Hike) => void;
 }
 
-// Memoized so a row keeps its parsed thumbnail while the screen re-renders around it.
 const HikeRow = memo(function HikeRow({ hike, onPress }: HikeRowProps) {
   const theme = useTheme();
 
@@ -61,7 +59,6 @@ const HikeRow = memo(function HikeRow({ hike, onPress }: HikeRowProps) {
           <View style={s.info}>
             <Text>{hike.hikeLength} km</Text>
             <Text>{FormattedTime(hike.duration)}</Text>
-            {/* The list shows the date it can be sorted by. */}
             <Text style={s.date}>{formatDate(hike.createdAt)}</Text>
           </View>
         </View>
@@ -93,7 +90,7 @@ export default function MyHikesScreen() {
     ranges,
   } = useHikeFilters(hikes, ACCESSORS);
 
-  // Each range is one choice to the user even though it is stored as two keys.
+  // keep-comment: a range counts once though it is stored as two keys
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, minDuration, maxDuration, ...rest } = filters;
     return (
@@ -149,12 +146,10 @@ export default function MyHikesScreen() {
       <FlatList
         data={filteredHikes}
         renderItem={renderHike}
-        // Identifier, not index: sorting reorders the list.
         keyExtractor={(item) => item.identifier}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={s.listContent}
-        // Each row parses its own coordinate payload, so windowing is what keeps a long
-        // collection off the first paint.
+        // keep-comment: every row parses its route, so windowing keeps a long list off the first paint
         initialNumToRender={8}
         maxToRenderPerBatch={8}
         windowSize={5}
@@ -216,7 +211,6 @@ const s = StyleSheet.create({
     gap: 12,
     marginTop: 2,
   },
-  // Trailing edge, so the date column lines up down the list.
   date: {
     marginLeft: "auto",
     opacity: 0.6,
@@ -225,7 +219,7 @@ const s = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 16,
   },
-  // Holds the stats banner too, which needs the padding to break back out of.
+  // keep-comment: the stats banner breaks back out of this padding
   listContent: {
     paddingHorizontal: SCREEN_PADDING,
     paddingBottom: 20,

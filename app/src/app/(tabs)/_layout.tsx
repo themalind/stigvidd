@@ -39,13 +39,8 @@ export default function TabsLayout() {
     fontFamily: BADGE_FONT_FAMILY,
   };
 
-  // On the profile tab, login/register live inside the stack and Stack.Protected
-  // swaps them in/out imperatively when auth flips — usePathname() lags one
-  // transition behind that swap, so deriving header visibility from the leaf path
-  // here is unreliable. The tab segment "(profile-stack)" is stable across the
-  // flip (you never leave the tab) and isAuthenticated is the lag-free source of
-  // truth for which screen Protected shows, so use that on the profile tab.
-  // Other tabs (incl. the separate settings login) keep the pathname check.
+  // keep-comment: usePathname() lags one transition behind Stack.Protected's swap on login,
+  // keep-comment: so the profile tab reads isAuthenticated instead
   const onProfileTab = segments.includes("(profile-stack)");
   const shouldShowHeader = onProfileTab
     ? isAuthenticated

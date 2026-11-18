@@ -88,8 +88,7 @@ export default function HomeScreen() {
 
       <NearbyAreas />
 
-      {/* Held for the returning user, who is the one this slot is usually for: a first-time
-          user resolves to "empty" and gets the get-started card above the carousel. */}
+      {/* keep-comment: held for the returning user; a first-time user resolves to "empty" and sees the get-started card */}
       {latest.kind === "loading" && <LatestHikeSkeleton />}
       {latest.kind === "error" && (
         <SectionPanel testID="home-latest-error" title={t("home.latestHike")}>

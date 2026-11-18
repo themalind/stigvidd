@@ -163,7 +163,7 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   errorContainer: {
-    // Pinned to the field width so a long error message wraps instead of widening the modal.
+    // keep-comment: a long error wraps instead of widening the modal
     width: width * 0.65,
   },
   errorBadge: {

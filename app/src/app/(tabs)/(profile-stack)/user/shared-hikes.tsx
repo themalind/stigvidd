@@ -31,7 +31,6 @@ import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "reac
 
 const PREVIEW_COUNT = 5;
 
-// Maps SharedHike's differently named fields onto the same filter hook my-hikes uses.
 const ACCESSORS: HikeAccessors<SharedHike> = {
   name: (h) => h.hikeName,
   length: (h) => h.hikeLength,
@@ -42,7 +41,7 @@ const ACCESSORS: HikeAccessors<SharedHike> = {
 
 const SORT_FIELDS: SortField[] = [
   { key: "name", labelKey: "filter.fieldName" },
-  // The "date" sort key with its own label: here the date is when the hike was shared.
+  // keep-comment: here the date is when the hike was shared
   { key: "date", labelKey: "filter.fieldShared", defaultDirection: "desc" },
   { key: "length", labelKey: "filter.fieldLength" },
   { key: "duration", labelKey: "filter.fieldDuration" },
@@ -71,8 +70,7 @@ export default function SharedHikesScreen() {
 
   const { data: hikes, isLoading, isError: getSharedHikesError, error, refetch } = useSharedHikes();
 
-  // Filtering covers received hikes only. Incoming requests are an action list, and keep
-  // their preview cap and their own order.
+  // keep-comment: received hikes only; incoming requests are an action list with their own order
   const {
     filteredHikes,
     filters,
@@ -89,7 +87,7 @@ export default function SharedHikesScreen() {
     ranges,
   } = useHikeFilters(hikes, ACCESSORS);
 
-  // Each range is one choice to the user even though it is stored as two keys.
+  // keep-comment: a range counts once though it is stored as two keys
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, minDuration, maxDuration, ...rest } = filters;
     return (
@@ -235,7 +233,6 @@ export default function SharedHikesScreen() {
                 <View style={s.cardInner}>
                   {filteredHikes.length === 0 && <EmptyState text={t("hike.noResults")} />}
                   {filteredHikes.map((hike, index) => (
-                    // Identifier, not index: sorting reorders the list.
                     <View key={hike.hikeIdentifier}>
                       <SharedHikeRow hike={hike} />
                       {index < filteredHikes.length - 1 && (

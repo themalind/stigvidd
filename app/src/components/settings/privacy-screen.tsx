@@ -13,14 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { getConsentSync, loadConsent, setConsent, subscribeConsent, type ConsentState } from "@/services/consent";
 
-/**
- * Where analytics consent is withdrawn.
- *
- * Art. 7(3) requires withdrawal to be as easy as giving consent, so this is a plain switch
- * reachable in two taps from anywhere, not a buried flow. The privacy policy names this screen
- * ("Settings → Privacy" / "Inställningar → Integritet"), so it must stay findable under that
- * name in both languages.
- */
+// keep-comment: GDPR art. 7(3): withdrawing must be as easy as consenting, so a plain switch two taps away
+// keep-comment: the privacy policy names this screen "Inställningar → Integritet"; keep that name in both languages
 export default function PrivacyScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -28,16 +22,14 @@ export default function PrivacyScreen() {
   const [consent, setConsentState] = React.useState<ConsentState>(getConsentSync());
 
   React.useEffect(() => {
-    // Re-read rather than trusting the cache: this screen can be the first thing opened on a
-    // cold start, before initTelemetry's hydration has resolved.
+    // keep-comment: re-read, since a cold start can open this before hydration resolves
     void loadConsent();
 
     return subscribeConsent(setConsentState);
   }, []);
 
   async function handleToggle(next: boolean) {
-    // Optimistic, so the switch never appears stuck while AsyncStorage is written. setConsent
-    // publishes to the cache before it persists, for the same reason.
+    // keep-comment: optimistic, so the switch never looks stuck while storage is written
     setConsentState(next ? "granted" : "denied");
     await setConsent(next ? "granted" : "denied");
   }

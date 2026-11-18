@@ -30,12 +30,12 @@ export interface FilterableTrail {
   city: string;
   startLatitude?: number;
   startLongitude?: number;
-  // The trail list carries a precomputed average; saved trails carry the ratings themselves.
+  // keep-comment: the trail list has an average; saved trails carry the ratings themselves
   averageRating?: number;
   ratingResponse?: { rating: number }[];
 }
 
-// 0 for an unrated trail, which keeps it out of every "at least N stars" filter.
+// keep-comment: 0 keeps an unrated trail out of every "at least N stars" filter
 export const trailRating = (trail: FilterableTrail): number => {
   if (typeof trail.averageRating === "number") {
     return trail.averageRating;
@@ -52,7 +52,6 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
   const [sortBy, setSortBy] = useState<SortOption>("name-asc");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Extracts a sorted list of unique city names from the trails
   const cities = useMemo(() => {
     if (!trails) {
       return [];
@@ -60,7 +59,6 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     return [...new Set(trails.map((trail) => trail.city))].sort();
   }, [trails]);
 
-  // Extracts a sorted list of unique non-zero trail classifications
   const classifications = useMemo(() => {
     if (!trails) {
       return [];
@@ -68,12 +66,6 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     return [...new Set(trails.map((trail) => trail.classification))].filter((cf) => cf.valueOf() !== 0).sort();
   }, [trails]);
 
-  // Memoizes a list of trails with added distance information.
-  // If trails are missing, returns undefined.
-  // If the user's location is unavailable, returns the trails with distanceKm set to undefined.
-  // Otherwise, calculates the distance (in kilometers) from the user’s location
-  // to each trail’s start coordinates (when available) and adds it as distanceKm.
-  // Recomputes only when trails or userLocation change.
   const trailsWithDistance = useMemo(() => {
     if (!trails) {
       return;
@@ -95,7 +87,6 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     });
   }, [trails, userLocation]);
 
-  // Applies all active filters and sorts the trails based on the selected sort option
   const filteredTrails = useMemo(() => {
     if (!trails || !trailsWithDistance) {
       return [];
@@ -170,7 +161,6 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     return result;
   }, [trailsWithDistance, trails, filters, sortBy, userLocation, searchQuery]);
 
-  // Updates a single filter and auto-selects a relevant sort order
   const updateFilter = (key: keyof FilterOptions, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     if (key === "nearMe" && value === true) {
@@ -181,13 +171,11 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     }
   };
 
-  // Updates min and max length in a single state update
   const updateLengthFilter = (min: number, max: number) => {
     setFilters((prev) => ({ ...prev, minLength: min, maxLength: max }));
     setSortBy("length-asc");
   };
 
-  // Resets all filters and restores the default sort order
   const clearFilters = () => {
     setFilters({});
     setSortBy("name-asc");

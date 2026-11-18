@@ -13,29 +13,15 @@ import { LayoutChangeEvent, StyleSheet, View } from "react-native";
 import { Text } from "react-native-paper";
 
 type Props = {
-  /** The image source being displayed. The badge only renders if this is a mock image. */
   source: unknown;
-  /**
-   * "badge" = label on the image itself, sized after how much room the image gives it.
-   * "watermark" = diagonal, semi-transparent text across the whole image.
-   */
   variant?: "badge" | "watermark";
 };
 
-/** Narrower than this and a corner pill would cover most of the picture — use a bottom ribbon instead. */
+// keep-comment: narrower and a corner pill would cover the picture, so a bottom ribbon instead
 const THUMBNAIL_WIDTH = 120;
-/** Below this the pill still fits, but only in a tighter form. */
 const COMPACT_WIDTH = 220;
 
-/**
- * Place as a sibling directly after an <Image> inside a parent with
- * `position: "relative"` (and preferably `overflow: "hidden"`).
- * Shows an "Example image" badge — but only for mock images, so it
- * removes itself once real images are uploaded.
- *
- * The overlay stretches to the image it covers and measures itself, so the
- * same component reads well on a full-width hero and on a 60px thumbnail.
- */
+// keep-comment: a sibling right after an <Image> in a relative parent; mock images only
 export default function ExampleImageOverlay({ source, variant = "badge" }: Props) {
   const { t } = useTranslation();
   const [width, setWidth] = useState(0);
@@ -49,8 +35,7 @@ export default function ExampleImageOverlay({ source, variant = "badge" }: Props
 
   if (!isMockImage(source)) return null;
 
-  // Nothing is drawn until the first layout pass, so a thumbnail never flashes
-  // a full-size badge before shrinking it.
+  // keep-comment: nothing before the first layout, so a thumbnail never flashes a full-size badge
   return (
     <View testID="example-image-overlay" style={s.fill} pointerEvents="none" onLayout={onLayout}>
       {width > 0 &&
@@ -61,9 +46,6 @@ export default function ExampleImageOverlay({ source, variant = "badge" }: Props
             </Text>
           </View>
         ) : width < THUMBNAIL_WIDTH ? (
-          // A ribbon along the bottom edge: it fits any thumbnail width and keeps
-          // the picture itself visible. Inset slightly so it stays clear of the
-          // image's rounded corners.
           <View testID="example-image-ribbon" style={s.ribbon}>
             <Text
               style={s.ribbonText}
@@ -90,7 +72,6 @@ export default function ExampleImageOverlay({ source, variant = "badge" }: Props
   );
 }
 
-/** Big enough to read as a watermark, small enough to stay inside the image. */
 function watermarkFontSize(width: number) {
   return Math.max(10, Math.min(28, Math.round(width * 0.11)));
 }

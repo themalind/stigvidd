@@ -7,14 +7,7 @@
 
 import { Facility, TrailMarkerResponse } from "@/data/types";
 
-// GeoJSON builders that turn API DTOs / parsed positions into the render data
-// MapLibre sources consume. These produce data in one direction (DTO → GeoJSON);
-// they are not bidirectional conversion shims. GeoJSON.* types come from the
-// global namespace declared by @types/geojson.
-
 export function featureCollectionFromMarkers(markers: TrailMarkerResponse[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
-  // Single pass: skip markers without a start coordinate while building, so we
-  // never emit a feature with undefined coordinates.
   const features: GeoJSON.Feature<GeoJSON.Point>[] = [];
   for (const m of markers) {
     if (m.startLongitude == null || m.startLatitude == null) continue;
@@ -38,8 +31,6 @@ export function featureCollectionFromMarkers(markers: TrailMarkerResponse[]): Ge
 }
 
 export function featureCollectionFromFacilities(facilities: Facility[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
-  // Single pass: skip facilities without coordinates while building, so we
-  // never emit a feature with undefined coordinates.
   const features: GeoJSON.Feature<GeoJSON.Point>[] = [];
   for (const f of facilities) {
     if (f.longitude == null || f.latitude == null) continue;

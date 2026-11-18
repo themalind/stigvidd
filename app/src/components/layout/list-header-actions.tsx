@@ -37,9 +37,6 @@ interface ListHeaderActionsProps {
   showActions?: boolean; // False leaves only the title row.
 }
 
-// Compact filter controls for the profile lists: two icons inside the existing header
-// row that expand into a search field or a sort menu. Fully controlled — all filter
-// state lives in the caller's useTrailFilters/useHikeFilters.
 export default function ListHeaderAction({
   children,
   searchQuery,
@@ -54,15 +51,13 @@ export default function ListHeaderAction({
   onClearFilters,
   showActions = true,
 }: ListHeaderActionsProps) {
-  // Panel visibility only — no filter state lives here.
   const [searchOpen, setSearchOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
   const anchorRef = useRef<ComponentRef<typeof View>>(null);
-  // Window coordinates of the sort menu, measured off the icon each time it opens.
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
 
-  // The two panels occupy the same slot under the header, so only one may be open.
+  // keep-comment: both panels share one slot, so only one may be open
   const toggleSearch = () => {
     setSortOpen(false);
     setSearchOpen((v) => !v);
@@ -73,24 +68,22 @@ export default function ListHeaderAction({
       setSortOpen(false);
       return;
     }
-    // Dismissing the keyboard blurs the search field, which collapses it.
+    // keep-comment: blurring the search field is what collapses it
     Keyboard.dismiss();
     setSearchOpen(false);
     anchorRef.current?.measureInWindow((x, y, width, height) => {
-      // Both values in one callback, so the menu never renders at a stale position.
       setMenuPos({ top: y + height + 8, right: Dimensions.get("window").width - (x + width) });
       setSortOpen(true);
     });
   };
 
-  // Split on the last dash so field keys containing one survive.
+  // keep-comment: the last dash, so a field key containing one survives
   const splitAt = sortBy.lastIndexOf("-");
   const activeField = sortBy.slice(0, splitAt);
   const activeDirection = sortBy.slice(splitAt + 1);
 
   const handleSortPress = (field: SortField) => {
     if (field.key === activeField) {
-      // Same field twice flips the direction.
       onSortChange(`${field.key}-${activeDirection === "asc" ? "desc" : "asc"}`);
     } else {
       onSortChange(`${field.key}-${field.defaultDirection ?? "asc"}`);
@@ -110,9 +103,8 @@ export default function ListHeaderAction({
       <View style={s.headerRow}>
         {children}
         <View style={s.actions}>
-          {/* hitSlop, not padding: 24px icons are below the 44px minimum touch target. */}
+          {/* keep-comment: 24px icons are below the 44px minimum touch target */}
           <Pressable onPress={toggleSearch} hitSlop={16}>
-            {/* Tinted while a query is active, since the collapsed field hides it. */}
             <MaterialIcons
               name="search"
               size={24}
@@ -120,15 +112,14 @@ export default function ListHeaderAction({
             />
           </Pressable>
 
-          {/* collapsable={false}: Android may drop a plain wrapper View from the
-              native tree, and measureInWindow needs it to exist. */}
+          {/* keep-comment: Android drops a plain wrapper View, and measureInWindow needs it */}
           <View ref={anchorRef} collapsable={false}>
             <FilterIconButton activeCount={activeFilterCount} label={t("filter.label")} onPress={toggleSort} />
           </View>
         </View>
       </View>
 
-      {/* Mounted on demand so autoFocus fires; styled to match the trails tab's search. */}
+      {/* keep-comment: mounted on demand so autoFocus fires */}
       {searchOpen && (
         <Animated.View entering={FadeInUp.duration(150)} exiting={FadeOutUp.duration(120)}>
           <SearchField
@@ -137,9 +128,7 @@ export default function ListHeaderAction({
             placeholder={searchPlaceholder}
             value={searchQuery}
             onChangeText={onSearchChange}
-            // Collapse on blur, not on every deleted character. A press anywhere
-            // outside blurs the field, which is what closes it; the query survives
-            // and the tinted search icon plus the counter row keep it visible.
+            // keep-comment: the query survives the collapse; the tinted icon and counter row show it
             onBlur={() => setSearchOpen(false)}
             onClear={() => {
               onSearchChange("");
@@ -150,10 +139,7 @@ export default function ListHeaderAction({
         </Animated.View>
       )}
 
-      {/* Portalled, not absolutely positioned inside the header: only a full-screen
-          layer can catch presses outside the panel, and on Android touches never
-          reach a child drawn outside its parent's bounds. Both the catcher and the
-          panel are tied to one boolean, so they cannot end up out of step. */}
+      {/* keep-comment: portalled, since Android never sends touches to a child outside its parent's bounds */}
       {sortOpen && menuPos && (
         <Portal>
           <Pressable
@@ -178,7 +164,6 @@ export default function ListHeaderAction({
               const active = field.key === activeField;
               return (
                 <Pressable key={field.key} onPress={() => handleSortPress(field)} style={s.popoverRow}>
-                  {/* asTranslationKey: labelKey is a variable, so t() cannot verify it. */}
                   <Text style={{ color: active ? theme.colors.onSurface : theme.colors.onSurfaceVariant }}>
                     {t(asTranslationKey(field.labelKey))}
                   </Text>
@@ -207,7 +192,6 @@ export default function ListHeaderAction({
         </Portal>
       )}
 
-      {/* Only rendered while filtering, so an untouched page keeps its current height. */}
       {hasActive && (
         <View style={s.countRow}>
           <Text variant="bodySmall" style={s.countText}>
@@ -229,7 +213,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    // iOS already gets its inset from the back button; Android does not.
+    // keep-comment: iOS gets its inset from the back button; Android does not
     paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
     paddingRight: SCREEN_PADDING,
   },
@@ -244,20 +228,17 @@ const s = StyleSheet.create({
     marginTop: 8,
   },
   popover: {
-    // Positioned in window coordinates inside the Portal; top/right come from the anchor.
     position: "absolute",
     borderRadius: SURFACE_BORDER_RADIUS,
     paddingVertical: 4,
     minWidth: 180,
-    // A tinted surface alone is nearly white in light theme — the border is what
-    // actually separates the menu from the list behind it.
+    // keep-comment: the tinted surface is near white in light theme; the border separates it
     borderWidth: StyleSheet.hairlineWidth,
-    // iOS shadow…
     shadowColor: "#000",
     shadowOpacity: 0.18,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    // …and Android's, which draws it above the press catcher (it ignores zIndex).
+    // keep-comment: Android ignores zIndex; elevation draws it above the press catcher
     elevation: 6,
   },
   popoverRow: {

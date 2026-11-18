@@ -22,9 +22,6 @@ import { AppState, Linking, Platform, StyleSheet, View } from "react-native";
 import { Button, Icon, IconButton, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
-// "checking" — reading the current status (never prompts)
-// "disclosure" — showing why we need location, before the system prompt
-// "granted" / "denied" — outcome
 type PermissionPhase = "checking" | "disclosure" | "granted" | "denied";
 
 async function readPermissionPhase(): Promise<PermissionPhase> {
@@ -42,14 +39,11 @@ export default function CreateHikeScreen() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [phase, setPhase] = useState<PermissionPhase>("checking");
-  // false once the OS stops offering the prompt ("never ask again" / iOS after a denial):
-  // from then on the only way back is the system settings app.
+  // keep-comment: false once the OS stops prompting; then only the settings app can grant it
   const [canAskAgain, setCanAskAgain] = useState(true);
   const [showInfo, setShowInfo] = useState(false);
 
-  // getForegroundPermissionsAsync only *reads* the status — it never raises the system
-  // dialog. That is what lets the disclosure come first: Play requires it ahead of the
-  // prompt, and users who already granted must not be nagged on every visit.
+  // keep-comment: only reads, never prompts, so Play's disclosure can come first
   useEffect(() => {
     readPermissionPhase()
       .then(setPhase)
@@ -59,10 +53,7 @@ export default function CreateHikeScreen() {
       });
   }, []);
 
-  // The shared userLocation query can't notice a permission granted in-app — it refreshes
-  // on a foreground return or a remount, and neither happens here. Without this the home
-  // hero, popular trails, map camera and trail distances all keep using the Borås
-  // fallback until the app is next backgrounded.
+  // keep-comment: the shared location query misses an in-app grant and would keep the Borås fallback app-wide
   const markGranted = useCallback(() => {
     setPhase("granted");
     queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
@@ -79,13 +70,8 @@ export default function CreateHikeScreen() {
     Linking.openSettings().catch(() => undefined);
   };
 
-  // Coming back from the settings app, the phase is stale if access was granted there —
-  // nothing else would notice. Only while denied, so the listener isn't live during a
-  // recording.
-  //
-  // getForegroundPermissionsAsync *reads* the status; it must never be swapped for
-  // requestForegroundPermissionsAsync here. Requesting from AppState-driven code livelocks
-  // the Android permission dialog.
+  // keep-comment: notices a grant made in the settings app; only while denied, so it is off during a recording
+  // keep-comment: never request here: requesting from AppState code livelocks the Android permission dialog
   useEffect(() => {
     if (phase !== "denied") return;
 

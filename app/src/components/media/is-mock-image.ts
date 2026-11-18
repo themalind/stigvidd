@@ -5,16 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-/**
- * Mock images are recognized by their path: trails live under ".../trails/mock/..."
- * (e.g. "mock/gesebol/20250824100243.jpg", "mock/vindskydd_mock.jpg") and areas
- * use ".../trails/area-mock.jpg". They all live on stigvidd.se and contain "mock"
- * in the URL. Real uploaded images have no "mock", so the "Example image" badge
- * disappears automatically once they are replaced.
- *
- * Handles the source formats expo-image accepts: a string URL, a { uri } object,
- * or a local require (number) — where local requires are never mock.
- */
+// keep-comment: mock images have "mock" in their path (trails/mock/…, trails/area-mock.jpg); uploads never do
 export function isMockImage(source: unknown): boolean {
   const uri =
     typeof source === "string"
