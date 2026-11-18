@@ -359,7 +359,7 @@ const s = StyleSheet.create({
     alignSelf: "center",
     width: 40,
     height: 28,
-    borderRadius: 14,
+    borderRadius: SURFACE_BORDER_RADIUS,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
