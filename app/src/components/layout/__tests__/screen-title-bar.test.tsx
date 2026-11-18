@@ -8,17 +8,25 @@
 import ScreenTitleBar, { TITLE_BAR_HEIGHT } from "@/components/layout/screen-title-bar";
 import { renderWithProviders } from "@/test/render";
 import { screen } from "@testing-library/react-native";
+import { StyleSheet } from "react-native";
 
 const ACTION = { testID: "title-action", label: "Filter", icon: "filter-list" as const, onPress: jest.fn() };
 
-it("is as tall without its button as with it, so hiding the button moves nothing below", async () => {
-  const { rerender } = await renderWithProviders(<ScreenTitleBar title="Leder" action={ACTION} />);
-  expect(screen.getByTestId("screen-title-bar")).toHaveStyle({ minHeight: TITLE_BAR_HEIGHT });
+function style(testID: string) {
+  return StyleSheet.flatten(screen.getByTestId(testID).props.style);
+}
 
-  await rerender(<ScreenTitleBar title="Leder" />);
+it("keeps the button's slot as tall as the button when the button hides, whatever the bar's padding", async () => {
+  const { rerender } = await renderWithProviders(
+    <ScreenTitleBar title="Leder" action={ACTION} style={{ paddingBottom: 20 }} />,
+  );
+  expect(style("screen-title-bar").minHeight).toBeUndefined();
+  expect(style("screen-title-bar-end").minHeight).toBe(TITLE_BAR_HEIGHT);
+
+  await rerender(<ScreenTitleBar title="Leder" style={{ paddingBottom: 20 }} />);
 
   expect(screen.queryByTestId("title-action")).toBeNull();
-  expect(screen.getByTestId("screen-title-bar")).toHaveStyle({ minHeight: TITLE_BAR_HEIGHT });
+  expect(style("screen-title-bar-end").minHeight).toBe(TITLE_BAR_HEIGHT);
 });
 
 it("gives the button the bar's height", async () => {

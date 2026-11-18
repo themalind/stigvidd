@@ -36,7 +36,7 @@ export default function ScreenTitleBar({ title, leading, trailing, action, style
         {leading}
         <Text style={[s.title, { color: theme.colors.onBackground }]}>{title}</Text>
       </View>
-      <View style={s.end}>
+      <View testID="screen-title-bar-end" style={s.end}>
         {trailing}
         {action ? (
           <Pressable testID={action.testID} accessibilityRole="button" onPress={action.onPress}>
@@ -51,12 +51,12 @@ export default function ScreenTitleBar({ title, leading, trailing, action, style
   );
 }
 
-// keep-comment: the bar keeps the button's height without one, so content below does not jump when it hides
+// keep-comment: the button's slot keeps its height when empty, so content below does not jump when the button hides
+// keep-comment: it sits on the slot, not the row, because a caller's padding on the row would count towards a minHeight
 export const TITLE_BAR_HEIGHT = 34;
 
 const s = StyleSheet.create({
   row: {
-    minHeight: TITLE_BAR_HEIGHT,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -67,6 +67,7 @@ const s = StyleSheet.create({
     gap: 10,
   },
   end: {
+    minHeight: TITLE_BAR_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     gap: 18,
