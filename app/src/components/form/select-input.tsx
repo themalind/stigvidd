@@ -24,9 +24,8 @@ interface SelectInputProps {
   placeholder?: string;
 }
 
-// Android must not render a Picker: both of its native components double-free on teardown
-// with RN 0.81 + new arch and take the app down with them. It gets plain Pressable rows.
-// iOS keeps the wheel — PickerIOS is a different native component and is unaffected.
+// keep-comment: never a Picker on Android: both its native components double-free on teardown (RN 0.81 +
+// keep-comment: new arch) and crash the app; iOS keeps the wheel, PickerIOS is unaffected
 export default function SelectInput({ selectedValue, onValueChange, options, placeholder }: SelectInputProps) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -46,8 +45,7 @@ export default function SelectInput({ selectedValue, onValueChange, options, pla
 
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
         <Pressable style={s.backdrop} onPress={() => setOpen(false)} />
-        {/* edges={["bottom"]}: the sheet is flush to the screen edge, so without the
-            inset Android's navigation bar sits on top of the last row. */}
+        {/* keep-comment: without the bottom inset Android's navigation bar covers the last row */}
         <SafeAreaView edges={["bottom"]} style={[s.sheet, { backgroundColor: theme.colors.surface }]}>
           <View style={[s.header, { borderBottomColor: theme.colors.outline }]}>
             <Pressable onPress={() => setOpen(false)}>
@@ -72,8 +70,6 @@ export default function SelectInput({ selectedValue, onValueChange, options, pla
                 return (
                   <Pressable
                     key={opt.value}
-                    // Picking closes the sheet: unlike the wheel, a tap here is the
-                    // final answer, so leaving it open would just need a second tap.
                     onPress={() => {
                       onValueChange(opt.value);
                       setOpen(false);

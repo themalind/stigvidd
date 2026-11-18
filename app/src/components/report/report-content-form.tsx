@@ -40,7 +40,6 @@ const { height } = Dimensions.get("screen");
 interface Props {
   contentType: ReportedContentType;
   contentIdentifier: string;
-  // The query to invalidate so the reported row leaves the list straight away.
   invalidateQueryKey: unknown[];
   visible: boolean;
   onDismiss: () => void;
@@ -60,8 +59,7 @@ export default function ReportContentForm({
   const queryClient = useQueryClient();
   const { modalStyle } = useModalKeyboardLift(0.6);
 
-  // Gated on visible for the same reason the obstacle form gates its lookups: this sits
-  // inside a list row and would otherwise fire once per rendered row.
+  // keep-comment: gated on visible, or every list row fetches it
   const { data: reasons } = useQuery({
     queryKey: ["reportReasons"],
     queryFn: () => getReportReasons(),
@@ -86,8 +84,7 @@ export default function ReportContentForm({
       if (contentType === "HikeImage") track("hike.image_reported", {});
       reset();
       onDismiss();
-      // Neutral on purpose: a reporter over the withholding threshold gets a queued report
-      // that hides nothing, and that must not read as a failure.
+      // keep-comment: neutral, since a reporter over the threshold gets a queued report that hides nothing
       setSuccessMsg(t("report.success"));
     },
     onError: (error) => {

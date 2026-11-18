@@ -38,17 +38,13 @@ export interface User {
   identifier: string;
   nickName: string;
   email: string;
-  // Set by a moderator: the account reads as before and may no longer write.
+  // keep-comment: a banned account still reads but may not write
   bannedAt?: string | null;
   myWishList: UserWishlistTrail[];
   myFavorites: UserFavoritesTrail[];
 }
 
-/**
- * Authenticated identity derived from a Keycloak token.
- * `id` is the Keycloak `sub` claim. Distinct from `User`, which is the
- * StigVidd profile stored in our own database.
- */
+// keep-comment: from the Keycloak token (id is `sub`); `User` is the profile in our database
 export interface AuthUser {
   id: string;
   email: string;

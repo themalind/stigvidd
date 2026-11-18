@@ -81,7 +81,6 @@ export default function AdventureCard() {
             ? t("home.adventurousAllTrails")
             : t("home.adventurousFilterCount", { count: activeFilterCount })}
         </Text>
-        {/* Clears the filters without opening the sheet. */}
         {activeFilterCount > 0 && (
           <Pressable testID="adventure-clear-filters" onPress={clearFilters} hitSlop={8}>
             <View style={[s.clearChip, { borderColor: theme.colors.outlineVariant }]}>
@@ -119,7 +118,7 @@ export default function AdventureCard() {
               contentFit="cover"
               cachePolicy="memory-disk"
             />
-            {/* Darkest in the middle, where the heading sits. */}
+            {/* keep-comment: darkest in the middle, where the heading sits */}
             <LinearGradient
               colors={["rgba(0,0,0,0.25)", "rgba(0,0,0,0.5)", "rgba(0,0,0,0.3)"]}
               locations={[0, 0.5, 1]}

@@ -16,8 +16,7 @@ interface Props {
   hikes: readonly SharedHike[];
 }
 
-// Totals for the hikes shared with you. The kilometres were walked by somebody else, so
-// they are labelled as distance waiting for you, and the satellites count people.
+// keep-comment: someone else walked these km, so they read as distance waiting for you
 export default function SharedHikeStatsBanner({ hikes }: Props) {
   const { t } = useTranslation();
   const stats = useMemo(() => summarizeSharedHikes(hikes), [hikes]);

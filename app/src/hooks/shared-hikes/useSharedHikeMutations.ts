@@ -22,7 +22,7 @@ export function useSharedHikeMutations() {
   const acceptMutation = useMutation({
     mutationFn: (hikeIdentifier: string) => acceptSharedHike(hikeIdentifier),
     onSuccess: () => {
-      // Covers the incoming list too, which is keyed under the same prefix.
+      // keep-comment: also covers the incoming list, keyed under the same prefix
       queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
       setSuccessMsg(t("hike.hikeAdded"));
     },

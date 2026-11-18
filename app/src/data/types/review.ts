@@ -9,7 +9,7 @@ export interface Review {
   identifier: string;
   trailReview?: string;
   rating: number;
-  // Both null once the author has deleted their account.
+  // keep-comment: both null once the author has deleted their account
   userName: string | null;
   createdAt: string;
   userIdentifier: string | null;

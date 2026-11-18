@@ -29,7 +29,7 @@ function topFiber(): FiberNode | null {
   while (fiber?.return) {
     fiber = fiber.return;
   }
-  // A host's fiber may belong to the previous commit; the root knows which tree is on screen.
+  // keep-comment: a host's fiber may be from the previous commit; the root knows which tree is on screen
   return fiber?.stateNode?.current ?? fiber;
 }
 

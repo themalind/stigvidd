@@ -18,19 +18,14 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { rememberQueryClient } from "./tree";
 import "@/i18n";
 
-// react-native-safe-area-context reads native insets that do not exist under Jest, and without
-// explicit metrics its children never mount.
+// keep-comment: without explicit metrics the safe-area provider never mounts its children under Jest
 const METRICS = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
   insets: { top: 47, left: 0, right: 0, bottom: 34 },
 };
 
-// The providers src/app/_layout.tsx mounts above every screen. A component that reads a query, an
-// atom or the theme crashes without them.
 interface Options extends Omit<RenderOptions, "wrapper"> {
-  // Atom values to seed before the first render, as [atom, value] pairs.
   initialAtoms?: [any, unknown][];
-  // The theme to render under; the app passes one to both providers. Pass AppDarkTheme for dark mode.
   theme?: AppTheme;
 }
 
@@ -38,11 +33,8 @@ export async function renderWithProviders(
   ui: ReactElement,
   { initialAtoms = [], theme = AppDefaultTheme, ...options }: Options = {},
 ) {
-  // Retries turn a failed query into a hung test, and gcTime 0 keeps nothing cached between renders.
-  // notifyOnChangeProps "all" turns off React Query's tracked-props optimisation, under which an
-  // observer is only notified about result fields something read during render — so a test probe
-  // that holds the whole result and reads it afterwards never re-renders on a data-only change,
-  // and reads a stale value with no error. See docs/notes/react-query-tracked-props.md.
+  // keep-comment: retries hang a failed test; notifyOnChangeProps "all", or a probe reading the result
+  // keep-comment: after render gets a stale value silently (docs/notes/react-query-tracked-props.md)
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -50,7 +42,7 @@ export async function renderWithProviders(
         // keep-comment: setQueryData on a key nothing observes is dropped at once; seed with setQueryDefaults(root, { gcTime: Infinity })
         gcTime: 0,
         notifyOnChangeProps: "all",
-        // As src/api/query-client.ts, so an offline test fails the way the app does instead of pausing.
+        // keep-comment: as the app's client, so an offline test fails instead of pausing
         networkMode: "always",
         refetchOnReconnect: true,
       },
@@ -58,18 +50,16 @@ export async function renderWithProviders(
     },
   });
   const store = createStore();
-  // src/app/_layout.tsx hands the app's client to this atom. Without it the query atoms build a
-  // second QueryClient whose five-minute gcTime timer keeps the Jest process alive; see
-  // docs/notes/jotai-query-atom-builds-its-own-queryclient.md.
+  // keep-comment: or the query atoms build a second client whose gcTime timer keeps Jest alive
+  // keep-comment: (docs/notes/jotai-query-atom-builds-its-own-queryclient.md)
   store.set(queryClientAtom, queryClient);
-  // Disposed by jest.after-env.js: a query hook may set a gcTime far longer than the test.
+  // keep-comment: jest.after-env.js disposes it, since a hook's gcTime can outlive the test
   rememberQueryClient(queryClient);
   for (const [atom, value] of initialAtoms) {
     store.set(atom, value);
   }
 
-  // Paper animates a modal or dialog out over 220 ms before unmounting it. theme.animation.scale
-  // multiplies those durations; at 0 the exit lands on the first tick after the state change.
+  // keep-comment: scale 0, so Paper's 220 ms exit animation unmounts on the next tick
   const instantTheme = { ...theme, animation: { ...theme.animation, scale: 0 } };
 
   const Wrapper = ({ children }: { children: ReactNode }) => (

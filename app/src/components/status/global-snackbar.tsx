@@ -5,15 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// components/GlobalSnackbar.tsx
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAtom, useSetAtom } from "jotai";
 import { StyleSheet, View } from "react-native";
 import { Snackbar, Text, useTheme } from "react-native-paper";
 import { hideSnackbarAtom, snackbarAtom } from "@/atoms/snackbar-atoms";
 
-// Not a Portal: portals stack in mount order, so it would be drawn under every modal opened after
-// startup. The root layout mounts it after PaperProvider's portal host instead.
+// keep-comment: not a Portal, which stacks in mount order and would draw under every later modal
 export function GlobalSnackbar() {
   const theme = useTheme();
   const [snackbar] = useAtom(snackbarAtom);

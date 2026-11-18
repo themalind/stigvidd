@@ -5,9 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// App-owned geographic coordinate in the device/wire format ({ latitude, longitude }).
-// Used by GPS tracking, geolib distance and the hike-creation request payload.
-// Map rendering uses GeoJSON Position ([lng, lat]) instead — see utils/geo/geojson.ts.
+// keep-comment: the wire format; the map uses GeoJSON [lng, lat] instead
 export interface LatLng {
   latitude: number;
   longitude: number;

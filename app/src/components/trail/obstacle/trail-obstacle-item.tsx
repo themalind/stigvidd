@@ -142,7 +142,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         <Divider />
         <View style={s.field}>
           <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.description")}</Text>
-          {/* Trailing newlines from the multiline input would render as blank lines in the card. */}
+          {/* keep-comment: trailing newlines from the input would render as blank lines */}
           <Text style={[s.description, { color: theme.colors.onSurface }]}>
             {obstacle.description?.trim() || t("obstacle.removedDescription")}
           </Text>

@@ -24,7 +24,7 @@ export function useDeleteReview() {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
         queryClient.invalidateQueries({ queryKey: ["reviews", trailIdentifier] });
-        // Brings the add option back
+        // keep-comment: brings the add option back
         queryClient.invalidateQueries({ queryKey: ["review-exists", trailIdentifier] });
         setSuccessMessage(t("review.deleted"));
       } else {

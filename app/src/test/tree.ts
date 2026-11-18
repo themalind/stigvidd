@@ -5,10 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// Every QueryClient renderWithProviders has built, so the setup file can dispose them. A hook with
-// its own gcTime — useTrails asks for 24 hours — overrides the client's gcTime: 0 and leaves a timer
-// of that length behind per test. Disposal runs in the next test's beforeEach, with the tree already
-// unmounted, so clearing cannot re-render anything outside act().
+// keep-comment: a hook's own gcTime (useTrails: 24 h) overrides the client's 0 and leaves a timer behind;
+// keep-comment: disposed in the next beforeEach, after unmount, so clearing re-renders nothing outside act()
 interface Disposable {
   clear: () => void;
 }

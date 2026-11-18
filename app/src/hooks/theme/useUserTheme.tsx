@@ -17,7 +17,6 @@ export function useUserTheme() {
   const colorScheme = useColorScheme();
   const theme = resolveTheme(userTheme, colorScheme);
 
-  // Updates the Android navigation bar to match the theme.
   useEffect(() => {
     if (Platform.OS === "android") {
       NavigationBar.setStyle(theme.dark ? "light" : "dark");

@@ -5,10 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// Type-safety for translation keys.
-// Augments i18next so `t("...")` keys are autocompleted and checked at compile
-// time against sv.json (the source-of-truth locale). A typo or missing key
-// becomes a TypeScript error instead of a silent runtime miss.
+// keep-comment: keys are checked against sv.json, the source-of-truth locale
 import "i18next";
 import sv from "../i18n/locales/sv.json";
 

@@ -9,7 +9,7 @@ import { ApiError } from "@/api/core/api-error";
 
 export type ShareFailure = "recipient_unavailable" | "not_allowed" | "error";
 
-// 404: a picked friend is no longer a friend. 403: this user may not share the walk.
+// keep-comment: 404 a picked friend is no longer one; 403 this user may not share the walk
 export function shareFailure(error: unknown): ShareFailure {
   if (!(error instanceof ApiError)) return "error";
   if (error.status === 404) return "recipient_unavailable";

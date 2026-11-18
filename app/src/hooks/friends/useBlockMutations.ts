@@ -17,7 +17,7 @@ export function useBlockMutations() {
   const setSuccessMsg = useSetAtom(showSuccessAtom);
   const setErrorMsg = useSetAtom(showErrorAtom);
 
-  // A block filters the blocker's own reads, so every list that can carry the person is re-read.
+  // keep-comment: a block filters the blocker's own reads, so every list that can show the person is re-read
   const invalidateEverythingTheBlockTouches = () => {
     queryClient.invalidateQueries({ queryKey: ["friends"] });
     queryClient.invalidateQueries({ queryKey: ["blocks"] });

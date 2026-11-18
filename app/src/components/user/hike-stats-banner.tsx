@@ -16,8 +16,7 @@ interface Props {
   hikes: readonly Hike[];
 }
 
-// Totals for the whole collection, above the list they summarise. Takes the unfiltered
-// hikes — the header's "showing x of y" counter is what tracks filtering.
+// keep-comment: unfiltered hikes; the header's "x of y" counter tracks filtering
 export default function HikeStatsBanner({ hikes }: Props) {
   const { t } = useTranslation();
   const stats = useMemo(() => summarizeHikes(hikes), [hikes]);

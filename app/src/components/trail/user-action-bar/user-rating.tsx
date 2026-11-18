@@ -41,7 +41,7 @@ export default function UserRating({ trail }: UserRatingProps) {
       else setAuthDialog(true);
       return;
     }
-    // Editing an existing review is not built yet.
+    // keep-comment: editing an existing review is not built yet
     if (hasReviewed) {
       setWarning(t("review.alreadyReviewed"));
       return;

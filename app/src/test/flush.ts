@@ -15,17 +15,13 @@ export async function pressWhileHeld(element: TestInstance) {
   await settle();
 }
 
-// Lets everything already in flight resolve. Use after an interaction instead of waitFor; see
-// docs/notes/app-component-testing-what-layout-can-be-asserted.md.
+// keep-comment: use instead of waitFor (docs/notes/app-component-testing-what-layout-can-be-asserted.md)
 export async function settle() {
   await act(async () => {});
 }
 
-// Flushes until `ready()` says the thing under test is there, for effects that only start once an
-// earlier one has landed — a modal mounts, and the query it enables fetches after that.
-//
-// Each tick yields a macrotask, not just microtasks: react-query settles parts of a query through
-// a zero-delay timer.
+// keep-comment: for chained effects (a modal mounts, then its query fetches)
+// keep-comment: macrotask ticks, since react-query settles parts of a query on a zero-delay timer
 export async function flushUntil(ready: () => unknown, maxTicks = 20) {
   for (let tick = 0; tick < maxTicks; tick++) {
     if (ready()) return;
@@ -35,9 +31,8 @@ export async function flushUntil(ready: () => unknown, maxTicks = 20) {
   }
 }
 
-// Waits for a Paper Dialog or Modal to unmount, which happens when its exit animation ends rather
-// than when the state that hid it changes. renderWithProviders scales those animations to zero.
-// Pass the query, not its result: it is re-run on every tick.
+// keep-comment: Paper unmounts when the exit animation ends, not when state hides it
+// keep-comment: pass the query, not its result, since it re-runs every tick
 export async function flushUntilGone(find: () => unknown) {
   await flushUntil(() => !find());
 }

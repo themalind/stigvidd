@@ -13,7 +13,6 @@ interface TrailTitleProps {
   city?: string;
 }
 
-// The trail's name with its city in small muted text underneath.
 export default function TrailTitle({ name, city }: TrailTitleProps) {
   const theme = useTheme();
   const place = city?.trim();

@@ -52,9 +52,7 @@ import { PaperProvider, ThemeProvider as PaperThemeProvider } from "react-native
 import "react-native-reanimated";
 import { useAuth, useInitAuth } from "@/components/auth/auth-provider";
 
-// Runs once at bundle evaluation, before any component mounts, so startup crashes and the
-// first API calls are inside the window. RootLayout returns null until fonts and the session
-// resolve, so an effect would miss exactly those. No-ops without the telemetry env vars.
+// keep-comment: module scope, since RootLayout renders null at first and an effect would miss startup crashes
 initTelemetry();
 
 function NotificationHandler() {
@@ -75,7 +73,6 @@ function NotificationHandler() {
     currentPath.current = pathname;
   }, [pathname]);
 
-  // Foreground: notification arrives while app is open — just refresh data, no navigation.
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener((notification) => {
       const data = notification.request.content.data;
@@ -85,7 +82,6 @@ function NotificationHandler() {
     return () => subscription.remove();
   }, [queryClient]);
 
-  // Background tap or cold-start tap: navigate to the right screen after auth resolves.
   useEffect(() => {
     if (!lastResponse || !user) return;
     const notifId = lastResponse.notification.request.identifier;
@@ -136,16 +132,11 @@ export default function RootLayout() {
   const theme = useUserTheme();
   const statusBarStyle = theme.dark ? "light" : "dark";
 
-  // Restore the Keycloak session once on startup (outside the render gate below).
+  // keep-comment: outside the render gate below, which waits on it
   useInitAuth();
   const { user, isLoading } = useAuth();
 
-  // One QueryClient for the app's lifetime. Cross-user isolation is handled by
-  // user-scoped query keys (e.g. ["userFavorites", user.id]) with enabled: !!user,
-  // so a different user can never read the previous user's cache. logout() calls
-  // queryClient.clear() to drop the signed-out user's cached data from memory.
-  // Auth-specific screens reset on login/logout because Stack.Protected unmounts
-  // them when the guard flips — no full navigator remount needed.
+  // keep-comment: one client for the app's life; user-scoped keys keep users apart, not a new client
   const queryClient = useMemo(() => createQueryClient(), []);
 
   const setQueryClient = useSetAtom(queryClientAtom);
@@ -153,9 +144,6 @@ export default function RootLayout() {
     setQueryClient(queryClient);
   }, [queryClient, setQueryClient]);
 
-  // Wires AppState changes to React Query's focusManager, so queries refetch
-  // when the app returns to the foreground — regardless of how it was opened
-  // (notification tap, app switcher, or tapping the home screen icon).
   useAppState();
 
   // Gates the render below, so nothing draws in the default theme or map style first. keep-comment: why the gate exists
@@ -177,7 +165,6 @@ export default function RootLayout() {
     initMapCache();
   }, []);
 
-  // Register for push notifications once the user is signed in.
   useEffect(() => {
     if (!user) return;
     registerForPushNotificationsAsync().catch((error) =>
@@ -191,9 +178,7 @@ export default function RootLayout() {
     if (fontError) logger.warn("Font loading failed", { errorMessage: String(fontError) });
   }, [fontError]);
 
-  // Render nothing until the initial session restore has resolved — prevents an
-  // auth-resolution blink at startup. Session is restored from the stored refresh
-  // token, so this is brief.
+  // keep-comment: nothing until the session resolves, or the signed-out screens blink at startup
   if (isLoading || !preferencesRestored || (!fontsLoaded && !fontError)) return null;
 
   return (
@@ -208,13 +193,13 @@ export default function RootLayout() {
               <Stack>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               </Stack>
-              {/* A Portal, so it must stay inside PaperProvider's portal host. */}
+              {/* keep-comment: a Portal, so it must stay inside PaperProvider's portal host */}
               <ConsentDialog />
               <BannedWriteDialog />
               <SessionRecovery />
               <DialogHost />
             </PaperProvider>
-            {/* After the portal host, so it is drawn over every modal and dialog. */}
+            {/* keep-comment: after the portal host, so it draws over every modal and dialog */}
             <PaperThemeProvider theme={theme}>
               <GlobalSnackbar />
             </PaperThemeProvider>

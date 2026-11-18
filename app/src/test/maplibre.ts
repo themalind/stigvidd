@@ -5,9 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// __mocks__/@maplibre/maplibre-react-native.js records every imperative handle it hands out, so a
-// test can assert camera moves that leave no trace in the tree. Those extras are not on the real
-// module, so they are reached through the mock.
+// keep-comment: the mock records its imperative handles, so a test can assert camera moves the tree never shows
 
 export interface MapLibreHandle {
   setCamera: jest.Mock;
@@ -32,19 +30,18 @@ interface MapLibreMock {
 
 const maplibre = jest.requireMock("@maplibre/maplibre-react-native") as MapLibreMock;
 
-// The handles created so far, oldest first; the last tree's camera is cameraHandles().at(-1).
+// keep-comment: oldest first; the last tree's camera is cameraHandles().at(-1)
 export function cameraHandles() {
   return maplibre.handlesFor("Camera");
 }
 
-// A clustered source by the id its owner gave it ("trails", "fire-pits").
 export function sourceHandle(id: string) {
   const handle = maplibre.handleForId(id);
   if (!handle) throw new Error(`No MapLibre source rendered with id "${id}"`);
   return handle;
 }
 
-// Call in beforeEach: handles outlive the render that made them.
+// keep-comment: call in beforeEach, since handles outlive their render
 export function resetMapHandles() {
   maplibre.resetHandles();
 }

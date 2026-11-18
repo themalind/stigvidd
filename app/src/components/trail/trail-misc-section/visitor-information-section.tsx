@@ -17,7 +17,6 @@ interface Props {
 
 export default function VisitorInformationSection({ visitorInfo }: Props) {
   const theme = useTheme();
-  // Only filled-in fields become rows, with dividers between them.
   const rows = [
     { icon: "map-search-outline", text: visitorInfo.gettingThere },
     { icon: "bus", text: visitorInfo.publicTransport },

@@ -13,43 +13,37 @@ import { StyleSheet, useWindowDimensions, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import Svg, { Circle, Path } from "react-native-svg";
 
-// Lane the route line gets to itself, between the figure and the satellites. Also sets
-// the wave's amplitude: taller lane, wider swing.
+// keep-comment: also sets the wave's amplitude
 const ROUTE_BAND_HEIGHT = 68;
-// Inset of the line within its lane, horizontally and vertically.
 const ROUTE_PADDING = 8;
 const CONTENT_PADDING = SCREEN_PADDING + 10;
-// Pulls the lane up into its own top headroom, closing the gap under the label.
 const ROUTE_LIFT = 25;
 
 export interface HeroSatellite {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   value: string;
   label: string;
-  /** Renders the label before the value, for phrases like "flest från Olof". */
+  // keep-comment: for phrases like "flest från Olof"
   labelFirst?: boolean;
 }
 
 interface Props {
-  /** Formatted figure including its unit, e.g. "142 km" — the unit is set smaller. */
+  // keep-comment: with its unit ("142 km"), which is set smaller
   figure: string;
   label: string;
   satellites: HeroSatellite[];
 }
 
-// Splits a trailing unit off the figure so it can be set at its own size.
 function splitUnit(formatted: string): [string, string] {
   const at = formatted.lastIndexOf(" ");
   return at === -1 ? [formatted, ""] : [formatted.slice(0, at), formatted.slice(at + 1)];
 }
 
-// Banner above a hike list
 export default function StatsHero({ figure, label, satellites }: Props) {
   const theme = useTheme();
   const { width } = useWindowDimensions();
   const [value, unit] = splitUnit(figure);
 
-  // The get-started card's line, redrawn when the screen width changes.
   const route = useMemo(() => buildDecorativeRoute(width, ROUTE_BAND_HEIGHT, ROUTE_PADDING), [width]);
   const surface = theme.dark ? theme.colors.surfaceVariant : theme.colors.secondaryContainer;
   const onSurface = theme.dark ? theme.colors.onSurface : theme.colors.onSecondaryContainer;
@@ -64,7 +58,7 @@ export default function StatsHero({ figure, label, satellites }: Props) {
         </View>
         <Text style={[s.heroLabel, { color: onSurface }]}>{label}</Text>
 
-        {/* In flow: the lane is what sets the gap between the figure and the satellites. */}
+        {/* keep-comment: in flow, since the lane sets the gap between figure and satellites */}
         <View testID="stats-hero-route" style={s.routeBand} pointerEvents="none">
           <Svg width={width} height={ROUTE_BAND_HEIGHT} opacity={routeOpacity}>
             <Path
@@ -75,7 +69,6 @@ export default function StatsHero({ figure, label, satellites }: Props) {
               strokeLinejoin="round"
               fill="none"
             />
-            {/* Trailhead marker. */}
             <Circle cx={route.start[0]} cy={route.start[1]} r={4} fill={theme.colors.primary} />
           </Svg>
         </View>
@@ -93,8 +86,7 @@ export default function StatsHero({ figure, label, satellites }: Props) {
                     {satellite.label}
                   </Text>
                 )}
-                {/* Truncates rather than pushing its neighbour off the row — a satellite
-                    may carry a nickname, and those run to 20 characters. */}
+                {/* keep-comment: truncates, since a nickname runs to 20 characters and would push its neighbour off */}
                 <Text style={[s.satValue, { color: onSurface }]} numberOfLines={1}>
                   {satellite.value}
                 </Text>
@@ -113,17 +105,15 @@ export default function StatsHero({ figure, label, satellites }: Props) {
 }
 
 const s = StyleSheet.create({
-  // Breaks out of the screen's horizontal padding to reach both edges.
   card: {
     marginHorizontal: -SCREEN_PADDING,
     overflow: "hidden",
   },
-  // Aligns the figure with the icon column of the rows below.
+  // keep-comment: lines the figure up with the icon column of the rows below
   content: {
     paddingVertical: 16,
     paddingHorizontal: CONTENT_PADDING,
   },
-  // Gives back the width the content padding took, so the line spans the card.
   routeBand: {
     height: ROUTE_BAND_HEIGHT,
     marginTop: -ROUTE_LIFT,

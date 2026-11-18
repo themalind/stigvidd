@@ -11,8 +11,7 @@ import { StyleProp, ViewStyle } from "react-native";
 import { useTheme } from "react-native-paper";
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
-// The pulsing placeholder every skeleton is built from. One shared beat, so blocks on the
-// same screen breathe together rather than drifting apart.
+// keep-comment: one shared beat, so blocks on a screen pulse together instead of drifting apart
 export default function ShimmerBlock({ style }: { style?: StyleProp<ViewStyle> }) {
   const theme = useTheme();
   const opacity = useSharedValue(0.3);

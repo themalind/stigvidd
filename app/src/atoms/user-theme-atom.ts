@@ -12,7 +12,7 @@ import { logger } from "../services/logger";
 
 const STORAGE_KEY = "my-theme";
 
-// Values stored by the old light/dark toggle.
+// keep-comment: values the old light/dark toggle stored on devices
 const LEGACY_CHOICES: Record<string, ThemeChoice> = { light: "petroleum", dark: "bivack" };
 
 export const userThemeAtom = atom<ThemeChoice>("auto");

@@ -5,8 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// i18next's default export IS the i18n instance, so i18n.use()/i18n.changeLanguage()
-// are the intended API — not a mistaken access of a same-named named export.
+// keep-comment: the default export is the instance, so i18n.use() is intended, not a mistaken named export
 /* eslint-disable import/no-named-as-default-member */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import i18n, { ParseKeys } from "i18next";
@@ -17,18 +16,8 @@ import sv from "./locales/sv.json";
 export const LANGUAGE_STORAGE_KEY = "@stigvidd/language";
 export type AppLanguage = "sv" | "en";
 
-/**
- * Cast a runtime-computed string to a translation key.
- *
- * Translation keys are type-checked at compile time (see src/@types/i18next.d.ts),
- * so pass literal keys straight to t() — e.g. t("trail.backToTop") — to keep that
- * safety. Use this helper only where the key genuinely isn't known statically —
- * these intentionally opt out of strict key checking, since we can never fully
- * know the set of values:
- *   - data from the API / DB (e.g. area data, currently static but moving to the DB)
- *   - zod validation messages (zod types `message` as plain string)
- *   - keys built at runtime (e.g. `obstacle.types.${type}`)
- */
+// keep-comment: opts out of key checking; only for keys unknown at compile time (API data, zod messages,
+// keep-comment: `obstacle.types.${type}`), never for a literal key
 export function asTranslationKey(key: string): ParseKeys {
   return key as ParseKeys;
 }

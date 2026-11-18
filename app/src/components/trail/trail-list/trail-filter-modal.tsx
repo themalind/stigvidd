@@ -16,10 +16,9 @@ import { classificationParser } from "@/utils/classification-parser";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-// Minimum-rating steps; undefined is the "all ratings" button.
+// keep-comment: undefined is "all ratings"
 const RATING_STEPS: (number | undefined)[] = [undefined, 3, 4, 4.5];
 
-// 4.5 reads as "4,5" in Swedish and "4.5" in English; whole steps carry no decimal.
 const formatRating = (value: number) => (Number.isInteger(value) ? String(value) : value.toLocaleString());
 
 interface TrailFilterModalProps {
@@ -35,7 +34,6 @@ interface TrailFilterModalProps {
   onClearFilters: () => void;
   hasLocation: boolean;
   showSort?: boolean;
-  // Overrides the default header, "Filter & Sortering".
   title?: string;
 }
 
@@ -56,7 +54,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  // Stable identities: a fresh array here rebuilds every option row on each render.
+  // keep-comment: stable, or every option row rebuilds each render
   const cityOptions = useMemo(
     () => [{ label: t("filter.allCities"), value: "" }, ...cities.map((city) => ({ label: city, value: city }))],
     [cities, t],
@@ -163,7 +161,6 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
         />
       </FilterSection>
 
-      {/* Hidden where sorting lives in the list header's popover instead. */}
       {showSort && (
         <FilterSection title={t("filter.sortBy")}>
           <SelectInput

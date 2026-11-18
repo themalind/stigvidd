@@ -22,8 +22,6 @@ export type LatestHikeState =
   | { kind: "empty" }
   | { kind: "hike"; hike: Hike };
 
-// Which of the home screen's two personal cards to show: the get-started card opens the
-// page, the latest-hike card sits below the carousel. Only one renders at a time.
 export function useLatestHike(): LatestHikeState {
   const { isAuthenticated } = useAuth();
   const user = useAtomValue(stigviddUserAtom);
@@ -33,12 +31,11 @@ export function useLatestHike(): LatestHikeState {
 
   const hike = useMemo(() => (hikes ? latestHike(hikes) : undefined), [hikes]);
 
-  // Checked first: signed-out needs no query, so the card renders on the first pass instead
-  // of appearing later and pushing the page down.
+  // keep-comment: first, so the card renders at once instead of pushing the page down later
   if (!isAuthenticated) return { kind: "signedOut" };
   if (hikes) return hike ? { kind: "hike", hike } : { kind: "empty" };
   if (!isOnline) return { kind: "offline" };
-  // A failed profile leaves the hikes query disabled, so it would never leave loading.
+  // keep-comment: a failed profile disables the hikes query, which would load forever
   if (user.isError && !user.data) return { kind: "error", retry: () => void user.refetch() };
   if (isError) return { kind: "error", retry: () => void refetch() };
   return { kind: "loading" };

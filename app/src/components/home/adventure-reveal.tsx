@@ -55,7 +55,7 @@ export default function AdventureReveal({ trail, onOpen, onReroll }: Props) {
           </View>
         )}
         <View style={s.body}>
-          {/* The rating owns its line: "Inga recensioner" is as wide as a trail name. */}
+          {/* keep-comment: the rating gets its own line, since "Inga recensioner" is as wide as a name */}
           <Text style={[s.name, { color: theme.colors.onSurface }]} numberOfLines={1}>
             {trail.name}
           </Text>

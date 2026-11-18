@@ -12,14 +12,13 @@ import { REVIEWS_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
 
-// Keyed per user so the next signed-in user does not inherit this answer.
+// keep-comment: per user, so the next signed-in user does not inherit the answer
 export const hasReviewedTrailKey = (trailIdentifier: string, userIdentifier?: string) => [
   "review-exists",
   trailIdentifier,
   userIdentifier,
 ];
 
-// True when the user already has a review on the trail.
 export function useHasReviewedTrail(trailIdentifier: string) {
   const { isAuthenticated } = useAuth();
   const { data: stigviddUser } = useAtomValue(stigviddUserAtom);

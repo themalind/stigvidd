@@ -11,12 +11,7 @@ import { useAtomValue } from "jotai";
 
 export type WriteBlockedReason = "unauthenticated" | "banned" | null;
 
-/**
- * Whether this user may add something other people will see. A ban leaves reading alone, so
- * the screens stay as they are and only the buttons that write consult this.
- *
- * The server refuses the write either way; this names which of the two reasons it is.
- */
+// keep-comment: a ban leaves reading alone; the server refuses the write anyway, this names the reason
 export function useCanWrite(): { canWrite: boolean; reason: WriteBlockedReason } {
   const { isAuthenticated } = useAuth();
   const { data: user } = useAtomValue(stigviddUserAtom);
@@ -25,7 +20,7 @@ export function useCanWrite(): { canWrite: boolean; reason: WriteBlockedReason }
     return { canWrite: false, reason: "unauthenticated" };
   }
 
-  // Undefined while the profile is still loading, which reads as allowed.
+  // keep-comment: a loading profile reads as allowed
   if (user?.bannedAt) {
     return { canWrite: false, reason: "banned" };
   }

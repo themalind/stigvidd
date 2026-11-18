@@ -11,7 +11,7 @@ import { useSyncExternalStore } from "react";
 const subscribe = (onChange: () => void) => onlineManager.subscribe(onChange);
 const isOnline = () => onlineManager.isOnline();
 
-// React Query's view of the connection, fed by NetInfo in online-status.ts.
+// keep-comment: React Query's view of the connection, fed by NetInfo in online-status.ts
 export function useIsOnline(): boolean {
   return useSyncExternalStore(subscribe, isOnline);
 }

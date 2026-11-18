@@ -109,9 +109,7 @@ export default function AboutScreen() {
             </Text>
           </View>
 
-          {/* AGPL section 13: everyone interacting with the deployed backend is
-              entitled to its Corresponding Source, and app users are those users.
-              This link is how the offer is made, so it is not decoration. */}
+          {/* keep-comment: the AGPL section 13 source offer to the backend's users; not decoration */}
           <View
             testID="about-section-licence"
             style={[s.section, { backgroundColor: theme.colors.secondaryContainer }]}

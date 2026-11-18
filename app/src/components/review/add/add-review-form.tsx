@@ -50,7 +50,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     formState: { errors, isSubmitting },
   } = useForm<FormFields>({
     resolver: zodResolver(newReviewForm),
-    // 0 is "no star picked yet"; the schema's min(1) is what makes a rating required.
+    // keep-comment: 0 is "no star yet"; the schema's min(1) makes a rating required
     defaultValues: {
       trailIdentifier: trailIdentifier,
       rating: 0,

@@ -17,7 +17,7 @@ export function isUnauthorized(error: unknown): boolean {
 
 export function retryUnlessAuthFailure(failureCount: number, error: unknown): boolean {
   if (isUnauthorized(error) || error instanceof SessionUnavailableError) return false;
-  // Offline every attempt fails the same way; the reconnect refetches instead.
+  // keep-comment: offline every attempt fails the same way; the reconnect refetches instead
   if (!onlineManager.isOnline()) return false;
   return failureCount < MAX_RETRIES;
 }

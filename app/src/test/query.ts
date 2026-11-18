@@ -7,9 +7,7 @@
 
 import { QueryClient, QueryKey } from "@tanstack/react-query";
 
-// How long a settled query counts as fresh, in milliseconds. A cache entry types its options
-// more loosely than useQuery does, and staleTime may be declared as a function of the query,
-// so both are resolved here rather than at every call site.
+// keep-comment: resolves a staleTime declared as a function of the query
 export function staleTimeOf(queryClient: QueryClient, queryKey: QueryKey): number | undefined {
   const query = queryClient.getQueryCache().find({ queryKey });
   const option = (query?.options as { staleTime?: number | ((query: unknown) => number) } | undefined)?.staleTime;

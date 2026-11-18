@@ -5,9 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// Formats a distance for display next to a trail or hike: metres round to the nearest
-// 10, kilometres drop their decimal from 10 km up.
-
 export function formatDistanceKm(km: number): string {
   const meters = Math.round((km * 1000) / 10) * 10;
 

@@ -41,7 +41,7 @@ export interface DeleteHikeRequest {
 
 export interface UpdateHikeRequest {
   hikeIdentifier: string;
-  // Omitted or null leaves the name unchanged.
+  // keep-comment: omitted or null leaves the name unchanged
   name?: string | null;
   parkingInfo: string | null;
   gettingThere: string | null;

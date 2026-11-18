@@ -27,7 +27,7 @@ export interface HikeAccessors<T> {
   sharedBy?: (h: T) => string | null;
 }
 
-/** Upper bounds and step sizes for the range sliders. Duration is in minutes. */
+// keep-comment: duration in minutes
 export interface HikeFilterRanges {
   lengthMax: number;
   lengthStep: number;
@@ -42,7 +42,6 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
   const [sortBy, setSortBy] = useState<HikeSortOption>("name-asc");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Unique sharer names, driving the "shared by" dropdown.
   const sharedByNames = useMemo(() => {
     const read = accessors.sharedBy;
     if (!hikes || !read) return [];
@@ -50,9 +49,7 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
     return [...new Set(names)].sort(compareSv);
   }, [hikes, accessors]);
 
-  // Slider bounds follow the collection, so the thumbs spread across the whole track
-  // instead of bunching in the first few pixels. Read from the unfiltered hikes, so the
-  // scale holds still while you drag. Steps get finer for short collections.
+  // keep-comment: from the unfiltered hikes, so the thumbs use the whole track and the scale holds still while dragging
   const ranges: HikeFilterRanges = useMemo(() => {
     let longestKm = 0;
     let longestMinutes = 0;
@@ -66,7 +63,7 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
     const lengthStep = longestKm <= 10 ? 0.5 : 1;
     const durationStep = longestMinutes <= 120 ? 5 : 15;
     return {
-      // Floors keep a single two-minute walk from collapsing the track to one stop.
+      // keep-comment: floors, so one two-minute walk does not collapse the track to one stop
       lengthMax: Math.max(roundUpTo(longestKm, lengthStep), 1),
       lengthStep,
       durationMax: Math.max(roundUpTo(longestMinutes, durationStep), 30),
@@ -95,7 +92,6 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
     const { minLength, maxLength, minDuration, maxDuration } = filters;
     if (minLength !== undefined) result = result.filter((h) => accessors.length(h) >= minLength);
     if (maxLength !== undefined) result = result.filter((h) => accessors.length(h) <= maxLength);
-    // The only place ms meets minutes.
     if (minDuration !== undefined) result = result.filter((h) => accessors.duration(h) / 60000 >= minDuration);
     if (maxDuration !== undefined) result = result.filter((h) => accessors.duration(h) / 60000 <= maxDuration);
 

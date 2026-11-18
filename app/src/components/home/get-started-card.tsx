@@ -29,11 +29,7 @@ interface Props {
   signedIn: boolean;
 }
 
-// Stands in for the latest-hike card when there is no walk to show, opening the home
-// screen for new users. The route draws itself across the photo as the pitch.
-//
-// Not a real map: mounting MapLibre would spend basemap requests on people who have not
-// signed up.
+// keep-comment: not a real map, which would spend basemap requests on people who have not signed up
 export default function GetStartedCard({ signedIn }: Props) {
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -43,8 +39,7 @@ export default function GetStartedCard({ signedIn }: Props) {
   const cardWidth = width - SCREEN_PADDING * 2;
   const route = useMemo(() => buildDecorativeRoute(cardWidth, ROUTE_BAND_HEIGHT), [cardWidth]);
 
-  // Plays once on mount, not looping — a line redrawing itself forever would never let
-  // the page settle.
+  // keep-comment: once, not looping, so the page settles
   const progress = useSharedValue(1);
   useEffect(() => {
     progress.value = withDelay(
@@ -59,10 +54,8 @@ export default function GetStartedCard({ signedIn }: Props) {
 
   return (
     <View testID="get-started-card" style={s.card}>
-      {/* Portrait photo in a landscape card, so cover takes a horizontal slice. */}
       <Image source={background} style={StyleSheet.absoluteFill} contentFit="cover" contentPosition="center" />
-      {/* Leaves the top third clear so the photo keeps its light, then ramps to near-solid
-          under the words. */}
+      {/* keep-comment: the top third stays clear so the photo keeps its light */}
       <LinearGradient
         colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.05)", "rgba(0,0,0,0.45)", "rgba(0,0,0,0.82)", "rgba(0,0,0,0.94)"]}
         locations={[0, 0.35, 0.55, 0.72, 1]}
@@ -70,8 +63,7 @@ export default function GetStartedCard({ signedIn }: Props) {
       />
       <View testID="get-started-route" style={s.routeBand} pointerEvents="none">
         <Svg width={cardWidth} height={ROUTE_BAND_HEIGHT}>
-          {/* Drawn twice: a dark halo under a white line, so the route reads over sky,
-              cloud or foliage alike. */}
+          {/* keep-comment: a dark halo under the white line, so it reads over sky and foliage alike */}
           <AnimatedPath
             d={route.d}
             stroke="rgba(0,0,0,0.35)"

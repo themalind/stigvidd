@@ -46,9 +46,7 @@ export default function HeroBanner({ lat, lon }: Props) {
   const { data: weather } = useWeather(lat, lon);
   const { data: cityName, isPending: cityPending } = useCityName(lat, lon);
   const hasLocation = lat != null && lon != null;
-  // null hides the whole row while the geocoder works, so the pin never sits there
-  // captionless. Once it settles — or when there was no position to geocode — the row
-  // says the location is unknown, which also explains the missing weather beside it.
+  // keep-comment: null hides the row while geocoding, so the pin never sits there without a caption
   const locationLabel = hasLocation && cityPending ? null : (cityName ?? t("home.locationUnknown"));
   const { tint, accent } = weather
     ? getWeatherStyle(weather.symbolCode, theme)

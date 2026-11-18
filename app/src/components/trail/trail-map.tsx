@@ -27,9 +27,6 @@ interface TrailMapProps {
 const HEIGHT = Dimensions.get("screen").height;
 const FIT_PADDING = { top: 40, right: 40, bottom: 40, left: 40 };
 
-// Static map preview on the trail detail screen: shows the route and the user's
-// position, but is not pannable — the whole surface is a button that opens the
-// fullscreen follow view (the map itself is the entry point).
 export default function TrailMap({ trail, onPress }: TrailMapProps) {
   const cameraRef = useRef<CameraRef>(null);
   const { t } = useTranslation();
@@ -48,8 +45,7 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
           <Map
             style={s.map}
             showsUserLocation
-            // Top-left instead of the fullscreen default: the bottom corners hold the
-            // overlay's two pills, and the safe-area inset has nothing to clear here.
+            // keep-comment: top-left, since the overlay's pills hold both bottom corners
             attributionPosition={{ top: SCREEN_PADDING, left: SCREEN_PADDING }}
             dragPan={false}
             touchZoom={false}

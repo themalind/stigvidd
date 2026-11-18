@@ -9,7 +9,7 @@ export type AppEnvironment = "production" | "staging" | "mixed" | "unknown";
 
 const PRODUCTION_REALM = "stigvidd";
 
-/** Which backend this build talks to; "mixed" when the API and the Keycloak realm disagree. */
+// keep-comment: "mixed" when the API and the Keycloak realm disagree
 export function resolveAppEnvironment(apiUrl: string | undefined, realm: string | undefined): AppEnvironment {
   if (!apiUrl || !realm) return "unknown";
   const stagingApi = apiUrl.includes("staging");

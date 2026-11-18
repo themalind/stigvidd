@@ -34,7 +34,7 @@ export const Rating = ({
 }: RatingProps) => {
   const { t } = useTranslation();
 
-  // Ratings are always 1–5, so averageRating === 0 means "no reviews".
+  // keep-comment: ratings are 1–5, so 0 means "no reviews"
   let value = 0;
   let hasReviews = false;
 
@@ -53,7 +53,7 @@ export const Rating = ({
   }
 
   if (!hasReviews) {
-    // The compact variant sits inline on cards, where the full sentence crowds out the trail name.
+    // keep-comment: on cards the full sentence crowds out the trail name
     return <Text style={textStyle}>{t(variant === "compact" ? "review.noReviewsShort" : "review.noReviews")}</Text>;
   }
 

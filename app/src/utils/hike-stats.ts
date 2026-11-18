@@ -9,9 +9,9 @@ import { Hike, SharedHike } from "@/data/types";
 
 export interface HikeStats {
   count: number;
-  /** Summed hikeLength, in kilometres. */
+  // keep-comment: km
   totalKm: number;
-  /** Summed duration, in milliseconds. */
+  // keep-comment: ms
   totalMs: number;
 }
 
@@ -27,15 +27,13 @@ export function summarizeHikes(hikes: readonly Hike[]): HikeStats {
 
 export interface SharedHikeStats {
   count: number;
-  /** Summed hikeLength, in kilometres. Distance received, not distance walked. */
+  // keep-comment: km received, not walked
   totalKm: number;
-  /** How many distinct people have shared something with you. */
   senderCount: number;
   /** The one person worth naming, and on what grounds. Absent when no sharer has a name. keep-comment: contract */
   featured?: { name: string; kind: "most" | "latest" };
 }
 
-// Totals plus the people behind them: how many have shared, and the one worth naming.
 export function summarizeSharedHikes(hikes: readonly SharedHike[]): SharedHikeStats {
   let totalKm = 0;
   const shareCounts = new Map<string, number>();
@@ -47,7 +45,7 @@ export function summarizeSharedHikes(hikes: readonly SharedHike[]): SharedHikeSt
     if (hike.sharedByName === null) continue;
     shareCounts.set(hike.sharedByName, (shareCounts.get(hike.sharedByName) ?? 0) + 1);
 
-    // An unparseable date gives NaN, which loses every comparison and drops out here.
+    // keep-comment: an unparseable date is NaN, which loses every comparison
     const time = Date.parse(hike.sharedAt);
     if (time > latestTime) {
       latestTime = time;
@@ -68,8 +66,7 @@ export function summarizeSharedHikes(hikes: readonly SharedHike[]): SharedHikeSt
     }
   }
 
-  // "Most" needs one sender strictly ahead of a field of several; ties and lone senders
-  // fall back to the latest share, which also names exactly one person.
+  // keep-comment: "most" needs one sender strictly ahead of several; ties and lone senders show the latest
   const featured =
     leaderCount === 1 && leader && shareCounts.size > 1
       ? ({ name: leader, kind: "most" } as const)
@@ -80,12 +77,11 @@ export function summarizeSharedHikes(hikes: readonly SharedHike[]): SharedHikeSt
   return { count: hikes.length, totalKm, senderCount: shareCounts.size, featured };
 }
 
-/** The most recently recorded hike, or undefined when there are none. */
 export function latestHike(hikes: readonly Hike[]): Hike | undefined {
   let latest: Hike | undefined;
   let latestTime = -Infinity;
   for (const hike of hikes) {
-    // An unparseable date gives NaN, which loses every comparison and drops out here.
+    // keep-comment: an unparseable date is NaN, which loses every comparison
     const time = Date.parse(hike.createdAt);
     if (time > latestTime) {
       latestTime = time;
@@ -95,8 +91,6 @@ export function latestHike(hikes: readonly Hike[]): Hike | undefined {
   return latest;
 }
 
-// A summed duration as a headline figure: minutes below an hour, then hours, dropping
-// the decimal once the total passes ten.
 export function formatTotalDuration(ms: number): string {
   const minutes = Math.round(ms / 60000);
 

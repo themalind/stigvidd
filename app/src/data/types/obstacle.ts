@@ -21,7 +21,7 @@ export interface CreateTrailObstacleRequest {
 
 export interface TrailObstacle {
   identifier: string;
-  // Null once the reporter has deleted their account.
+  // keep-comment: null once the reporter has deleted their account
   userIdentifier: string | null;
   description: string;
   issueType: string;

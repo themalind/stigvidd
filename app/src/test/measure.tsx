@@ -11,12 +11,8 @@ import { View } from "react-native";
 
 type Rect = { x: number; y: number; width: number; height: number };
 
-// Makes measureInWindow call back, which it never does under Jest because no layout runs (see
-// docs/notes/app-component-testing-what-layout-can-be-asserted.md). Anything gated on the callback
-// — the sort popover's position, and so the popover itself — never appears without this.
-//
-// Every host instance shares one prototype, so patching it once covers whatever renders next. The
-// rectangle is made up; only the arithmetic done on it is under test.
+// keep-comment: under Jest measureInWindow never calls back (no layout), so gated UI never appears
+// keep-comment: (docs/notes/app-component-testing-what-layout-can-be-asserted.md); the rect is made up
 export async function stubMeasureInWindow(rect: Rect = { x: 300, y: 50, width: 24, height: 24 }) {
   const ref = createRef<ComponentRef<typeof View>>();
   const probe = await render(<View ref={ref} collapsable={false} />);

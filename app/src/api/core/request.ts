@@ -11,7 +11,7 @@ import { logger } from "@/services/logger";
 import { API_REQUEST_TIMEOUT_MS, apiFetch, BASE_URL, UPLOAD_TIMEOUT_MS } from "./api-config";
 import { apiErrorFrom, isApiStatus } from "./api-error";
 
-// "required" refuses without a token, "optional" sends one when signed in, "none" never sends one.
+// keep-comment: "required" refuses without a token, "optional" sends one when signed in, "none" never does
 export type ApiAuth = "required" | "optional" | "none";
 
 export interface ApiCall {
@@ -23,9 +23,9 @@ export interface ApiCall {
   body?: unknown;
   form?: FormData;
   auth?: ApiAuth;
-  // Defaults to the upload timeout for multipart and the normal one otherwise.
+  // keep-comment: defaults to the upload timeout for multipart
   timeoutMs?: number;
-  // Statuses the caller handles itself, so they are not logged as failures.
+  // keep-comment: statuses the caller handles, so they are not logged as failures
   quietStatuses?: number[];
 }
 

@@ -43,8 +43,7 @@ export default function UserTrailCollection({
 }: UserTrailCollectionProps) {
   const theme = useTheme();
   const { t } = useTranslation();
-  // Null without a real fix, which drops the distance line from each card and the
-  // distance sort and "near me" filter from the controls.
+  // keep-comment: null without a real fix, which hides distances, the distance sort and "near me"
   const userLocation = useRealUserLocation();
 
   const {
@@ -67,15 +66,13 @@ export default function UserTrailCollection({
 
   const isEmpty = totalCount === 0;
 
-  // Length is set as two keys but is one choice to the user; maxDistance is a
-  // modifier on "near me" rather than a filter of its own.
+  // keep-comment: length counts once though two keys; maxDistance modifies "near me" and is not a filter
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, maxDistance, ...rest } = filters;
     const hasLengthRange = minLength !== undefined || maxLength !== undefined;
     return Object.values(rest).filter((v) => v !== undefined).length + (hasLengthRange ? 1 : 0);
   }, [filters]);
 
-  // Sorting by distance only means something once we know where the user is.
   const sortFields = useMemo(
     () => [
       { key: "name", labelKey: "filter.fieldName" },
@@ -114,8 +111,7 @@ export default function UserTrailCollection({
         contentContainerStyle={[s.container]}
       >
         <View style={s.content}>
-          {/* Gives up its slot to the header's result counter, which shares the line
-              and matters more while filtering. */}
+          {/* keep-comment: gives way to the result counter, which shares the line */}
           {!isEmpty && activeFilterCount === 0 && !searchQuery && (
             <Text variant="bodySmall" style={s.sectionSubtitle}>
               {t("collection.tapInfo")}
@@ -137,7 +133,7 @@ export default function UserTrailCollection({
                 }
               >
                 <View style={s.trailContainer}>
-                  {/* Length, not existence: the API returns [] for a trail without images. */}
+                  {/* keep-comment: length, since the API returns [] for a trail without images */}
                   {trail.trailImages?.length ? (
                     <View>
                       <Image style={s.trailImage} source={trail.trailImages[0].imageUrl} contentFit="cover" />
@@ -293,7 +289,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingTop: 24,
   },
-  // Clears the header, so it does not read as part of it.
   emptyCollection: {
     paddingTop: 72,
   },

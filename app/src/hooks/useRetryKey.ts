@@ -8,7 +8,7 @@
 import { useRef } from "react";
 import uuid from "react-native-uuid";
 
-// The same content keeps its key until it is saved, so the server can tell a retry from a new submission.
+// keep-comment: the key holds until saved, so the server can tell a retry from a new submission
 export function useRetryKey() {
   const last = useRef<{ content: string; key: string } | null>(null);
 

@@ -36,8 +36,7 @@ export default function UserReportIssue({ trailIdentifier }: Props) {
     setShowForm(true);
   }
 
-  // The form's create mutation already invalidates ["obstacles", trailIdentifier]
-  // on success, so there's nothing to refresh here — just close the sheet.
+  // keep-comment: the form's mutation already invalidates ["obstacles", trailIdentifier]
   function handleReportAdded() {
     setShowForm(false);
   }
