@@ -53,7 +53,7 @@ export default function ScreenTitleBar({ title, leading, trailing, action, style
 
 // keep-comment: the button's slot keeps its height when empty, so content below does not jump when the button hides
 // keep-comment: it sits on the slot, not the row, because a caller's padding on the row would count towards a minHeight
-export const TITLE_BAR_HEIGHT = 34;
+export const TITLE_BAR_ACTION_HEIGHT = 34;
 
 const s = StyleSheet.create({
   row: {
@@ -67,7 +67,7 @@ const s = StyleSheet.create({
     gap: 10,
   },
   end: {
-    minHeight: TITLE_BAR_HEIGHT,
+    minHeight: TITLE_BAR_ACTION_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     gap: 18,
@@ -77,7 +77,7 @@ const s = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    height: TITLE_BAR_HEIGHT,
+    minHeight: TITLE_BAR_ACTION_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

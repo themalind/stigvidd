@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ScreenTitleBar, { TITLE_BAR_HEIGHT } from "@/components/layout/screen-title-bar";
+import ScreenTitleBar, { TITLE_BAR_ACTION_HEIGHT } from "@/components/layout/screen-title-bar";
 import { renderWithProviders } from "@/test/render";
 import { screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
@@ -21,16 +21,20 @@ it("keeps the button's slot as tall as the button when the button hides, whateve
     <ScreenTitleBar title="Leder" action={ACTION} style={{ paddingBottom: 20 }} />,
   );
   expect(style("screen-title-bar").minHeight).toBeUndefined();
-  expect(style("screen-title-bar-end").minHeight).toBe(TITLE_BAR_HEIGHT);
+  expect(style("screen-title-bar-end").minHeight).toBe(TITLE_BAR_ACTION_HEIGHT);
 
   await rerender(<ScreenTitleBar title="Leder" style={{ paddingBottom: 20 }} />);
 
   expect(screen.queryByTestId("title-action")).toBeNull();
-  expect(style("screen-title-bar-end").minHeight).toBe(TITLE_BAR_HEIGHT);
+  expect(style("screen-title-bar-end").minHeight).toBe(TITLE_BAR_ACTION_HEIGHT);
 });
 
-it("gives the button the bar's height", async () => {
+it("lets the button grow past the slot's height for larger text, never clipping its label", async () => {
   await renderWithProviders(<ScreenTitleBar title="Leder" action={ACTION} />);
 
-  expect(screen.getByTestId("title-action").children[0]).toHaveStyle({ height: TITLE_BAR_HEIGHT });
+  const surface = screen.getByTestId("title-action").children[0];
+  if (typeof surface === "string") throw new Error("expected the button's surface view");
+  const button = StyleSheet.flatten(surface.props.style);
+  expect(button.minHeight).toBe(TITLE_BAR_ACTION_HEIGHT);
+  expect(button.height).toBeUndefined();
 });
