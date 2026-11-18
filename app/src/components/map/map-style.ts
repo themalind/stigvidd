@@ -45,6 +45,16 @@ const STYLE_URLS: Record<Basemap, string> = {
   satellite: styleUrl("hybrid-v4"),
 };
 
+// keep-comment: outdoor-v2's Background layer runs hsl(86,39%,93%) at z5 to hsl(120,4%,95%) at z14; hybrid has none
+const LOADING_COLOURS: Record<Basemap, { cover: string; spinner: string }> = {
+  outdoor: { cover: "#F0F3EC", spinner: "#4F5D48" },
+  satellite: { cover: "#26302A", spinner: "#C9D4C2" },
+};
+
+export function getMapLoadingColours(basemap: Basemap = "outdoor") {
+  return LOADING_COLOURS[basemap];
+}
+
 // Outdoor stays light in the app's dark mode: a legible dark topographic map needs a separately
 // tuned custom style (MapTiler's "Outdoor Dark" is night-vision dark and hard to read).
 export function getMapStyle(basemap: Basemap = "outdoor"): string {

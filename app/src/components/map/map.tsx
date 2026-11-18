@@ -10,10 +10,10 @@ import { Image } from "expo-image";
 import { useAtomValue } from "jotai";
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { Animated, StyleProp, StyleSheet, View, ViewStyle } from "react-native";
-import { ActivityIndicator, useTheme } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import { basemapAtom } from "@/atoms/basemap-atom";
 import { SCREEN_PADDING } from "@/constants/constants";
-import { getMapStyle } from "./map-style";
+import { getMapLoadingColours, getMapStyle } from "./map-style";
 
 type Props = Partial<Omit<MapProps, "mapStyle" | "ref" | "style">> & {
   style?: StyleProp<ViewStyle>;
@@ -58,7 +58,7 @@ export default forwardRef<MapRef, Props>(function Map(
   ref,
 ) {
   const basemap = useAtomValue(basemapAtom);
-  const theme = useTheme();
+  const loadingColours = getMapLoadingColours(basemap);
   const positions = ornamentPositions(attributionPosition);
   const cover = useRef(new Animated.Value(1)).current;
   const revealed = useRef(false);
@@ -112,11 +112,11 @@ export default forwardRef<MapRef, Props>(function Map(
       <Animated.View
         testID="map-loading-cover"
         pointerEvents="none"
-        style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.surfaceVariant, opacity: cover }]}
+        style={[StyleSheet.absoluteFill, { backgroundColor: loadingColours.cover, opacity: cover }]}
       />
       {(covered || !contentReady) && (
         <View testID="map-loading-spinner" style={s.spinner} pointerEvents="none">
-          <ActivityIndicator color={theme.colors.primary} />
+          <ActivityIndicator color={loadingColours.spinner} />
         </View>
       )}
       <Image

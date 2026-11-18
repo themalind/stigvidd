@@ -9,11 +9,14 @@ import { basemapAtom, loadBasemap } from "@/atoms/basemap-atom";
 import BasemapToggle from "@/components/map/basemap-toggle";
 import Map from "@/components/map/map";
 import { getMapStyle } from "@/components/map/map-style";
+import { getByType } from "@/test/composites";
 import { renderWithProviders } from "@/test/render";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { onlineManager } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import React from "react";
+import { StyleSheet } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 beforeEach(async () => {
   await AsyncStorage.clear();
@@ -32,6 +35,27 @@ async function show(initial: "outdoor" | "satellite" = "outdoor") {
 function mapStyle() {
   return screen.getByTestId("maplibre-Map").props.mapStyle;
 }
+
+function coverColour() {
+  return StyleSheet.flatten(screen.getByTestId("map-loading-cover").props.style).backgroundColor;
+}
+
+function spinnerColour() {
+  return getByType(ActivityIndicator).props.color;
+}
+
+it("covers the loading map in the chosen map's own colours, dark for satellite", async () => {
+  await show();
+  expect(coverColour()).toBe("#F0F3EC");
+  expect(spinnerColour()).toBe("#4F5D48");
+
+  await act(async () => {
+    await fireEvent.press(screen.getByTestId("basemap-toggle"));
+  });
+
+  expect(coverColour()).toBe("#26302A");
+  expect(spinnerColour()).toBe("#C9D4C2");
+});
 
 it("offers satellite while the outdoor map shows", async () => {
   await show();
