@@ -16,49 +16,38 @@ import { logger } from "./logger";
 
 export const LOCATION_TASK_NAME = "stigvidd-background-location";
 export const HIKE_STORAGE_KEY = "@stigvidd_active_hike";
-// Stores which version of the recording-info dialog the user has dismissed with
-// "don't show again". Versioned so changing the rules can re-surface the dialog.
 export const RECORDING_INFO_KEY = "@stigvidd_recording_info_dismissed";
 
-// Minimum meters between accepted points. Also used as the GPS distanceInterval.
+// keep-comment: metres; also the GPS distanceInterval
 export const MIN_DISTANCE = 3;
-// A jump larger than this (meters) between two fixes is a GPS teleport, not travel.
+// keep-comment: metres; a bigger jump without a usable time delta is a teleport
 const MAX_DISTANCE = 100;
 // A dropped fix becomes a straight chord on the map, across a lake where the path keep-comment: why the gate is loose
 // bends round one (#239), so the gate only rejects fixes worse than that chord. keep-comment: why the gate is loose
 const MAX_ACCURACY = Platform.OS === "ios" ? 40 : 30;
-// The gate in force once nothing has been accepted for ACCURACY_STALL_MS, so a
-// bad stretch costs detail rather than becoming a hole the map draws a chord across.
+// keep-comment: after a stall, so a bad stretch costs detail rather than becoming a chord
 const MAX_ACCURACY_STALLED = 40;
 export const ACCURACY_STALL_MS = 12_000;
 // Computed from the last accepted point: Android reports 0 for much of a walk. keep-comment: hidden platform trap
 const MOVING_SPEED = 0.5;
-// Physically impossible speed (m/s) between two fixes ⇒ GPS glitch, not movement.
-// ~10 m/s (36 km/h) clears hiking/running/cycling while catching teleport spikes.
+// keep-comment: m/s; 36 km/h clears hiking, running and cycling but catches teleport spikes
 const MAX_SPEED = 10;
-// Tighter cap (m/s) for fixes less than BURST_WINDOW seconds apart, where drift can
-// outrun the allowance MAX_SPEED makes for suspension gaps.
+// keep-comment: tighter within BURST_WINDOW seconds, where drift outruns the allowance for suspension gaps
 const MAX_SPEED_BURST = 7;
 const BURST_WINDOW = 5;
-// A fix stamped more than this (ms) before the recording started is Core Location's
-// cached position from an earlier session, not where the user is now.
+// keep-comment: ms; older than the recording start is Core Location's cached fix from an earlier session
 export const MAX_FIX_AGE = 15_000;
-// Accuracy (m) a fix must reach to anchor a segment's first point, and how long (ms)
-// the segment waits for one before falling back to the normal gate.
+// keep-comment: a segment's first point waits WARMUP_MS for this accuracy, since all later points measure from it
 const ANCHOR_ACCURACY = 20;
 export const WARMUP_MS = 15_000;
 
-// A segment shorter than this (meters) is discarded when finalized — it's noise,
-// not a walk. Shared by stopTracking and the stale-session finalizer.
+// keep-comment: metres; a shorter segment is noise and is discarded
 export const MIN_SEGMENT_DISTANCE = 10;
-// No accepted GPS point for this long (ms) means the user stopped moving and
-// likely forgot to stop — auto-finalize, trimming the time to the last movement.
-export const INACTIVITY_TIMEOUT = 60 * 60 * 1000; // 60 minutes
-// Absolute ceiling (ms) on a single recording. Even if points keep arriving, the
-// recording stops here so a forgotten session can never run indefinitely.
-export const MAX_DURATION = 12 * 60 * 60 * 1000; // 12 hours
-// Bump when the auto-stop rules change so previously-dismissed users see the
-// updated info dialog once more.
+// keep-comment: no accepted point this long means a forgotten recording, ended at the last movement
+export const INACTIVITY_TIMEOUT = 60 * 60 * 1000;
+// keep-comment: a hard cap, even while points keep arriving
+export const MAX_DURATION = 12 * 60 * 60 * 1000;
+// keep-comment: bump when the auto-stop rules change, so the info dialog shows again
 export const RECORDING_INFO_VERSION = 1;
 
 export type FilterStats = {
@@ -132,17 +121,13 @@ export async function writeHikeState(state: StoredHikeState): Promise<void> {
   await AsyncStorage.setItem(HIKE_STORAGE_KEY, JSON.stringify(state));
 }
 
-// Serializes read-modify-write access to the stored hike state. The background
-// location task and the UI (start/stop/reset/sync) all mutate the same
-// AsyncStorage record; while the app is alive they share one JS runtime, so a
-// promise-chain lock makes each read→modify→write atomic. Without it, a late
-// task batch can read pre-stop state and write its points back after a Pause —
-// resurrecting a finished recording or double-counting distance.
+// keep-comment: the task and the UI share one record; unlocked, a late batch writes back after a
+// keep-comment: pause, resurrecting the recording or counting distance twice
 let hikeStateLock: Promise<unknown> = Promise.resolve();
 
 function withHikeStateLock<T>(fn: () => Promise<T>): Promise<T> {
   const result = hikeStateLock.then(() => fn());
-  // Keep the chain alive on rejection so one failed mutation can't wedge the lock.
+  // keep-comment: survives a rejection, so one failure cannot wedge the lock
   hikeStateLock = result.then(
     () => undefined,
     () => undefined,
@@ -150,9 +135,7 @@ function withHikeStateLock<T>(fn: () => Promise<T>): Promise<T> {
   return result;
 }
 
-// Atomically read the current state, apply `mutator`, and persist the result.
-// A mutator that returns null leaves storage untouched (no write). Returns the
-// state after the mutation (or the unchanged current state when null).
+// keep-comment: a mutator returning null writes nothing
 export async function mutateHikeState(
   mutator: (state: StoredHikeState) => StoredHikeState | null,
 ): Promise<StoredHikeState> {
@@ -171,8 +154,6 @@ export async function clearHikeState(): Promise<void> {
   notifyHikeStateChange();
 }
 
-// Whether the recording-info dialog should be shown before starting. Hidden only
-// if the user dismissed the current (or a newer) version with "don't show again".
 export async function shouldShowRecordingInfo(): Promise<boolean> {
   try {
     const stored = await AsyncStorage.getItem(RECORDING_INFO_KEY);
@@ -187,14 +168,7 @@ export async function dismissRecordingInfo(): Promise<void> {
   await AsyncStorage.setItem(RECORDING_INFO_KEY, String(RECORDING_INFO_VERSION));
 }
 
-// Closes the active segment and stops tracking. Its end is trimmed back to the last
-// recorded GPS point so time spent not moving (or after the app stopped recording)
-// is never counted, and is clamped to the hard cap. The segment is kept only if it
-// covered a meaningful distance; otherwise it's discarded and the distance already
-// accumulated for it is rolled back so totalDistance can't stay stuck at a phantom
-// value. Pure. Always finalizes — callers decide *whether* to: maybeFinalizeStaleHike
-// gates on staleness, and the cold-launch recovery path (use-location-tracking)
-// calls it directly to recover a killed recording as paused.
+// keep-comment: ends at the last GPS point, so idle time never counts; a too-short segment rolls back its distance
 export function finalizeActiveSegment(state: StoredHikeState, reason: RecordingStopReason): StoredHikeState {
   const seg = state.currentSegment;
   if (!seg) return { isTracking: false, hike: state.hike, currentSegment: null };
@@ -304,10 +278,6 @@ function recordFix(
   return next;
 }
 
-// Finalizes an in-progress hike that has been left running, but only when it's
-// actually stale — inactive past INACTIVITY_TIMEOUT, or running longer than
-// MAX_DURATION. Returns the finalized state when stale, otherwise null (callers
-// leave the recording running).
 export function maybeFinalizeStaleHike(state: StoredHikeState, now: number): StoredHikeState | null {
   if (!state.isTracking || !state.currentSegment) return null;
 
@@ -340,17 +310,12 @@ export type RejectReason = "stale" | "accuracy" | "warmup" | "speed" | "teleport
 export type PointDecision = { accept: boolean; distance: number; reason?: RejectReason };
 
 export type PointContext = {
-  // Where the accuracy gate measures its stall from before anything has been
-  // accepted — the open segment's startTime.
   trackStartedAt?: number;
 };
 
 const reject = (reason: RejectReason): PointDecision => ({ accept: false, distance: 0, reason });
 
-// Decides whether a freshly-sampled GPS fix joins the track, and how much distance
-// it adds relative to the last accepted point. Shared by the background task and
-// the foreground live watcher so both filter identically. Rejects low-accuracy
-// fixes, jitter within the noise envelope, and impossible speed/teleport spikes.
+// keep-comment: shared by the task and the live watcher, so both filter alike
 export function evaluatePoint(
   lastPoint: LocationData | undefined,
   candidate: LocationData,
@@ -359,24 +324,17 @@ export function evaluatePoint(
 ): PointDecision {
   const { trackStartedAt } = context;
 
-  // Reject Core Location's cached first fix: its timestamp predates the recording.
   if (trackStartedAt !== undefined && trackStartedAt - candidate.timeStamp > MAX_FIX_AGE) {
     return reject("stale");
   }
 
-  // The gate relaxes once the track has stalled, so poor reception costs detail
-  // rather than the whole stretch.
   const stalledSince = lastPoint?.timeStamp ?? trackStartedAt ?? candidate.timeStamp;
   const maxAccuracy = candidate.timeStamp - stalledSince > ACCURACY_STALL_MS ? MAX_ACCURACY_STALLED : MAX_ACCURACY;
 
-  // Reject missing/zero and negative accuracy (iOS reports a negative
-  // horizontalAccuracy when it can't determine one — the fix is unusable), as well
-  // as anything worse than the gate in force.
+  // keep-comment: iOS reports a negative accuracy when it has none, and that fix is unusable
   if (!accuracy || accuracy < 0 || accuracy > maxAccuracy) return reject("accuracy");
 
   if (!lastPoint) {
-    // Every later point is measured from the anchor, so it holds out for a converged
-    // fix until WARMUP_MS has passed.
     const warmingUp = trackStartedAt !== undefined && candidate.timeStamp - trackStartedAt < WARMUP_MS;
     if (warmingUp && accuracy > ANCHOR_ACCURACY) return reject("warmup");
     return { accept: true, distance: 0 };
@@ -386,25 +344,16 @@ export function evaluatePoint(
 
   const dtSeconds = (candidate.timeStamp - lastPoint.timeStamp) / 1000;
   if (dtSeconds > 0) {
-    // With a valid time delta, speed — not an absolute distance cap — is the
-    // plausibility gate, tighter for consecutive fixes than across a gap: a jump over
-    // a suspension gap (pocket, locked screen) is real ground covered at a plausible
-    // speed, the same jump over a short gap is a glitch.
+    // keep-comment: speed, not distance: a jump across a suspension gap is real ground, the same jump in seconds a glitch
     const maxSpeed = dtSeconds <= BURST_WINDOW ? MAX_SPEED_BURST : MAX_SPEED;
     if (distance / dtSeconds > maxSpeed) return reject("speed");
   } else if (distance > MAX_DISTANCE) {
-    // No usable time delta (missing or non-increasing timestamps): fall back to an
-    // absolute distance cap to reject teleport glitches.
     return reject("teleport");
   }
 
-  // A stationary phone wanders within its accuracy radius, so a move only counts
-  // once it clears that noise envelope (but never below MIN_DISTANCE) — otherwise
-  // drift piles up phantom distance and zig-zags in place. Consecutive fixes share
-  // most of their error, so half the radius is the envelope for a receiver in
-  // motion; the full radius applies while it stands still, where drift would keep-comment: noise-floor invariant
-  // otherwise become distance. Measured against the last accepted point, drift keep-comment: why drift reads as still
-  // over a long pause stays under MOVING_SPEED. iOS halves throughout. keep-comment: noise-floor invariant
+  // keep-comment: a still phone wanders within its accuracy radius, so a move must clear it or drift becomes distance
+  // keep-comment: moving fixes share most of their error, so half the radius; the full radius while standing still
+  // keep-comment: measured from the last accepted point, drift over a pause stays under MOVING_SPEED; iOS always halves
   const travelling = Platform.OS === "ios" || (dtSeconds > 0 && distance / dtSeconds > MOVING_SPEED);
   const noiseFloor = travelling ? accuracy / 2 : accuracy;
   const minStep = Math.max(MIN_DISTANCE, noiseFloor);
@@ -413,33 +362,22 @@ export function evaluatePoint(
   return { accept: true, distance };
 }
 
-// A minimal GPS fix as it arrives from a source (the Android background task or the
-// iOS native background engine), before it's filtered/joined to the track. `accuracy`
-// is horizontal accuracy in metres; `timestamp` is ms since the Unix epoch.
+// keep-comment: accuracy in metres, timestamp in epoch ms
 export type RawFix = {
   latitude: number;
   longitude: number;
   accuracy: number | null | undefined;
   timestamp: number;
-  // Reported ground speed in m/s. Absent from sources that don't supply one.
   speed?: number | null;
 };
 
-// Outcome of ingesting a batch — used by callers for task control.
 export type IngestResult = {
-  // No active recording, so nothing was written.
   notTracking: boolean;
-  // The batch tripped the stale-session finalizer and stopped the recording.
   didFinalize: boolean;
-  // Point count of the active segment after ingesting.
   resultPts: number;
 };
 
-// Runs a batch of raw GPS fixes through evaluatePoint into the stored hike,
-// atomically. This is the single write path shared by the Android background
-// TaskManager task and the iOS native drain, so both platforms filter, accumulate
-// distance, and auto-finalize through the exact same logic. Pure of platform APIs —
-// the caller decides what to do with the result (e.g. stop the task on finalize).
+// keep-comment: the one write path for the Android task and the iOS drain, so both platforms behave alike
 export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
   let notTracking = false;
   let didFinalize = false;
@@ -461,8 +399,6 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
         timeStamp: fix.timestamp,
       };
 
-      // Same filter as the foreground live watcher (see evaluatePoint) so the
-      // recorded track and the drawn live tail always agree on what counts.
       const lastPoint = currentSegment.coordinates.at(-1);
       const decision = evaluatePoint(lastPoint, newPoint, fix.accuracy, {
         trackStartedAt: currentSegment.startTime,
@@ -491,9 +427,7 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
       filterStats,
     };
 
-    // Auto-stop a forgotten recording: if the session has gone inactive or hit the
-    // hard cap, persist the finalized state. Stopping the source itself happens in
-    // the caller, after the lock releases.
+    // keep-comment: the caller stops the source, after the lock releases
     const finalized = maybeFinalizeStaleHike(updated, Date.now());
     if (finalized) {
       didFinalize = true;
@@ -514,8 +448,7 @@ TaskManager.defineTask(
   LOCATION_TASK_NAME,
   async ({ data, error }: TaskManager.TaskManagerTaskBody<LocationTaskData>) => {
     if (error) {
-      // Background GPS failures happen while nobody is looking at the screen, which is
-      // exactly why they need to leave the device. Never log positions — only shape.
+      // keep-comment: never log positions here, only the error
       logger.error("Background location task error", { errorMessage: error.message });
       return;
     }
@@ -534,8 +467,7 @@ TaskManager.defineTask(
 
       const { didFinalize } = await ingestFixes(fixes);
 
-      // The finalized state (isTracking: false) is now persisted, so any batch
-      // still in flight will no-op on read — safe to stop the task.
+      // keep-comment: safe now: the finalized state is stored, so a batch in flight no-ops
       if (didFinalize) {
         const isRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
         if (isRunning) await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);

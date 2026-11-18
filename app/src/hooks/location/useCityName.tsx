@@ -9,27 +9,20 @@ import { REVERSE_GEOCODE_STALE_TIME } from "@/constants/cache";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 
-// Reverse-geocodes a position into a place name, or null when the geocoder has nothing
-// to offer. Returning null rather than a fallback string keeps the wording (and its
-// translation) in the component that renders it — this hook has no business inventing
-// user-facing copy.
-//
-// Both arguments are optional and the query stays disabled without them: expo-location
-// requires foreground permission for reverse geocoding, so calling it with a stand-in
-// coordinate would either name the wrong town or throw.
+// keep-comment: null, not fallback text, so the wording stays in the component
+// keep-comment: disabled without a real position: geocoding needs the permission, and a stand-in names the wrong town
 export function useCityName(latitude?: number, longitude?: number) {
   return useQuery<string | null>({
     queryKey: ["reverseGeocode", latitude, longitude],
     queryFn: async () => {
       const [place] = await Location.reverseGeocodeAsync({ latitude: latitude!, longitude: longitude! });
-      // Workaround: expo-location does not always give the town as a field of its own.
+      // keep-comment: expo-location does not always give the town as a field of its own
       const fromAddress = place?.formattedAddress?.split(",")[1]?.replace(/\d+/g, "").trim();
       return place?.city ?? place?.district ?? place?.subregion ?? fromAddress ?? null;
     },
     enabled: latitude != null && longitude != null,
     staleTime: REVERSE_GEOCODE_STALE_TIME,
-    // A missing permission fails every attempt identically; retrying just delays the
-    // point at which the banner can settle on its "location unknown" wording.
+    // keep-comment: a missing permission fails every retry alike and only delays "location unknown"
     retry: false,
     placeholderData: keepPreviousData,
   });

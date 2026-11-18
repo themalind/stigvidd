@@ -5,29 +5,20 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-// JS wrapper for the local native module in `app/modules/expo-live-location/`
-// (Swift, Apple-only). It lives here rather than inside the module folder so the
-// module directory stays purely native: a stray .ts file there sits outside
-// tsconfig's `include`, which makes the editor's TS server type it as a loose file
-// with the DOM lib and produce phantom conflicts against React Native's types
-// (FormData, AbortController, …). Expo autolinking only needs
-// `expo-module.config.json` + `ios/`, and requireNativeModule matches on the name
-// string, so nothing depends on this file's location.
+// keep-comment: wraps modules/expo-live-location; not in that folder, where a .ts file falls outside
+// keep-comment: tsconfig and gets phantom DOM-vs-React-Native type conflicts
 import { NativeModule, requireNativeModule } from "expo";
 import type { EventSubscription } from "expo-modules-core";
 import { Platform } from "react-native";
 
 import { logger } from "./logger";
 
-// A raw GPS fix delivered by the native iOS 18+ background engine. Deliberately the
-// minimal shape needed to run through the JS evaluatePoint filter — no app types
-// leak into the native layer.
 export type LiveFix = {
   latitude: number;
   longitude: number;
-  // Horizontal accuracy in metres (negative when iOS can't determine it).
+  // keep-comment: metres, negative when iOS has none
   accuracy: number;
-  // Milliseconds since the Unix epoch.
+  // keep-comment: epoch ms
   timestamp: number;
 };
 
@@ -36,31 +27,21 @@ type LiveLocationModuleEvents = {
 };
 
 declare class ExpoLiveLocationNativeModule extends NativeModule<LiveLocationModuleEvents> {
-  // True only on iOS 18+, where the background-capable Core Location API exists.
+  // keep-comment: iOS 18+ only
   isAvailable(): boolean;
-  // Starts the background activity session + live-updates stream.
   start(): Promise<void>;
-  // Stops the stream and releases the session.
   stop(): Promise<void>;
-  // Returns every fix buffered since the last drain and clears the buffer.
+  // keep-comment: also clears the buffer
   drain(): Promise<LiveFix[]>;
 }
 
-// The native module ships for Apple only. On Android/web `requireNativeModule`
-// would throw, so guard on platform and fall back to null; callers treat a null
-// module as "native background tracking unavailable" and use expo-location.
+// keep-comment: Apple only; requireNativeModule throws elsewhere, and null means expo-location
 const nativeModule: ExpoLiveLocationNativeModule | null = (() => {
   if (Platform.OS !== "ios") return null;
   try {
     return requireNativeModule<ExpoLiveLocationNativeModule>("ExpoLiveLocation");
   } catch (e) {
-    // On iOS the module is supposed to be there, so reaching this is a real degradation:
-    // the app silently drops to expo-location and the user gets worse background tracking
-    // with nothing anywhere saying why. Android never gets here — it returns above — so
-    // this does not fire on every launch of the platform that legitimately lacks it.
-    //
-    // A logger.warn and not an analytics event, deliberately: this has to keep working when
-    // a user declines analytics consent. See docs/observability.md.
+    // keep-comment: a silent drop to worse background tracking; logger, not analytics, so it survives declined consent
     logger.warn("Native live-location module failed to load on iOS; using expo-location", {
       reason: "module_load_failed",
       error: String(e),
@@ -70,8 +51,6 @@ const nativeModule: ExpoLiveLocationNativeModule | null = (() => {
   }
 })();
 
-// Whether to use the native iOS 18+ background engine. False on Android, on iOS < 18,
-// and if the module failed to load for any reason.
 export function isLiveLocationAvailable(): boolean {
   return nativeModule?.isAvailable() ?? false;
 }
@@ -88,8 +67,6 @@ export function drainLiveLocation(): Promise<LiveFix[]> {
   return nativeModule?.drain() ?? Promise.resolve([]);
 }
 
-// Subscribes to live fixes for the foreground map tail. Returns null (no-op) when
-// the native module isn't available.
 export function addLiveLocationListener(listener: (fix: LiveFix) => void): EventSubscription | null {
   return nativeModule?.addListener("onLocation", listener) ?? null;
 }

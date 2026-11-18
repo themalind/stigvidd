@@ -40,16 +40,11 @@ import { track } from "./analytics";
 import { showDialog } from "./dialog";
 import { logger } from "./logger";
 
-// How often the background task samples GPS (ms). Android-only — on iOS the
-// sampling cadence is driven purely by distanceInterval (see startTracking).
+// keep-comment: Android only; iOS samples on distanceInterval alone
 const SAMPLE_INTERVAL = 1000;
-// How often the UI reads AsyncStorage to reflect background task updates (ms)
 const POLL_INTERVAL = 2000;
 
-// True once cold-launch recovery has been attempted in this app process. Module
-// scope (not a ref) so it survives component remounts but resets on a fresh launch —
-// which is exactly how we tell an interrupted recording (new process, engine dead)
-// from an active one that just remounted (same process, engine still running).
+// keep-comment: module scope tells a killed recording (new process) from a remount (same process)
 let recoveryAttempted = false;
 
 async function startLocationTask(options: Location.LocationTaskOptions): Promise<void> {
@@ -78,17 +73,13 @@ async function logIfRecording(next: AppStateStatus): Promise<void> {
 export function useLocationTracking() {
   const { t } = useTranslation();
   const setError = useSetAtom(showErrorAtom);
-  // Holds the setInterval handle for the polling loop
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [hike, setHike] = useState<ActiveHike>(defaultHikeState.hike);
   const [currentSegment, setCurrentSegment] = useState<Segment | null>(null);
   const [isTracking, setIsTracking] = useState(false);
 
-  // Live foreground track of the active segment, updated on every GPS fix. Drives
-  // the drawn route so it follows the user dot in real time instead of catching up
-  // in polling-sized jumps. Purely visual — the background task remains the source
-  // of truth for persisted distance and segments (see routePositions in the UI).
+  // keep-comment: visual only, so the line follows the dot; storage stays the source of truth
   const [liveCoordinates, setLiveCoordinates] = useState<LocationData[]>([]);
   const liveCoordsRef = useRef<LocationData[]>([]);
   const setLive = useCallback((coords: LocationData[]) => {
@@ -96,22 +87,13 @@ export function useLocationTracking() {
     setLiveCoordinates(coords);
   }, []);
 
-  // Whether to drive background recording with the native iOS 18+ engine
-  // (CLLocationUpdate.liveUpdates + CLBackgroundActivitySession) instead of the
-  // expo-location background task. True only on iOS 18+; everywhere else this is
-  // false and the existing expo-location pipeline is used unchanged. Captured once
-  // in a ref — the answer can't change during a session (it's OS/build-fixed).
+  // keep-comment: iOS 18+ records with CLLocationUpdate + CLBackgroundActivitySession instead of the expo task
   const useNativeRef = useRef(isLiveLocationAvailable());
 
-  // Start time of the open segment, in a ref so the live watcher's subscription
-  // survives a poll tick.
+  // keep-comment: a ref, so the live watcher's subscription survives a poll tick
   const segmentStartRef = useRef<number | undefined>(undefined);
 
-  // Pulls fixes the native engine buffered while JS was suspended (or is actively
-  // delivering) and runs them through the shared evaluatePoint pipeline. Native is
-  // the single background source of truth on iOS 18+, so this is the only writer of
-  // background points there. Stops the engine if a batch trips the stale-session
-  // finalizer. No-op on non-native platforms.
+  // keep-comment: on iOS 18+ this is the only writer of background points
   const drainNative = useCallback(async () => {
     if (!useNativeRef.current) return;
     const fixes = await drainLiveLocation();
@@ -120,8 +102,6 @@ export function useLocationTracking() {
     if (didFinalize) await stopLiveLocation();
   }, []);
 
-  // Stops whichever background source is running for the current platform. Native
-  // engine on iOS 18+, the expo-location task otherwise.
   const stopBackgroundSource = useCallback(async () => {
     if (useNativeRef.current) {
       await stopLiveLocation();
@@ -131,17 +111,9 @@ export function useLocationTracking() {
     }
   }, []);
 
-  // Cold-launch recovery. If storage still marks a recording active when a fresh
-  // process starts, it was killed mid-hike (force-quit or system termination) and
-  // the engine/task died with it. We recover the hike as PAUSED rather than silently
-  // resuming: a swipe-away may be deliberate, and continuing would let fixes captured
-  // somewhere else entirely (e.g. back home, hours later) re-anchor onto the open
-  // segment as a low-speed-over-long-gap "walk" — a straight line across the map plus
-  // phantom distance. Closing the segment leaves the data intact and the timer honest;
-  // the user then chooses Save / Resume / Discard, and Resume opens a fresh segment
-  // (a new anchor), so a disjoint location can never extend the line.
+  // keep-comment: a killed recording comes back PAUSED: resuming would join fixes from somewhere
+  // keep-comment: else (home, hours later) to the open segment as a straight line with phantom distance
   const recoverInterruptedHike = useCallback(async () => {
-    // Land any fixes the engine buffered before it died into the segment first.
     await drainNative();
 
     const current = await readHikeState();
@@ -163,7 +135,6 @@ export function useLocationTracking() {
     );
   }, [drainNative, stopBackgroundSource]);
 
-  // Applies a StoredHikeState snapshot into React state
   const applyState = useCallback((state: StoredHikeState) => {
     setHike(state.hike);
     setCurrentSegment(state.currentSegment);
@@ -171,20 +142,12 @@ export function useLocationTracking() {
     setIsTracking(state.isTracking);
   }, []);
 
-  // Reads the latest state from AsyncStorage and syncs it into React state.
-  // Also auto-finalizes a forgotten recording (inactive or past the hard cap)
-  // so reopening the app — or just polling while it's open — can never surface a
-  // session that has been silently running for hours.
+  // keep-comment: also ends a forgotten recording, so none can run silently for hours
   const syncFromStorage = useCallback(async () => {
-    // On iOS 18+ the native engine is the background source of truth: pull anything
-    // it buffered (including everything captured while JS was suspended in the
-    // background) into storage BEFORE reflecting state, so the polled UI and the
-    // foreground-resume both catch up on the real track. No-op elsewhere.
+    // keep-comment: drained before reading, so the UI catches up on what was buffered while suspended
     await drainNative();
 
-    // Check-and-finalize atomically so a concurrent task batch can't slip a write
-    // in between the read and the finalize. Returns null (no write) when the
-    // session isn't stale, in which case we just reflect the current state.
+    // keep-comment: atomic, so a task batch cannot write between the check and the finalize
     let didFinalize = false;
     const state = await mutateHikeState((current) => {
       const finalized = maybeFinalizeStaleHike(current, Date.now());
@@ -206,8 +169,6 @@ export function useLocationTracking() {
     }
   }, [syncFromStorage]);
 
-  // On mount: recover a killed recording (once per process), restore state, and
-  // listen for the app returning from background.
   useEffect(() => {
     (async () => {
       if (!recoveryAttempted) {
@@ -219,7 +180,6 @@ export function useLocationTracking() {
       await syncSafely();
     })();
 
-    // Re-sync when the app returns from background so state is never stale
     const appStateSub = AppState.addEventListener("change", (nextState) => {
       if (nextState === "active") {
         void syncSafely().then(() => logIfRecording(nextState));
@@ -233,13 +193,10 @@ export function useLocationTracking() {
     };
   }, [syncSafely, recoverInterruptedHike]);
 
-  // Poll AsyncStorage while tracking so the UI stays up to date with background task writes
   useEffect(() => {
     if (isTracking) {
       pollingRef.current = setInterval(syncSafely, POLL_INTERVAL);
     }
-    // The cleanup below stops the polling, and React runs it before every re-run of this
-    // effect as well as on unmount.
     return () => {
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
@@ -248,19 +205,11 @@ export function useLocationTracking() {
     };
   }, [isTracking, syncSafely]);
 
-  // Foreground GPS watcher: while tracking, append every accepted fix to the live
-  // tail so the drawn route follows the user dot smoothly. Runs only while the app
-  // is foregrounded (iOS suspends JS in the background) — the background task keeps
-  // recording to storage during that time, and the UI stitches the two by
-  // timestamp. Uses the same filter as the task so both agree on what counts.
+  // keep-comment: the same filter as the task, so the live tail and storage agree on what counts
   useEffect(() => {
     if (!isTracking) return;
 
-    // iOS 18+ native path: the engine already delivers fixes (foreground AND
-    // background). Subscribe to its live event for the smooth foreground tail —
-    // the durable track comes from draining into storage (see drainNative). Using
-    // the engine's own stream here avoids running a second competing
-    // CLLocationManager via expo-location's watchPositionAsync.
+    // keep-comment: the engine's own stream, so no second CLLocationManager competes with it
     if (useNativeRef.current) {
       const sub = addLiveLocationListener((fix) => {
         const candidate: LocationData = {
@@ -297,14 +246,13 @@ export function useLocationTracking() {
             setLive([...liveCoordsRef.current, candidate]);
           },
         );
-        // If tracking stopped while awaiting, tear down immediately.
         if (active) {
           subscription = sub;
         } else {
           sub.remove();
         }
       } catch {
-        // If the foreground watcher can't start, the polled line still renders.
+        // keep-comment: without the watcher the polled line still draws
       }
     })();
 
@@ -315,21 +263,14 @@ export function useLocationTracking() {
   }, [isTracking, setLive]);
 
   const startTracking = async () => {
-    // Foreground ("When In Use") is the only hard requirement to start recording.
     const { status: fgPermission } = await Location.requestForegroundPermissionsAsync();
     if (fgPermission !== "granted") {
       setError(t("createHike.fgPermissionDenied"));
       return;
     }
 
-    // iOS never grants "Always" on the first request (it only offers "When In Use"
-    // and escalates later), so a non-granted result must NOT block recording. With
-    // foreground access + the location background mode, iOS records provisionally in
-    // the background and prompts for "Always" on its own. But "When In Use" only
-    // survives while the app stays alive in the background — if iOS suspends it under
-    // memory pressure mid-hike, only "Always" relaunches it. So we surface a firm,
-    // actionable prompt (Open Settings) rather than a transient snackbar, while still
-    // letting the recording start provisionally.
+    // keep-comment: a refusal must not block: iOS never grants "Always" on the first request,
+    // keep-comment: but only "Always" relaunches a suspended app, hence the Open Settings dialog
     // Resume only reads it: on Android 11+ a request leaves the app for the settings page. keep-comment: platform behaviour behind the read
     const isNewHike = (await readHikeState()).hike.segments.length === 0;
     const { status: bgPermission } = isNewHike
@@ -350,24 +291,20 @@ export function useLocationTracking() {
       });
     }
 
-    // Each press of "start" opens a new segment
     const newSegment: Segment = {
       coordinates: [],
       distance: 0,
       startTime: Date.now(),
     };
 
-    // Preserve paused hike data when resuming so segments accumulate correctly.
-    // Read + write atomically so a lingering task batch can't clobber the start,
-    // and persist before starting the task so it always finds a valid state.
+    // keep-comment: atomic and before the task starts, so a late batch cannot clobber it and the task finds valid state
     const newState = await mutateHikeState((existing) => ({
       isTracking: true,
       hike: existing.hike,
       currentSegment: newSegment,
     }));
 
-    // Which engine is in use and whether background permission was granted together explain
-    // most "my track has holes" reports, and neither is derivable from the saved hike.
+    // keep-comment: engine and background permission explain most "holes in my track" reports
     track("hike.recording_started", {
       engine: useNativeRef.current ? "native_ios" : "expo_task",
       backgroundPermission: bgPermission === "granted" ? "granted" : "denied",
@@ -377,52 +314,29 @@ export function useLocationTracking() {
       segmentIndex: newState.hike.segments.length,
     });
 
-    // Each new segment starts with an empty live tail so it never carries points
-    // from the previous (now finalized) segment.
     setLive([]);
 
-    // iOS 18+ native path: start the background activity session + live-updates
-    // stream instead of the expo-location task. These two must be mutually
-    // exclusive — running both would double-record the same fixes into storage.
+    // keep-comment: never both engines, which would record every fix twice
     if (useNativeRef.current) {
-      // Clear any fixes left buffered from a previous session so they can't leak
-      // into this new segment, then start the engine.
+      // keep-comment: drops fixes left from a previous session
       await drainLiveLocation();
       await startLiveLocation();
       applyState(newState);
       return;
     }
 
-    // Avoid registering the task twice if it somehow survived a previous session
     const isAlreadyRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
     if (!isAlreadyRunning) {
       await startLocationTask({
-        // BestForNavigation keeps the GPS pinned hot for the duration of a recording.
-        // High (~kCLLocationAccuracyNearestTenMeters, ~10m target) is too coarse for a
-        // walking track: in a pocket with a locked screen the body blocks the antenna
-        // and fixes scatter 10-30m, so the drawn line cuts through buildings and many
-        // fixes fail the accuracy gate (looking like tracking "stopped"). The battery
-        // cost is the standard fitness-app trade-off — we only run this while actively
-        // recording and stop the task the moment the user stops.
+        // keep-comment: deliberate: High scatters 10–30 m in a pocket, cutting through buildings and failing the accuracy gate
         accuracy: Location.Accuracy.BestForNavigation,
-        // Android-only: caps how often the task fires. On iOS this is ignored and
-        // distanceInterval alone drives sampling.
         timeInterval: SAMPLE_INTERVAL,
         distanceInterval: MIN_DISTANCE,
-        // iOS-only (safely ignored on Android). Without these, iOS defaults to
-        // pausesUpdatesAutomatically = true and pauses background updates when it
-        // decides the user is stationary (a rest stop, a viewpoint) without
-        // reliably resuming — which both drops track points and, after
-        // INACTIVITY_TIMEOUT with no fixes, lets maybeFinalizeStaleHike end the
-        // hike behind the user's back. Flagging this as a Fitness activity and
-        // disabling auto-pause keeps a hike recording across breaks.
+        // keep-comment: iOS auto-pauses at a rest stop and may never resume, dropping points and ending the hike
         pausesUpdatesAutomatically: false,
         activityType: Location.ActivityType.Fitness,
-        // Show the blue "using your location" status-bar indicator while recording
-        // in the background, as Apple expects for continuous-location apps.
         showsBackgroundLocationIndicator: true,
-        // Android foreground service: the persistent notification that keeps the
-        // OS from killing the recording while backgrounded.
+        // keep-comment: the notification keeps Android from killing the recording in the background
         foregroundService: {
           notificationTitle: "Stigvidd",
           notificationBody: t("createHike.notificationBody"),
@@ -436,9 +350,7 @@ export function useLocationTracking() {
   const stopTracking = async () => {
     try {
       if (useNativeRef.current) {
-        // Ingest anything the engine still holds so the final points land in this
-        // segment, then stop the session. drainNative runs before the finalize
-        // mutation below, so those points are part of the completed segment.
+        // keep-comment: before the finalize, so the last buffered points join this segment
         await drainNative();
         await stopLiveLocation();
       } else {
@@ -448,10 +360,7 @@ export function useLocationTracking() {
         }
       }
 
-      // Finalize atomically against the latest task-written state. A batch still
-      // in flight when we stopped either lands before this mutation (its points are
-      // included) or after it (it no-ops because isTracking is now false) — never a
-      // clobber.
+      // keep-comment: atomic: a late batch lands before (included) or after (no-op), never clobbering
       const newState = await mutateHikeState((state) => {
         const seg = state.currentSegment;
         let updatedHike = state.hike;
@@ -459,25 +368,19 @@ export function useLocationTracking() {
         if (seg) {
           logSegmentEnded(state, "user");
           const endTime = Date.now();
-          // Duration is the span of recorded GPS timestamps, matching the value
-          // recomputeTrimmedHike saves — so the live timer and the saved hike agree.
-          // Falls back to 0 for a segment with fewer than two fixes.
+          // keep-comment: GPS span, as recomputeTrimmedHike saves it
           const coords = seg.coordinates;
           const segmentDuration = coords.length > 1 ? coords[coords.length - 1].timeStamp - coords[0].timeStamp : 0;
           const completedSegment: Segment = { ...seg, endTime };
 
-          // Only keep the segment if the user actually moved a meaningful distance
           if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {
             updatedHike = {
               ...state.hike,
               segments: [...state.hike.segments, completedSegment],
-              // Accumulate the recorded span of this segment into the total
               totalTime: state.hike.totalTime + segmentDuration,
             };
           } else {
-            // Discard the too-short segment as noise, and roll back the distance the
-            // background task already accumulated for it — otherwise distance stays
-            // stuck at a phantom value while the segment and its time are thrown away.
+            // keep-comment: also rolls back the distance the task already added, or it stays as a phantom
             updatedHike = {
               ...state.hike,
               totalDistance: Math.max(0, state.hike.totalDistance - seg.distance),
@@ -494,10 +397,7 @@ export function useLocationTracking() {
 
       applyState(newState);
 
-      // The SHAPE of the track, never the track. Emitted here rather than from the background
-      // task: that task can be relaunched in a fresh JS runtime mid-hike, and its consent
-      // cache may be unhydrated, so the foreground is the only place this can be both correct
-      // and consent-gated.
+      // keep-comment: the track's shape, never the track; not from the task, whose fresh runtime may lack consent
       track("hike.recording_stopped", {
         reason: "user",
         durationSeconds: Math.round(newState.hike.totalTime / 1000),
@@ -517,18 +417,15 @@ export function useLocationTracking() {
   const resetTracking = async () => {
     try {
       if (useNativeRef.current) {
-        // Stop the engine and discard any buffered fixes so they can't bleed into
-        // the next recording.
+        // keep-comment: the drain discards buffered fixes so they cannot reach the next recording
         await stopLiveLocation();
         await drainLiveLocation();
       } else {
-        // Stop the background task if it's still running
         const isTaskRunning = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME);
         if (isTaskRunning) {
           await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         }
       }
-      // Wipe persisted state and reset UI back to the initial empty hike
       await clearHikeState();
       setLive([]);
       applyState(defaultHikeState);
@@ -538,15 +435,8 @@ export function useLocationTracking() {
     }
   };
 
-  // Total recording time as a real stopwatch: the wall-clock span of every
-  // completed segment (startTime → endTime) plus, while tracking, the live span of
-  // the active segment (startTime → now). It measures against the clock rather than
-  // GPS-fix timestamps so it ticks smoothly every second regardless of movement.
-  //
-  // The *saved* duration is recomputed from GPS timestamps in recomputeTrimmedHike
-  // so start/end trimming stays exact; the live stopwatch and the saved duration
-  // can therefore differ by the few stationary seconds at a segment's edges, as in
-  // any GPS fitness app.
+  // keep-comment: a wall-clock stopwatch by design, so it ticks without movement; the saved
+  // keep-comment: duration comes from GPS timestamps and may differ by a few seconds at the edges
   const getActiveTime = (now: number = Date.now()) => {
     const completedTime = hike.segments.reduce(
       (sum, seg) => sum + Math.max(0, (seg.endTime ?? seg.startTime) - seg.startTime),
