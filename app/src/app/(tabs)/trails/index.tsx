@@ -143,6 +143,7 @@ export default function TrailsScreen() {
               placeholder={t("trailList.search")}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              dense
               style={s.searchInput}
             />
             <View style={s.filterContainer}>
@@ -259,7 +260,6 @@ const s = StyleSheet.create({
   },
   searchInput: {
     marginBottom: 5,
-    height: 40,
   },
   listContent: {
     padding: 10,

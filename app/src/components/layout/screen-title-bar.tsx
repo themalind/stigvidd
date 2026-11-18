@@ -31,7 +31,7 @@ export default function ScreenTitleBar({ title, leading, trailing, action, style
   const theme = useTheme();
 
   return (
-    <View style={[s.row, style]}>
+    <View testID="screen-title-bar" style={[s.row, style]}>
       <View style={s.titleRow}>
         {leading}
         <Text style={[s.title, { color: theme.colors.onBackground }]}>{title}</Text>
@@ -51,8 +51,12 @@ export default function ScreenTitleBar({ title, leading, trailing, action, style
   );
 }
 
+// keep-comment: the bar keeps the button's height without one, so content below does not jump when it hides
+export const TITLE_BAR_HEIGHT = 34;
+
 const s = StyleSheet.create({
   row: {
+    minHeight: TITLE_BAR_HEIGHT,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -72,6 +76,7 @@ const s = StyleSheet.create({
     fontSize: 16,
   },
   button: {
+    height: TITLE_BAR_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
