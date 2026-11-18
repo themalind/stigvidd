@@ -1017,8 +1017,16 @@
     },
     "pendingInvitations_one": "{{count}} invitation",
     "pendingInvitations_other": "{{count}} invitations",
-    "noMyEvents": "You're not in any upcoming events.",
-    "empty": "No upcoming events right now.",
+    "emptyCard": {
+      "tag": "Get started",
+      "exploreTitle": "Events gather here",
+      "exploreBody": "Walks and hikes that others invite to show up here. Nothing is planned right now, so yours could be the first.",
+      "createEvent": "Create event",
+      "mineTitle": "You're not in any upcoming events",
+      "mineBody": "Find one to join under Explore, or create your own and invite your friends.",
+      "explore": "Explore",
+      "create": "Create"
+    },
     "loadError": "Couldn't load the events.",
     "open": "Open",
     "private": "Private",

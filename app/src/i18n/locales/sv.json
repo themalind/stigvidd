@@ -1017,8 +1017,16 @@
     },
     "pendingInvitations_one": "{{count}} inbjudan",
     "pendingInvitations_other": "{{count}} inbjudningar",
-    "noMyEvents": "Du är inte med i några kommande evenemang.",
-    "empty": "Inga kommande evenemang just nu.",
+    "emptyCard": {
+      "tag": "Kom igång",
+      "exploreTitle": "Här samlas evenemangen",
+      "exploreBody": "Promenader och vandringar som andra bjuder in till visas här. Just nu är inget inplanerat, så ditt kan bli det första.",
+      "createEvent": "Skapa evenemang",
+      "mineTitle": "Du är inte med i några kommande evenemang",
+      "mineBody": "Hitta ett att gå med i under Utforska, eller skapa ett eget och bjud in dina vänner.",
+      "explore": "Utforska",
+      "create": "Skapa"
+    },
     "loadError": "Kunde inte hämta evenemangen.",
     "open": "Öppet",
     "private": "Privat",

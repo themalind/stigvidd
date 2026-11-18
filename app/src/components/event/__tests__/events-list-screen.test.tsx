@@ -13,7 +13,7 @@ import { renderWithProviders } from "@/test/render";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
-// Explicit, so the component and requireMock share one instance of the root manual mock.
+// Explicit, so the component and requireMock share one instance of the root manual mock. keep-comment: why the explicit mock
 jest.mock("react-native-paper-dates");
 const { mockPickers } = jest.requireMock<{
   mockPickers: { date: { onConfirm: (range: { startDate?: Date; endDate?: Date }) => void } | null };
@@ -237,6 +237,85 @@ describe("EventsListScreen", () => {
     await flushUntil(() => screen.queryByText("Du har inga tidigare evenemang.") !== null);
 
     expect(screen.getByText("Du har inga tidigare evenemang.")).toBeTruthy();
+    expect(screen.queryByTestId("events-empty-mine")).toBeNull();
+    expect(screen.queryByTestId("events-search")).toBeNull();
+  });
+
+  describe("empty lists", () => {
+    beforeEach(() => {
+      mockGetEvents.mockResolvedValue({ items: [], nextCursor: null });
+      mockGetMine.mockResolvedValue({ items: [], nextCursor: null });
+      mockGetInvitations.mockResolvedValue([]);
+    });
+
+    async function showEmpty() {
+      await renderWithProviders(<EventsListScreen />, {
+        initialAtoms: [[userAtom, { id: "u1", email: "a@b.se", username: "jag" }]],
+      });
+      await flushUntil(() => screen.queryByTestId("events-empty-explore") !== null);
+    }
+
+    it("invites to create the first event when Utforska is empty", async () => {
+      await showEmpty();
+
+      expect(screen.getByText("Här samlas evenemangen")).toBeTruthy();
+      await fireEvent.press(screen.getByTestId("events-empty-create-button"));
+
+      expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/events/create");
+    });
+
+    it("asks a signed-out visitor to log in from the empty card", async () => {
+      mockSignedIn = false;
+      await renderWithProviders(<EventsListScreen />);
+      await flushUntil(() => screen.queryByTestId("events-empty-explore") !== null);
+
+      await fireEvent.press(screen.getByTestId("events-empty-create-button"));
+
+      expect(screen.getByTestId("not-authenticated-dialog")).toBeTruthy();
+      expect(mockNavigate).not.toHaveBeenCalledWith("/(tabs)/events/create");
+    });
+
+    it("sends an empty Mina back to Utforska", async () => {
+      await showEmpty();
+      await fireEvent.press(screen.getByTestId("events-tabs-mine"));
+      await flushUntil(() => screen.queryByTestId("events-empty-mine") !== null);
+
+      await fireEvent.press(screen.getByTestId("events-empty-explore-button"));
+
+      expect(screen.getByTestId("events-tabs-explore")).toBeSelected();
+      expect(screen.getByTestId("events-empty-explore")).toBeTruthy();
+    });
+
+    it("hides the search and quick filters behind the card", async () => {
+      await showEmpty();
+
+      expect(screen.queryByTestId("events-search")).toBeNull();
+      expect(screen.queryByTestId("events-chip-weekend")).toBeNull();
+    });
+
+    it("shows the search on the tab that has events while another tab is empty", async () => {
+      mockGetMine.mockResolvedValue({ items: [summary("mine", "Min tur")], nextCursor: null });
+      await showEmpty();
+
+      await fireEvent.press(screen.getByTestId("events-tabs-mine"));
+      await flushUntil(() => screen.queryByText("Min tur") !== null);
+
+      expect(screen.getByTestId("events-search")).toBeTruthy();
+    });
+
+    it("keeps the search and the no-matches text when a search finds nothing", async () => {
+      mockGetEvents.mockImplementation(({ search }: { search?: string }) =>
+        Promise.resolve({ items: search ? [] : [summary("open", "Fikapromenad")], nextCursor: null }),
+      );
+      await show();
+
+      await fireEvent.changeText(screen.getByTestId("events-search"), "kype");
+      await flushUntil(() => screen.queryByTestId("events-no-matches") !== null);
+
+      expect(screen.getByTestId("events-no-matches")).toBeTruthy();
+      expect(screen.getByTestId("events-search")).toBeTruthy();
+      expect(screen.queryByTestId("events-empty-explore")).toBeNull();
+    });
   });
 
   describe("signed out", () => {

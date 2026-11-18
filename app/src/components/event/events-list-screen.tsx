@@ -29,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import EventCard from "./event-card";
+import EventsEmptyCard from "./events-empty-card";
 import EventFilterSheet from "./event-filter-sheet";
 import EventSearchBar from "./event-search-bar";
 import EventInvitationRow from "./event-invitation-row";
@@ -64,12 +65,15 @@ export default function EventsListScreen() {
 
   const active = { explore: feed, mine, past }[tab];
   const data = { explore: feedEvents, mine: myEvents, past: pastEvents }[tab];
-  const emptyText = { explore: t("events.empty"), mine: t("events.noMyEvents"), past: t("events.noPastEvents") }[tab];
+  const hidesSearch = !search.isActive && !!active.data && data.length === 0;
 
   const chooseTab = (next: EventsTab) => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
     setTab(next);
   };
+
+  const create = () =>
+    isAuthenticated ? guardedNavigate(() => router.navigate("/(tabs)/events/create")) : setAuthDialog(true);
 
   const refresh = () => {
     // refetch ignores enabled, so a signed-out refresh would ask for invitations and own events. keep-comment: why the guard
@@ -120,7 +124,10 @@ export default function EventsListScreen() {
         </View>
       );
     }
-    return <Text style={[s.empty, { color: theme.colors.onSurfaceVariant }]}>{emptyText}</Text>;
+    if (tab === "explore") return <EventsEmptyCard variant="explore" onCreate={create} />;
+    if (tab === "mine")
+      return <EventsEmptyCard variant="mine" onCreate={create} onExplore={() => chooseTab("explore")} />;
+    return <Text style={[s.empty, { color: theme.colors.onSurfaceVariant }]}>{t("events.noPastEvents")}</Text>;
   };
 
   return (
@@ -141,8 +148,7 @@ export default function EventsListScreen() {
             testID: "events-create",
             label: t("events.form.create"),
             icon: "add",
-            onPress: () =>
-              isAuthenticated ? guardedNavigate(() => router.navigate("/(tabs)/events/create")) : setAuthDialog(true),
+            onPress: create,
           }}
           style={s.titleBar}
         />
@@ -164,7 +170,7 @@ export default function EventsListScreen() {
             style={s.tabs}
           />
         ) : null}
-        <EventSearchBar search={search} showWhen={!isPast} />
+        {hidesSearch ? null : <EventSearchBar search={search} showWhen={!isPast} />}
       </View>
       <FlatList
         ref={listRef}
