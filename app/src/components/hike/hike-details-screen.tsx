@@ -31,6 +31,7 @@ import { useHikeImageMutations } from "@/hooks/hike/useHikeImageMutations";
 import { useMyHikeSubmissions } from "@/hooks/hike/useMyHikeSubmissions";
 import { myHikesQueryKey, useMyHikes } from "@/hooks/hike/useMyHikes";
 import { useCanWrite } from "@/hooks/auth/useCanWrite";
+import { usePopToTopOnSignOut } from "@/hooks/auth/usePopToTopOnSignOut";
 import { track } from "@/services/analytics";
 import { formatDate } from "@/utils/format/format-date";
 import { guardedNavigate } from "@/utils/navigation";
@@ -62,6 +63,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
+  usePopToTopOnSignOut();
   const user = useAtomValue(stigviddUserAtom);
   const setErrorMsg = useSetAtom(showErrorAtom);
   const setSuccessMsg = useSetAtom(showSuccessAtom);

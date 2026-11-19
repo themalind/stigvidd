@@ -17,6 +17,7 @@ import ReportContentForm from "@/components/report/report-content-form";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";
 import { EventPost } from "@/data/types";
+import { usePopToTopOnSignOut } from "@/hooks/auth/usePopToTopOnSignOut";
 import { eventBoardKey, firstUnreadPostId, useEventBoard, useEventBoardMutations } from "@/hooks/events/useEventBoard";
 import { useEvent } from "@/hooks/events/useEventQueries";
 import { eventErrorCode } from "@/utils/event/event-errors";
@@ -38,6 +39,7 @@ export default function EventBoardScreen() {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
+  usePopToTopOnSignOut();
 
   if (!isAuthenticated) return <SignInPrompt message={t("events.signInToSee")} />;
   if (!identifier) return <EventGoneView />;

@@ -73,6 +73,8 @@ jest.mock("@/api/friends", () => ({
 let mockParams: { identifier?: string } = {};
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
+jest.mock("@/hooks/auth/usePopToTopOnSignOut", () => ({ usePopToTopOnSignOut: () => {} }));
+
 jest.mock("expo-router", () => ({
   useLocalSearchParams: () => mockParams,
   router: {

@@ -16,6 +16,7 @@ import SectionPanel from "@/components/layout/section-panel";
 import { BORDER_RADIUS, EVENT_COVER_ASPECT, SCREEN_PADDING } from "@/constants/constants";
 import { EVENT_REQUEST_LIMITS } from "@/constants/event-limits";
 import { EventVisibility, HikingEvent } from "@/data/types";
+import { usePopToTopOnSignOut } from "@/hooks/auth/usePopToTopOnSignOut";
 import { CoverChange, useSaveEvent } from "@/hooks/events/useSaveEvent";
 import {
   clampDeadline,
@@ -43,6 +44,7 @@ export default function EventFormScreen() {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const { identifier } = useLocalSearchParams<{ identifier?: string }>();
+  usePopToTopOnSignOut();
 
   if (!isAuthenticated) return <SignInPrompt message={t("events.signInToSee")} />;
   if (identifier) return <EventGate identifier={identifier}>{(event) => <EventForm original={event} />}</EventGate>;

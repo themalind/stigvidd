@@ -42,6 +42,8 @@ jest.mock("expo-router", () => ({
 
 jest.mock("expo-router/js-tabs", () => ({ useBottomTabBarHeight: () => 0 }));
 
+jest.mock("@/hooks/auth/usePopToTopOnSignOut", () => ({ usePopToTopOnSignOut: () => {} }));
+
 jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: true, logout: jest.fn() }),
 }));

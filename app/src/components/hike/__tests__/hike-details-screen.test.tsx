@@ -59,6 +59,8 @@ jest.mock("@/api/shared-hikes", () => ({ getOutgoingSharedHikes: () => mockGetOu
 const mockTrack = jest.fn();
 jest.mock("@/services/analytics", () => ({ track: (...args: unknown[]) => mockTrack(...args) }));
 
+jest.mock("@/hooks/auth/usePopToTopOnSignOut", () => ({ usePopToTopOnSignOut: () => {} }));
+
 jest.mock("expo-router", () => ({
   useRouter: () => ({ navigate: mockNavigate, back: mockBack }),
   useLocalSearchParams: () => ({ identifier: mockIdentifier, shareWith: mockShareWith }),
@@ -107,7 +109,7 @@ async function show(overrides: Partial<Hike> = {}, hikeFollowRoute: HikeFollowRo
 
 async function confirmDelete() {
   await fireEvent.press(screen.getByTestId("hike-delete"));
-  // The dialog repeats the label of the button that opened it; the confirm is the second.
+  // The dialog repeats the label of the button that opened it; the confirm is the second. keep-comment: why index 1
   await fireEvent.press(screen.getAllByText("Ta bort")[1]);
 }
 
@@ -179,7 +181,7 @@ it("offers a retry when the list could not be fetched", async () => {
   expect(screen.getByText("Kvällspromenad")).toBeTruthy();
 });
 
-// The three info rows are what a shared walk carries; an empty one is a lone icon and a blank label.
+// The three info rows are what a shared walk carries; an empty one is a lone icon and a blank label. keep-comment: the failure the test guards
 it("shows an info row only for the fields the walk actually has", async () => {
   await show({ parkingInfo: "Grusplan vid vändplatsen" });
 
@@ -322,7 +324,7 @@ it.each<HikeFollowRoute>([
 ])("seeds the route and opens %s from the map", async (route) => {
   const { queryClient } = await show({}, route);
 
-  // Read as the screen opens: at gcTime 0 an entry with no observer is collected next tick.
+  // Read as the screen opens: at gcTime 0 an entry with no observer is collected next tick. keep-comment: why the read is inside navigate
   let seeded: unknown;
   mockNavigate.mockImplementationOnce(() => {
     seeded = queryClient.getQueryData(["hike-route", "hike-1"]);
