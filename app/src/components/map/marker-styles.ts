@@ -28,13 +28,14 @@ export const CONTRIBUTION_MARKER_COLORS: MarkerColors = {
 export const MARKER_COLORS: Record<MarkerCategory, MarkerColors> = {
   trails: { fill: colors.primary, stroke: colors.onPrimary },
   contributions: CONTRIBUTION_MARKER_COLORS,
-  shelters: { fill: colors.tertiary, stroke: colors.onTertiary },
+  // keep-comment: a shade under the theme's tertiary, which is too light for the white cluster count
+  shelters: { fill: "#BC5624", stroke: colors.onTertiary },
   firePits: { fill: colors.secondary, stroke: colors.onSecondary },
 };
 
-// keep-comment: swimming is a third dot colour beside fire pits and shelters, a water blue the theme has no role for
+// keep-comment: swimming is a third dot colour beside fire pits and shelters, a water turquoise kept apart from the trails' dark blue
 export const SWIMMING_MARKER_COLORS: MarkerColors = {
-  fill: "#2A6FB0",
+  fill: "#00838F",
   stroke: colors.onPrimary,
 };
 
