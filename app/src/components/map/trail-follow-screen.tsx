@@ -8,6 +8,7 @@
 import RouteFollowView from "@/components/map/route-follow-view";
 import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
 import { useTrailCard } from "@/hooks/trail/useTrailCard";
+import { useTrailObstacles } from "@/hooks/trail/useTrailObstacles";
 import CoordinateParser from "@/utils/geo/coordinate-parser";
 import { useLocalSearchParams } from "expo-router";
 import { useMemo } from "react";
@@ -21,6 +22,12 @@ export default function TrailFollowScreen() {
   const { card } = useTrailCard(normalizedIdentifier ?? null);
 
   const { data: coords, isLoading, isError } = useTrailCoordinates(normalizedIdentifier);
+  const { data: obstacleItems } = useTrailObstacles(normalizedIdentifier);
+
+  const obstacles = useMemo(
+    () => (normalizedIdentifier ? { trailIdentifier: normalizedIdentifier, items: obstacleItems ?? [] } : undefined),
+    [normalizedIdentifier, obstacleItems],
+  );
 
   const path = useMemo(
     () => (coords ? CoordinateParser({ data: coords.coordinates, identifier: normalizedIdentifier }) : []),
@@ -37,6 +44,7 @@ export default function TrailFollowScreen() {
       title={card?.name}
       isLoading={isLoading}
       errorMessage={failed ? t("map.loadError") : undefined}
+      obstacles={obstacles}
     />
   );
 }

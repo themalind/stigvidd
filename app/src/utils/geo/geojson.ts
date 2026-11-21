@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { Facility, TrailMarkerResponse } from "@/data/types";
+import { Facility, TrailMarkerResponse, TrailObstacle } from "@/data/types";
 
 export function featureCollectionFromMarkers(markers: TrailMarkerResponse[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
   const features: GeoJSON.Feature<GeoJSON.Point>[] = [];
@@ -45,6 +45,27 @@ export function featureCollectionFromFacilities(facilities: Facility[]): GeoJSON
       geometry: {
         type: "Point",
         coordinates: [f.longitude, f.latitude],
+      },
+    });
+  }
+
+  return { type: "FeatureCollection", features };
+}
+
+export function featureCollectionFromObstacles(obstacles: TrailObstacle[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
+  const features: GeoJSON.Feature<GeoJSON.Point>[] = [];
+  for (const o of obstacles) {
+    if (o.incidentLongitude == null || o.incidentLatitude == null) continue;
+    features.push({
+      type: "Feature",
+      id: o.identifier,
+      properties: {
+        identifier: o.identifier,
+        issueType: o.issueType,
+      },
+      geometry: {
+        type: "Point",
+        coordinates: [o.incidentLongitude, o.incidentLatitude],
       },
     });
   }

@@ -30,9 +30,11 @@ interface Props {
   obstacle: TrailObstacle;
   trailIdentifier: string;
   onCloseModal?: () => void;
+  // keep-comment: off where a surrounding card already draws the edge
+  outlined?: boolean;
 }
 
-export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseModal }: Props) {
+export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseModal, outlined = true }: Props) {
   const theme = useTheme();
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -121,7 +123,10 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   }
 
   return (
-    <View testID="obstacle-card" style={[s.container, { borderColor: theme.colors.outlineVariant }]}>
+    <View
+      testID="obstacle-card"
+      style={[s.container, outlined && [s.outlined, { borderColor: theme.colors.outlineVariant }]]}
+    >
       <View style={s.content}>
         <View style={s.categoryRow}>
           <View style={s.field}>
@@ -240,9 +245,11 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
 
 const s = StyleSheet.create({
   container: {
+    padding: 12,
+  },
+  outlined: {
     borderWidth: 1,
     borderRadius: BORDER_RADIUS,
-    padding: 12,
   },
   content: {
     gap: 10,

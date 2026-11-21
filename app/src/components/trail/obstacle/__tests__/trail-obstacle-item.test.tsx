@@ -412,6 +412,14 @@ it("sits in a rounded, outlined card, in both themes", async () => {
   expect(screen.getByTestId("obstacle-card")).toHaveStyle({ borderColor: AppDarkTheme.colors.outlineVariant });
 });
 
+it("drops its own outline inside a card that already draws one", async () => {
+  await renderWithProviders(<TrailObstacleItem obstacle={obstacle()} trailIdentifier={TRAIL_ID} outlined={false} />);
+
+  const card = screen.getByTestId("obstacle-card");
+  expect(card).toHaveStyle({ padding: 12 });
+  expect(card).not.toHaveStyle({ borderWidth: 1 });
+});
+
 it("offers to report someone else's obstacle, and opens the form on that obstacle", async () => {
   await show();
 

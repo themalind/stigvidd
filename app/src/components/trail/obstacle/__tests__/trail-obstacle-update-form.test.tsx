@@ -73,6 +73,40 @@ beforeEach(() => {
   mockIssueTypes.mockResolvedValue(["FallenTree", "Mud", "Other"]);
 });
 
+function form(props: { visible: boolean; initialDescription: string }) {
+  return (
+    <TrailObstacleUpdateForm
+      obstacleIdentifier={OBSTACLE_ID}
+      trailIdentifier={TRAIL_ID}
+      initialDescription={props.initialDescription}
+      initialIssueType="FallenTree"
+      visible={props.visible}
+      onDismiss={onDismiss}
+    />
+  );
+}
+
+// keep-comment: the item stays mounted after a save, so a stale form would put back the old text on the next save
+it("opens on the saved text after an earlier edit, not on what it first mounted with", async () => {
+  const { rerender } = await renderWithProviders(form({ visible: false, initialDescription: DESCRIPTION }));
+  await rerender(form({ visible: false, initialDescription: "Två granar ligger över spången" }));
+
+  await rerender(form({ visible: true, initialDescription: "Två granar ligger över spången" }));
+  await settle();
+
+  expect(screen.getByTestId("obstacle-update-description").props.value).toBe("Två granar ligger över spången");
+});
+
+it("keeps what is being typed when the report is refetched while the form is open", async () => {
+  const { rerender } = await renderWithProviders(form({ visible: true, initialDescription: DESCRIPTION }));
+  await write("Mitt eget tillägg om spången");
+
+  await rerender(form({ visible: true, initialDescription: "Någon annans nya text om spången" }));
+  await settle();
+
+  expect(screen.getByTestId("obstacle-update-description").props.value).toBe("Mitt eget tillägg om spången");
+});
+
 it("opens on what the report says today, rather than an empty form", async () => {
   await show();
 
@@ -107,6 +141,26 @@ it("saves the edited description against the obstacle it was opened on", async (
     description: "Trädet är bortsågat men spången är trasig",
     issueType: "FallenTree",
   });
+});
+
+// keep-comment: a form reopened before the refetch lands reads the cache, and would put the old text back
+it("writes the saved edit into the trail's cached obstacles before the refetch lands", async () => {
+  const { queryClient } = await show();
+  const other = { identifier: "other", description: "Lera vid bron", issueType: "Mud" };
+  // keep-comment: no screen observes the entry here, and the test client would collect it at once
+  queryClient.setQueryDefaults(["obstacles"], { gcTime: Infinity });
+  queryClient.setQueryData(
+    ["obstacles", TRAIL_ID, undefined],
+    [{ identifier: OBSTACLE_ID, description: DESCRIPTION, issueType: "FallenTree" }, other],
+  );
+
+  await write("Trädet är bortsågat men spången är trasig");
+  await save();
+
+  expect(queryClient.getQueryData(["obstacles", TRAIL_ID, undefined])).toEqual([
+    { identifier: OBSTACLE_ID, description: "Trädet är bortsågat men spången är trasig", issueType: "FallenTree" },
+    other,
+  ]);
 });
 
 it("saves the category the reporter picked instead of the one it opened with", async () => {

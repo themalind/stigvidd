@@ -12,7 +12,7 @@ import CountedTextInput from "@/components/form/counted-text-input";
 import SelectInput from "@/components/form/select-input";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { useModalKeyboardLift } from "@/hooks/useModalKeyboardLift";
-import { UpdateTrailObstacleRequest } from "@/data/types";
+import { TrailObstacle, UpdateTrailObstacleRequest } from "@/data/types";
 import issueTypeParser from "@/components/trail/issue-type-parser";
 import { MaterialIcons } from "@expo/vector-icons";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,6 +20,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ISSUE_TYPES_STALE_TIME } from "@/constants/cache";
 import ModalScrim from "@/components/dialog/modal-scrim";
 import { useSetAtom } from "jotai";
+import { useLayoutEffect, useRef } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Modal, Portal, Text, useTheme } from "react-native-paper";
@@ -38,6 +39,14 @@ const updateObstacleFields = z.object({
 type FormFields = z.infer<typeof updateObstacleFields>;
 
 const { width } = Dimensions.get("screen");
+
+function withEdit(obstacle: TrailObstacle, edit: UpdateTrailObstacleRequest): TrailObstacle {
+  return {
+    ...obstacle,
+    description: edit.description ?? obstacle.description,
+    issueType: edit.issueType ?? obstacle.issueType,
+  };
+}
 
 interface Props {
   obstacleIdentifier: string;
@@ -71,7 +80,11 @@ export default function TrailObstacleUpdateForm({
 
   const { mutate, isPending } = useMutation({
     mutationFn: (request: UpdateTrailObstacleRequest) => updateTrailObstacle(obstacleIdentifier, request),
-    onSuccess: () => {
+    onSuccess: (_, request) => {
+      // keep-comment: written before the refetch, so a form reopened before it lands starts from the saved text
+      queryClient.setQueriesData<TrailObstacle[]>({ queryKey: ["obstacles", trailIdentifier] }, (obstacles) =>
+        obstacles?.map((o) => (o.identifier === obstacleIdentifier ? withEdit(o, request) : o)),
+      );
       queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
       onDismiss();
       setSuccessMsg(t("obstacle.updated"));
@@ -84,6 +97,7 @@ export default function TrailObstacleUpdateForm({
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormFields>({
     resolver: zodResolver(updateObstacleFields),
@@ -92,6 +106,15 @@ export default function TrailObstacleUpdateForm({
       issueType: initialIssueType,
     },
   });
+
+  // keep-comment: defaultValues are read once at mount, so each opening starts from the obstacle as it is now;
+  // keep-comment: only on opening, so a refetch while the form is open does not wipe what is being typed
+  // keep-comment: a layout effect, so the first frame of the opened form already holds the current text
+  const wasVisible = useRef(visible);
+  useLayoutEffect(() => {
+    if (visible && !wasVisible.current) reset({ description: initialDescription, issueType: initialIssueType });
+    wasVisible.current = visible;
+  }, [visible, initialDescription, initialIssueType, reset]);
 
   const onSubmit: SubmitHandler<FormFields> = (data) => {
     mutate({ description: data.description, issueType: data.issueType });

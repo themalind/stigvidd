@@ -20,6 +20,7 @@ import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Icon, Text, useTheme } from "react-native-paper";
 import { Rating } from "../review/rating";
+import MapOverlayDismissButton from "./map-overlay-dismiss-button";
 
 interface Props {
   identifiers: string[];
@@ -99,17 +100,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
       style={s.wrapper}
       onLayout={(e) => onMeasure?.(e.nativeEvent.layout.height + BOTTOM_OFFSET)}
     >
-      <Pressable
-        onPress={onClose}
-        hitSlop={10}
-        style={({ pressed }) => [
-          s.dismissButton,
-          { backgroundColor: theme.colors.surface },
-          pressed && { opacity: 0.7 },
-        ]}
-      >
-        <MaterialIcons name="keyboard-arrow-down" size={24} color={theme.colors.onSurfaceVariant} />
-      </Pressable>
+      <MapOverlayDismissButton onPress={onClose} />
       <FlatList
         testID="carousel-list"
         ref={listRef}
@@ -354,15 +345,6 @@ const s = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
     paddingLeft: 4,
-  },
-  dismissButton: {
-    alignSelf: "center",
-    width: 40,
-    height: 28,
-    borderRadius: SURFACE_BORDER_RADIUS,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
   },
   buttonRow: {
     flexDirection: "row",

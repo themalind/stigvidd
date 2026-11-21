@@ -58,6 +58,8 @@ folder are free. Tests (`__tests__/`, `*.test.ts(x)`, `__mocks__/`, `src/test/`)
 - One border radius: `BORDER_RADIUS` (5) from the constants.
 - An icon name is typed `keyof typeof MaterialCommunityIcons.glyphMap`, never `string`, or `tsc` lets a
   missing glyph through (Paper's `Icon` is MCI). Facility icons come from `constants/facility-icons.ts`.
+- A map icon (MapLibre `<Images>`) must be a PNG with `@2x`/`@3x`. No SVG rasteriser is installed, so draw it in
+  `scripts/render-obstacle-pins.mjs` (headless Chrome, `CHROME` overrides the path) rather than adding a dependency.
 - Licence: `app/` is MPL-2.0, and Exhibit B is never added.
 
 ## Checks

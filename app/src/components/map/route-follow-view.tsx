@@ -11,20 +11,34 @@ import Map from "@/components/map/map";
 import MapBackChip from "@/components/map/map-back-chip";
 import MapStatusOverlay from "@/components/map/map-status-overlay";
 import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styles";
+import ObstacleMarkers from "@/components/map/obstacle-markers";
 import StartMarker from "@/components/map/start-marker";
 import UserLocationMarker from "@/components/map/user-location-marker";
+import ObstacleMapCard from "@/components/trail/obstacle/obstacle-map-card";
+import { SCREEN_PADDING } from "@/constants/constants";
+import { TrailObstacle } from "@/data/types";
 import { useLiveUserLocation } from "@/hooks/location/useLiveUserLocation";
 import { lineStringFromPositions } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
 import { SINGLE_POINT_ZOOM, initialViewFor } from "@/utils/map/initial-view";
 import { MeetingPoint, openDirectionsToStart } from "@/utils/map/open-directions";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 // Shared by trail and hike follow so the two cannot drift apart; each passes in its own path. keep-comment: why shared
 const FIT_PADDING = { top: 100, right: 60, bottom: 120, left: 60 };
+
+export interface FollowObstacles {
+  trailIdentifier: string;
+  items: TrailObstacle[];
+}
+
+interface CardMeasure {
+  identifier: string;
+  height: number;
+}
 
 interface Props {
   idPrefix: string;
@@ -34,13 +48,34 @@ interface Props {
   isLoading?: boolean;
   errorMessage?: string;
   meetingPoint?: MeetingPoint;
+  obstacles?: FollowObstacles;
 }
 
-export default function RouteFollowView({ idPrefix, path, title, isLoading, errorMessage, meetingPoint }: Props) {
+export default function RouteFollowView({
+  idPrefix,
+  path,
+  title,
+  isLoading,
+  errorMessage,
+  meetingPoint,
+  obstacles,
+}: Props) {
   const { t } = useTranslation();
 
   const cameraRef = useRef<CameraRef>(null);
   const mapReadyRef = useRef(false);
+
+  const [selectedObstacleId, setSelectedObstacleId] = useState<string | null>(null);
+  const [cardMeasure, setCardMeasure] = useState<CardMeasure | null>(null);
+  const selectedObstacle = obstacles?.items.find((o) => o.identifier === selectedObstacleId);
+  const clearObstacle = useCallback(() => setSelectedObstacleId(null), []);
+
+  // keep-comment: a resolved or deleted obstacle closes its card, and stays closed if a later refetch brings it back
+  if (selectedObstacleId && !selectedObstacle) setSelectedObstacleId(null);
+
+  // keep-comment: only the open card's own measurement counts, never one left over from the card before it
+  const cardHeight =
+    selectedObstacle && cardMeasure?.identifier === selectedObstacle.identifier ? cardMeasure.height : undefined;
 
   // Our own watcher, since MapLibre's engine freezes the puck mid-walk. keep-comment: platform bug
   const userLocation = useLiveUserLocation();
@@ -53,6 +88,8 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
   // Named only once the route exists: the GPS fix usually arrives first, and the puck would wait on a missing layer. keep-comment: race
   // The start label, not the line, so the puck is not buried under the trailhead you stand on. keep-comment: layer order
   const puckAnchor = path.length > 0 ? `${idPrefix}-start-label` : undefined;
+  // keep-comment: directly above the line, so the start marker and the puck, added later, stay on top of the pins
+  const obstacleAnchor = path.length > 1 ? lineLayerId : undefined;
 
   const openDirections = useCallback(() => {
     if (path.length > 0) openDirectionsToStart(path[0], t);
@@ -83,6 +120,12 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
         showsUserLocation={false}
         contentReady={!isLoading}
         onDidFinishLoadingMap={handleMapReady}
+        onPress={clearObstacle}
+        // keep-comment: the licence requires the attribution and MapTiler logo visible, so they move above an open card
+        attributionPosition={{
+          bottom: cardHeight ?? SCREEN_PADDING,
+          left: SCREEN_PADDING,
+        }}
       >
         <Camera ref={cameraRef} initialViewState={initialViewFor(bounds, FIT_PADDING)} />
         {path.length > 1 && (
@@ -100,6 +143,17 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
               paint={{ "line-color": ROUTE_LINE_COLOR, "line-width": 5 }}
             />
           </GeoJSONSource>
+        )}
+        {obstacles && (
+          <ObstacleMarkers
+            // keep-comment: remount, not mutate, when the anchor appears (see ObstacleMarkers)
+            key={obstacleAnchor ?? "no-anchor"}
+            aboveLayerId={obstacleAnchor}
+            id={`${idPrefix}-obstacles`}
+            obstacles={obstacles.items}
+            selectedIdentifier={selectedObstacleId}
+            onSelect={setSelectedObstacleId}
+          />
         )}
         {path.length > 0 && (
           <StartMarker id={`${idPrefix}-start`} position={path[0]} label={t("map.start")} onPress={openDirections} />
@@ -128,8 +182,21 @@ export default function RouteFollowView({ idPrefix, path, title, isLoading, erro
 
       <MapStatusOverlay errorMessage={isLoading ? undefined : errorMessage} />
 
-      <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
-      <BasemapToggle />
+      {obstacles && selectedObstacle ? (
+        <ObstacleMapCard
+          // keep-comment: a fresh card per obstacle, or the edit form, dialogs and scroll carry over to the next one
+          key={selectedObstacle.identifier}
+          obstacle={selectedObstacle}
+          trailIdentifier={obstacles.trailIdentifier}
+          onDismiss={clearObstacle}
+          onMeasure={(height) => setCardMeasure({ identifier: selectedObstacle.identifier, height })}
+        />
+      ) : (
+        <>
+          <CenterOnUserButton cameraRef={cameraRef} position={userLocation?.position ?? null} />
+          <BasemapToggle />
+        </>
+      )}
     </View>
   );
 }

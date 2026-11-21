@@ -5,8 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { Facility, TrailMarkerResponse } from "@/data/types";
-import { featureCollectionFromFacilities, featureCollectionFromMarkers, lineStringFromPositions } from "../geojson";
+import { Facility, TrailMarkerResponse, TrailObstacle } from "@/data/types";
+import {
+  featureCollectionFromFacilities,
+  featureCollectionFromMarkers,
+  featureCollectionFromObstacles,
+  lineStringFromPositions,
+} from "../geojson";
 
 describe("featureCollectionFromMarkers", () => {
   it("maps markers to point features in [lng, lat] order with carried properties", () => {
@@ -90,6 +95,45 @@ describe("featureCollectionFromFacilities", () => {
         geometry: { type: "Point", coordinates: [13.0, 58.0] },
       },
     ]);
+  });
+});
+
+describe("featureCollectionFromObstacles", () => {
+  function obstacle(identifier: string, position?: { longitude: number; latitude: number }): TrailObstacle {
+    return {
+      identifier,
+      userIdentifier: null,
+      description: "Gran över stigen",
+      issueType: "FallenTree",
+      incidentLongitude: position?.longitude,
+      incidentLatitude: position?.latitude,
+      createdAt: "2026-11-14T10:00:00Z",
+    };
+  }
+
+  it("maps positioned obstacles to point features in [lng, lat] order with their issue type", () => {
+    const fc = featureCollectionFromObstacles([obstacle("o1", { longitude: 12.94, latitude: 57.72 })]);
+
+    expect(fc.features).toEqual([
+      {
+        type: "Feature",
+        id: "o1",
+        properties: { identifier: "o1", issueType: "FallenTree" },
+        geometry: { type: "Point", coordinates: [12.94, 57.72] },
+      },
+    ]);
+  });
+
+  it("skips obstacles reported without a position", () => {
+    const fc = featureCollectionFromObstacles([obstacle("o1"), obstacle("o2", { longitude: 12.94, latitude: 57.72 })]);
+
+    expect(fc.features.map((f) => f.id)).toEqual(["o2"]);
+  });
+
+  it("keeps a zero coordinate (falsy but valid)", () => {
+    const fc = featureCollectionFromObstacles([obstacle("o1", { longitude: 0, latitude: 0 })]);
+
+    expect(fc.features).toHaveLength(1);
   });
 });
 

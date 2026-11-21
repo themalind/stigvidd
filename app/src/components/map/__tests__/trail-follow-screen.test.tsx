@@ -11,9 +11,14 @@ import { renderWithProviders } from "@/test/render";
 import { act, screen } from "@testing-library/react-native";
 
 const mockGetCoordinates = jest.fn();
+const mockGetObstacles = jest.fn();
 
 jest.mock("@/api/trails", () => ({
   getCoordinatesByTrailIdentifier: (...args: unknown[]) => mockGetCoordinates(...args),
+}));
+
+jest.mock("@/api/trail-obstacles", () => ({
+  getTrailObstaclesByTrailIdentifier: (...args: unknown[]) => mockGetObstacles(...args),
 }));
 
 jest.mock("@/hooks/trail/useTrailCard", () => ({
@@ -29,11 +34,30 @@ jest.mock("@/components/map/route-follow-view", () => {
   const ReactActual = jest.requireActual("react");
   return {
     __esModule: true,
-    default: ({ path, isLoading, errorMessage }: { path: unknown[]; isLoading: boolean; errorMessage?: string }) =>
+    default: ({
+      path,
+      isLoading,
+      errorMessage,
+      obstacles,
+    }: {
+      path: unknown[];
+      isLoading: boolean;
+      errorMessage?: string;
+      obstacles?: { trailIdentifier: string; items: { identifier: string }[] };
+    }) =>
       ReactActual.createElement(
-        Text,
-        { testID: "route-follow-view" },
-        `${path.length}|${isLoading ? "loading" : "idle"}|${errorMessage ?? ""}`,
+        ReactActual.Fragment,
+        null,
+        ReactActual.createElement(
+          Text,
+          { testID: "route-follow-view" },
+          `${path.length}|${isLoading ? "loading" : "idle"}|${errorMessage ?? ""}`,
+        ),
+        ReactActual.createElement(
+          Text,
+          { testID: "route-follow-obstacles" },
+          `${obstacles?.trailIdentifier}:${obstacles?.items.map((o) => o.identifier).join(",")}`,
+        ),
       ),
   };
 });
@@ -44,6 +68,7 @@ function view() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockGetObstacles.mockResolvedValue([]);
 });
 
 it("says the map data could not be loaded when the route request fails", async () => {
@@ -95,4 +120,34 @@ it("keeps the route without a message when a later refetch fails", async () => {
   await flushUntil(() => view().endsWith("kartdata"));
 
   expect(view()).toBe("2|idle|");
+});
+
+function shownObstacles() {
+  return screen.getByTestId("route-follow-obstacles").props.children as string;
+}
+
+it("hands this trail's obstacles to the map", async () => {
+  mockGetCoordinates.mockResolvedValue({ coordinates: "[]" });
+  mockGetObstacles.mockResolvedValue([{ identifier: "o1" }, { identifier: "o2" }]);
+
+  await renderWithProviders(<TrailFollowScreen />);
+  await flushUntil(() => shownObstacles().endsWith("o1,o2"));
+
+  expect(mockGetObstacles).toHaveBeenCalledWith("trail-1");
+  expect(shownObstacles()).toBe("trail-1:o1,o2");
+});
+
+it("draws the route while the obstacles are still loading", async () => {
+  mockGetCoordinates.mockResolvedValue({
+    coordinates: JSON.stringify([
+      { latitude: 57.7, longitude: 12.9 },
+      { latitude: 57.71, longitude: 12.91 },
+    ]),
+  });
+  mockGetObstacles.mockReturnValue(new Promise(() => {}));
+
+  await renderWithProviders(<TrailFollowScreen />);
+  await flushUntil(() => view() === "2|idle|");
+
+  expect(shownObstacles()).toBe("trail-1:");
 });

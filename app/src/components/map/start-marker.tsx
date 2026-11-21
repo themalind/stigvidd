@@ -6,8 +6,9 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { pointFeatureFromPosition } from "@/utils/geo/geojson";
-import { GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
-import { useMemo } from "react";
+import { GeoJSONSource, Layer, type PressEventWithFeatures } from "@maplibre/maplibre-react-native";
+import { useCallback, useMemo } from "react";
+import { NativeSyntheticEvent } from "react-native";
 import { START_MARKER_COLORS } from "./marker-styles";
 
 interface Props {
@@ -22,8 +23,17 @@ interface Props {
 export default function StartMarker({ id, position, label, onPress }: Props) {
   const shape = useMemo(() => pointFeatureFromPosition(position), [position]);
 
+  // keep-comment: a tap on the marker is not also a tap on the map (which, on the follow map, closes an open card)
+  const handlePress = useCallback(
+    (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
+      event.stopPropagation();
+      onPress?.();
+    },
+    [onPress],
+  );
+
   return (
-    <GeoJSONSource id={id} data={shape} onPress={onPress}>
+    <GeoJSONSource id={id} data={shape} onPress={onPress ? handlePress : undefined}>
       {onPress && (
         <Layer
           type="circle"

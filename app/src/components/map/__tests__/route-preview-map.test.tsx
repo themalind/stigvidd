@@ -273,7 +273,9 @@ it("makes the start marker itself tappable only when nothing covers it", async (
 it("opens directions to the start from the marker itself when there is no pill", async () => {
   await show();
 
-  await fireEvent(source("hike-start")!, "press");
+  const start = source("hike-start");
+  if (!start) throw new Error("expected the start marker");
+  await fireEvent(start, "press", { nativeEvent: { features: [] }, stopPropagation: () => {} });
   await settle();
   expect(shownDialog().title).toBe("Vägbeskrivning");
   await confirmDirections();

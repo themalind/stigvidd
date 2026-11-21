@@ -5,9 +5,9 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { getTrailObstaclesByTrailIdentifier } from "@/api/trail-obstacles";
 import { getTrailByIdentifier } from "@/api/trails";
 import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
+import { useTrailObstacles } from "@/hooks/trail/useTrailObstacles";
 import { Rating } from "@/components/review/rating";
 import TrailReviewsContainer from "@/components/review/trail-reviews-container";
 import ImageGallery from "@/components/trail/image-gallery";
@@ -20,10 +20,8 @@ import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { Review } from "@/data/types";
 import CoordinateParser from "@/utils/geo/coordinate-parser";
-import { userAtom } from "@/atoms/auth-atoms";
 import { guardedNavigate } from "@/utils/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { useAtomValue } from "jotai";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { type ComponentRef, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,7 +59,6 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
   const theme = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
-  const user = useAtomValue(userAtom);
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
   const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -93,12 +90,7 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
     staleTime: TRAIL_DETAIL_STALE_TIME,
   });
 
-  const { data: obstacles } = useQuery({
-    queryKey: ["obstacles", normalizedIdentifier, user?.id],
-    queryFn: () => getTrailObstaclesByTrailIdentifier(normalizedIdentifier),
-    enabled: !!normalizedIdentifier,
-    staleTime: TRAIL_DETAIL_STALE_TIME,
-  });
+  const { data: obstacles } = useTrailObstacles(normalizedIdentifier);
 
   const { data: coords } = useTrailCoordinates(normalizedIdentifier, { staleTime: TRAIL_DETAIL_STALE_TIME });
 
