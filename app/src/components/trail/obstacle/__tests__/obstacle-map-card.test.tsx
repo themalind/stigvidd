@@ -6,10 +6,9 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ObstacleMapCard from "@/components/trail/obstacle/obstacle-map-card";
-import { SCREEN_PADDING } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { screen } from "@testing-library/react-native";
 import { Dimensions } from "react-native";
 
 // keep-comment: the item has its own suite; here it only shows what it was given
@@ -45,10 +44,8 @@ const OBSTACLE: TrailObstacle = {
   createdAt: "2026-11-14T10:00:00Z",
 };
 
-function show(props: Partial<Parameters<typeof ObstacleMapCard>[0]> = {}) {
-  return renderWithProviders(
-    <ObstacleMapCard obstacle={OBSTACLE} trailIdentifier="trail-1" onDismiss={jest.fn()} {...props} />,
-  );
+function show() {
+  return renderWithProviders(<ObstacleMapCard obstacle={OBSTACLE} trailIdentifier="trail-1" width={300} />);
 }
 
 it("shows the obstacle with the same item as the obstacle list, without a second outline", async () => {
@@ -57,22 +54,11 @@ it("shows the obstacle with the same item as the obstacle list, without a second
   expect(screen.getByTestId("obstacle-item").props.children).toBe("trail-1:o1:plain");
 });
 
-it("closes from its handle", async () => {
-  const onDismiss = jest.fn();
-  await show({ onDismiss });
+it("takes the width the carousel gives it", async () => {
+  await show();
 
-  await fireEvent.press(screen.getByLabelText("Stäng"));
-
-  expect(onDismiss).toHaveBeenCalledTimes(1);
-});
-
-it("reports the height it covers, counting the gap below it", async () => {
-  const onMeasure = jest.fn();
-  await show({ onMeasure });
-
-  fireEvent(screen.getByTestId("obstacle-map-card"), "layout", { nativeEvent: { layout: { height: 200 } } });
-
-  expect(onMeasure).toHaveBeenCalledWith(200 + SCREEN_PADDING);
+  // keep-comment: Paper's Surface puts layout styles such as width on its outer layer
+  expect(screen.getByTestId("obstacle-map-card-o1-outer-layer")).toHaveStyle({ width: 300 });
 });
 
 // keep-comment: an uncapped long description would cover the back chip and most of the map

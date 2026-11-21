@@ -5,10 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import MapOverlayDismissButton from "@/components/map/map-overlay-dismiss-button";
-import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
-import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { memo } from "react";
+import { ScrollView, StyleSheet, useWindowDimensions } from "react-native";
 import { Surface } from "react-native-paper";
 import TrailObstacleItem from "./trail-obstacle-item";
 
@@ -18,41 +18,26 @@ const MAX_HEIGHT_SHARE = 0.4;
 interface Props {
   obstacle: TrailObstacle;
   trailIdentifier: string;
-  onDismiss: () => void;
-  // keep-comment: the covered height, so the map can lift its attribution clear of the card
-  onMeasure?: (coveredHeight: number) => void;
+  width: number;
 }
 
-export default function ObstacleMapCard({ obstacle, trailIdentifier, onDismiss, onMeasure }: Props) {
+export default memo(function ObstacleMapCard({ obstacle, trailIdentifier, width }: Props) {
   const { height } = useWindowDimensions();
 
   return (
-    <View
-      testID="obstacle-map-card"
-      style={s.wrapper}
-      onLayout={(e) => onMeasure?.(e.nativeEvent.layout.height + SCREEN_PADDING)}
-    >
-      <MapOverlayDismissButton onPress={onDismiss} />
-      <Surface style={s.card} elevation={2}>
-        <ScrollView
-          testID="obstacle-map-card-scroll"
-          style={[s.scroll, { maxHeight: height * MAX_HEIGHT_SHARE }]}
-          bounces={false}
-        >
-          <TrailObstacleItem obstacle={obstacle} trailIdentifier={trailIdentifier} outlined={false} />
-        </ScrollView>
-      </Surface>
-    </View>
+    <Surface testID={`obstacle-map-card-${obstacle.identifier}`} style={[s.card, { width }]} elevation={2}>
+      <ScrollView
+        testID="obstacle-map-card-scroll"
+        style={[s.scroll, { maxHeight: height * MAX_HEIGHT_SHARE }]}
+        bounces={false}
+      >
+        <TrailObstacleItem obstacle={obstacle} trailIdentifier={trailIdentifier} outlined={false} />
+      </ScrollView>
+    </Surface>
   );
-}
+});
 
 const s = StyleSheet.create({
-  wrapper: {
-    position: "absolute",
-    bottom: SCREEN_PADDING,
-    left: SCREEN_PADDING,
-    right: SCREEN_PADDING,
-  },
   card: {
     borderRadius: SURFACE_BORDER_RADIUS,
   },

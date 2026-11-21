@@ -107,7 +107,7 @@ it("selects the tapped obstacle and keeps the tap from reaching the map", async 
 
   const stopPropagation = pressFeatures({ identifier: "o1", issueType: "FallenTree" });
 
-  expect(onSelect).toHaveBeenCalledWith("o1");
+  expect(onSelect).toHaveBeenCalledWith(["o1"]);
   expect(stopPropagation).toHaveBeenCalled();
 });
 
@@ -119,20 +119,13 @@ it("ignores a tap that carries no obstacle", async () => {
   expect(onSelect).not.toHaveBeenCalled();
 });
 
-it("steps past the open obstacle when the tap lands on stacked pins", async () => {
-  await show([obstacle("o1"), obstacle("o2")], "o1");
+// keep-comment: a pin is hit in both its circle and its symbol layer, and stacked pins come back together
+it("hands over every obstacle under the finger, each once", async () => {
+  await show([obstacle("o1"), obstacle("o2")]);
 
-  pressFeatures({ identifier: "o1" }, { identifier: "o2" });
+  pressFeatures({ identifier: "o1" }, { identifier: "o2" }, { identifier: "o1" });
 
-  expect(onSelect).toHaveBeenCalledWith("o2");
-});
-
-it("keeps the open obstacle when its pin is tapped again on its own", async () => {
-  await show([obstacle("o1")], "o1");
-
-  pressFeatures({ identifier: "o1" }, { identifier: "o1" });
-
-  expect(onSelect).toHaveBeenCalledWith("o1");
+  expect(onSelect).toHaveBeenCalledWith(["o1", "o2"]);
 });
 
 it("stacks its layers above the given layer, and names none without one", async () => {

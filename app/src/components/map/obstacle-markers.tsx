@@ -66,7 +66,8 @@ interface Props {
   id: string;
   obstacles: TrailObstacle[];
   selectedIdentifier: string | null;
-  onSelect: (identifier: string) => void;
+  // keep-comment: every obstacle under the finger; stacked pins come back together
+  onSelect: (identifiers: string[]) => void;
   // keep-comment: keeps the pins above a layer that may load after them; never change it on a mounted
   // keep-comment: component (see UserLocationMarker), remount with a `key` instead
   aboveLayerId?: string;
@@ -89,15 +90,15 @@ export default function ObstacleMarkers({ id, obstacles, selectedIdentifier, onS
   const handlePress = useCallback(
     (event: NativeSyntheticEvent<PressEventWithFeatures>) => {
       event.stopPropagation();
-      const tapped = (event.nativeEvent.features ?? [])
-        .map((feature) => feature.properties?.identifier)
-        .filter((identifier): identifier is string => typeof identifier === "string");
-      // keep-comment: MapLibre's feature order is not the drawing order, so a tap on stacked pins steps
-      // keep-comment: past the open one; each pin under the finger is then one tap away
-      const next = tapped.find((identifier) => identifier !== selectedIdentifier) ?? tapped[0];
-      if (next) onSelect(next);
+      // keep-comment: each pin appears once per layer it is hit in (circle and symbol), so duplicates are dropped
+      const tapped = new Set(
+        (event.nativeEvent.features ?? [])
+          .map((feature) => feature.properties?.identifier)
+          .filter((identifier): identifier is string => typeof identifier === "string"),
+      );
+      if (tapped.size > 0) onSelect([...tapped]);
     },
-    [onSelect, selectedIdentifier],
+    [onSelect],
   );
 
   return (

@@ -14,7 +14,7 @@ import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styl
 import ObstacleMarkers from "@/components/map/obstacle-markers";
 import StartMarker from "@/components/map/start-marker";
 import UserLocationMarker from "@/components/map/user-location-marker";
-import ObstacleMapCard from "@/components/trail/obstacle/obstacle-map-card";
+import ObstacleMapCarousel from "@/components/trail/obstacle/obstacle-map-carousel";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
 import { useLiveUserLocation } from "@/hooks/location/useLiveUserLocation";
@@ -35,9 +35,13 @@ export interface FollowObstacles {
   items: TrailObstacle[];
 }
 
-interface CardMeasure {
-  identifier: string;
-  height: number;
+interface ObstacleSelection {
+  // keep-comment: every obstacle under the finger, so stacked pins open as one carousel
+  tapped: string[];
+  // keep-comment: the card the carousel has settled on; its pin is drawn enlarged
+  activeId?: string;
+  // keep-comment: the carousel's covered height, gone with it when it closes
+  coveredHeight?: number;
 }
 
 interface Props {
@@ -65,17 +69,33 @@ export default function RouteFollowView({
   const cameraRef = useRef<CameraRef>(null);
   const mapReadyRef = useRef(false);
 
-  const [selectedObstacleId, setSelectedObstacleId] = useState<string | null>(null);
-  const [cardMeasure, setCardMeasure] = useState<CardMeasure | null>(null);
-  const selectedObstacle = obstacles?.items.find((o) => o.identifier === selectedObstacleId);
-  const clearObstacle = useCallback(() => setSelectedObstacleId(null), []);
+  const [selection, setSelection] = useState<ObstacleSelection | null>(null);
+  const tapped = selection?.tapped;
+  const shownObstacles = useMemo(
+    () => (tapped && obstacles ? obstacles.items.filter((o) => tapped.includes(o.identifier)) : []),
+    [tapped, obstacles],
+  );
 
-  // keep-comment: a resolved or deleted obstacle closes its card, and stays closed if a later refetch brings it back
-  if (selectedObstacleId && !selectedObstacle) setSelectedObstacleId(null);
+  // keep-comment: resolved or deleted obstacles close the carousel, and it stays closed if a later refetch brings them back
+  if (selection && shownObstacles.length === 0) setSelection(null);
 
-  // keep-comment: only the open card's own measurement counts, never one left over from the card before it
-  const cardHeight =
-    selectedObstacle && cardMeasure?.identifier === selectedObstacle.identifier ? cardMeasure.height : undefined;
+  const activeObstacleId =
+    shownObstacles.find((o) => o.identifier === selection?.activeId)?.identifier ??
+    shownObstacles[0]?.identifier ??
+    null;
+
+  // keep-comment: a tap starts the carousel at its first card; it stays mounted across taps, so its last
+  // keep-comment: height still holds until it measures again
+  const selectObstacles = useCallback((identifiers: string[]) => {
+    setSelection((current) => ({ tapped: identifiers, coveredHeight: current?.coveredHeight }));
+  }, []);
+  const showObstacle = useCallback((activeId: string) => {
+    setSelection((current) => (current && current.activeId !== activeId ? { ...current, activeId } : current));
+  }, []);
+  const measureCarousel = useCallback((coveredHeight: number) => {
+    setSelection((current) => current && { ...current, coveredHeight });
+  }, []);
+  const clearObstacle = useCallback(() => setSelection(null), []);
 
   // Our own watcher, since MapLibre's engine freezes the puck mid-walk. keep-comment: platform bug
   const userLocation = useLiveUserLocation();
@@ -123,7 +143,7 @@ export default function RouteFollowView({
         onPress={clearObstacle}
         // keep-comment: the licence requires the attribution and MapTiler logo visible, so they move above an open card
         attributionPosition={{
-          bottom: cardHeight ?? SCREEN_PADDING,
+          bottom: selection?.coveredHeight ?? SCREEN_PADDING,
           left: SCREEN_PADDING,
         }}
       >
@@ -151,8 +171,8 @@ export default function RouteFollowView({
             aboveLayerId={obstacleAnchor}
             id={`${idPrefix}-obstacles`}
             obstacles={obstacles.items}
-            selectedIdentifier={selectedObstacleId}
-            onSelect={setSelectedObstacleId}
+            selectedIdentifier={activeObstacleId}
+            onSelect={selectObstacles}
           />
         )}
         {path.length > 0 && (
@@ -182,14 +202,14 @@ export default function RouteFollowView({
 
       <MapStatusOverlay errorMessage={isLoading ? undefined : errorMessage} />
 
-      {obstacles && selectedObstacle ? (
-        <ObstacleMapCard
-          // keep-comment: a fresh card per obstacle, or the edit form, dialogs and scroll carry over to the next one
-          key={selectedObstacle.identifier}
-          obstacle={selectedObstacle}
+      {obstacles && shownObstacles.length > 0 ? (
+        <ObstacleMapCarousel
+          obstacles={shownObstacles}
+          opening={selection?.tapped}
           trailIdentifier={obstacles.trailIdentifier}
-          onDismiss={clearObstacle}
-          onMeasure={(height) => setCardMeasure({ identifier: selectedObstacle.identifier, height })}
+          onClose={clearObstacle}
+          onActiveChange={showObstacle}
+          onMeasure={measureCarousel}
         />
       ) : (
         <>

@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ExampleImageOverlay from "@/components/media/example-image-overlay";
-import { SCREEN_PADDING, SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { SLIM_BUTTON_HEIGHT, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailCard } from "@/data/types";
 import { useTrailCards } from "@/hooks/trail/useTrailCard";
 import { useTrailCoordinates } from "@/hooks/trail/useTrailCoordinates";
@@ -14,13 +14,12 @@ import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Dimensions, FlatList, Pressable, StyleSheet, View } from "react-native";
-import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import { memo, useCallback, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { Icon, Text, useTheme } from "react-native-paper";
 import { Rating } from "../review/rating";
-import MapOverlayDismissButton from "./map-overlay-dismiss-button";
+import MapCardCarousel, { type CarouselCardLayout } from "./map-card-carousel";
 
 interface Props {
   identifiers: string[];
@@ -31,112 +30,50 @@ interface Props {
   onMeasure?: (coveredHeight: number) => void;
 }
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-// keep-comment: a sliver of the next card shows that the list scrolls
-const PEEK = 44;
-const CARD_WIDTH = SCREEN_WIDTH - SCREEN_PADDING * 2 - PEEK;
-const SNAP_INTERVAL = CARD_WIDTH + SCREEN_PADDING;
-const SINGLE_CARD_WIDTH = SCREEN_WIDTH - SCREEN_PADDING * 2;
+// No safe-area offset: the tab bar already clears the home indicator. keep-comment: hidden layout dependency
 const BOTTOM_OFFSET = 16;
 
-export default function TrailCardCarousel({ identifiers, onClose, onReadMore, onShowOnMap, onMeasure }: Props) {
-  const theme = useTheme();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const listRef = useRef<FlatList<string>>(null);
-  const multiple = identifiers.length > 1;
-  const cardWidth = multiple ? CARD_WIDTH : SINGLE_CARD_WIDTH;
+function identity(identifier: string) {
+  return identifier;
+}
 
+export default function TrailCardCarousel({ identifiers, onClose, onReadMore, onShowOnMap, onMeasure }: Props) {
   const { cards, isError, notFound, refetch } = useTrailCards(identifiers);
 
+  const [shownIdentifier, setShownIdentifier] = useState<string>();
+  // keep-comment: another cluster shows its first card from the first render, before the carousel reports it
+  const activeIdentifier = shownIdentifier && identifiers.includes(shownIdentifier) ? shownIdentifier : identifiers[0];
   // keep-comment: warms the cache "Se på karta" reads; only for a card that loaded, so a deleted trail is not fetched
-  const activeIdentifier = identifiers[activeIndex];
   useTrailCoordinates(activeIdentifier, { enabled: !!activeIdentifier && !!cards[activeIdentifier] });
 
-  // keep-comment: a new cluster starts at its first card, or the list keeps the old index ("3/4")
-  const [shownIdentifiers, setShownIdentifiers] = useState(identifiers);
-  if (identifiers !== shownIdentifiers) {
-    setShownIdentifiers(identifiers);
-    setActiveIndex(0);
-  }
-  useEffect(() => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [identifiers]);
-
-  const handleScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / SNAP_INTERVAL);
-    setActiveIndex(Math.max(0, Math.min(index, identifiers.length - 1)));
-  };
-
-  // keep-comment: stable, or every card and its image re-renders on each swipe
-  const renderItem = useCallback(
-    ({ item, index }: { item: string; index: number }) => (
+  const renderCard = useCallback(
+    (identifier: string, { width, position }: CarouselCardLayout) => (
       <CarouselCard
-        identifier={item}
-        card={cards[item]}
-        cardWidth={cardWidth}
+        identifier={identifier}
+        card={cards[identifier]}
+        cardWidth={width}
         isError={isError}
-        isNotFound={notFound.has(item)}
+        isNotFound={notFound.has(identifier)}
         onRetry={refetch}
-        position={identifiers.length > 1 ? `${index + 1}/${identifiers.length}` : undefined}
+        position={position}
         onReadMore={onReadMore}
         onShowOnMap={onShowOnMap}
       />
     ),
-    [cards, cardWidth, isError, notFound, refetch, identifiers.length, onReadMore, onShowOnMap],
-  );
-
-  const getItemLayout = useCallback(
-    (_: ArrayLike<string> | null | undefined, index: number) => ({
-      length: cardWidth,
-      offset: SCREEN_PADDING + index * SNAP_INTERVAL,
-      index,
-    }),
-    [cardWidth],
+    [cards, isError, notFound, refetch, onReadMore, onShowOnMap],
   );
 
   return (
-    <View
-      testID="carousel"
-      style={s.wrapper}
-      onLayout={(e) => onMeasure?.(e.nativeEvent.layout.height + BOTTOM_OFFSET)}
-    >
-      <MapOverlayDismissButton onPress={onClose} />
-      <FlatList
-        testID="carousel-list"
-        ref={listRef}
-        data={identifiers}
-        keyExtractor={(id) => id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={SNAP_INTERVAL}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        contentContainerStyle={s.listContent}
-        onMomentumScrollEnd={handleScrollEnd}
-        renderItem={renderItem}
-        getItemLayout={getItemLayout}
-        initialNumToRender={2}
-        maxToRenderPerBatch={2}
-        windowSize={3}
-      />
-      {multiple && (
-        <View style={s.dots}>
-          {identifiers.map((id, i) => (
-            <View
-              key={id}
-              testID="carousel-dot"
-              style={[
-                s.dot,
-                {
-                  width: i === activeIndex ? 18 : 6,
-                  backgroundColor: i === activeIndex ? theme.colors.primary : theme.colors.outlineVariant,
-                },
-              ]}
-            />
-          ))}
-        </View>
-      )}
-    </View>
+    <MapCardCarousel
+      items={identifiers}
+      opening={identifiers}
+      keyOf={identity}
+      renderCard={renderCard}
+      onClose={onClose}
+      onActiveChange={setShownIdentifier}
+      onMeasure={onMeasure}
+      bottomOffset={BOTTOM_OFFSET}
+    />
   );
 }
 
@@ -264,17 +201,6 @@ const CarouselCard = memo(function CarouselCard({
 });
 
 const s = StyleSheet.create({
-  wrapper: {
-    position: "absolute",
-    // No safe-area offset: the tab bar already clears the home indicator. keep-comment: hidden layout dependency
-    bottom: BOTTOM_OFFSET,
-    left: 0,
-    right: 0,
-  },
-  listContent: {
-    paddingHorizontal: SCREEN_PADDING,
-    gap: SCREEN_PADDING,
-  },
   card: {
     borderRadius: SURFACE_BORDER_RADIUS,
     padding: 14,
@@ -362,16 +288,5 @@ const s = StyleSheet.create({
   buttonText: {
     fontSize: 14,
     fontFamily: "Inter_600SemiBold",
-  },
-  dots: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 6,
-    paddingTop: 8,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
 });

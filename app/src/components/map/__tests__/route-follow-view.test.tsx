@@ -12,7 +12,7 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { TrailObstacle } from "@/data/types";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
-import { Animated } from "react-native";
+import { Animated, Dimensions } from "react-native";
 
 const mockBack = jest.fn();
 const mockUseLiveUserLocation = jest.fn();
@@ -25,28 +25,22 @@ jest.mock("@/hooks/location/useLiveUserLocation", () => ({
   useLiveUserLocation: () => mockUseLiveUserLocation(),
 }));
 
-// keep-comment: the card has its own suite; here it only shows which obstacle is open and closes on press
+// keep-comment: the card has its own suite; here it only shows which obstacle it was mounted for
 jest.mock("@/components/trail/obstacle/obstacle-map-card", () => {
-  const { Pressable, Text } = jest.requireActual("react-native");
+  const { Text } = jest.requireActual("react-native");
   const ReactActual = jest.requireActual("react");
   function MockObstacleMapCard({
     obstacle,
     trailIdentifier,
-    onDismiss,
-    onMeasure,
   }: {
     obstacle: { identifier: string };
     trailIdentifier: string;
-    onDismiss: () => void;
-    onMeasure: (coveredHeight: number) => void;
   }) {
     const [mountedFor] = ReactActual.useState(obstacle.identifier);
     return ReactActual.createElement(
-      Pressable,
-      { testID: "obstacle-map-card", onPress: onDismiss },
-      ReactActual.createElement(Text, null, `${trailIdentifier}:${obstacle.identifier}`),
-      ReactActual.createElement(Text, { testID: "obstacle-map-card-mounted-for" }, mountedFor),
-      ReactActual.createElement(Pressable, { testID: "obstacle-map-card-measure", onPress: () => onMeasure(180) }),
+      Text,
+      { testID: `obstacle-card-${obstacle.identifier}` },
+      `${trailIdentifier}:${obstacle.identifier} mounted for ${mountedFor}`,
     );
   }
   return { __esModule: true, default: MockObstacleMapCard };
@@ -221,11 +215,35 @@ describe("obstacles", () => {
     return node;
   }
 
-  async function tapObstacle(identifier: string) {
+  async function tapObstacles(...identifiers: string[]) {
     await fireEvent(obstacleSource(), "press", {
-      nativeEvent: { features: [{ type: "Feature", properties: { identifier } }] },
+      nativeEvent: { features: identifiers.map((identifier) => ({ type: "Feature", properties: { identifier } })) },
       stopPropagation: () => {},
     });
+  }
+
+  async function swipeToCard(index: number) {
+    const cardWidth = Dimensions.get("window").width - SCREEN_PADDING * 2 - 44;
+    await fireEvent(screen.getByTestId("obstacle-carousel-list"), "momentumScrollEnd", {
+      nativeEvent: {
+        contentOffset: { x: index * (cardWidth + SCREEN_PADDING) },
+        contentSize: {},
+        layoutMeasurement: {},
+      },
+    });
+  }
+
+  async function measureCarousel(height: number) {
+    await fireEvent(screen.getByTestId("obstacle-carousel"), "layout", { nativeEvent: { layout: { height } } });
+  }
+
+  function enlargedPin() {
+    const size = layer("trail-obstacles-pins")?.props.layout["icon-size"];
+    return size[1][2];
+  }
+
+  function attribution() {
+    return screen.getByTestId("maplibre-Map").props.attributionPosition;
   }
 
   it("draws no obstacles on a route that is given none", async () => {
@@ -249,113 +267,155 @@ describe("obstacles", () => {
     await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />);
     expect(screen.getByLabelText("Visa satellitkarta")).toBeTruthy();
 
-    await tapObstacle("o2");
+    await tapObstacles("o2");
 
-    expect(screen.getByText("trail-1:o2")).toBeTruthy();
+    expect(screen.getByTestId("obstacle-card-o2")).toHaveTextContent("trail-1:o2", { exact: false });
+    expect(screen.queryByTestId("obstacle-card-o1")).toBeNull();
     expect(screen.queryByLabelText("Visa satellitkarta")).toBeNull();
-    expect(layer("trail-obstacles-pins")?.props.layout["icon-size"]).toEqual([
-      "case",
-      ["==", ["get", "identifier"], "o2"],
-      1.25,
-      1,
-    ]);
+    expect(enlargedPin()).toBe("o2");
   });
 
-  it("closes the card from the card itself", async () => {
-    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
-    await tapObstacle("o1");
+  it("opens stacked pins as one carousel, in the trail's own order", async () => {
+    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2", "o3")} />);
 
-    await fireEvent.press(screen.getByTestId("obstacle-map-card"));
+    await tapObstacles("o3", "o1");
 
-    expect(screen.queryByTestId("obstacle-map-card")).toBeNull();
-    expect(screen.getByLabelText("Visa satellitkarta")).toBeTruthy();
+    const shown = screen.getAllByTestId(/^obstacle-card-/).map((card) => card.props.testID);
+    expect(shown).toEqual(["obstacle-card-o1", "obstacle-card-o3"]);
+    expect(screen.getAllByTestId("obstacle-carousel-dot")).toHaveLength(2);
+    expect(enlargedPin()).toBe("o1");
   });
 
-  it("closes the card on a tap elsewhere on the map", async () => {
-    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
-    await tapObstacle("o1");
+  it("enlarges the pin of the card the carousel settles on", async () => {
+    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />);
+    await tapObstacles("o1", "o2");
 
-    await act(async () => screen.getByTestId("maplibre-Map").props.onPress());
+    await swipeToCard(1);
 
-    expect(screen.queryByTestId("obstacle-map-card")).toBeNull();
+    expect(enlargedPin()).toBe("o2");
   });
 
-  // keep-comment: three solved votes hide an obstacle on the server, so the refetch drops it from the list
-  it("closes the card by itself once its obstacle is gone from the list", async () => {
+  // keep-comment: a vote refetches the list with new objects, which must not throw the reader back to the first card
+  it("keeps the card that is showing when a vote refetches the list", async () => {
     const { rerender } = await renderWithProviders(
       <RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />,
     );
-    await tapObstacle("o1");
+    await tapObstacles("o1", "o2");
+    await swipeToCard(1);
 
-    await rerender(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o2")} />);
+    await rerender(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />);
 
-    expect(screen.queryByTestId("obstacle-map-card")).toBeNull();
+    expect(enlargedPin()).toBe("o2");
+  });
+
+  it("starts at the first card again when the pins are tapped anew", async () => {
+    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />);
+    await tapObstacles("o1", "o2");
+    await swipeToCard(1);
+
+    await tapObstacles("o1", "o2");
+
+    expect(enlargedPin()).toBe("o1");
+    expect(screen.getAllByTestId("obstacle-carousel-dot")[0]).toHaveStyle({ width: 18 });
+  });
+
+  it("closes the carousel from its handle", async () => {
+    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
+    await tapObstacles("o1");
+
+    await fireEvent.press(screen.getByLabelText("Stäng"));
+
+    expect(screen.queryByTestId("obstacle-carousel")).toBeNull();
+    expect(screen.getByLabelText("Visa satellitkarta")).toBeTruthy();
+  });
+
+  it("closes the carousel on a tap elsewhere on the map", async () => {
+    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
+    await tapObstacles("o1");
+
+    await act(async () => screen.getByTestId("maplibre-Map").props.onPress());
+
+    expect(screen.queryByTestId("obstacle-carousel")).toBeNull();
+  });
+
+  // keep-comment: three solved votes hide an obstacle on the server, so the refetch drops it from the list
+  it("drops a card whose obstacle is gone from the list, and closes when none is left", async () => {
+    const { rerender } = await renderWithProviders(
+      <RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2", "o3")} />,
+    );
+    await tapObstacles("o1", "o2");
+
+    await rerender(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o2", "o3")} />);
+    expect(screen.queryByTestId("obstacle-card-o1")).toBeNull();
+    expect(enlargedPin()).toBe("o2");
+
+    await rerender(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o3")} />);
+    expect(screen.queryByTestId("obstacle-carousel")).toBeNull();
   });
 
   // keep-comment: a withdrawn vote brings the obstacle back in the next refetch, which must not reopen its card
-  it("keeps the card closed when its obstacle comes back in a later refetch", async () => {
+  it("keeps the carousel closed when its obstacle comes back in a later refetch", async () => {
     const { rerender } = await renderWithProviders(
       <RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />,
     );
-    await tapObstacle("o1");
+    await tapObstacles("o1");
     await rerender(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles()} />);
 
     await rerender(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
 
-    expect(screen.queryByTestId("obstacle-map-card")).toBeNull();
+    expect(screen.queryByTestId("obstacle-carousel")).toBeNull();
   });
 
   // keep-comment: the data licence and MapTiler's Free plan require both on screen at all times (map.tsx)
-  it("lifts the attribution and logo above the open card, and lowers them again when it closes", async () => {
+  it("lifts the attribution and logo above the open carousel, and lowers them again when it closes", async () => {
     await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
-    const attribution = () => screen.getByTestId("maplibre-Map").props.attributionPosition;
     const resting = attribution();
 
-    await tapObstacle("o1");
+    await tapObstacles("o1");
     expect(attribution()).toEqual(resting);
-    await fireEvent.press(screen.getByTestId("obstacle-map-card-measure"));
-    expect(attribution().bottom).toBe(180);
+    await measureCarousel(170);
+    expect(attribution().bottom).toBe(170 + SCREEN_PADDING);
 
-    await fireEvent.press(screen.getByTestId("obstacle-map-card"));
+    await fireEvent.press(screen.getByLabelText("Stäng"));
+    expect(attribution()).toEqual(resting);
+  });
+
+  // keep-comment: the carousel is not remounted by another tap, so it may never measure again
+  it("keeps the attribution above the carousel when pins are tapped while it is open", async () => {
+    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />);
+    await tapObstacles("o1");
+    await measureCarousel(170);
+
+    await tapObstacles("o2");
+
+    expect(attribution().bottom).toBe(170 + SCREEN_PADDING);
+  });
+
+  it("does not reuse a closed carousel's height for the next one", async () => {
+    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
+    const resting = attribution();
+    await tapObstacles("o1");
+    await measureCarousel(170);
+    await fireEvent.press(screen.getByLabelText("Stäng"));
+
+    await tapObstacles("o1");
+
     expect(attribution()).toEqual(resting);
   });
 
   // keep-comment: a reused card would carry the last obstacle's edit form into this one, and save its text here
   it("gives each obstacle a card of its own when another pin is tapped", async () => {
     await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />);
-    await tapObstacle("o1");
+    await tapObstacles("o1");
 
-    await tapObstacle("o2");
+    await tapObstacles("o2");
 
-    expect(screen.getByTestId("obstacle-map-card-mounted-for").props.children).toBe("o2");
+    expect(screen.getByTestId("obstacle-card-o2")).toHaveTextContent("mounted for o2", { exact: false });
   });
 
-  it("does not place the attribution by the last card's height before the next card measures", async () => {
-    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1", "o2")} />);
-    const attribution = () => screen.getByTestId("maplibre-Map").props.attributionPosition;
-    const resting = attribution();
-    await tapObstacle("o1");
-    await fireEvent.press(screen.getByTestId("obstacle-map-card-measure"));
-
-    await tapObstacle("o2");
-
-    expect(attribution()).toEqual(resting);
-  });
-
-  // keep-comment: the card is not remounted by a second tap, so it never measures again
-  it("keeps the attribution above the card when its pin is tapped again", async () => {
+  it("keeps the carousel open when the start marker is tapped for directions", async () => {
     await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
-    await tapObstacle("o1");
-    await fireEvent.press(screen.getByTestId("obstacle-map-card-measure"));
-
-    await tapObstacle("o1");
-
-    expect(screen.getByTestId("maplibre-Map").props.attributionPosition.bottom).toBe(180);
-  });
-
-  it("keeps the card open when the start marker is tapped for directions", async () => {
-    await renderWithProviders(<RouteFollowView idPrefix="trail" path={PATH} obstacles={obstacles("o1")} />);
-    await tapObstacle("o1");
+    await tapObstacles("o1");
     const start = screen.queryAllByTestId("maplibre-GeoJSONSource").find((n) => n.props.id === "trail-start");
     if (!start) throw new Error("expected the start marker");
     const stopPropagation = jest.fn();
@@ -363,6 +423,6 @@ describe("obstacles", () => {
     await fireEvent(start, "press", { nativeEvent: { features: [] }, stopPropagation });
 
     expect(stopPropagation).toHaveBeenCalled();
-    expect(screen.getByTestId("obstacle-map-card")).toBeTruthy();
+    expect(screen.getByTestId("obstacle-carousel")).toBeTruthy();
   });
 });
