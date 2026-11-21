@@ -8,6 +8,7 @@
 import { addSolvedVote, deleteSolvedVote, deleteTrailObstacle } from "@/api/trail-obstacles";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/dialog/alert-dialog";
+import InfoHeading from "@/components/layout/info-heading";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import ReportContentForm from "@/components/report/report-content-form";
@@ -164,22 +165,32 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
                 <MaterialCommunityIcons size={24} name="alert-circle" color={theme.colors.outline} />
               </Pressable>
             )}
-            <View style={s.voteGroup}>
-              <Text style={s.voteCount}>{obstacle.solvedVoteCount ?? obstacle.solvedVotes?.length ?? 0}/3</Text>
-              {!isOwner && (
-                <Pressable
-                  testID="vote-button"
-                  hitSlop={12}
-                  onPress={handlePress}
-                  disabled={isPending || deleteSolvedVoteIsPending}
-                >
-                  <MaterialIcons
-                    size={24}
-                    name={hasVoted ? "check-circle" : "radio-button-unchecked"}
-                    color={isPending ? theme.colors.outline : theme.colors.tertiary}
-                  />
-                </Pressable>
-              )}
+            <View testID="obstacle-solved" style={[s.field, s.solvedField]}>
+              <InfoHeading
+                label={t("obstacle.gone")}
+                labelStyle={[s.label, { color: theme.colors.onSurfaceVariant }]}
+                infoTitle={t("obstacle.goneInfoTitle")}
+                infoHitSlop={INFO_HIT_SLOP}
+                // keep-comment: the same text as the box above the obstacle list, so the two never drift apart
+                infoIntro={t("obstacle.modalBody")}
+              />
+              <View style={s.voteGroup}>
+                <Text style={s.voteCount}>{obstacle.solvedVoteCount ?? obstacle.solvedVotes?.length ?? 0}/3</Text>
+                {!isOwner && (
+                  <Pressable
+                    testID="vote-button"
+                    hitSlop={12}
+                    onPress={handlePress}
+                    disabled={isPending || deleteSolvedVoteIsPending}
+                  >
+                    <MaterialIcons
+                      size={24}
+                      name={hasVoted ? "check-circle" : "radio-button-unchecked"}
+                      color={isPending ? theme.colors.outline : theme.colors.tertiary}
+                    />
+                  </Pressable>
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -243,6 +254,9 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   );
 }
 
+// keep-comment: no reach downwards, so a tap just above the vote circle votes instead of opening the info
+const INFO_HIT_SLOP = { top: 16, left: 16, right: 16, bottom: 0 };
+
 const s = StyleSheet.create({
   container: {
     padding: 12,
@@ -287,9 +301,15 @@ const s = StyleSheet.create({
   },
   voteRow: {
     flexDirection: "row",
-    alignItems: "center",
+    // keep-comment: the report icon lines up with the count and check under the label, not with the label
+    alignItems: "flex-end",
     // keep-comment: 24 is twice the hitSlop, so the report and vote touch areas meet without overlapping.
     gap: 24,
+  },
+  solvedField: {
+    alignItems: "flex-end",
+    // keep-comment: room between the info button and the vote circle stacked under it, see INFO_HIT_SLOP
+    gap: 8,
   },
   voteGroup: {
     flexDirection: "row",

@@ -7,7 +7,7 @@
 
 import TrailDetailsScreen from "@/components/trail/trail-details-screen";
 import { Trail } from "@/data/types";
-import { flushUntil, settle } from "@/test/flush";
+import { flushUntil, flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 
@@ -199,6 +199,36 @@ it("warns about obstacles only when there are some, and opens them", async () =>
   await flushUntil(() => screen.queryByText(/hinder/i));
 
   expect(screen.getByText(/hinder/i)).toBeTruthy();
+});
+
+// keep-comment: deleting the last obstacle, or its third solved vote, refetches an empty list under the open modal
+it("closes the obstacle list once its last obstacle is gone, and keeps it closed when another is reported", async () => {
+  const banner = "Hinder rapporterade längs promenaden!";
+  const obstacle = (identifier: string) => ({
+    identifier,
+    issueType: "Mud",
+    description: "Lerigt vid bron",
+    createdAt: "2026-11-14T10:00:00Z",
+  });
+  mockGetObstacles.mockResolvedValue([obstacle("o1")]);
+  const { queryClient } = await show();
+  const refetchObstacles = async (obstacles: unknown[]) => {
+    mockGetObstacles.mockResolvedValue(obstacles);
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ["obstacles"] });
+    });
+  };
+  await flushUntil(() => screen.queryByText(banner));
+  await fireEvent.press(screen.getByText(banner));
+  expect(screen.getByText("Rapporterade hinder")).toBeTruthy();
+
+  await refetchObstacles([]);
+  await flushUntilGone(() => screen.queryByText("Rapporterade hinder"));
+  expect(screen.queryByText(banner)).toBeNull();
+
+  await refetchObstacles([obstacle("o2")]);
+  await flushUntil(() => screen.queryByText(banner));
+  expect(screen.queryByText("Rapporterade hinder")).toBeNull();
 });
 
 // The rating row follows what the reviews container reports, so it waits for something to count.

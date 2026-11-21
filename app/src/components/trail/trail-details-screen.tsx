@@ -91,6 +91,9 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
   });
 
   const { data: obstacles } = useTrailObstacles(normalizedIdentifier);
+  // keep-comment: the last obstacle deleted or voted away leaves an empty list; it closes with the banner,
+  // keep-comment: and stays closed when a later report brings the banner back
+  if (showObstacleModal && obstacles?.length === 0) setShowObstacleModal(false);
 
   const { data: coords } = useTrailCoordinates(normalizedIdentifier, { staleTime: TRAIL_DETAIL_STALE_TIME });
 

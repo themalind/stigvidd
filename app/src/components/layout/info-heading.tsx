@@ -9,13 +9,16 @@ import { DialogText } from "@/components/dialog/dialog-section";
 import InfoDialog from "@/components/dialog/info-dialog";
 import InfoButton from "@/components/display/info-button";
 import { ComponentProps, ReactNode, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { type Insets, type StyleProp, StyleSheet, type TextStyle, View } from "react-native";
 import { Text } from "react-native-paper";
 
 interface Props {
   label: string;
   labelVariant?: ComponentProps<typeof Text>["variant"];
+  // keep-comment: for a heading that must match the fields around it, such as a form or card field label
+  labelStyle?: StyleProp<TextStyle>;
   infoTitle: string;
+  infoHitSlop?: Insets;
   infoIcon?: string;
   infoIntro?: string;
   infoText?: string[];
@@ -25,7 +28,9 @@ interface Props {
 export default function InfoHeading({
   label,
   labelVariant,
+  labelStyle,
   infoTitle,
+  infoHitSlop,
   infoIcon,
   infoIntro,
   infoText,
@@ -35,8 +40,10 @@ export default function InfoHeading({
 
   return (
     <View style={s.row}>
-      <Text variant={labelVariant}>{label}</Text>
-      <InfoButton accessibilityLabel={infoTitle} onPress={() => setShowInfo(true)} />
+      <Text variant={labelVariant} style={labelStyle}>
+        {label}
+      </Text>
+      <InfoButton accessibilityLabel={infoTitle} hitSlop={infoHitSlop} onPress={() => setShowInfo(true)} />
       <InfoDialog
         visible={showInfo}
         onDismiss={() => setShowInfo(false)}

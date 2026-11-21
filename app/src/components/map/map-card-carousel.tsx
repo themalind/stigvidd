@@ -31,7 +31,8 @@ interface Props<T> {
   // keep-comment: data for the same opening (a refetch after a vote) keeps the card that is showing
   opening: unknown;
   keyOf: (item: T) => string;
-  // keep-comment: keep it stable (useCallback), or every card re-renders on each swipe
+  // keep-comment: keep it stable (useCallback) and return a memo card; a swipe re-renders only the cards whose
+  // keep-comment: layout changed (active), since the list calls it again for each row
   renderCard: (item: T, layout: CarouselCardLayout) => ReactElement;
   onClose: () => void;
   onActiveChange?: (key: string) => void;
@@ -57,32 +58,50 @@ export default function MapCardCarousel<T>({
 }: Props<T>) {
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [settledKey, setSettledKey] = useState<string>();
   const listRef = useRef<FlatList<T>>(null);
 
   const multiple = items.length > 1;
   const cardWidth = windowWidth - SCREEN_PADDING * 2 - (multiple ? PEEK : 0);
   const snapInterval = cardWidth + SCREEN_PADDING;
 
-  // keep-comment: a new opening starts at its first card, or the list keeps the old index ("3/4")
+  // keep-comment: a new opening starts at its first card, or the list keeps the old card ("3/4")
   const [shownOpening, setShownOpening] = useState(opening);
   if (opening !== shownOpening) {
     setShownOpening(opening);
-    setActiveIndex(0);
+    setSettledKey(undefined);
   }
-  useEffect(() => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: false });
-  }, [opening]);
 
-  const activeItem = items[activeIndex];
-  const activeKey = activeItem === undefined ? undefined : keyOf(activeItem);
+  // keep-comment: held by key, not position, so a card dropped by a refetch never moves the reader onto
+  // keep-comment: its neighbour; the reader of the dropped card itself is moved to the first card, for good
+  const keys = items.map(keyOf);
+  if (settledKey !== undefined && !keys.includes(settledKey)) setSettledKey(keys[0]);
+  const activeIndex = settledKey === undefined ? 0 : Math.max(keys.indexOf(settledKey), 0);
+  const activeKey = keys[activeIndex];
+
+  // keep-comment: the offset the list rests at, in pixels, so a new card width also counts as out of place
+  const listOffsetRef = useRef(0);
+  // keep-comment: begin and end drag always come in pairs, unlike the momentum events
+  const draggingRef = useRef(false);
+
+  // keep-comment: the list follows the card held when it moves without a swipe (a new opening, cards dropped
+  // keep-comment: before it, a new width), but never under a finger
+  useEffect(() => {
+    const offset = activeIndex * snapInterval;
+    if (offset === listOffsetRef.current || draggingRef.current) return;
+    listOffsetRef.current = offset;
+    listRef.current?.scrollToOffset({ offset, animated: false });
+  }, [activeIndex, snapInterval]);
+
   useEffect(() => {
     if (activeKey !== undefined) onActiveChange?.(activeKey);
   }, [activeKey, onActiveChange]);
 
-  const handleScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / snapInterval);
-    setActiveIndex(Math.max(0, Math.min(index, items.length - 1)));
+  // keep-comment: settles on letting go too, since iOS sends no momentum end when a finger stops a fling
+  const settleAt = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.max(0, Math.min(Math.round(e.nativeEvent.contentOffset.x / snapInterval), keys.length - 1));
+    listOffsetRef.current = index * snapInterval;
+    setSettledKey(keys[index]);
   };
 
   const renderItem = useCallback(
@@ -122,7 +141,12 @@ export default function MapCardCarousel<T>({
         snapToAlignment="start"
         decelerationRate="fast"
         contentContainerStyle={s.listContent}
-        onMomentumScrollEnd={handleScrollEnd}
+        onScrollBeginDrag={() => (draggingRef.current = true)}
+        onScrollEndDrag={(e) => {
+          draggingRef.current = false;
+          settleAt(e);
+        }}
+        onMomentumScrollEnd={settleAt}
         renderItem={renderItem}
         getItemLayout={getItemLayout}
         initialNumToRender={2}

@@ -40,9 +40,13 @@ function identity(identifier: string) {
 export default function TrailCardCarousel({ identifiers, onClose, onReadMore, onShowOnMap, onMeasure }: Props) {
   const { cards, isError, notFound, refetch } = useTrailCards(identifiers);
 
-  const [shownIdentifier, setShownIdentifier] = useState<string>();
+  const [shown, setShown] = useState<{ cluster: string[]; identifier: string }>();
+  const reportShown = useCallback(
+    (identifier: string) => setShown({ cluster: identifiers, identifier }),
+    [identifiers],
+  );
   // keep-comment: another cluster shows its first card from the first render, before the carousel reports it
-  const activeIdentifier = shownIdentifier && identifiers.includes(shownIdentifier) ? shownIdentifier : identifiers[0];
+  const activeIdentifier = shown?.cluster === identifiers ? shown.identifier : identifiers[0];
   // keep-comment: warms the cache "Se på karta" reads; only for a card that loaded, so a deleted trail is not fetched
   useTrailCoordinates(activeIdentifier, { enabled: !!activeIdentifier && !!cards[activeIdentifier] });
 
@@ -70,7 +74,7 @@ export default function TrailCardCarousel({ identifiers, onClose, onReadMore, on
       keyOf={identity}
       renderCard={renderCard}
       onClose={onClose}
-      onActiveChange={setShownIdentifier}
+      onActiveChange={reportShown}
       onMeasure={onMeasure}
       bottomOffset={BOTTOM_OFFSET}
     />

@@ -175,6 +175,22 @@ it("counts the votes of people this reader blocked, which the server leaves out 
   expect(screen.getByText("2/3")).toBeTruthy();
 });
 
+// keep-comment: the map card has no explanation above it, so a bare "1/3" there would say nothing
+it("names what the count counts, also for the reporter who cannot vote", async () => {
+  await show(obstacle({ userIdentifier: "me" }));
+
+  expect(screen.getByTestId("obstacle-solved")).toHaveTextContent(/^Inte kvar\?\s*0\/3$/);
+});
+
+// keep-comment: on the map card this button is the only explanation of the count; the list also has a box above
+it("explains the count from its info button, with the obstacle list's own text", async () => {
+  await show(obstacle());
+
+  await fireEvent.press(screen.getByLabelText("Är hindret inte kvar?"));
+
+  expect(screen.getByTestId("info-dialog")).toHaveTextContent(/3 bekräftelser eller 30 dagar/);
+});
+
 it("counts an obstacle nobody has voted on as zero", async () => {
   await show(obstacle({ solvedVotes: undefined }));
 

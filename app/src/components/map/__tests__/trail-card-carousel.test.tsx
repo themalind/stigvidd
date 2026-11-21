@@ -56,6 +56,12 @@ function state(cards: TrailCard[], overrides: Partial<ReturnType<typeof mockUseT
 
 const noop = () => {};
 
+async function swipeToSecondCard() {
+  await fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
+    nativeEvent: { contentOffset: { x: CARD_WIDTH + SCREEN_PADDING }, contentSize: {}, layoutMeasurement: {} },
+  });
+}
+
 function show(identifiers: string[], props: Partial<React.ComponentProps<typeof TrailCardCarousel>> = {}) {
   return renderWithProviders(
     <TrailCardCarousel identifiers={identifiers} onClose={noop} onReadMore={noop} onShowOnMap={noop} {...props} />,
@@ -123,9 +129,7 @@ it("marks which card is showing, and moves the mark when the list settles on ano
 
   expect(screen.getByText("1/3")).toBeTruthy();
 
-  await fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
-    nativeEvent: { contentOffset: { x: CARD_WIDTH + SCREEN_PADDING }, contentSize: {}, layoutMeasurement: {} },
-  });
+  await swipeToSecondCard();
 
   // Only the dots follow the scroll; each card keeps its own counter.
   const dots = screen.getByTestId("carousel-list").parent;
@@ -135,9 +139,7 @@ it("marks which card is showing, and moves the mark when the list settles on ano
 
 it("starts on the first card when another cluster is opened", async () => {
   const { rerender } = await show(["a", "b", "c"]);
-  await fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
-    nativeEvent: { contentOffset: { x: CARD_WIDTH + SCREEN_PADDING }, contentSize: {}, layoutMeasurement: {} },
-  });
+  await swipeToSecondCard();
   expect(screen.getAllByTestId("carousel-dot")[1]).toHaveStyle({ width: 18 });
 
   await rerender(<TrailCardCarousel identifiers={["a", "b"]} onClose={noop} onReadMore={noop} onShowOnMap={noop} />);
@@ -204,12 +206,22 @@ it("loads the coordinates of the card that is showing, so the follow map has the
   await show(["a", "b", "c"]);
   expect(mockUseTrailCoordinates).toHaveBeenLastCalledWith("a", { enabled: true });
 
-  await fireEvent(screen.getByTestId("carousel-list"), "momentumScrollEnd", {
-    nativeEvent: { contentOffset: { x: CARD_WIDTH + SCREEN_PADDING }, contentSize: {}, layoutMeasurement: {} },
-  });
+  await swipeToSecondCard();
 
   expect(mockUseTrailCoordinates).toHaveBeenLastCalledWith("b", { enabled: true });
   expect(mockUseTrailCoordinates).not.toHaveBeenCalledWith("c", expect.anything());
+});
+
+// keep-comment: a trail swiped to in the last cluster may sit in the next one too, at another place
+it("loads the first card's coordinates when another cluster opens, even one holding the last card shown", async () => {
+  const { rerender } = await show(["a", "b"]);
+  await swipeToSecondCard();
+  mockUseTrailCoordinates.mockClear();
+
+  await rerender(<TrailCardCarousel identifiers={["c", "b"]} onClose={noop} onReadMore={noop} onShowOnMap={noop} />);
+
+  expect(mockUseTrailCoordinates).toHaveBeenCalledWith("c", { enabled: true });
+  expect(mockUseTrailCoordinates).not.toHaveBeenCalledWith("b", expect.anything());
 });
 
 it("does not load the coordinates of a trail whose card could not be found", async () => {
