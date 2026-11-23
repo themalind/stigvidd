@@ -43,6 +43,8 @@ async function authHeader(auth: ApiAuth): Promise<Record<string, string>> {
 // One API request: token, JSON or multipart, a coded ApiError on failure, and one log line. keep-comment: shared by the api modules
 export async function send(call: ApiCall): Promise<Response> {
   const method = call.method ?? "GET";
+  const startedAt = Date.now();
+  let received: Response | undefined;
 
   try {
     const headers = await authHeader(call.auth ?? "required");
@@ -59,6 +61,8 @@ export async function send(call: ApiCall): Promise<Response> {
       call.timeoutMs ?? (call.form === undefined ? API_REQUEST_TIMEOUT_MS : UPLOAD_TIMEOUT_MS),
     );
 
+    received = response;
+
     if (!response.ok) {
       throw await apiErrorFrom(response, `HTTP error: ${call.name}: ${response.status}`);
     }
@@ -69,6 +73,11 @@ export async function send(call: ApiCall): Promise<Response> {
       logger.error(`${call.name} failed`, {
         endpoint: `${method} ${call.endpoint}`,
         errorMessage: String(error),
+        // keep-comment: tells our proxy's 504 (server: Caddy) from the API's or a network middlebox's, and a fast refusal from a timeout
+        elapsedMs: Date.now() - startedAt,
+        status: received?.status,
+        server: received?.headers.get("server") ?? undefined,
+        via: received?.headers.get("via") ?? undefined,
       });
     }
     throw error;

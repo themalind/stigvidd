@@ -35,6 +35,7 @@ function mockFetch(ok: boolean, status = ok ? 200 : 500) {
   global.fetch = jest.fn().mockResolvedValue({
     ok,
     status,
+    headers: new Headers(),
     body: null,
   } as unknown as Response);
 }
@@ -86,7 +87,12 @@ describe("addTrail", () => {
 
 describe("getPopularContributedTrails", () => {
   function mockJson() {
-    global.fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] } as unknown as Response);
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => [],
+    } as unknown as Response);
   }
 
   it("sends the position as query parameters", async () => {

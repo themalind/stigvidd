@@ -903,7 +903,8 @@ so nothing has to be raised to see it:
   `event.post_created`, `event.route_followed`, `push.opened`, `area.list_viewed`, `area.opened`
   (`app/src/services/event-catalogue.ts`). Usage goes here, never into the logger, which has no consent gate.
 
-The alert `app_events_areas_failures` (above) watches the app side. Go deeper only for a while:
+The alert `app_events_areas_failures` (above) watches the app side. One device's retries can fire it
+alone ([note](notes/one-phone-trips-the-app-failures-alert.md)). Go deeper only for a while:
 
 - **App:** `EXPO_PUBLIC_LOG_LEVEL=debug` in the EAS `production` environment, then an OTA. The value is
   inlined into the bundle, so removing it and publishing another OTA restores `info`.

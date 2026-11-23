@@ -74,7 +74,8 @@ public abstract class StigViddController : Controller
 
         if (string.IsNullOrEmpty(subjectId))
         {
-            Logger.LogInformation("{Controller}: the token carries no subject id.", GetType().Name);
+            // keep-comment: Debug, since an anonymous caller on an endpoint that only optionally identifies the user is routine
+            Logger.LogDebug("{Controller}: the token carries no subject id.", GetType().Name);
             return null;
         }
 

@@ -26,6 +26,7 @@ function mockFetch(status: number, body: unknown = {}) {
   global.fetch = jest.fn().mockResolvedValue({
     ok: status >= 200 && status < 300,
     status,
+    headers: new Headers(),
     json: jest.fn().mockResolvedValue(body),
   } as unknown as Response);
 }
@@ -46,6 +47,38 @@ describe("getFriendProfile", () => {
     mockFetch(500);
     await expect(getFriendProfile("id-anna")).rejects.toMatchObject({ status: 500 });
     expect(logger.error).toHaveBeenCalledWith("getFriendProfile failed", expect.anything());
+  });
+
+  it("logs who answered a gateway error, so a proxy's 504 can be told from the API's", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 504,
+      headers: new Headers({ server: "Caddy", via: "1.1 carrier-proxy" }),
+      json: jest.fn().mockRejectedValue(new Error("not json")),
+    } as unknown as Response);
+
+    await expect(getFriendProfile("id-anna")).rejects.toMatchObject({ status: 504 });
+
+    expect(logger.error).toHaveBeenCalledWith(
+      "getFriendProfile failed",
+      expect.objectContaining({
+        status: 504,
+        server: "Caddy",
+        via: "1.1 carrier-proxy",
+        elapsedMs: expect.any(Number),
+      }),
+    );
+  });
+
+  it("logs a failure with no response (a network error) without status or server", async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error("Network request failed"));
+
+    await expect(getFriendProfile("id-anna")).rejects.toThrow("Network request failed");
+
+    const [, context] = (logger.error as jest.Mock).mock.calls[0] as [string, Record<string, unknown>];
+    expect(context.status).toBeUndefined();
+    expect(context.server).toBeUndefined();
+    expect(context.elapsedMs).toEqual(expect.any(Number));
   });
 });
 
