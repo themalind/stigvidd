@@ -116,6 +116,7 @@
         }
       ],
       "./plugins/with-transparent-autofill-highlight",
+      "./plugins/with-optional-portrait-screen",
       "expo-font",
       "expo-image",
       "expo-secure-store",
