@@ -4,6 +4,7 @@
 using Core.Logging;
 using Core.Interfaces.Services;
 using Infrastructure.Data.Entities;
+using MailKit;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
@@ -12,9 +13,7 @@ using MimeKit;
 
 namespace Core.Services.Mail;
 
-// Submits to the mail server on 587 over STARTTLS. Configuration comes from the Smtp section,
-// which docker-compose.yml sets on the api service; nothing here belongs in appsettings.json,
-// and its absence is what selects LoggingMailSender instead.
+// keep-comment: Smtp is set by docker-compose only; its absence selects LoggingMailSender
 public class SmtpMailSender : IMailSender
 {
     private const int DefaultPort = 587;
@@ -38,8 +37,7 @@ public class SmtpMailSender : IMailSender
         _user = configuration["Smtp:User"];
         _password = configuration["Smtp:Password"];
 
-        // Falling back to the submission account keeps a half-configured stack sending from a
-        // sane address rather than from whatever Postfix decides the local user is.
+        // keep-comment: else Postfix picks the sender from its local user
         _from = configuration["Smtp:From"] ?? _user
             ?? throw new InvalidOperationException("Smtp:From or Smtp:User configuration is required");
     }
@@ -55,8 +53,7 @@ public class SmtpMailSender : IMailSender
                 : new MailboxAddress(email.ToName, email.ToAddress));
             message.Subject = email.Subject;
 
-            // multipart/alternative. A mail with no text part is both unreadable in a plain
-            // text client and a spam-score penalty in everyone else's.
+            // keep-comment: a mail without a text part costs spam score
             message.Body = new BodyBuilder
             {
                 HtmlBody = email.BodyHtml,
@@ -65,23 +62,20 @@ public class SmtpMailSender : IMailSender
 
             using var client = new SmtpClient();
 
-            // StartTlsWhenAvailable, not StartTls: the same code then works against a local
-            // test server with no certificate. The deployed host is the mail server's network
-            // alias, so its certificate matches and TLS is used.
+            // keep-comment: WhenAvailable so a local test server without a certificate works
             await client.ConnectAsync(_host, _port, SecureSocketOptions.StartTlsWhenAvailable, ctoken);
 
             if (!string.IsNullOrWhiteSpace(_user))
                 await client.AuthenticateAsync(_user, _password ?? string.Empty, ctoken);
 
-            await client.SendAsync(message, ctoken);
+            await client.SendAsync(new SendRequest(message), ctoken);
             await client.DisconnectAsync(true, ctoken);
 
             return MailSendResult.Ok();
         }
         catch (SmtpCommandException ex) when ((int)ex.StatusCode >= 500)
         {
-            // A 5xx is the server refusing the message itself — no such mailbox, sender not
-            // permitted. Retrying asks the same question and gets the same answer.
+            // keep-comment: a 5xx refuses the message itself, so a retry gets the same answer
             _logger.LogError(
                 "SmtpMailSender: SendAsync -> Mail {identifier} was rejected permanently ({status}): {error}",
                 email.Identifier, ex.StatusCode, LogRedaction.ScrubEmails(ex.Message));
@@ -89,9 +83,7 @@ public class SmtpMailSender : IMailSender
         }
         catch (Exception ex)
         {
-            // Everything else — connection refused, timeout, a 4xx greylisting reply — is
-            // worth another attempt. Greylisting in particular is designed to be retried, and
-            // Rspamd has it enabled on this mail server.
+            // keep-comment: retried, since the mail server's Rspamd greylists with a 4xx
             if (ex is SmtpCommandException command)
             {
                 _logger.LogWarning(
