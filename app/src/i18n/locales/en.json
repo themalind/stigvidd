@@ -829,7 +829,7 @@
     "description": "Stigvidd is a hiking app made as a hobby project, for the love of the outdoors. Explore trails in the Borås area, record your own walks with GPS, rate the trails you enjoy and help other hikers by reporting obstacles along the way.",
     "featuresTitle": "What you can do",
     "dataSourceTitle": "Data & credits",
-    "dataSourceText": "Trail data for the Borås area comes from the City of Borås open data portal and is provided under Creative Commons CC0 1.0. Maps are provided by MapTiler and MapLibre and are based on OpenStreetMap under ODbL 1.0.",
+    "dataSourceText": "Trail and swimming spot data for the Borås area comes from the City of Borås open data portal and is provided under Creative Commons CC0 1.0. Maps are provided by MapTiler and MapLibre and are based on OpenStreetMap under ODbL 1.0.",
     "licenceTitle": "Open source",
     "licenceText": "Stigvidd is free software. The app is licensed under the Mozilla Public License 2.0 and the server under the GNU Affero General Public License version 3. You are free to read, modify and share the source.",
     "licenceLink": "View the source on GitHub",
@@ -850,9 +850,10 @@
       "Save favorites and build a wishlist of trails to try",
       "Report obstacles and hazards to help other hikers",
       "Share your recorded walks with friends",
+      "Create events, invite friends and walk together",
       "Publish your walk as a trail so more people can walk it",
       "Discover and like trails that other hikers have published",
-      "Explore outdoor areas around Borås, such as Rya åsar and Kype",
+      "Find destinations around Borås with swimming spots, fire pits and wind shelters",
       "Let Stigvidd pick a walk for you when you cannot decide",
       "Read up on the right of public access, nature reserves and difficulty grades in the nature guide"
     ]

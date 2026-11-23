@@ -6,7 +6,13 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import AboutScreen from "@/components/about/about-screen";
-import { PRIVACY_POLICY_URL, SCREEN_PADDING, SOURCE_CODE_URL, TERMS_OF_USE_URL } from "@/constants/constants";
+import {
+  BORDER_RADIUS,
+  PRIVACY_POLICY_URL,
+  SCREEN_PADDING,
+  SOURCE_CODE_URL,
+  TERMS_OF_USE_URL,
+} from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
@@ -19,7 +25,7 @@ jest.mock("expo-router", () => ({
   router: { back: (...args: unknown[]) => mockBack(...args) },
 }));
 
-// The version comes from app.json at build time, read through a getter so a test can take it away.
+// keep-comment: a getter, so a test can take the version away
 let mockVersion: string | undefined = "1.4.2";
 jest.mock("expo-constants", () => ({
   __esModule: true,
@@ -60,14 +66,15 @@ it("says what the app is for", async () => {
   expect(screen.getByText(/vandringsapp skapad som ett hobbyprojekt/)).toBeTruthy();
 });
 
-// t("about.features") is an array; a missing key returns the key itself and empties the list, so the count is asserted.
+// keep-comment: a missing array key empties the list silently, so the count is asserted
 it("lists every feature, each with its bullet", async () => {
   await show();
 
   expect(screen.getByText("Det här kan du göra")).toBeTruthy();
-  expect(screen.getAllByText("•")).toHaveLength(12);
+  expect(screen.getAllByText("•")).toHaveLength(13);
   expect(screen.getByText("Spela in dina vandringar med GPS och se hur långt du går")).toBeTruthy();
   expect(screen.getByText("Dela dina inspelade vandringar med vänner")).toBeTruthy();
+  expect(screen.getByText("Skapa evenemang, bjud in vänner och gå tillsammans")).toBeTruthy();
   expect(screen.getByText("Låt Stigvidd slumpa fram en promenad när du inte kan bestämma dig")).toBeTruthy();
 });
 
@@ -80,7 +87,7 @@ it("offers a way to get in touch", async () => {
   expect(Linking.openURL).toHaveBeenCalledWith(`mailto:${EMAIL}`);
 });
 
-// A phone with no mail client rejects openURL, and an unhandled rejection is a crash in a release build.
+// keep-comment: no mail client rejects openURL; unhandled, that crashes a release build
 it("survives a device that cannot open mail", async () => {
   jest.spyOn(Linking, "openURL").mockRejectedValue(new Error("no handler"));
   await show();
@@ -93,11 +100,7 @@ it("survives a device that cannot open mail", async () => {
 it("links to the privacy policy and the terms of use", async () => {
   await show();
 
-  // Pins the promise the app makes about analytics. It used to read "inga annonser,
-  // analysverktyg eller spårning" — an absolute no-analytics claim that became false the
-  // moment usage statistics were added. What replaces it is conditional, so the two halves
-  // that carry the legal weight are asserted separately: collection is opt-in, and a
-  // position is never part of it.
+  // keep-comment: the privacy promise: statistics are opt-in and never include a position
   expect(screen.getByText(/samlas bara in om du samtycker/)).toBeTruthy();
   expect(screen.getByText(/innehåller aldrig din position/)).toBeTruthy();
 
@@ -117,7 +120,7 @@ it("survives a link that will not open", async () => {
   expect(Linking.openURL).toHaveBeenCalledWith(PRIVACY_POLICY_URL);
 });
 
-// Borås Stad's licence requires the attribution, and MapTiler's the map credit.
+// keep-comment: MapTiler's terms require the map credit
 it("credits the trail data and the map", async () => {
   await show();
 
@@ -127,7 +130,7 @@ it("credits the trail data and the map", async () => {
   expect(screen.getByText(/OpenStreetMap under ODbL 1.0/)).toBeTruthy();
 });
 
-// AGPL §13: this link is how the source offer is made to everyone using the deployed backend.
+// keep-comment: AGPL §13 source offer to the backend's users
 it("names both licences and offers the source", async () => {
   await show();
 
@@ -140,7 +143,6 @@ it("names both licences and offers the source", async () => {
   expect(Linking.openURL).toHaveBeenCalledWith(SOURCE_CODE_URL);
 });
 
-// A bug report is worth little without the build it came from.
 it("shows the build's version", async () => {
   await show();
 
@@ -155,7 +157,6 @@ it("leaves the version out when the build has none, rather than an empty label",
   expect(screen.getByText("Skapad med omtanke om naturen")).toBeTruthy();
 });
 
-// iOS has no hardware back button, so the screen carries its own; Android does not.
 it("goes back from the header button", async () => {
   await show();
 
@@ -192,7 +193,7 @@ it("draws each block as a card on the theme's container colour", async () => {
   for (const section of ["features", "contact", "privacy", "data-source", "licence"]) {
     expect(screen.getByTestId(`about-section-${section}`)).toHaveStyle({
       backgroundColor: AppDefaultTheme.colors.secondaryContainer,
-      borderRadius: 12,
+      borderRadius: BORDER_RADIUS,
       padding: 16,
     });
   }
@@ -206,7 +207,6 @@ it("draws the cards on the dark theme's container colour too", async () => {
   });
 });
 
-// A feature is a long line beside a bullet, and flex is what wraps it inside the card.
 it("lets a feature wrap inside its row", async () => {
   await show();
 
@@ -217,7 +217,6 @@ it("lets a feature wrap inside its row", async () => {
   });
 });
 
-// The links sit among body text, so colour and weight are what say they can be pressed.
 it("marks the links as links", async () => {
   await show();
 

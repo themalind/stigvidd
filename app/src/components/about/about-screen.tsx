@@ -6,7 +6,13 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import BackButton from "@/components/layout/back-button";
-import { PRIVACY_POLICY_URL, SCREEN_PADDING, SOURCE_CODE_URL, TERMS_OF_USE_URL } from "@/constants/constants";
+import {
+  BORDER_RADIUS,
+  PRIVACY_POLICY_URL,
+  SCREEN_PADDING,
+  SOURCE_CODE_URL,
+  TERMS_OF_USE_URL,
+} from "@/constants/constants";
 import Constants from "expo-constants";
 import { Linking, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
@@ -174,7 +180,7 @@ const s = StyleSheet.create({
     lineHeight: 22,
   },
   section: {
-    borderRadius: 12,
+    borderRadius: BORDER_RADIUS,
     padding: 16,
     gap: 8,
   },

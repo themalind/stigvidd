@@ -829,7 +829,7 @@
     "description": "Stigvidd är en vandringsapp skapad som ett hobbyprojekt, av kärlek till naturen. Utforska vandringsleder i Boråsområdet, spela in egna vandringar med GPS, betygsätt lederna du gillar och hjälp andra vandrare genom att rapportera hinder längs vägen.",
     "featuresTitle": "Det här kan du göra",
     "dataSourceTitle": "Data & källor",
-    "dataSourceText": "Leddata för Boråsområdet kommer från Borås Stads öppna dataportal och tillhandahålls under Creative Commons CC0 1.0. Kartor tillhandahålls av MapTiler och MapLibre och bygger på OpenStreetMap under ODbL 1.0.",
+    "dataSourceText": "Leddata och badplatser för Boråsområdet kommer från Borås Stads öppna dataportal och tillhandahålls under Creative Commons CC0 1.0. Kartor tillhandahålls av MapTiler och MapLibre och bygger på OpenStreetMap under ODbL 1.0.",
     "licenceTitle": "Öppen källkod",
     "licenceText": "Stigvidd är fri programvara. Appen är licensierad under Mozilla Public License 2.0 och servern under GNU Affero General Public License version 3. Du har rätt att läsa, ändra och dela källkoden.",
     "licenceLink": "Visa källkoden på GitHub",
@@ -850,9 +850,10 @@
       "Spara favoriter och bygg en önskelista med leder att testa",
       "Rapportera hinder och faror för att hjälpa andra vandrare",
       "Dela dina inspelade vandringar med vänner",
+      "Skapa evenemang, bjud in vänner och gå tillsammans",
       "Publicera din promenad som en led så att fler kan gå den",
       "Upptäck och gilla leder som andra vandrare har publicerat",
-      "Utforska friluftsområden i Boråstrakten, som Rya åsar och Kype",
+      "Hitta utflyktsmål i Boråstrakten med badplatser, grillplatser och vindskydd",
       "Låt Stigvidd slumpa fram en promenad när du inte kan bestämma dig",
       "Läs på om allemansrätten, naturreservat och svårighetsgrader i naturguiden"
     ]
