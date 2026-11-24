@@ -103,6 +103,25 @@ describe("NavMain", () => {
     expect(screen.getAllByText(/waiting/)).toHaveLength(2);
   });
 
+  it("makes room for a folded group's badge, so it never covers the chevron", async () => {
+    renderAt(paths.dashboard, { attention: { ...ATTENTION, importsAwaitingReview: 1, failedMails: 4 } });
+    for (const group of ["Contributions", "Community", "Mail"]) {
+      expect(screen.getByRole("button", { name: group })).toHaveClass("pr-9");
+    }
+    const importButton = screen.getByRole("button", { name: "Import" });
+
+    expect(importButton).toHaveClass("pr-9");
+
+    await userEvent.click(importButton);
+    expect(screen.getByRole("button", { name: "Import" })).not.toHaveClass("pr-9");
+  });
+
+  it("leaves a folded group without a badge its normal padding", () => {
+    renderAt(paths.dashboard, { attention: { ...ATTENTION, importsAwaitingReview: 0 } });
+
+    expect(screen.getByRole("button", { name: "Import" })).not.toHaveClass("pr-9");
+  });
+
   it("shows no badge where nothing waits", () => {
     renderAt(paths.dashboard, { attention: { ...ATTENTION, pendingHikeSubmissions: 0, pendingReports: 0 } });
 

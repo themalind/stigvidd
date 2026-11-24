@@ -173,7 +173,7 @@ function FacilityFormBody({ facility, onSaved }: { facility: AdminFacilityRespon
         <FacilityMap
           position={formPosition(form)}
           satellite={false}
-          className="h-64"
+          className="h-80"
           onPick={([lng, lat]) => set({ latitude: lat.toFixed(6), longitude: lng.toFixed(6) })}
         />
 

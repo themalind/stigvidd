@@ -99,7 +99,8 @@ export function FacilityMap({ position, neighbours = NO_NEIGHBOURS, satellite, o
   }, [mapRef, lng, lat]);
 
   return (
-    <div className={cn("relative h-[480px] w-full overflow-hidden rounded-sm border", className)}>
+    // keep-comment: shrink-0, since overflow-hidden drops a flex item's min-height to 0 and a scrolling form column squeezed it to a strip
+    <div className={cn("relative h-[480px] w-full shrink-0 overflow-hidden rounded-sm border", className)}>
       {/* keep-comment: maplibre's unlayered .maplibregl-map sets position: relative, which beats Tailwind's layered "absolute", so size it explicitly (docs/notes/maplibre-css-beats-tailwind-v4-layered-utilities.md) */}
       <div
         ref={containerRef}

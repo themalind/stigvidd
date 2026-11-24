@@ -65,15 +65,22 @@ function NavGroupEntry({ item: { group, pages: children }, attention }: { item: 
     return <NavPageItem page={{ ...first, title: group.title, icon: Icon }} count={total} />;
   }
 
+  const showsTotal = !expanded && total > 0;
+
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton aria-expanded={expanded} onClick={() => setExpanded((was) => !was)}>
+      <SidebarMenuButton
+        aria-expanded={expanded}
+        onClick={() => setExpanded((was) => !was)}
+        // keep-comment: the badge is absolutely placed at the right edge, so room is made for it left of the chevron
+        className={cn(showsTotal && "pr-9")}
+      >
         <Icon />
         <span>{group.title}</span>
         <ChevronRight className={cn("ml-auto transition-transform", expanded && "rotate-90")} aria-hidden />
       </SidebarMenuButton>
       {/* keep-comment: an open group shows each page's count instead, so the sum is not counted twice */}
-      {!expanded && <NavBadge count={total} />}
+      {showsTotal && <NavBadge count={total} />}
       {expanded && (
         <SidebarMenuSub>
           {children.map((child) => {
