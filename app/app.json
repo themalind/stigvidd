@@ -21,7 +21,8 @@
         "CFBundleDevelopmentRegion": "sv",
         "CFBundleLocalizations": ["sv"],
         "UIBackgroundModes": ["location"],
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIViewControllerBasedStatusBarAppearance": true
       }
     },
     "locales": {

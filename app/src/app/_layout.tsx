@@ -130,6 +130,7 @@ function ActiveRecordingHandler() {
 export default function RootLayout() {
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
+  // keep-comment: iOS applies this only with UIViewControllerBasedStatusBarAppearance in app.json, see docs/notes/ios-27-sdk-ignores-app-level-status-bar-style.md
   const statusBarStyle = theme.dark ? "light" : "dark";
 
   // keep-comment: outside the render gate below, which waits on it
