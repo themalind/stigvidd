@@ -190,6 +190,45 @@ describe("the guard against rewriting a template nobody edited", () => {
   });
 });
 
+describe("inserting a placeholder from the palette", () => {
+  it("puts it where the caret is in the subject, replacing a selection", async () => {
+    renderPage();
+    const subject = (await screen.findByLabelText("Subject")) as HTMLInputElement;
+
+    await userEvent.click(subject);
+    subject.setSelectionRange(0, 8);
+    await userEvent.click(screen.getByRole("button", { name: "Insert Nickname" }));
+
+    expect(subject).toHaveValue("{{NickName}} din e-postadress");
+    await waitFor(() => expect(saveButton()).toBeEnabled());
+  });
+
+  it("puts it in the plain-text body when that was the last field in focus", async () => {
+    renderPage();
+    await userEvent.click(await screen.findByRole("tab", { name: "Plain text" }));
+    const plain = screen.getByLabelText("Plain-text version") as HTMLTextAreaElement;
+
+    await userEvent.click(plain);
+    plain.setSelectionRange(0, 0);
+    await userEvent.click(screen.getByRole("button", { name: "Insert Verification code" }));
+
+    expect(plain.value.startsWith("{{VerificationCode}}Hej")).toBe(true);
+    expect(screen.getByLabelText("Subject")).toHaveValue("Bekräfta din e-postadress");
+  });
+});
+
+describe("the notes field", () => {
+  it("sends an emptied note as no note at all", async () => {
+    renderPage();
+
+    await userEvent.clear(await screen.findByLabelText("Notes for whoever edits this next"));
+    await userEvent.click(saveButton());
+
+    await waitFor(() => expect(savedBodies()).toHaveLength(1));
+    expect(savedBodies()[0]).toMatchObject({ description: null });
+  });
+});
+
 describe("after a save", () => {
   it("is clean again and says the next mail uses it", async () => {
     renderPage();

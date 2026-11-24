@@ -123,6 +123,16 @@ module.exports = defineConfig([
     rules: {
       "import/first": "off",
       "import/no-named-as-default-member": "off",
+      "no-restricted-syntax": [
+        "error",
+        {
+          // keep-comment: flushUntil stops waiting without failing, so a test that ends on it asserts nothing
+          selector:
+            "CallExpression:matches([callee.name=/^(it|test)$/], [callee.object.name=/^(it|test)$/], [callee.callee.object.name=/^(it|test)$/]) > :function > BlockStatement > ExpressionStatement:last-child > AwaitExpression > CallExpression[callee.name=/^flushUntil(Gone)?$/]",
+          message:
+            "flushUntil never fails, so a test that ends on it asserts nothing. Follow it with an expect() on the same condition.",
+        },
+      ],
     },
   },
 ]);

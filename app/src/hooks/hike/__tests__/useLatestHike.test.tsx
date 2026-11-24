@@ -8,7 +8,7 @@
 import { HIKES_STALE_TIME } from "@/constants/cache";
 import { Hike } from "@/data/types";
 import { LatestHikeState, useLatestHike } from "@/hooks/hike/useLatestHike";
-import { flushUntil } from "@/test/flush";
+import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
 import { act } from "@testing-library/react-native";
@@ -86,7 +86,10 @@ describe("useLatestHike", () => {
   });
 
   it("is loading while the hikes are on their way", async () => {
+    // keep-comment: a fetch that never answers; a resolved one could land before the assertion on a loaded machine
+    mockGetAllHikesByUserId.mockReturnValue(new Promise(() => {}));
     const harness = await render();
+    await settle();
     expect(harness.state()).toEqual({ kind: "loading" });
   });
 

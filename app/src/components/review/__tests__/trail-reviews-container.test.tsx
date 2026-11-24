@@ -206,6 +206,8 @@ it("disables the load-more button while the next page is loading", async () => {
 
   release(page({ reviews: [review("r2")], hasMore: false, page: 1, total: 2 }));
   await flushUntil(() => screen.queryByText("Laddar fler...") === null);
+
+  expect(screen.queryByText("Laddar fler...")).toBeNull();
 });
 
 it("shows the error view rather than an empty section when the reviews fail to load", async () => {
