@@ -70,6 +70,11 @@ and the publish promise, which is the seeded consent text in `ConsentTextConfigu
 "Update web/public" means these pages too: `web/public` holds only `icon.png` and `robots.txt`. Fastest
 diff: `git log -1 --format=%h -- site/public/privacy-policy`, then `git diff <that>..HEAD --stat -- backend/Infrastructure/Data/Entities`
 for new stored fields; `HikeSubmissionRepository.ClearContent` lists what a rejection wipes.
+The privacy policy's top HTML comment maps each section to the code it is bound to: start there.
+Menu paths the pages quote must match the app labels: `profile.deleteAccount` ("Radera konto",
+not "Avsluta konto"), `settings.about`, `settings.privacy`. "And the about screen" means
+`about.features` / `about.dataSourceText` in both locales: check that a release's new features
+(events, Utflyktsmål) and data sources are listed.
 
 Related: [[json-file-has-no-time-retention]] — the same publication turned §5's stated 7-day
 log retention into a promise that had to be made true.
