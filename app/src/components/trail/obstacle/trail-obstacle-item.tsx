@@ -33,9 +33,17 @@ interface Props {
   onCloseModal?: () => void;
   // keep-comment: off where a surrounding card already draws the edge
   outlined?: boolean;
+  // keep-comment: off where the vote count is already explained above the item, as in the obstacle list
+  explainVotes?: boolean;
 }
 
-export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseModal, outlined = true }: Props) {
+export default function TrailObstacleItem({
+  obstacle,
+  trailIdentifier,
+  onCloseModal,
+  outlined = true,
+  explainVotes = true,
+}: Props) {
   const theme = useTheme();
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
@@ -51,6 +59,7 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
   const queryClient = useQueryClient();
   const hasVoted = obstacle.solvedVotes?.some((v) => v.userIdentifier === stigviddUser?.identifier);
   const isOwner = !!obstacle.userIdentifier && stigviddUser?.identifier === obstacle.userIdentifier;
+  const labelStyle = [s.label, { color: theme.colors.onSurfaceVariant }];
 
   const { mutate, isPending } = useMutation({
     mutationFn: () => addSolvedVote(obstacle.identifier),
@@ -129,12 +138,12 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
       style={[s.container, outlined && [s.outlined, { borderColor: theme.colors.outlineVariant }]]}
     >
       <View style={s.content}>
-        <View style={s.categoryRow}>
+        <View testID="obstacle-header" style={s.categoryRow}>
           <View style={s.field}>
-            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.category")}</Text>
+            <Text style={labelStyle}>{t("obstacle.category")}</Text>
             <Text style={[s.value, { color: theme.colors.onSurface }]}>{issueTypeParser(obstacle.issueType)}</Text>
           </View>
-          {isOwner && (
+          {isOwner ? (
             <View style={s.ownerActions}>
               <Pressable hitSlop={12} onPress={handleEdit} disabled={deleteObstacleIsPending}>
                 <MaterialIcons size={20} name="edit" color={theme.colors.onSurfaceVariant} />
@@ -143,11 +152,15 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
                 <MaterialIcons size={20} name="delete-outline" color={theme.colors.onSurface} />
               </Pressable>
             </View>
+          ) : (
+            <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
+              <MaterialCommunityIcons size={20} name="alert-circle" color={theme.colors.outline} />
+            </Pressable>
           )}
         </View>
         <Divider />
         <View style={s.field}>
-          <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.description")}</Text>
+          <Text style={labelStyle}>{t("obstacle.description")}</Text>
           {/* keep-comment: trailing newlines from the input would render as blank lines */}
           <Text style={[s.description, { color: theme.colors.onSurface }]}>
             {obstacle.description?.trim() || t("obstacle.removedDescription")}
@@ -155,42 +168,39 @@ export default function TrailObstacleItem({ obstacle, trailIdentifier, onCloseMo
         </View>
         <View style={s.footer}>
           <View style={s.field}>
-            <Text style={[s.label, { color: theme.colors.onSurfaceVariant }]}>{t("obstacle.date")}</Text>
+            <Text style={labelStyle}>{t("obstacle.date")}</Text>
             <Text style={[s.value, { color: theme.colors.onSurface }]}>{formatDate(obstacle.createdAt)}</Text>
           </View>
 
-          <View testID="obstacle-actions" style={s.voteRow}>
-            {!isOwner && (
-              <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
-                <MaterialCommunityIcons size={24} name="alert-circle" color={theme.colors.outline} />
-              </Pressable>
-            )}
-            <View testID="obstacle-solved" style={[s.field, s.solvedField]}>
+          <View testID="obstacle-solved" style={[s.field, s.solvedField]}>
+            {explainVotes ? (
               <InfoHeading
                 label={t("obstacle.gone")}
-                labelStyle={[s.label, { color: theme.colors.onSurfaceVariant }]}
+                labelStyle={labelStyle}
                 infoTitle={t("obstacle.goneInfoTitle")}
                 infoHitSlop={INFO_HIT_SLOP}
                 // keep-comment: the same text as the box above the obstacle list, so the two never drift apart
                 infoIntro={t("obstacle.modalBody")}
               />
-              <View style={s.voteGroup}>
-                <Text style={s.voteCount}>{obstacle.solvedVoteCount ?? obstacle.solvedVotes?.length ?? 0}/3</Text>
-                {!isOwner && (
-                  <Pressable
-                    testID="vote-button"
-                    hitSlop={12}
-                    onPress={handlePress}
-                    disabled={isPending || deleteSolvedVoteIsPending}
-                  >
-                    <MaterialIcons
-                      size={24}
-                      name={hasVoted ? "check-circle" : "radio-button-unchecked"}
-                      color={isPending ? theme.colors.outline : theme.colors.tertiary}
-                    />
-                  </Pressable>
-                )}
-              </View>
+            ) : (
+              <Text style={labelStyle}>{t("obstacle.gone")}</Text>
+            )}
+            <View style={s.voteGroup}>
+              <Text style={s.voteCount}>{obstacle.solvedVoteCount ?? obstacle.solvedVotes?.length ?? 0}/3</Text>
+              {!isOwner && (
+                <Pressable
+                  testID="vote-button"
+                  hitSlop={12}
+                  onPress={handlePress}
+                  disabled={isPending || deleteSolvedVoteIsPending}
+                >
+                  <MaterialIcons
+                    size={24}
+                    name={hasVoted ? "check-circle" : "radio-button-unchecked"}
+                    color={isPending ? theme.colors.outline : theme.colors.tertiary}
+                  />
+                </Pressable>
+              )}
             </View>
           </View>
         </View>
@@ -298,13 +308,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
-  },
-  voteRow: {
-    flexDirection: "row",
-    // keep-comment: the report icon lines up with the count and check under the label, not with the label
-    alignItems: "flex-end",
-    // keep-comment: 24 is twice the hitSlop, so the report and vote touch areas meet without overlapping.
-    gap: 24,
   },
   solvedField: {
     alignItems: "flex-end",

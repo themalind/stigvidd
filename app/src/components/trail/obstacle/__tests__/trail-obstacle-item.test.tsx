@@ -182,13 +182,27 @@ it("names what the count counts, also for the reporter who cannot vote", async (
   expect(screen.getByTestId("obstacle-solved")).toHaveTextContent(/^Inte kvar\?\s*0\/3$/);
 });
 
-// keep-comment: on the map card this button is the only explanation of the count; the list also has a box above
+// keep-comment: on the map card this button is the only explanation of the count
 it("explains the count from its info button, with the obstacle list's own text", async () => {
   await show(obstacle());
 
   await fireEvent.press(screen.getByLabelText("Är hindret inte kvar?"));
 
   expect(screen.getByTestId("info-dialog")).toHaveTextContent(/3 bekräftelser eller 30 dagar/);
+});
+
+it("leaves the info button out where the count is already explained, and still names it", async () => {
+  await renderWithProviders(
+    <TrailObstacleItem
+      obstacle={obstacle()}
+      trailIdentifier={TRAIL_ID}
+      onCloseModal={onCloseModal}
+      explainVotes={false}
+    />,
+  );
+
+  expect(screen.queryByLabelText("Är hindret inte kvar?")).toBeNull();
+  expect(screen.getByTestId("obstacle-solved")).toHaveTextContent(/^Inte kvar\?\s*0\/3$/);
 });
 
 it("counts an obstacle nobody has voted on as zero", async () => {
@@ -463,12 +477,11 @@ it("reports with the same icon as a review report", async () => {
   expect(screen.queryByTestId("icon-flag")).toBeNull();
 });
 
-// Both buttons carry hitSlop 12, so a gap under 24 makes their touch areas overlap and a
-// thumb aimed at one lands on the other.
-it("keeps the report and the vote far enough apart not to overlap", async () => {
+it("puts the report button in the header, not beside the vote", async () => {
   await show();
 
-  expect(screen.getByTestId("obstacle-actions")).toHaveStyle({ gap: 24 });
+  expect(within(screen.getByTestId("obstacle-header")).getByTestId("report-obstacle-button")).toBeTruthy();
+  expect(within(screen.getByTestId("obstacle-solved")).queryByTestId("report-obstacle-button")).toBeNull();
 });
 
 // Nobody reports their own report; the owner gets edit and delete instead.

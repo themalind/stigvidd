@@ -55,6 +55,7 @@ export default function TrailObstacleModal({ visible, onDismiss, obstacles, trai
               obstacle={obstacle}
               trailIdentifier={trailIdentifier}
               onCloseModal={onDismiss}
+              explainVotes={false}
             />
           ))}
         </ScrollView>

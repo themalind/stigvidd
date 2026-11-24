@@ -400,7 +400,7 @@
     "warningTitle": "Obstacles reported along the trail!",
     "modalTitle": "Reported obstacles",
     "modalInfo": "Obstacles reported along the trail are shown here.",
-    "modalBody": "Please help by marking an obstacle as resolved if it has been fixed or is no longer a problem, for example when the mud has dried. You do this by pressing the circle next to the count on the obstacle you want to mark. The warning is removed after 3 confirmations or 30 days.",
+    "modalBody": "Please help by marking an obstacle as resolved if it has been fixed or is no longer a problem. You do this by pressing the circle next to the count on the obstacle you want to mark. The warning is removed after 3 confirmations or 30 days.",
     "report": "Report",
     "reportTitle": "Report obstacle",
     "formInfo1": "Have you noticed something that affects accessibility or safety on the trail?",

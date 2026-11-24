@@ -201,6 +201,20 @@ it("warns about obstacles only when there are some, and opens them", async () =>
   expect(screen.getByText(/hinder/i)).toBeTruthy();
 });
 
+it("explains the solved count once, above the obstacle list, not on every obstacle", async () => {
+  mockGetObstacles.mockResolvedValue([
+    { identifier: "o1", issueType: "Mud", description: "Lerigt vid bron", createdAt: "2026-11-14T10:00:00Z" },
+  ]);
+  await show();
+  await flushUntil(() => screen.queryByText("Hinder rapporterade längs promenaden!"));
+
+  await fireEvent.press(screen.getByText("Hinder rapporterade längs promenaden!"));
+
+  expect(screen.getByText(/3 bekräftelser eller 30 dagar/)).toBeTruthy();
+  expect(screen.getByText("Inte kvar?")).toBeTruthy();
+  expect(screen.queryByLabelText("Är hindret inte kvar?")).toBeNull();
+});
+
 // keep-comment: deleting the last obstacle, or its third solved vote, refetches an empty list under the open modal
 it("closes the obstacle list once its last obstacle is gone, and keeps it closed when another is reported", async () => {
   const banner = "Hinder rapporterade längs promenaden!";
