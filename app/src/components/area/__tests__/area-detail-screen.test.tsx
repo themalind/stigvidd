@@ -19,7 +19,6 @@ import { ActivityIndicator, Platform, StyleSheet, Text } from "react-native";
 
 const mockGetArea = jest.fn();
 const mockNavigate = jest.fn();
-const mockBack = jest.fn();
 
 jest.mock("@/api/areas", () => ({
   getAreaByIdentifier: (...args: unknown[]) => mockGetArea(...args),
@@ -32,7 +31,7 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ identifier: "kransmossen" }),
   router: {
     navigate: (...args: unknown[]) => mockNavigate(...args),
-    back: (...args: unknown[]) => mockBack(...args),
+    back: jest.fn(),
   },
 }));
 
@@ -228,26 +227,19 @@ it("clamps a long area name to two lines and the place to one", async () => {
   expect(screen.getByText("Borås").props.numberOfLines).toBe(1);
 });
 
-// Android draws its own back affordance in the header, so the photo carries none.
-it("puts a back button over the hero on iOS only", async () => {
+// keep-comment: Android has its own system back, so the photo carries no button there
+it("puts the shared round back button over the hero on iOS only", async () => {
   await show();
-  expect(screen.getByTestId("area-back")).toBeTruthy();
+  expect(screen.getByTestId("area-header")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
+  expect(within(screen.getByTestId("area-header")).getByTestId("back-button")).toBeTruthy();
 
   Platform.OS = "android";
   try {
     await show();
-    expect(screen.queryByTestId("area-back")).toBeNull();
+    expect(screen.queryByTestId("back-button")).toBeNull();
   } finally {
     Platform.OS = "ios";
   }
-});
-
-it("goes back when the hero's back button is pressed", async () => {
-  await show();
-
-  await fireEvent.press(screen.getByTestId("area-back"));
-
-  expect(mockBack).toHaveBeenCalled();
 });
 
 it("counts the trails and adds up their length", async () => {

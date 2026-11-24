@@ -13,13 +13,13 @@ import { AreaMapFocus } from "@/utils/area/area-map-shapes";
 import { useOnFirstLoad } from "@/hooks/useOnFirstLoad";
 import { track } from "@/services/analytics";
 import { guardedNavigate } from "@/utils/navigation";
-import { MaterialIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
+import ScreenHeader from "@/components/layout/screen-header";
 import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import AreaImage from "./area-image";
@@ -111,16 +111,9 @@ export default function AreaDetailScreen({ routes }: Props) {
           </View>
         </View>
 
-        {Platform.OS === "ios" && (
-          <Pressable
-            testID="area-back"
-            onPress={() => router.back()}
-            hitSlop={12}
-            style={({ pressed }) => [s.backButton, pressed && { opacity: 0.7 }]}
-          >
-            <MaterialIcons name="chevron-left" size={28} color="#fff" />
-          </Pressable>
-        )}
+        <View style={s.headerOverlay} pointerEvents="box-none">
+          <ScreenHeader testID="area-header" />
+        </View>
 
         {(trailCount > 0 || totalKm > 0) && (
           <View testID="area-stats" style={s.statsRow}>
@@ -228,16 +221,11 @@ const s = StyleSheet.create({
     color: "rgba(255,255,255,0.9)",
     flexShrink: 1,
   },
-  backButton: {
+  headerOverlay: {
     position: "absolute",
-    top: 12,
-    left: SCREEN_PADDING,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.35)",
+    top: 8,
+    left: 0,
+    right: 0,
   },
   statsRow: {
     flexDirection: "row",
