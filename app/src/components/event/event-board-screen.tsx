@@ -9,7 +9,7 @@ import { isApiStatus } from "@/api/core/api-error";
 import AlertDialog from "@/components/dialog/alert-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import SignInPrompt from "@/components/auth/sign-in-prompt";
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import CountedTextInput from "@/components/form/counted-text-input";
 import ErrorScreen from "@/components/status/error-screen";
 import LoadingIndicator from "@/components/status/loading-indicator";
@@ -158,20 +158,23 @@ function EventBoard({ identifier }: { identifier: string }) {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.topBar}>
-        <BackButton />
-        <Text style={[s.title, { color: theme.colors.onBackground }]} numberOfLines={1}>
-          {event.data?.title ?? t("events.board")}
-        </Text>
-        <EventPinsToggle count={pinned.length} open={pinsOpen} onToggle={() => setPinsOpen((open) => !open)} />
-        <IconButton
-          testID="event-board-mute"
-          icon={muted ? "bell-off-outline" : "bell-outline"}
-          accessibilityLabel={muted ? t("events.unmute") : t("events.mute")}
-          disabled={muteMutation.isPending}
-          onPress={() => muteMutation.mutate(!muted)}
-        />
-      </View>
+      <ScreenHeader
+        testID="event-board-header"
+        title={event.data?.title ?? t("events.board")}
+        titleLines={1}
+        actions={
+          <>
+            <EventPinsToggle count={pinned.length} open={pinsOpen} onToggle={() => setPinsOpen((open) => !open)} />
+            <IconButton
+              testID="event-board-mute"
+              icon={muted ? "bell-off-outline" : "bell-outline"}
+              accessibilityLabel={muted ? t("events.unmute") : t("events.mute")}
+              disabled={muteMutation.isPending}
+              onPress={() => muteMutation.mutate(!muted)}
+            />
+          </>
+        }
+      />
 
       {pinsOpen ? (
         <EventPinnedPosts
@@ -283,17 +286,6 @@ function EventBoard({ identifier }: { identifier: string }) {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: SCREEN_PADDING,
-    gap: 4,
-  },
-  title: {
-    flex: 1,
-    fontSize: 18,
-    fontFamily: "Inter_600SemiBold",
   },
   list: {
     paddingHorizontal: SCREEN_PADDING,

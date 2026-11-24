@@ -9,12 +9,11 @@ import { ApiError } from "@/api/core/api-error";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import PasswordInputField from "@/components/auth/password-input-field";
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import {
   BORDER_RADIUS,
   MIN_NICKNAME_LENGTH,
   PRIVACY_POLICY_URL,
-  SCREEN_PADDING,
   SURFACE_BORDER_RADIUS,
   TERMS_OF_USE_URL,
 } from "@/constants/constants";
@@ -117,8 +116,8 @@ export default function RegisterScreen() {
         contentContainerStyle={s.scrollContent}
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
-          <View style={s.backButtonContainer}>
-            <BackButton />
+          <View style={s.backButtonContainer} pointerEvents="box-none">
+            <ScreenHeader />
           </View>
           <View style={[s.surface, { backgroundColor: addOpacity(theme.colors.surface, 0.9) }]}>
             <View style={s.logoContainer}>
@@ -317,7 +316,8 @@ const s = StyleSheet.create({
   backButtonContainer: {
     position: "absolute",
     top: 0,
-    left: SCREEN_PADDING,
+    left: 0,
+    right: 0,
   },
   logoContainer: {
     flexDirection: "row",

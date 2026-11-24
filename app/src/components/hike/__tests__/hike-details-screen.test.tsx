@@ -339,12 +339,12 @@ it.each<HikeFollowRoute>([
   });
 });
 
-it("splits the action row evenly and truncates a long name", async () => {
+it("splits the action row evenly and keeps a long name to two lines", async () => {
   await show({ name: "En osedvanligt lång promenadtitel som inte får tränga undan pennan" });
 
   expect(
     screen.getByText("En osedvanligt lång promenadtitel som inte får tränga undan pennan").props.numberOfLines,
-  ).toBe(1);
+  ).toBe(2);
   for (const id of ["hike-share", "hike-delete"]) {
     expect(screen.getByTestId(`${id}-container-outer-layer`)).toHaveStyle({ flex: 1 });
   }

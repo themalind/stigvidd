@@ -9,7 +9,7 @@ import { getBlockedUsers, getOutgoingRequests } from "@/api/friends";
 import { friendsAtom, incomingRequestsAtom, userSearchAtomFamily } from "@/atoms/friends-atoms";
 import AlertDialog from "@/components/dialog/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import BlockUserDialog, { UserRef } from "@/components/friends/block-user-dialog";
 import FriendRequestCard from "@/components/friends/friend-request-card";
 import PersonRow from "@/components/friends/person-row";
@@ -33,7 +33,7 @@ import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Button, IconButton, Searchbar, Text, useTheme } from "react-native-paper";
+import { Button, IconButton, Searchbar, useTheme } from "react-native-paper";
 
 const RECENT_SHARE_DAYS = 7;
 
@@ -90,11 +90,10 @@ export default function FriendsScreen() {
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={s.scrollContent}>
-        <View style={s.header}>
-          <BackButton />
-          <MaterialCommunityIcons name="account-group" size={24} color={theme.colors.onSurfaceVariant} />
-          <Text style={s.headerTitle}>{t("friends.title")}</Text>
-        </View>
+        <ScreenHeader
+          title={t("friends.title")}
+          icon={<MaterialCommunityIcons name="account-group" size={26} color={theme.colors.onSurfaceVariant} />}
+        />
         <View style={s.content}>
           <Searchbar
             placeholder={t("friends.search")}
@@ -301,16 +300,6 @@ export default function FriendsScreen() {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: SCREEN_PADDING,
-  },
-  headerTitle: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
   },
   searchbarInput: {
     fontSize: 15,

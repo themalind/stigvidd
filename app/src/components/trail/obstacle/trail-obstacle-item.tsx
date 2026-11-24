@@ -145,15 +145,33 @@ export default function TrailObstacleItem({
           </View>
           {isOwner ? (
             <View style={s.ownerActions}>
-              <Pressable hitSlop={12} onPress={handleEdit} disabled={deleteObstacleIsPending}>
+              <Pressable
+                hitSlop={12}
+                onPress={handleEdit}
+                disabled={deleteObstacleIsPending}
+                accessibilityRole="button"
+                accessibilityLabel={t("obstacle.editTitle")}
+              >
                 <MaterialIcons size={20} name="edit" color={theme.colors.onSurfaceVariant} />
               </Pressable>
-              <Pressable hitSlop={12} onPress={() => setShowDeleteDialog(true)} disabled={deleteObstacleIsPending}>
+              <Pressable
+                hitSlop={12}
+                onPress={() => setShowDeleteDialog(true)}
+                disabled={deleteObstacleIsPending}
+                accessibilityRole="button"
+                accessibilityLabel={t("obstacle.deleteTitle")}
+              >
                 <MaterialIcons size={20} name="delete-outline" color={theme.colors.onSurface} />
               </Pressable>
             </View>
           ) : (
-            <Pressable testID="report-obstacle-button" hitSlop={12} onPress={handleReport}>
+            <Pressable
+              testID="report-obstacle-button"
+              hitSlop={12}
+              onPress={handleReport}
+              accessibilityRole="button"
+              accessibilityLabel={t("obstacle.reportTitle")}
+            >
               <MaterialCommunityIcons size={20} name="alert-circle" color={theme.colors.outline} />
             </Pressable>
           )}

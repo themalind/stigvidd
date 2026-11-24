@@ -9,7 +9,8 @@ import TrailDetailsScreen from "@/components/trail/trail-details-screen";
 import { Trail } from "@/data/types";
 import { flushUntil, flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { SCREEN_PADDING } from "@/constants/constants";
+import { act, fireEvent, screen, within } from "@testing-library/react-native";
 
 const mockGetTrail = jest.fn();
 const mockGetObstacles = jest.fn();
@@ -131,11 +132,20 @@ it("offers a retry instead of a half-empty page when the trail cannot be fetched
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
 });
 
-it("keeps the round back button off the screen edge, in line with the images", async () => {
+it("uses the shared header, with the trail as title and its city below", async () => {
   await show();
 
-  expect(screen.getByTestId("trail-details-header")).toHaveStyle({ paddingLeft: 12 });
-  expect(screen.getByTestId("back-button")).toBeTruthy();
+  expect(screen.getByTestId("trail-details-header")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
+  expect(within(screen.getByTestId("trail-details-header-bar")).getByTestId("back-button")).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Kvarnstigen" })).toBeTruthy();
+  expect(within(screen.getByTestId("trail-details-header-subtitle")).getByText("Borås")).toBeTruthy();
+});
+
+it.each(["", "   "])("leaves the city line out when the trail has no city (%j)", async (city) => {
+  mockGetTrail.mockResolvedValue(trail({ city }));
+  await show();
+
+  expect(screen.queryByTestId("trail-details-header-subtitle")).toBeNull();
 });
 
 it("shows the trail once it arrives", async () => {

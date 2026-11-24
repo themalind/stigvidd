@@ -39,7 +39,7 @@ export default function FavoritesScreen() {
       noTrailsSavedInfo={t("collection.favorites.empty")}
       onDelete={handleDelete}
       trails={data ?? []}
-      icon={<MaterialCommunityIcons name="cards-heart" size={24} color={theme.colors.tertiary} />}
+      icon={<MaterialCommunityIcons name="cards-heart" size={26} color={theme.colors.tertiary} />}
     />
   );
 }

@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import {
   BORDER_RADIUS,
   PRIVACY_POLICY_URL,
@@ -29,10 +29,7 @@ export default function AboutScreen() {
   return (
     <View testID="about-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-        <View style={s.header}>
-          <BackButton />
-          <Text style={[s.appName, { color: theme.colors.onBackground }]}>Stigvidd</Text>
-        </View>
+        <ScreenHeader title="Stigvidd" />
         <View testID="about-content" style={s.content}>
           <Text variant="titleMedium" style={[s.tagline, { color: theme.colors.onBackground }]}>
             {t("about.tagline")}
@@ -152,17 +149,6 @@ export default function AboutScreen() {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: SCREEN_PADDING,
-  },
-  appName: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
-    marginBottom: 4,
   },
   container: {
     paddingTop: 8,

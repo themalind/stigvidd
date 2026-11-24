@@ -10,7 +10,7 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { stubMeasureInWindow } from "@/test/measure";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 import { Dimensions, Text } from "react-native";
 
 const onSearchChange = jest.fn();
@@ -47,10 +47,9 @@ function show(props: Partial<React.ComponentProps<typeof ListHeaderAction>> = {}
       activeFilterCount={0}
       showingLabel="Visar 3 av 12"
       onClearFilters={onClearFilters}
+      title="Mina promenader"
       {...props}
-    >
-      <Text>Mina promenader</Text>
-    </ListHeaderAction>,
+    />,
   );
 }
 
@@ -69,7 +68,19 @@ beforeEach(() => {
 it.each([true, false])("keeps the round back button off the screen edge (actions shown: %s)", async (showActions) => {
   await show({ showActions });
 
-  expect(screen.getByTestId("list-header-row")).toHaveStyle({ paddingLeft: SCREEN_PADDING });
+  expect(screen.getByTestId("list-header")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
+});
+
+it("puts search and filter on the bar beside the back button, with the title below", async () => {
+  await show({ icon: <Text>ikon</Text> });
+
+  const bar = screen.getByTestId("list-header-bar");
+  expect(within(bar).getByTestId("back-button")).toBeTruthy();
+  expect(within(bar).getByTestId("icon-search")).toBeTruthy();
+  expect(within(bar).getByTestId("icon-filter-list")).toBeTruthy();
+  expect(within(bar).queryByText("Mina promenader")).toBeNull();
+  expect(screen.getByRole("header", { name: "Mina promenader" })).toBeTruthy();
+  expect(screen.getByText("ikon")).toBeTruthy();
 });
 
 it("keeps the header itself out of the way until an icon is pressed", async () => {
@@ -121,9 +132,8 @@ it("tints the search icon while a query is active", async () => {
       activeFilterCount={0}
       showingLabel="Visar 3 av 12"
       onClearFilters={onClearFilters}
-    >
-      <Text>Mina promenader</Text>
-    </ListHeaderAction>,
+      title="Mina promenader"
+    />,
   );
 
   expect(screen.getByTestId("icon-search").props.color).toBe(AppDefaultTheme.colors.primary);

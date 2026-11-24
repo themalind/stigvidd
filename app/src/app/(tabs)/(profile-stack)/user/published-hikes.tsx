@@ -8,7 +8,7 @@
 import { withdrawHikeSubmission } from "@/api/hike-submissions";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
 import AlertDialog from "@/components/dialog/alert-dialog";
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import ErrorView from "@/components/status/error-view";
 import LikeCount from "@/components/display/like-count";
 import RouteThumbnail from "@/components/hike/route-thumbnail";
@@ -146,11 +146,10 @@ export default function PublishedHikesScreen() {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-        <Icon source="upload" size={24} color={theme.colors.tertiary} />
-        <Text style={s.title}>{t("profile.myPublishedHikes")}</Text>
-      </View>
+      <ScreenHeader
+        title={t("profile.myPublishedHikes")}
+        icon={<Icon source="upload" size={26} color={theme.colors.tertiary} />}
+      />
       <FlatList
         data={data ?? []}
         keyExtractor={(item) => item.identifier}
@@ -183,19 +182,8 @@ const s = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingTop: 8,
-    paddingBottom: 16,
-    paddingHorizontal: SCREEN_PADDING,
-  },
-  title: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
-  },
   list: {
+    paddingTop: 8,
     paddingHorizontal: SCREEN_PADDING,
     paddingBottom: 30,
     gap: 10,

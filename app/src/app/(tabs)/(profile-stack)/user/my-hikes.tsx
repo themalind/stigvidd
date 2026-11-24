@@ -5,7 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/layout/back-button";
 import ErrorView from "@/components/status/error-view";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
 import RouteThumbnail from "@/components/hike/route-thumbnail";
@@ -137,11 +136,9 @@ export default function MyHikesScreen() {
           showingLabel={t("hike.showing", { count: totalCount, shown: filteredCount })}
           onClearFilters={clearFilters}
           showActions={totalCount > 0}
-        >
-          <BackButton />
-          <Icon source="hiking" size={24} color={theme.colors.tertiary} />
-          <Text style={s.titleTextBold}>{t("hike.myHikesTitle")}</Text>
-        </ListHeaderActions>
+          title={t("hike.myHikesTitle")}
+          icon={<Icon source="hiking" size={26} color={theme.colors.tertiary} />}
+        />
       </View>
       <FlatList
         data={filteredHikes}
@@ -186,10 +183,6 @@ export default function MyHikesScreen() {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  titleTextBold: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
   },
   hikePressable: {
     padding: 10,

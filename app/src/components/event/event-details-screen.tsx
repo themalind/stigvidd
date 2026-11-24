@@ -9,7 +9,7 @@ import { stigviddUserAtom } from "@/atoms/user-atoms";
 import AlertDialog from "@/components/dialog/alert-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import NoticeBanner from "@/components/status/notice-banner";
 import SectionPanel from "@/components/layout/section-panel";
 import { BORDER_RADIUS, EVENT_COVER_ASPECT, SCREEN_PADDING } from "@/constants/constants";
@@ -77,22 +77,25 @@ function LoadedEvent({ event, routes, isRefetching, onRefresh }: LoadedProps) {
         contentContainerStyle={s.content}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />}
       >
-        <View testID="event-top-bar" style={s.topBar}>
-          <BackButton />
-          <View style={s.flex} />
-          <EventShareButton event={event} />
-          <EventManageMenu
-            event={event}
-            onEdit={() =>
-              guardedNavigate(() =>
-                router.navigate({ pathname: routes.edit, params: { identifier: event.identifier } }),
-              )
-            }
-            onInvite={() => setInviting(true)}
-            onCancel={() => manage.cancelMutation.mutate()}
-            onDelete={() => manage.deleteMutation.mutateAsync()}
-          />
-        </View>
+        <ScreenHeader
+          testID="event-top-bar"
+          actions={
+            <>
+              <EventShareButton event={event} />
+              <EventManageMenu
+                event={event}
+                onEdit={() =>
+                  guardedNavigate(() =>
+                    router.navigate({ pathname: routes.edit, params: { identifier: event.identifier } }),
+                  )
+                }
+                onInvite={() => setInviting(true)}
+                onCancel={() => manage.cancelMutation.mutate()}
+                onDelete={() => manage.deleteMutation.mutateAsync()}
+              />
+            </>
+          }
+        />
         <EventBody event={event} routes={routes} />
         {participants.data?.participants ? (
           <View style={s.participants}>
@@ -308,15 +311,6 @@ const s = StyleSheet.create({
   },
   content: {
     paddingBottom: 24,
-  },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: SCREEN_PADDING,
-    minHeight: 8,
-  },
-  flex: {
-    flex: 1,
   },
   participants: {
     marginTop: 12,

@@ -11,6 +11,8 @@ import { Switch, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import ScreenHeader from "@/components/layout/screen-header";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { getConsentSync, loadConsent, setConsent, subscribeConsent, type ConsentState } from "@/services/consent";
 
 // keep-comment: GDPR art. 7(3): withdrawing must be as easy as consenting, so a plain switch two taps away
@@ -37,44 +39,42 @@ export default function PrivacyScreen() {
   return (
     <ScrollView
       testID="privacy-screen"
-      contentContainerStyle={[s.content, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 32 }]}
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }}
       style={{ backgroundColor: theme.colors.background }}
     >
-      <Text variant="headlineSmall" style={[s.title, { color: theme.colors.onBackground }]}>
-        {t("privacy.title")}
-      </Text>
-
-      <View style={[s.row, { backgroundColor: theme.colors.secondaryContainer }]}>
-        <View style={s.rowText}>
-          <Text variant="titleSmall" style={{ color: theme.colors.onSecondaryContainer }}>
-            {t("privacy.statsLabel")}
-          </Text>
-          <Text variant="bodySmall" style={{ color: theme.colors.onSecondaryContainer }}>
-            {t("privacy.statsDescription")}
-          </Text>
+      <ScreenHeader title={t("privacy.title")} />
+      <View style={s.content}>
+        <View testID="privacy-stats-row" style={[s.row, { backgroundColor: theme.colors.secondaryContainer }]}>
+          <View style={s.rowText}>
+            <Text variant="titleSmall" style={{ color: theme.colors.onSecondaryContainer }}>
+              {t("privacy.statsLabel")}
+            </Text>
+            <Text variant="bodySmall" style={{ color: theme.colors.onSecondaryContainer }}>
+              {t("privacy.statsDescription")}
+            </Text>
+          </View>
+          <Switch
+            testID="privacy-stats-switch"
+            value={consent === "granted"}
+            onValueChange={handleToggle}
+            accessibilityLabel={t("privacy.statsLabel")}
+          />
         </View>
-        <Switch
-          testID="privacy-stats-switch"
-          value={consent === "granted"}
-          onValueChange={handleToggle}
-          accessibilityLabel={t("privacy.statsLabel")}
-        />
-      </View>
 
-      <Text variant="bodyMedium" style={[s.body, { color: theme.colors.onBackground }]}>
-        {t("privacy.explanation")}
-      </Text>
-      <Text variant="bodySmall" style={[s.body, { color: theme.colors.onSurfaceVariant }]}>
-        {t("privacy.errorsNote")}
-      </Text>
+        <Text variant="bodyMedium" style={[s.body, { color: theme.colors.onBackground }]}>
+          {t("privacy.explanation")}
+        </Text>
+        <Text variant="bodySmall" style={[s.body, { color: theme.colors.onSurfaceVariant }]}>
+          {t("privacy.errorsNote")}
+        </Text>
+      </View>
     </ScrollView>
   );
 }
 
 const s = StyleSheet.create({
-  content: { paddingHorizontal: 16, gap: 16 },
-  title: { fontWeight: "600" },
-  row: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, borderRadius: 12 },
+  content: { paddingHorizontal: SCREEN_PADDING, paddingTop: 8, gap: 16 },
+  row: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, borderRadius: BORDER_RADIUS },
   rowText: { flex: 1, gap: 2 },
   body: { lineHeight: 20 },
 });

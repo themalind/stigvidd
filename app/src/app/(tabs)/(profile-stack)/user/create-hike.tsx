@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import LocationDisclosureDialog from "@/components/hike/recorder/location-disclosure-dialog";
 import RecordingInfoDialog from "@/components/hike/recorder/recording-info-dialog";
@@ -105,9 +105,7 @@ export default function CreateHikeScreen() {
   if (phase === "denied") {
     return (
       <View testID="create-hike-denied" style={[s.screen, { backgroundColor: theme.colors.background }]}>
-        <View style={s.header}>
-          <BackButton />
-        </View>
+        <ScreenHeader />
         <View style={s.deniedContent}>
           <View
             testID="create-hike-denied-icon"
@@ -142,19 +140,21 @@ export default function CreateHikeScreen() {
 
   return (
     <View testID="create-hike-screen" style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View testID="create-hike-header" style={s.header}>
-        <BackButton />
-        <Text style={s.title}>{t("createHike.title")}</Text>
-        <IconButton
-          testID="create-hike-info"
-          icon="information-outline"
-          size={20}
-          iconColor={theme.colors.onBackground}
-          style={s.infoButton}
-          accessibilityLabel={t("createHike.infoTitle")}
-          onPress={() => setShowInfo(true)}
-        />
-      </View>
+      <ScreenHeader
+        testID="create-hike-header"
+        title={t("createHike.title")}
+        actions={
+          <IconButton
+            testID="create-hike-info"
+            icon="information-outline"
+            size={24}
+            iconColor={theme.colors.onBackground}
+            style={s.infoButton}
+            accessibilityLabel={t("createHike.infoTitle")}
+            onPress={() => setShowInfo(true)}
+          />
+        }
+      />
       <View testID="create-hike-content" style={s.content}>
         <HikeRecorder />
       </View>
@@ -169,17 +169,6 @@ const s = StyleSheet.create({
     flex: 1,
     paddingTop: 8,
     paddingBottom: 20,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: SCREEN_PADDING,
-    paddingBottom: 8,
-    gap: 4,
-  },
-  title: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
   },
   infoButton: {
     margin: 0,

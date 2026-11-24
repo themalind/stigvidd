@@ -5,9 +5,10 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { APP_THEMES, AUTO_THEMES, type AppTheme, type ThemeChoice } from "@/constants/theme";
 import { useThemeChoice } from "@/hooks/theme/useThemeChoice";
+import ScreenHeader from "@/components/layout/screen-header";
 import ThemePreview from "@/components/settings/theme-preview";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
@@ -72,11 +73,9 @@ export default function ThemeScreen() {
   };
 
   return (
-    <View style={[s.screen, { paddingTop: insets.top + 16, backgroundColor: theme.colors.background }]}>
+    <View style={[s.screen, { paddingTop: insets.top + 8, backgroundColor: theme.colors.background }]}>
+      <ScreenHeader title={t("themes.title")} />
       <View style={[s.header, { borderBottomColor: theme.colors.outlineVariant }]}>
-        <Text variant="headlineSmall" style={[s.title, { color: theme.colors.onBackground }]}>
-          {t("themes.title")}
-        </Text>
         <View style={s.previewSection}>
           <Text variant="labelLarge" style={{ color: theme.colors.onSurfaceVariant }}>
             {t("themes.preview.heading")}
@@ -115,10 +114,14 @@ function themeColors({ colors }: AppTheme): OptionColors {
 
 const s = StyleSheet.create({
   screen: { flex: 1 },
-  header: { paddingHorizontal: 16, paddingBottom: 24, gap: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  header: {
+    paddingHorizontal: SCREEN_PADDING,
+    paddingTop: 8,
+    paddingBottom: 24,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
   previewSection: { gap: 8 },
-  content: { paddingHorizontal: 16, paddingTop: 24 },
-  title: { fontWeight: "600" },
+  content: { paddingHorizontal: SCREEN_PADDING, paddingTop: 24 },
   list: { gap: 10 },
   groupLabel: { marginTop: 8 },
   option: {

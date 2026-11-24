@@ -10,8 +10,9 @@
 // really writes the stored choice — a toggle that looks right but persists nothing would make
 // the policy false.
 
-import { screen, fireEvent, waitFor } from "@testing-library/react-native";
+import { screen, fireEvent, waitFor, within } from "@testing-library/react-native";
 
+import { BORDER_RADIUS } from "@/constants/constants";
 import { renderWithProviders } from "@/test/render";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -25,6 +26,14 @@ beforeEach(async () => {
 
 afterEach(() => {
   resetConsent();
+});
+
+it("uses the shared header, and the app's corner radius on the row", async () => {
+  await renderWithProviders(<PrivacyScreen />);
+
+  expect(within(screen.getByTestId("screen-header-bar")).getByTestId("back-button")).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Integritet" })).toBeTruthy();
+  expect(screen.getByTestId("privacy-stats-row")).toHaveStyle({ borderRadius: BORDER_RADIUS });
 });
 
 it("starts off when nothing has been chosen yet", async () => {

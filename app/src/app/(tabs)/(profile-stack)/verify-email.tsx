@@ -9,8 +9,8 @@ import { ApiError } from "@/api/core/api-error";
 import { resendVerification, verifyEmailCode } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
-import BackButton from "@/components/layout/back-button";
-import { BORDER_RADIUS, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import ScreenHeader from "@/components/layout/screen-header";
+import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -130,8 +130,8 @@ export default function VerifyEmailScreen() {
         contentContainerStyle={s.scrollContent}
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
-          <View style={s.backButtonContainer}>
-            <BackButton />
+          <View style={s.backButtonContainer} pointerEvents="box-none">
+            <ScreenHeader />
           </View>
           <View style={[s.surface, { backgroundColor: addOpacity(theme.colors.surface, 0.9) }]}>
             <Text style={[s.title, { color: theme.colors.onSurface }]}>{t("auth.verifyEmailTitle")}</Text>
@@ -223,7 +223,8 @@ const s = StyleSheet.create({
   backButtonContainer: {
     position: "absolute",
     top: 0,
-    left: SCREEN_PADDING,
+    left: 0,
+    right: 0,
   },
   surface: {
     gap: 10,

@@ -15,7 +15,6 @@ import TrailDescription from "@/components/trail/trail-description";
 import TrailContributionBar from "@/components/trail/trail-contribution-bar";
 import TrailInfo from "@/components/trail/trail-info";
 import TrailMap from "@/components/trail/trail-map";
-import TrailTitle from "@/components/trail/trail-title";
 import UserBar from "@/components/trail/user-action-bar/user-bar";
 import { TRAIL_DETAIL_STALE_TIME } from "@/constants/cache";
 import { Review } from "@/data/types";
@@ -27,7 +26,7 @@ import { type ComponentRef, startTransition, useCallback, useEffect, useRef, use
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import MapSkeleton from "../skeletons/map-skeleton";
@@ -130,10 +129,12 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
-        <View testID="trail-details-header" style={s.header}>
-          <BackButton />
-          <TrailTitle name={trail?.name} city={trail?.city} />
-        </View>
+        <ScreenHeader
+          testID="trail-details-header"
+          title={trail?.name}
+          subtitle={trail?.city?.trim()}
+          subtitleIcon="map-marker"
+        />
         <View style={s.content}>
           <View style={s.imageContainer}>
             <ImageGallery images={images} />
@@ -190,13 +191,6 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 5,
-    paddingBottom: 5,
-    paddingLeft: 12,
   },
   container: {
     paddingTop: 4,

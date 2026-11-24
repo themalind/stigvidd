@@ -13,7 +13,7 @@ import { EventParticipants, HikingEvent } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { renderWithProviders } from "@/test/render";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 
 const mockGetEvent = jest.fn();
 const mockGetParticipants = jest.fn();
@@ -158,11 +158,12 @@ describe("EventDetailsScreen", () => {
     expect(screen.getByTestId("back-button")).toBeTruthy();
   });
 
-  it("keeps the round back button off the screen edge", async () => {
+  it("uses the shared header, with share and the menu on the bar", async () => {
     await show(hikingEvent());
     await flushUntil(() => screen.queryByTestId("event-top-bar") !== null);
 
-    expect(screen.getByTestId("event-top-bar")).toHaveStyle({ paddingLeft: SCREEN_PADDING });
+    expect(screen.getByTestId("event-top-bar")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
+    expect(within(screen.getByTestId("event-top-bar-bar")).getByTestId("back-button")).toBeTruthy();
   });
 
   it("joins an open event from the action bar", async () => {

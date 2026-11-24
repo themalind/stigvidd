@@ -15,7 +15,7 @@ import { getByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { QueryClient } from "@tanstack/react-query";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 import { ActivityIndicator, AppState, AppStateStatus, Linking, Platform } from "react-native";
 
 const mockGetPermissions = jest.fn();
@@ -534,16 +534,14 @@ it("gives the creator the full height below the header, inset by the screen padd
   });
 });
 
-it("keeps the round back button off the screen edge", async () => {
+it("uses the shared header: back button and info on the bar, the title below", async () => {
   await showGranted();
 
-  expect(screen.getByTestId("create-hike-header")).toHaveStyle({
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    paddingLeft: SCREEN_PADDING,
-    paddingBottom: 8,
-  });
+  expect(screen.getByTestId("create-hike-header")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
+  const bar = screen.getByTestId("create-hike-header-bar");
+  expect(within(bar).getByTestId("back-button")).toBeTruthy();
+  expect(within(bar).getByTestId("create-hike-info")).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Skapa promenad" })).toBeTruthy();
 });
 
 it("draws the denied state's icon as a filled circle in the theme's container colour", async () => {

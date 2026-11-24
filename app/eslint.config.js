@@ -95,7 +95,22 @@ module.exports = defineConfig([
         "error",
         { name: "fetch", message: "Call the API through src/api/core/request.ts (send/sendForJson)." },
       ],
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/back-button"],
+              message: "Use ScreenHeader (components/layout/screen-header), so every screen's header looks the same.",
+            },
+          ],
+        },
+      ],
     },
+  },
+  {
+    files: ["src/components/layout/screen-header.tsx"],
+    rules: { "no-restricted-imports": "off" },
   },
   {
     // keep-comment: these talk to Keycloak and the telemetry endpoint, not to the Stigvidd API

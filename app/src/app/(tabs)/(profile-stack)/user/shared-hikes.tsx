@@ -7,7 +7,6 @@
 
 import { getIncomingSharedHike } from "@/api/shared-hikes";
 import { incomingSharedHikesAtom } from "@/atoms/friends-atoms";
-import BackButton from "@/components/layout/back-button";
 import ErrorScreen from "@/components/status/error-screen";
 import { HikeFilterModal } from "@/components/hike/hike-filter-modal";
 import ListHeaderActions, { SortField } from "@/components/layout/list-header-actions";
@@ -121,11 +120,9 @@ export default function SharedHikesScreen() {
           showingLabel={t("hike.showing", { count: totalCount, shown: filteredCount })}
           onClearFilters={clearFilters}
           showActions={totalCount > 0}
-        >
-          <BackButton />
-          <Icon source="hiking" size={24} color={theme.colors.onSurfaceVariant} />
-          <Text style={s.headerText}>{t("hike.sharedHikesTitle")}</Text>
-        </ListHeaderActions>
+          title={t("hike.sharedHikesTitle")}
+          icon={<Icon source="hiking" size={26} color={theme.colors.onSurfaceVariant} />}
+        />
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>
         <View style={s.content}>
@@ -324,10 +321,6 @@ const s = StyleSheet.create({
   stickyHeader: {
     paddingTop: 8,
     paddingBottom: 8,
-  },
-  headerText: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
   },
   iconCircle: {
     width: 42,

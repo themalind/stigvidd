@@ -21,7 +21,6 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
-import BackButton from "@/components/layout/back-button";
 import ListHeaderActions from "@/components/layout/list-header-actions";
 import { Rating } from "../review/rating";
 import { TrailFilterModal } from "../trail/trail-list/trail-filter-modal";
@@ -98,11 +97,9 @@ export default function UserTrailCollection({
           showingLabel={t("trailList.showing", { count: totalCount, shown: filteredCount })}
           onClearFilters={clearFilters}
           showActions={!isEmpty}
-        >
-          <BackButton />
-          {icon}
-          <Text style={s.title}>{title}</Text>
-        </ListHeaderActions>
+          title={title}
+          icon={icon}
+        />
       </View>
 
       <ScrollView
@@ -242,10 +239,6 @@ const s = StyleSheet.create({
     gap: 12,
     paddingVertical: 8,
     paddingHorizontal: 5,
-  },
-  title: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
   },
   cardBody: {
     flex: 1,

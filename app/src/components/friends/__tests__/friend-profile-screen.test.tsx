@@ -157,10 +157,11 @@ function sentHike(hikeName: string, isOwnHike: boolean, ...recipients: [string, 
   };
 }
 
-it("keeps the round back button off the screen edge", async () => {
+it("uses the shared header for its back button", async () => {
   await show();
 
-  expect(screen.getByTestId("friend-profile-top-bar")).toHaveStyle({ paddingLeft: SCREEN_PADDING });
+  expect(screen.getByTestId("friend-profile-top-bar")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
+  expect(within(screen.getByTestId("friend-profile-top-bar-bar")).getByTestId("back-button")).toBeTruthy();
 });
 
 it("counts both directions in the tabs and lists what you sent on the second", async () => {

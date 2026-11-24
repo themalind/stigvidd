@@ -227,6 +227,15 @@ it("lets everyone else vote, and not edit or delete", async () => {
   expect(screen.queryByTestId("icon-delete-outline")).toBeNull();
 });
 
+it("names its icon-only buttons for screen readers", async () => {
+  await show(obstacle({ userIdentifier: "me" }));
+  expect(screen.getByRole("button", { name: "Redigera hinder" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Ta bort hinder" })).toBeTruthy();
+
+  await show();
+  expect(screen.getByRole("button", { name: "Rapportera hinder" })).toBeTruthy();
+});
+
 // userIdentifier is null once the reporter has deleted their account: nobody owns it then.
 it("gives an orphaned report no owner actions", async () => {
   await show(obstacle({ userIdentifier: null }));

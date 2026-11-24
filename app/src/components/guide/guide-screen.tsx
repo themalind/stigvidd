@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import { BORDER_RADIUS, SCREEN_PADDING } from "@/constants/constants";
 import { DIFFICULTIES } from "@/data/trail-content";
 import { asTranslationKey } from "@/i18n";
@@ -78,10 +78,7 @@ export default function GuideScreen() {
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={s.container} showsVerticalScrollIndicator={false}>
-        <View style={s.header}>
-          <BackButton />
-          <Text style={[s.pageTitle, { color: theme.colors.onBackground }]}>{t("guide.title")}</Text>
-        </View>
+        <ScreenHeader title={t("guide.title")} />
         <View style={s.content}>
           <AccordionSection
             icon={<MaterialCommunityIcons name="walk" size={18} color={theme.colors.onSurfaceVariant} />}
@@ -198,12 +195,6 @@ const s = StyleSheet.create({
   screen: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: SCREEN_PADDING,
-  },
   container: {
     paddingTop: 8,
     paddingBottom: 48,
@@ -212,10 +203,6 @@ const s = StyleSheet.create({
   content: {
     paddingHorizontal: SCREEN_PADDING,
     gap: 12,
-  },
-  pageTitle: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
   },
   accordion: {
     borderRadius: BORDER_RADIUS,

@@ -11,7 +11,7 @@ import { APP_THEMES, AppDefaultTheme, type ThemeChoice } from "@/constants/theme
 import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen, within } from "@testing-library/react-native";
 
 function show(choice: ThemeChoice = "auto") {
   return renderWithProviders(<ThemeScreen />, { initialAtoms: [[userThemeAtom, choice]] });
@@ -20,6 +20,13 @@ function show(choice: ThemeChoice = "auto") {
 beforeEach(async () => {
   jest.clearAllMocks();
   await AsyncStorage.clear();
+});
+
+it("uses the shared header", async () => {
+  await show();
+
+  expect(within(screen.getByTestId("screen-header-bar")).getByTestId("back-button")).toBeTruthy();
+  expect(screen.getByRole("header", { name: "Tema" })).toBeTruthy();
 });
 
 it("offers the system choice and every theme, by name", async () => {

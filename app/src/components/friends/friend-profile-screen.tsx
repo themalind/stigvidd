@@ -10,7 +10,7 @@ import AlertDialog from "@/components/dialog/alert-dialog";
 import EventCard from "@/components/event/event-card";
 import { openEvent, PROFILE_STACK_EVENT_ROUTES } from "@/components/event/event-routes";
 import { useOrganizerEvents } from "@/hooks/events/useEventQueries";
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import ErrorView from "@/components/status/error-view";
 import BlockUserDialog, { UserRef } from "@/components/friends/block-user-dialog";
 import FriendNoteDialog from "@/components/friends/friend-note-dialog";
@@ -86,9 +86,7 @@ export default function FriendProfileScreen() {
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={s.scrollContent}>
-        <View testID="friend-profile-top-bar" style={s.topBar}>
-          <BackButton />
-        </View>
+        <ScreenHeader testID="friend-profile-top-bar" />
         {!friend ? (
           <Text variant="bodyMedium" style={s.notFriend}>
             {t("friends.notFriend")}
@@ -298,12 +296,6 @@ const s = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 32,
     gap: 8,
-  },
-  topBar: {
-    minHeight: 32,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingLeft: SCREEN_PADDING,
   },
   content: {
     paddingHorizontal: SCREEN_PADDING,

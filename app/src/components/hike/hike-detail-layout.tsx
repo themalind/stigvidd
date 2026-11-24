@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import ErrorScreen from "@/components/status/error-screen";
 import { HikeFact, HikeFactsCard, HikeInfo, HikeInfoCard } from "@/components/hike/hike-detail-sections";
 import RoutePreviewMap from "@/components/map/route-preview-map";
@@ -16,7 +16,7 @@ import FormattedTime from "@/utils/format/format-time-from-ms";
 import { ReactNode, startTransition, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
-import { Text, useTheme } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 
 const MAP_HEIGHT = Dimensions.get("screen").height * 0.3;
 
@@ -69,7 +69,7 @@ export default function HikeDetailLayout({
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <HikeDetailHeader title={title} action={headerAction} />
+      <ScreenHeader testID="hike-detail-header" title={title} titleLines={2} actions={headerAction} />
       <ScrollView contentContainerStyle={s.scrollContent}>
         {mapReady ? (
           <RoutePreviewMap idPrefix={idPrefix} path={path} onOpen={onOpenMap} style={s.map} />
@@ -97,18 +97,6 @@ export default function HikeDetailLayout({
   );
 }
 
-function HikeDetailHeader({ title, action }: { title?: string; action?: ReactNode }) {
-  return (
-    <View style={s.header}>
-      <BackButton />
-      <Text style={s.title} numberOfLines={1}>
-        {title}
-      </Text>
-      {action}
-    </View>
-  );
-}
-
 export function HikeDetailFallback({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   return <ErrorScreen error={error} onRetry={onRetry} />;
 }
@@ -116,19 +104,6 @@ export function HikeDetailFallback({ error, onRetry }: { error: unknown; onRetry
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    minHeight: 44,
-    paddingLeft: SCREEN_PADDING,
-    paddingRight: SCREEN_PADDING,
-  },
-  title: {
-    flex: 1,
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 16,
   },
   // keep-comment: flexGrow plus the actions' marginTop auto pin the buttons to the bottom while content is short
   scrollContent: {

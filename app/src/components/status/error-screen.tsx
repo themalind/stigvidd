@@ -5,9 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import BackButton from "@/components/layout/back-button";
+import ScreenHeader from "@/components/layout/screen-header";
 import ErrorView from "@/components/status/error-view";
-import { SCREEN_PADDING } from "@/constants/constants";
 import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
@@ -22,9 +21,7 @@ export default function ErrorScreen({ error, onRetry }: Props) {
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <View style={s.header}>
-        <BackButton />
-      </View>
+      <ScreenHeader />
       <ErrorView error={error} onRetry={onRetry} />
     </View>
   );
@@ -33,11 +30,5 @@ export default function ErrorScreen({ error, onRetry }: Props) {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 44,
-    paddingLeft: SCREEN_PADDING,
   },
 });

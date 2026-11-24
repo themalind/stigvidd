@@ -8,8 +8,8 @@
 import { asTranslationKey } from "@/i18n";
 import { AccountNotVerifiedError, InvalidCredentialsError } from "@/services/keycloak-auth";
 import PasswordInputField from "@/components/auth/password-input-field";
-import BackButton from "@/components/layout/back-button";
-import { BORDER_RADIUS, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import ScreenHeader from "@/components/layout/screen-header";
+import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { loginReturnPathAtom } from "@/atoms/auth-atoms";
@@ -94,8 +94,8 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
       >
         <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
           {showBackButton && (
-            <View style={s.backButtonContainer}>
-              <BackButton />
+            <View style={s.backButtonContainer} pointerEvents="box-none">
+              <ScreenHeader />
             </View>
           )}
           <View
@@ -232,7 +232,8 @@ const s = StyleSheet.create({
   backButtonContainer: {
     position: "absolute",
     top: 0,
-    left: SCREEN_PADDING,
+    left: 0,
+    right: 0,
   },
   logoContainer: {
     flexDirection: "row",

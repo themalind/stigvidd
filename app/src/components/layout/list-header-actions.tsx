@@ -7,10 +7,11 @@
 
 import FilterIconButton from "@/components/filter/filter-icon-button";
 import SearchField from "@/components/form/search-field";
+import ScreenHeader from "@/components/layout/screen-header";
 import { SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
-import { type ComponentRef, useRef, useState } from "react";
+import { type ComponentRef, type ReactNode, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Keyboard, Pressable, StyleSheet, View } from "react-native";
 import { Divider, Portal, Text, useTheme } from "react-native-paper";
@@ -23,7 +24,8 @@ export interface SortField {
 }
 
 interface ListHeaderActionsProps {
-  children: React.ReactNode; // Left side of the header row: back button, icon, title.
+  title: string;
+  icon?: ReactNode;
   searchQuery: string;
   onSearchChange: (v: string) => void;
   searchPlaceholder: string;
@@ -38,7 +40,8 @@ interface ListHeaderActionsProps {
 }
 
 export default function ListHeaderAction({
-  children,
+  title,
+  icon,
   searchQuery,
   onSearchChange,
   searchPlaceholder,
@@ -95,33 +98,38 @@ export default function ListHeaderAction({
   const hasActive = activeFilterCount > 0 || searchQuery.length > 0;
 
   if (!showActions) {
-    return (
-      <View testID="list-header-row" style={s.headerRow}>
-        {children}
-      </View>
-    );
+    return <ScreenHeader testID="list-header" title={title} icon={icon} />;
   }
 
   return (
     <View>
-      <View testID="list-header-row" style={s.headerRow}>
-        {children}
-        <View style={s.actions}>
-          {/* keep-comment: 24px icons are below the 44px minimum touch target */}
-          <Pressable onPress={toggleSearch} hitSlop={16}>
-            <MaterialIcons
-              name="search"
-              size={24}
-              color={searchQuery ? theme.colors.primary : theme.colors.onBackground}
-            />
-          </Pressable>
+      <ScreenHeader
+        testID="list-header"
+        title={title}
+        icon={icon}
+        actions={
+          <View style={s.actions}>
+            {/* keep-comment: 24px icons are below the 44px minimum touch target */}
+            <Pressable
+              onPress={toggleSearch}
+              hitSlop={16}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.search")}
+            >
+              <MaterialIcons
+                name="search"
+                size={24}
+                color={searchQuery ? theme.colors.primary : theme.colors.onBackground}
+              />
+            </Pressable>
 
-          {/* keep-comment: Android drops a plain wrapper View, and measureInWindow needs it */}
-          <View ref={anchorRef} collapsable={false}>
-            <FilterIconButton activeCount={activeFilterCount} label={t("filter.label")} onPress={toggleSort} />
+            {/* keep-comment: Android drops a plain wrapper View, and measureInWindow needs it */}
+            <View ref={anchorRef} collapsable={false}>
+              <FilterIconButton activeCount={activeFilterCount} label={t("filter.label")} onPress={toggleSort} />
+            </View>
           </View>
-        </View>
-      </View>
+        }
+      />
 
       {/* keep-comment: mounted on demand so autoFocus fires */}
       {searchOpen && (
@@ -213,18 +221,10 @@ export default function ListHeaderAction({
 }
 
 const s = StyleSheet.create({
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: SCREEN_PADDING,
-    paddingRight: SCREEN_PADDING,
-  },
   actions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    marginLeft: "auto",
   },
   search: {
     marginHorizontal: SCREEN_PADDING,
