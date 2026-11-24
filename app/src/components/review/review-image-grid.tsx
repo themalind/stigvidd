@@ -9,6 +9,7 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { ReviewImage } from "@/data/types";
 import { Image } from "expo-image";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import ImageViewer from "./image-viewer";
 
@@ -17,6 +18,7 @@ interface ReviewImageProps {
 }
 
 export default function ReviewImageGrid({ reviewImages }: ReviewImageProps) {
+  const { t } = useTranslation();
   const [isGalleryVisible, setIsGalleryVisible] = useState(false);
   const [openIndex, setOpenIndex] = useState(0);
 
@@ -28,7 +30,13 @@ export default function ReviewImageGrid({ reviewImages }: ReviewImageProps) {
   return (
     <View style={s.container}>
       {reviewImages.map((image, index) => (
-        <Pressable key={image.identifier} onPress={() => handleImagePress(index)}>
+        <Pressable
+          key={image.identifier}
+          testID={`review-image-${index}`}
+          onPress={() => handleImagePress(index)}
+          accessibilityRole="imagebutton"
+          accessibilityLabel={t("hike.openImage", { index: index + 1, count: reviewImages.length })}
+        >
           <Image style={s.image} contentFit="cover" source={{ uri: image.imageUrl }} />
         </Pressable>
       ))}

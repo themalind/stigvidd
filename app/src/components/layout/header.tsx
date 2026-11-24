@@ -8,6 +8,7 @@
 import { SCREEN_PADDING } from "@/constants/constants";
 import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ import SettingsDrawer from "@/components/settings/drawer";
 export default function Header() {
   const [visible, setVisible] = useState(false);
   const theme = useTheme();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={{ backgroundColor: theme.colors.background }} edges={["top"]}>
@@ -34,7 +36,13 @@ export default function Header() {
           <Text style={[s.text, { color: theme.colors.onSurfaceVariant }]}>Stigvidd</Text>
         </View>
         <View style={s.iconContainer}>
-          <Pressable hitSlop={12} onPress={() => setVisible(true)}>
+          <Pressable
+            testID="header-settings"
+            hitSlop={12}
+            onPress={() => setVisible(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t("settings.open")}
+          >
             <MaterialIcons name="settings" size={24} color={theme.colors.onSurfaceVariant} />
           </Pressable>
         </View>

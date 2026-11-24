@@ -795,7 +795,8 @@
   "settings": {
     "theme": "Tema",
     "about": "Om Stigvidd",
-    "privacy": "Integritet"
+    "privacy": "Integritet",
+    "open": "Inställningar"
   },
   "themes": {
     "title": "Tema",

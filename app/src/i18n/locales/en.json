@@ -795,7 +795,8 @@
   "settings": {
     "theme": "Theme",
     "about": "About Stigvidd",
-    "privacy": "Privacy"
+    "privacy": "Privacy",
+    "open": "Settings"
   },
   "themes": {
     "title": "Theme",
