@@ -148,7 +148,7 @@ export default function PublishedHikesScreen() {
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScreenHeader
         title={t("profile.myPublishedHikes")}
-        icon={<Icon source="upload" size={26} color={theme.colors.tertiary} />}
+        icon={<Icon source="upload" size={24} color={theme.colors.tertiary} />}
       />
       <FlatList
         data={data ?? []}

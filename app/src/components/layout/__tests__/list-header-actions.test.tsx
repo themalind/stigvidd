@@ -71,16 +71,15 @@ it.each([true, false])("keeps the round back button off the screen edge (actions
   expect(screen.getByTestId("list-header")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
 });
 
-it("puts search and filter on the bar beside the back button, with the title below", async () => {
+it("puts the back button, icon, title, search and filter on one row", async () => {
   await show({ icon: <Text>ikon</Text> });
 
   const bar = screen.getByTestId("list-header-bar");
   expect(within(bar).getByTestId("back-button")).toBeTruthy();
+  expect(within(bar).getByText("ikon")).toBeTruthy();
+  expect(within(bar).getByRole("header", { name: "Mina promenader" })).toBeTruthy();
   expect(within(bar).getByTestId("icon-search")).toBeTruthy();
   expect(within(bar).getByTestId("icon-filter-list")).toBeTruthy();
-  expect(within(bar).queryByText("Mina promenader")).toBeNull();
-  expect(screen.getByRole("header", { name: "Mina promenader" })).toBeTruthy();
-  expect(screen.getByText("ikon")).toBeTruthy();
 });
 
 it("keeps the header itself out of the way until an icon is pressed", async () => {

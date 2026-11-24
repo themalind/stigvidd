@@ -8,7 +8,7 @@
 import BackButton from "@/components/layout/back-button";
 import { SCREEN_PADDING } from "@/constants/constants";
 import type { ReactNode } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";
 
 type Props = {
@@ -17,13 +17,13 @@ type Props = {
   subtitleIcon?: string;
   // keep-comment: drawn before the title, e.g. the heart on the favourites list
   icon?: ReactNode;
-  // keep-comment: right of the back button, e.g. search, filter or a menu
+  // keep-comment: at the end of the row, e.g. search, filter or a menu
   actions?: ReactNode;
   titleLines?: number;
   testID?: string;
 };
 
-// keep-comment: the one header for every pushed screen: back button and actions on a bar, a large title below
+// keep-comment: the one header for every pushed screen: back button, icon, title and actions on one row
 export default function ScreenHeader({
   title,
   subtitle,
@@ -34,21 +34,14 @@ export default function ScreenHeader({
   testID = "screen-header",
 }: Props) {
   const theme = useTheme();
-  // keep-comment: Android shows no back button; the empty bar stays only when there is no title, so content starts at the same height as on iOS
-  const showBar = Platform.OS === "ios" || !!actions || !title;
 
   return (
     <View testID={testID} style={s.header} pointerEvents="box-none">
-      {showBar && (
-        <View testID={`${testID}-bar`} style={s.bar} pointerEvents="box-none">
-          <BackButton />
-          <View style={s.actions}>{actions}</View>
-        </View>
-      )}
-      {!!title && (
+      <View testID={`${testID}-bar`} style={s.bar} pointerEvents="box-none">
+        <BackButton />
+        {icon}
         <View style={s.titleBlock}>
-          <View style={s.titleRow}>
-            {icon}
+          {!!title && (
             <Text
               accessibilityRole="header"
               numberOfLines={titleLines}
@@ -56,15 +49,16 @@ export default function ScreenHeader({
             >
               {title}
             </Text>
-          </View>
-          {!!subtitle && (
+          )}
+          {!!title && !!subtitle && (
             <View testID={`${testID}-subtitle`} style={s.subtitleRow}>
-              {!!subtitleIcon && <Icon source={subtitleIcon} size={14} color={theme.colors.onSurfaceVariant} />}
+              {!!subtitleIcon && <Icon source={subtitleIcon} size={12} color={theme.colors.onSurfaceVariant} />}
               <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>{subtitle}</Text>
             </View>
           )}
         </View>
-      )}
+        {!!actions && <View style={s.actions}>{actions}</View>}
+      </View>
     </View>
   );
 }
@@ -74,39 +68,34 @@ const s = StyleSheet.create({
     paddingHorizontal: SCREEN_PADDING,
     paddingTop: 4,
     paddingBottom: 8,
-    gap: 8,
   },
   bar: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 8,
     minHeight: 44,
+  },
+  titleBlock: {
+    flex: 1,
+    minWidth: 0,
+    gap: 1,
+  },
+  title: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 17,
+    lineHeight: 22,
   },
   actions: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    marginLeft: "auto",
-  },
-  titleBlock: {
-    gap: 2,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  title: {
-    flexShrink: 1,
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 26,
-    lineHeight: 32,
   },
   subtitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: 3,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
   },
 });

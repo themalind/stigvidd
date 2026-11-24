@@ -49,7 +49,6 @@ const s = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 8,
     shadowColor: "#000",
     shadowOpacity: 0.12,
     shadowRadius: 4,

@@ -69,7 +69,7 @@ export default function HikeDetailLayout({
 
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
-      <ScreenHeader testID="hike-detail-header" title={title} titleLines={2} actions={headerAction} />
+      <ScreenHeader testID="hike-detail-header" title={title} titleLines={1} actions={headerAction} />
       <ScrollView contentContainerStyle={s.scrollContent}>
         {mapReady ? (
           <RoutePreviewMap idPrefix={idPrefix} path={path} onOpen={onOpenMap} style={s.map} />

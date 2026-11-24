@@ -137,7 +137,7 @@ export default function MyHikesScreen() {
           onClearFilters={clearFilters}
           showActions={totalCount > 0}
           title={t("hike.myHikesTitle")}
-          icon={<Icon source="hiking" size={26} color={theme.colors.tertiary} />}
+          icon={<Icon source="hiking" size={24} color={theme.colors.tertiary} />}
         />
       </View>
       <FlatList

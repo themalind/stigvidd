@@ -92,7 +92,7 @@ export default function FriendsScreen() {
       <ScrollView style={{ backgroundColor: theme.colors.background }} contentContainerStyle={s.scrollContent}>
         <ScreenHeader
           title={t("friends.title")}
-          icon={<MaterialCommunityIcons name="account-group" size={26} color={theme.colors.onSurfaceVariant} />}
+          icon={<MaterialCommunityIcons name="account-group" size={24} color={theme.colors.onSurfaceVariant} />}
         />
         <View style={s.content}>
           <Searchbar

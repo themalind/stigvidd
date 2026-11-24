@@ -39,7 +39,7 @@ export default function PrivacyScreen() {
   return (
     <ScrollView
       testID="privacy-screen"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: insets.bottom + 32 }}
+      contentContainerStyle={{ paddingTop: 8, paddingBottom: insets.bottom + 32 }}
       style={{ backgroundColor: theme.colors.background }}
     >
       <ScreenHeader title={t("privacy.title")} />

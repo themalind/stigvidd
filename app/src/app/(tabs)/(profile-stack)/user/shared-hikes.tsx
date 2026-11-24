@@ -121,7 +121,7 @@ export default function SharedHikesScreen() {
           onClearFilters={clearFilters}
           showActions={totalCount > 0}
           title={t("hike.sharedHikesTitle")}
-          icon={<Icon source="hiking" size={26} color={theme.colors.onSurfaceVariant} />}
+          icon={<Icon source="hiking" size={24} color={theme.colors.onSurfaceVariant} />}
         />
       </View>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.scrollContent}>

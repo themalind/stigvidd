@@ -22,14 +22,24 @@ describe("on iOS", () => {
     Platform.OS = "ios";
   });
 
-  it("puts the back button and the actions on a bar, and the large title below", async () => {
-    await renderWithProviders(<ScreenHeader title="Mina favoriter" actions={<Text>sök</Text>} />);
+  it("puts the back button, icon, title and actions on one row", async () => {
+    await renderWithProviders(
+      <ScreenHeader title="Mina favoriter" icon={<Text>hjärta</Text>} actions={<Text>sök</Text>} />,
+    );
 
     const bar = screen.getByTestId("screen-header-bar");
+    expect(bar).toHaveStyle({ flexDirection: "row" });
     expect(within(bar).getByTestId("back-button")).toBeTruthy();
+    expect(within(bar).getByText("hjärta")).toBeTruthy();
+    expect(within(bar).getByRole("header", { name: "Mina favoriter" })).toHaveStyle({ fontSize: 17 });
     expect(within(bar).getByText("sök")).toBeTruthy();
-    expect(within(bar).queryByText("Mina favoriter")).toBeNull();
-    expect(screen.getByRole("header", { name: "Mina favoriter" })).toHaveStyle({ fontSize: 26 });
+  });
+
+  it("spaces the title from the back button once, by the row's gap", async () => {
+    await renderWithProviders(<ScreenHeader title="Tema" />);
+
+    expect(screen.getByTestId("screen-header-bar")).toHaveStyle({ gap: 8 });
+    expect(screen.getByTestId("back-button")).not.toHaveStyle({ marginRight: 8 });
   });
 
   it("keeps the same edge on every screen", async () => {
@@ -38,7 +48,7 @@ describe("on iOS", () => {
     expect(screen.getByTestId("screen-header")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
   });
 
-  it("shows only the bar when the screen has no title of its own", async () => {
+  it("shows only the back button when the screen has no title of its own", async () => {
     await renderWithProviders(<ScreenHeader />);
 
     expect(screen.getByTestId("back-button")).toBeTruthy();
@@ -68,20 +78,12 @@ describe("on Android", () => {
     await renderWithProviders(<ScreenHeader title="Tema" />);
 
     expect(screen.queryByTestId("back-button")).toBeNull();
-    expect(screen.queryByTestId("screen-header-bar")).toBeNull();
-    expect(screen.getByRole("header", { name: "Tema" })).toHaveStyle({ fontSize: 26 });
+    expect(screen.getByRole("header", { name: "Tema" })).toHaveStyle({ fontSize: 17 });
   });
 
-  it("keeps the bar when there are actions to show", async () => {
-    await renderWithProviders(<ScreenHeader actions={<Text>dela</Text>} />);
-
-    expect(within(screen.getByTestId("screen-header-bar")).getByText("dela")).toBeTruthy();
-  });
-
-  it("keeps the empty bar on a screen with no title, so content starts where it does on iOS", async () => {
+  it("keeps the empty row on a screen with no title, so content starts where it does on iOS", async () => {
     await renderWithProviders(<ScreenHeader />);
 
     expect(screen.getByTestId("screen-header-bar")).toHaveStyle({ minHeight: 44 });
-    expect(screen.queryByTestId("back-button")).toBeNull();
   });
 });

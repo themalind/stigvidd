@@ -39,7 +39,7 @@ export default function WishlistScreen() {
       noTrailsSavedInfo={t("collection.wishlist.empty")}
       onDelete={handleDelete}
       trails={data ?? []}
-      icon={<MaterialIcons name="star" size={26} color={theme.colors.tertiary} />}
+      icon={<MaterialIcons name="star" size={24} color={theme.colors.tertiary} />}
     />
   );
 }

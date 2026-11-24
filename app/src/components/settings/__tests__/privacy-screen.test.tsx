@@ -36,6 +36,13 @@ it("uses the shared header, and the app's corner radius on the row", async () =>
   expect(screen.getByTestId("privacy-stats-row")).toHaveStyle({ borderRadius: BORDER_RADIUS });
 });
 
+// keep-comment: the app header above already clears the status bar, so adding its inset here doubled the gap
+it("leaves the status bar to the app header instead of adding its inset again", async () => {
+  await renderWithProviders(<PrivacyScreen />);
+
+  expect(screen.getByTestId("privacy-screen").props.contentContainerStyle).toMatchObject({ paddingTop: 8 });
+});
+
 it("starts off when nothing has been chosen yet", async () => {
   await renderWithProviders(<PrivacyScreen />);
 

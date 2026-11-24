@@ -29,6 +29,13 @@ it("uses the shared header", async () => {
   expect(screen.getByRole("header", { name: "Tema" })).toBeTruthy();
 });
 
+// keep-comment: the app header above already clears the status bar, so adding its inset here doubled the gap
+it("leaves the status bar to the app header instead of adding its inset again", async () => {
+  await show();
+
+  expect(screen.getByTestId("theme-screen-root")).toHaveStyle({ paddingTop: 8 });
+});
+
 it("offers the system choice and every theme, by name", async () => {
   await show();
 

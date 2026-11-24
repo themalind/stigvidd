@@ -534,14 +534,14 @@ it("gives the creator the full height below the header, inset by the screen padd
   });
 });
 
-it("uses the shared header: back button and info on the bar, the title below", async () => {
+it("uses the shared header: back button, title and info on one row", async () => {
   await showGranted();
 
   expect(screen.getByTestId("create-hike-header")).toHaveStyle({ paddingHorizontal: SCREEN_PADDING });
   const bar = screen.getByTestId("create-hike-header-bar");
   expect(within(bar).getByTestId("back-button")).toBeTruthy();
+  expect(within(bar).getByRole("header", { name: "Skapa promenad" })).toBeTruthy();
   expect(within(bar).getByTestId("create-hike-info")).toBeTruthy();
-  expect(screen.getByRole("header", { name: "Skapa promenad" })).toBeTruthy();
 });
 
 it("draws the denied state's icon as a filled circle in the theme's container colour", async () => {

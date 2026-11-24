@@ -73,7 +73,7 @@ export default function ThemeScreen() {
   };
 
   return (
-    <View style={[s.screen, { paddingTop: insets.top + 8, backgroundColor: theme.colors.background }]}>
+    <View testID="theme-screen-root" style={[s.screen, { paddingTop: 8, backgroundColor: theme.colors.background }]}>
       <ScreenHeader title={t("themes.title")} />
       <View style={[s.header, { borderBottomColor: theme.colors.outlineVariant }]}>
         <View style={s.previewSection}>
