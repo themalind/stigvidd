@@ -46,6 +46,7 @@ export default function MapScreen() {
   const [filters, setFilters] = useState<MapMarkerFilter>({
     trails: true,
     contributions: true,
+    swimming: false,
     shelters: false,
     firePits: false,
     accessibility: false,

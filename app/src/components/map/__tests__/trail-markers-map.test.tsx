@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
-import { CONTRIBUTION_MARKER_COLORS, MARKER_COLORS } from "@/components/map/marker-styles";
+import { CONTRIBUTION_MARKER_COLORS, MARKER_COLORS, SWIMMING_MARKER_COLORS } from "@/components/map/marker-styles";
 import TrailMarkersMap from "@/components/map/trail-markers-map";
 import { FacilityType, MapMarkerFilter } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
@@ -36,6 +36,7 @@ const onDismiss = jest.fn();
 const ALL_OFF: MapMarkerFilter = {
   trails: false,
   contributions: false,
+  swimming: false,
   shelters: false,
   firePits: false,
   accessibility: false,
@@ -107,6 +108,7 @@ beforeEach(() => {
   mockGetFacilityMarkers.mockResolvedValue([
     facilityMarker("Grillplatsen", FacilityType.FirePit),
     facilityMarker("Vindskyddet", FacilityType.Shelter, false),
+    facilityMarker("Badplatsen", FacilityType.SwimmingArea, false),
   ]);
   mockUseUserLocation.mockReturnValue({ data: { isFallback: true } });
 });
@@ -135,18 +137,37 @@ describe("tracking the user", () => {
   });
 });
 
-// Each filter owns its own source, so a layer left on with the filter off is an unexplained pin.
 it("mounts a source only for the kinds the filter asks for", async () => {
   const { unmount } = await show({ trails: true, firePits: false, shelters: false });
   expect(source("trails")).toBeTruthy();
   expect(source("firepits")).toBeFalsy();
   expect(source("shelters")).toBeFalsy();
+  expect(source("swimming")).toBeFalsy();
   await unmount();
 
-  await show({ trails: false, firePits: true, shelters: true });
+  await show({ trails: false, firePits: true, shelters: true, swimming: true });
   expect(source("trails")).toBeFalsy();
   expect(source("firepits")).toBeTruthy();
   expect(source("shelters")).toBeTruthy();
+  expect(source("swimming")).toBeTruthy();
+});
+
+it("puts swimming spots in their own source, in the swimming colour", async () => {
+  await show({ swimming: true });
+  await flushUntil(() => source("swimming")?.props.data.features.length);
+  const layer = (id: string) => screen.queryAllByTestId("maplibre-Layer").find((node) => node.props.id === id);
+
+  expect(
+    source("swimming")?.props.data.features.map((f: { properties: { name: string } }) => f.properties.name),
+  ).toEqual(["Badplatsen"]);
+  expect(layer("swimming-points")?.props.paint["circle-color"]).toBe(SWIMMING_MARKER_COLORS.fill);
+});
+
+it("loads the facility markers when only swimming spots are asked for", async () => {
+  await show({ swimming: true });
+  await flushUntil(() => source("swimming")?.props.data.features.length);
+
+  expect(mockGetFacilityMarkers).toHaveBeenCalled();
 });
 
 // keep-comment: one marker list feeds both sources, so a trail and a user walk must never cluster together
@@ -181,10 +202,10 @@ it("draws user-walk clusters in their own colour", async () => {
 });
 
 it("never drops a cluster count when clusters from two sources overlap", async () => {
-  await show({ trails: true, contributions: true, firePits: true, shelters: true });
+  await show({ trails: true, contributions: true, firePits: true, shelters: true, swimming: true });
   const counts = screen.queryAllByTestId("maplibre-Layer").filter((node) => node.props.id.endsWith("-cluster-count"));
 
-  expect(counts).toHaveLength(4);
+  expect(counts).toHaveLength(5);
   for (const count of counts) {
     expect(count.props.layout).toMatchObject({ "text-allow-overlap": true, "text-ignore-placement": true });
   }
@@ -207,20 +228,21 @@ it("opens a user-walk cluster from its own source", async () => {
   expect(sourceHandle("trails").getClusterLeaves).not.toHaveBeenCalled();
 });
 
-// The accessibility filter applies across every kind at once.
 it("drops what is not accessible from every source when that filter is on", async () => {
-  const { unmount } = await show({ trails: true, firePits: true, shelters: true });
-  // Both marker fetches have to land before the sources hold anything.
+  const { unmount } = await show({ trails: true, firePits: true, shelters: true, swimming: true });
+  // keep-comment: both marker fetches have to land before the sources hold anything
   await flushUntil(() => source("trails")?.props.data.features.length);
   expect(source("trails")?.props.data.features).toHaveLength(2);
   expect(source("shelters")?.props.data.features).toHaveLength(1);
+  expect(source("swimming")?.props.data.features).toHaveLength(1);
   await unmount();
 
-  await show({ trails: true, firePits: true, shelters: true, accessibility: true });
+  await show({ trails: true, firePits: true, shelters: true, swimming: true, accessibility: true });
   await flushUntil(() => source("trails")?.props.data.features.length);
   expect(source("trails")?.props.data.features).toHaveLength(1);
   expect(source("firepits")?.props.data.features).toHaveLength(1);
   expect(source("shelters")?.props.data.features).toHaveLength(0);
+  expect(source("swimming")?.props.data.features).toHaveLength(0);
 });
 
 // A small cluster will not separate usefully, so it opens the carousel; a big one zooms in.
@@ -338,6 +360,24 @@ it("takes the name bubble down with the pin it belongs to", async () => {
   );
 
   expect(screen.queryByText("Grillplatsen")).toBeNull();
+});
+
+it("keeps the bubble of a place that is two kinds while one of its pins is still shown", async () => {
+  const both = FacilityType.SwimmingArea | FacilityType.Shelter;
+  const props = { cameraRef: createRef<CameraRef>(), onClusterOpen, onDismiss };
+  const { rerender } = await show({ swimming: true, shelters: true });
+  const swimming = source("swimming");
+  if (!swimming) throw new Error("expected the swimming source");
+
+  await fireEvent(swimming, "press", pointFeature({ name: "Badet", isAccessible: true, facilityType: both }));
+  await settle();
+  expect(screen.getByText("Badet")).toBeTruthy();
+
+  await rerender(<TrailMarkersMap filter={{ ...ALL_OFF, swimming: false, shelters: true }} {...props} />);
+  expect(screen.getByText("Badet")).toBeTruthy();
+
+  await rerender(<TrailMarkersMap filter={{ ...ALL_OFF, swimming: false, shelters: false }} {...props} />);
+  expect(screen.queryByText("Badet")).toBeNull();
 });
 
 it("clears the bubble when the map itself is pressed", async () => {

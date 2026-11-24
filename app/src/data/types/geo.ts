@@ -32,6 +32,7 @@ export type ActiveHike = {
 export type MapMarkerFilter = {
   trails: boolean;
   contributions: boolean;
+  swimming: boolean;
   shelters: boolean;
   firePits: boolean;
   accessibility: boolean;

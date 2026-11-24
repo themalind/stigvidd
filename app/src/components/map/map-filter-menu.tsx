@@ -14,7 +14,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { useTranslation } from "react-i18next";
 import { Text, useTheme } from "react-native-paper";
-import { MARKER_COLORS, type MarkerColors } from "./marker-styles";
+import { MARKER_COLORS, SWIMMING_MARKER_COLORS, type MarkerColors } from "./marker-styles";
 
 // keep-comment: a category with colors shows its marker swatch (a legend); one without, such as accessibility, its icon
 export interface MapFilterItem<K extends string> {
@@ -36,6 +36,7 @@ interface Props<K extends string> {
 export const MAP_TAB_FILTER_ITEMS: MapFilterItem<keyof MapMarkerFilter>[] = [
   { key: "trails", label: "filter.trails", colors: MARKER_COLORS.trails },
   { key: "contributions", label: "filter.contributions", colors: MARKER_COLORS.contributions },
+  { key: "swimming", label: "filter.swimming", colors: SWIMMING_MARKER_COLORS },
   { key: "shelters", label: "filter.shelters", colors: MARKER_COLORS.shelters },
   { key: "firePits", label: "filter.firePits", colors: MARKER_COLORS.firePits },
   { key: "accessibility", label: "filter.accessibility", icon: FACILITY_ICONS.accessible },
@@ -53,6 +54,8 @@ export default function MapFilterMenu<K extends string>({ filter, onChange, item
     <View style={s.container}>
       <Pressable
         testID="map-filter-trigger"
+        accessibilityRole="button"
+        accessibilityState={{ expanded: open }}
         onPress={() => onOpenChange(!open)}
         style={[s.trigger, { backgroundColor: surface }]}
       >
@@ -83,6 +86,8 @@ export default function MapFilterMenu<K extends string>({ filter, onChange, item
               <Pressable
                 key={item.key}
                 testID={`map-filter-row-${item.key}`}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: selected }}
                 onPress={() => onChange({ ...filter, [item.key]: !filter[item.key] })}
                 style={s.row}
               >

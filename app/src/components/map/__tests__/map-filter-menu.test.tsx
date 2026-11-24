@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import MapFilterMenu, { MAP_TAB_FILTER_ITEMS } from "@/components/map/map-filter-menu";
-import { MARKER_COLORS } from "@/components/map/marker-styles";
+import { MARKER_COLORS, SWIMMING_MARKER_COLORS } from "@/components/map/marker-styles";
 import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { MapMarkerFilter } from "@/data/types";
@@ -19,6 +19,7 @@ const onChange = jest.fn();
 const NOTHING_ON: MapMarkerFilter = {
   trails: false,
   contributions: false,
+  swimming: false,
   shelters: false,
   firePits: false,
   accessibility: false,
@@ -26,6 +27,7 @@ const NOTHING_ON: MapMarkerFilter = {
 const ALL_ON: MapMarkerFilter = {
   trails: true,
   contributions: true,
+  swimming: true,
   shelters: true,
   firePits: true,
   accessibility: true,
@@ -68,6 +70,24 @@ it("starts collapsed, showing only the pill", async () => {
   expect(screen.queryByText("Leder")).toBeNull();
 });
 
+it("tells a screen reader each category is a checkbox, and whether it is ticked", async () => {
+  await show({ swimming: true });
+
+  await open();
+
+  expect(screen.getByRole("checkbox", { name: /Badplatser/, checked: true })).toBeTruthy();
+  expect(screen.getByRole("checkbox", { name: /Vindskydd/, checked: false })).toBeTruthy();
+  expect(screen.getAllByRole("checkbox")).toHaveLength(MAP_TAB_FILTER_ITEMS.length);
+});
+
+it("tells a screen reader the pill is a button that opens and closes the panel", async () => {
+  await show();
+
+  expect(screen.getByRole("button", { name: /Filter/, expanded: false })).toBeTruthy();
+  await open();
+  expect(screen.getByRole("button", { name: /Filter/, expanded: true })).toBeTruthy();
+});
+
 it("opens on the pill and lists every category", async () => {
   await show();
 
@@ -106,10 +126,10 @@ it("counts the filters that are on", async () => {
   expect(screen.getByText("2")).toBeTruthy();
 });
 
-it("counts all five", async () => {
+it("counts all six", async () => {
   await show(ALL_ON);
 
-  expect(screen.getByText("5")).toBeTruthy();
+  expect(screen.getByText("6")).toBeTruthy();
 });
 
 it("shows no badge when nothing is filtered on", async () => {
@@ -152,7 +172,7 @@ it("ticks the boxes of the categories that are on", async () => {
   await open();
 
   expect(screen.getAllByTestId("icon-check-box")).toHaveLength(2);
-  expect(screen.getAllByTestId("icon-check-box-outline-blank")).toHaveLength(3);
+  expect(screen.getAllByTestId("icon-check-box-outline-blank")).toHaveLength(4);
 });
 
 // The swatch is a legend: it has to be the colour that category's pin is drawn in.
@@ -170,6 +190,9 @@ it("draws each category's swatch in that category's marker colour", async () => 
   });
   expect(screen.getByTestId("map-filter-dot-firePits")).toHaveStyle({
     backgroundColor: MARKER_COLORS.firePits.fill,
+  });
+  expect(screen.getByTestId("map-filter-dot-swimming")).toHaveStyle({
+    backgroundColor: SWIMMING_MARKER_COLORS.fill,
   });
 });
 

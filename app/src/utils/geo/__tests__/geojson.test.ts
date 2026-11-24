@@ -91,7 +91,7 @@ describe("featureCollectionFromFacilities", () => {
       {
         type: "Feature",
         id: "f1",
-        properties: { identifier: "f1", name: "Shelter", isAccessible: true },
+        properties: { identifier: "f1", name: "Shelter", isAccessible: true, facilityType: 2 },
         geometry: { type: "Point", coordinates: [13.0, 58.0] },
       },
     ]);

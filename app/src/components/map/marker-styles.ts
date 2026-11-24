@@ -25,18 +25,19 @@ export const CONTRIBUTION_MARKER_COLORS: MarkerColors = {
   stroke: colors.onPrimary,
 };
 
-export const MARKER_COLORS: Record<MarkerCategory, MarkerColors> = {
-  trails: { fill: colors.primary, stroke: colors.onPrimary },
-  contributions: CONTRIBUTION_MARKER_COLORS,
-  // keep-comment: a shade under the theme's tertiary, which is too light for the white cluster count
-  shelters: { fill: "#BC5624", stroke: colors.onTertiary },
-  firePits: { fill: colors.secondary, stroke: colors.onSecondary },
-};
-
 // keep-comment: swimming is a third dot colour beside fire pits and shelters, a water turquoise kept apart from the trails' dark blue
 export const SWIMMING_MARKER_COLORS: MarkerColors = {
   fill: "#00838F",
   stroke: colors.onPrimary,
+};
+
+export const MARKER_COLORS: Record<MarkerCategory, MarkerColors> = {
+  trails: { fill: colors.primary, stroke: colors.onPrimary },
+  contributions: CONTRIBUTION_MARKER_COLORS,
+  swimming: SWIMMING_MARKER_COLORS,
+  // keep-comment: a shade under the theme's tertiary, which is too light for the white cluster count
+  shelters: { fill: "#BC5624", stroke: colors.onTertiary },
+  firePits: { fill: colors.secondary, stroke: colors.onSecondary },
 };
 
 export const ROUTE_LINE_COLOR = colors.primary;

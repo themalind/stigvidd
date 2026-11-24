@@ -791,6 +791,7 @@ describe("MapScreen — the marker filter", () => {
     expect(map().filter).toEqual({
       trails: true,
       contributions: true,
+      swimming: false,
       shelters: false,
       firePits: false,
       accessibility: false,
@@ -801,12 +802,13 @@ describe("MapScreen — the marker filter", () => {
     await show();
     await mapReady();
 
-    await toggleFilter("shelters");
+    await toggleFilter("swimming");
 
     expect(map().filter).toEqual({
       trails: true,
       contributions: true,
-      shelters: true,
+      swimming: true,
+      shelters: false,
       firePits: false,
       accessibility: false,
     });

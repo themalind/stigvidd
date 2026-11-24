@@ -44,14 +44,15 @@ import { NativeSyntheticEvent, StyleProp, StyleSheet, View, ViewStyle } from "re
 import { ActivityIndicator, Text, useTheme } from "react-native-paper";
 import Map from "./map";
 import MapNameBubble from "./map-name-bubble";
-import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS } from "./marker-styles";
+import { HIGHLIGHT_MARKER_COLORS, MARKER_COLORS, SWIMMING_MARKER_COLORS } from "./marker-styles";
 
 type FacilityTypeValue = (typeof FacilityType)[keyof typeof FacilityType];
 
 interface SelectedFacility {
   name: string;
   coordinates: [number, number];
-  type: FacilityTypeValue;
+  // keep-comment: every kind the place is, so its bubble stays while any of its pins is still shown
+  facilityType: number;
   isAccessible: boolean;
 }
 
@@ -107,6 +108,7 @@ export default function TrailMarkersMap({
   const isLocating = tracksUser && !!userLocation && !userLocation.isFallback && !currentPosition;
   const firePitSourceRef = useRef<GeoJSONSourceRef>(null);
   const shelterSourceRef = useRef<GeoJSONSourceRef>(null);
+  const swimmingSourceRef = useRef<GeoJSONSourceRef>(null);
   const [selectedFacility, setSelectedFacility] = useState<SelectedFacility | null>(null);
 
   const handleMapPress = useCallback(() => {
@@ -116,9 +118,11 @@ export default function TrailMarkersMap({
 
   // keep-comment: the bubble goes with its pin when a filter hides it, or it floats over nothing
   if (selectedFacility) {
+    const kinds = selectedFacility.facilityType;
     const typeVisible =
-      (selectedFacility.type === FacilityType.FirePit && filter.firePits) ||
-      (selectedFacility.type === FacilityType.Shelter && filter.shelters);
+      (filter.firePits && hasFacilityType(kinds, FacilityType.FirePit)) ||
+      (filter.shelters && hasFacilityType(kinds, FacilityType.Shelter)) ||
+      (filter.swimming && hasFacilityType(kinds, FacilityType.SwimmingArea));
     const accessibilityVisible = !filter.accessibility || selectedFacility.isAccessible;
     if (!typeVisible || !accessibilityVisible) setSelectedFacility(null);
   }
@@ -133,7 +137,7 @@ export default function TrailMarkersMap({
   const { data: facilities, isError: facilitiesError } = useQuery({
     queryKey: ["facilities", "markers"],
     queryFn: getFacilityMarkers,
-    enabled: filter.firePits || filter.shelters,
+    enabled: filter.firePits || filter.shelters || filter.swimming,
     staleTime: TRAIL_MARKERS_STALE_TIME,
   });
 
@@ -164,6 +168,13 @@ export default function TrailMarkersMap({
   const shelterFC = useMemo(() => {
     const items = (facilities ?? []).filter(
       (f) => hasFacilityType(f.facilityType, FacilityType.Shelter) && (!filter.accessibility || f.isAccessible),
+    );
+    return featureCollectionFromFacilities(items);
+  }, [facilities, filter.accessibility]);
+
+  const swimmingFC = useMemo(() => {
+    const items = (facilities ?? []).filter(
+      (f) => hasFacilityType(f.facilityType, FacilityType.SwimmingArea) && (!filter.accessibility || f.isAccessible),
     );
     return featureCollectionFromFacilities(items);
   }, [facilities, filter.accessibility]);
@@ -234,7 +245,8 @@ export default function TrailMarkersMap({
 
         const name = props.name as string | undefined;
         const isAccessible = Boolean(props.isAccessible);
-        if (name) setSelectedFacility({ name, coordinates: [lng, lat], type, isAccessible });
+        const facilityType = typeof props.facilityType === "number" ? props.facilityType : type;
+        if (name) setSelectedFacility({ name, coordinates: [lng, lat], facilityType, isAccessible });
       },
     [cameraRef, onDismiss],
   );
@@ -273,6 +285,17 @@ export default function TrailMarkersMap({
             colors={MARKER_COLORS.contributions}
             pointRadius={POINT_RADIUS}
             onPress={handleTrailPress}
+          />
+        )}
+
+        {filter.swimming && (
+          <ClusterSource
+            id="swimming"
+            sourceRef={swimmingSourceRef}
+            data={swimmingFC}
+            colors={SWIMMING_MARKER_COLORS}
+            pointRadius={FACILITY_POINT_RADIUS}
+            onPress={handleFacilityPress(FacilityType.SwimmingArea)}
           />
         )}
 

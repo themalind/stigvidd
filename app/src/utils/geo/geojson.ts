@@ -41,6 +41,7 @@ export function featureCollectionFromFacilities(facilities: Facility[]): GeoJSON
         identifier: f.identifier,
         name: f.name,
         isAccessible: f.isAccessible,
+        facilityType: f.facilityType,
       },
       geometry: {
         type: "Point",
