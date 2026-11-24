@@ -12,7 +12,7 @@ import { asTranslationKey } from "@/i18n";
 import { MaterialIcons } from "@expo/vector-icons";
 import { type ComponentRef, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Keyboard, Platform, Pressable, StyleSheet, View } from "react-native";
+import { Dimensions, Keyboard, Pressable, StyleSheet, View } from "react-native";
 import { Divider, Portal, Text, useTheme } from "react-native-paper";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 
@@ -95,12 +95,16 @@ export default function ListHeaderAction({
   const hasActive = activeFilterCount > 0 || searchQuery.length > 0;
 
   if (!showActions) {
-    return <View style={s.headerRow}>{children}</View>;
+    return (
+      <View testID="list-header-row" style={s.headerRow}>
+        {children}
+      </View>
+    );
   }
 
   return (
     <View>
-      <View style={s.headerRow}>
+      <View testID="list-header-row" style={s.headerRow}>
         {children}
         <View style={s.actions}>
           {/* keep-comment: 24px icons are below the 44px minimum touch target */}
@@ -213,8 +217,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    // keep-comment: iOS gets its inset from the back button; Android does not
-    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
+    paddingLeft: SCREEN_PADDING,
     paddingRight: SCREEN_PADDING,
   },
   actions: {

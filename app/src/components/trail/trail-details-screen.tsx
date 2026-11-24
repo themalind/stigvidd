@@ -25,7 +25,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { type ComponentRef, startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import BackButton from "@/components/layout/back-button";
 import ErrorView from "@/components/status/error-view";
@@ -130,7 +130,7 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView ref={scrollViewRef} contentContainerStyle={s.container}>
-        <View style={s.header}>
+        <View testID="trail-details-header" style={s.header}>
           <BackButton />
           <TrailTitle name={trail?.name} city={trail?.city} />
         </View>
@@ -196,7 +196,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     paddingTop: 5,
     paddingBottom: 5,
-    paddingLeft: Platform.select({ ios: 0, default: 12 }),
+    paddingLeft: 12,
   },
   container: {
     paddingTop: 4,

@@ -8,6 +8,7 @@
 import ListHeaderAction, { SortField } from "@/components/layout/list-header-actions";
 import { AppDefaultTheme } from "@/constants/theme";
 import { stubMeasureInWindow } from "@/test/measure";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Dimensions, Text } from "react-native";
@@ -63,6 +64,12 @@ async function openSort() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+});
+
+it.each([true, false])("keeps the round back button off the screen edge (actions shown: %s)", async (showActions) => {
+  await show({ showActions });
+
+  expect(screen.getByTestId("list-header-row")).toHaveStyle({ paddingLeft: SCREEN_PADDING });
 });
 
 it("keeps the header itself out of the way until an icon is pressed", async () => {

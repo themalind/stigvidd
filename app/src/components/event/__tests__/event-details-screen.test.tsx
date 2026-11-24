@@ -11,6 +11,7 @@ import EventDetailsScreen from "@/components/event/event-details-screen";
 import { EVENTS_TAB_ROUTES } from "@/components/event/event-routes";
 import { EventParticipants, HikingEvent } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
@@ -155,6 +156,13 @@ describe("EventDetailsScreen", () => {
 
     await flushUntil(() => screen.queryByText("Försök igen") !== null);
     expect(screen.getByTestId("back-button")).toBeTruthy();
+  });
+
+  it("keeps the round back button off the screen edge", async () => {
+    await show(hikingEvent());
+    await flushUntil(() => screen.queryByTestId("event-top-bar") !== null);
+
+    expect(screen.getByTestId("event-top-bar")).toHaveStyle({ paddingLeft: SCREEN_PADDING });
   });
 
   it("joins an open event from the action bar", async () => {

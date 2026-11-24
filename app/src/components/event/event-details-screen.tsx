@@ -77,7 +77,7 @@ function LoadedEvent({ event, routes, isRefetching, onRefresh }: LoadedProps) {
         contentContainerStyle={s.content}
         refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />}
       >
-        <View style={s.topBar}>
+        <View testID="event-top-bar" style={s.topBar}>
           <BackButton />
           <View style={s.flex} />
           <EventShareButton event={event} />
@@ -312,6 +312,7 @@ const s = StyleSheet.create({
   topBar: {
     flexDirection: "row",
     alignItems: "center",
+    paddingLeft: SCREEN_PADDING,
     minHeight: 8,
   },
   flex: {

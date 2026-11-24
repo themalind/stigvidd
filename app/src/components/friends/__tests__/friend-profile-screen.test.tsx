@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { flushUntil } from "@/test/flush";
+import { SCREEN_PADDING } from "@/constants/constants";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen, within } from "@testing-library/react-native";
 import FriendProfileScreen from "../friend-profile-screen";
@@ -155,6 +156,12 @@ function sentHike(hikeName: string, isOwnHike: boolean, ...recipients: [string, 
     recipients: recipients.map(([identifier, sharedAt]) => ({ identifier, nickName: identifier, sharedAt })),
   };
 }
+
+it("keeps the round back button off the screen edge", async () => {
+  await show();
+
+  expect(screen.getByTestId("friend-profile-top-bar")).toHaveStyle({ paddingLeft: SCREEN_PADDING });
+});
 
 it("counts both directions in the tabs and lists what you sent on the second", async () => {
   mockShares = [sharedHike("Rya åsar", "id-anna", "2026-08-01T10:00:00Z")];

@@ -131,6 +131,13 @@ it("offers a retry instead of a half-empty page when the trail cannot be fetched
   expect(screen.getByText("Kvarnstigen")).toBeTruthy();
 });
 
+it("keeps the round back button off the screen edge, in line with the images", async () => {
+  await show();
+
+  expect(screen.getByTestId("trail-details-header")).toHaveStyle({ paddingLeft: 12 });
+  expect(screen.getByTestId("back-button")).toBeTruthy();
+});
+
 it("shows the trail once it arrives", async () => {
   await show();
 

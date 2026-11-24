@@ -86,7 +86,7 @@ export default function FriendProfileScreen() {
   return (
     <View style={[s.screen, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={s.scrollContent}>
-        <View style={s.topBar}>
+        <View testID="friend-profile-top-bar" style={s.topBar}>
           <BackButton />
         </View>
         {!friend ? (
@@ -303,6 +303,7 @@ const s = StyleSheet.create({
     minHeight: 32,
     flexDirection: "row",
     alignItems: "center",
+    paddingLeft: SCREEN_PADDING,
   },
   content: {
     paddingHorizontal: SCREEN_PADDING,
