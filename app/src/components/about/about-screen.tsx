@@ -14,7 +14,7 @@ import {
   TERMS_OF_USE_URL,
 } from "@/constants/constants";
 import Constants from "expo-constants";
-import { Linking, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Linking, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 
@@ -157,7 +157,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
+    paddingLeft: SCREEN_PADDING,
   },
   appName: {
     fontFamily: "Inter_600SemiBold",

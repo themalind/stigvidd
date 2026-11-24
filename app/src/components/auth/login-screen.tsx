@@ -9,7 +9,7 @@ import { asTranslationKey } from "@/i18n";
 import { AccountNotVerifiedError, InvalidCredentialsError } from "@/services/keycloak-auth";
 import PasswordInputField from "@/components/auth/password-input-field";
 import BackButton from "@/components/layout/back-button";
-import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { loginReturnPathAtom } from "@/atoms/auth-atoms";
@@ -232,7 +232,7 @@ const s = StyleSheet.create({
   backButtonContainer: {
     position: "absolute",
     top: 0,
-    left: 0,
+    left: SCREEN_PADDING,
   },
   logoContainer: {
     flexDirection: "row",

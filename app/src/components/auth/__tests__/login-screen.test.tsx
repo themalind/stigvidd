@@ -29,16 +29,14 @@ jest.mock("expo-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-// The real module reaches Keycloak on import; only the error classes matter here. The
-// subclassing mirrors the real module, and is the point of the "not yet verified" test:
-// the screen must test for the narrower class FIRST or the broader one swallows it.
+// keep-comment: the real module reaches Keycloak on import; the subclassing mirrors it, so the screen must check the narrower class first
 jest.mock("@/services/keycloak-auth", () => {
   class InvalidCredentialsError extends Error {}
   class AccountNotVerifiedError extends InvalidCredentialsError {}
   return { InvalidCredentialsError, AccountNotVerifiedError };
 });
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- keep-comment: reads the mocked classes above
 const { InvalidCredentialsError, AccountNotVerifiedError } = require("@/services/keycloak-auth");
 
 const WIDTH = Dimensions.get("screen").width;
@@ -48,7 +46,7 @@ async function fillForm({ email = "vandrare@example.com", password = "hemligt123
   await fireEvent.changeText(screen.getByTestId("login-password"), password);
 }
 
-// Validation and the login call both resolve on microtasks, so they are flushed rather than waited for.
+// keep-comment: validation and the login call resolve on microtasks, so they are flushed, not waited for
 async function submit() {
   await fireEvent.press(screen.getByTestId("login-submit"));
   await act(async () => {});
@@ -78,7 +76,6 @@ it("logs in without the space the keyboard left after the address, and suggests 
   expect(mockLogin).toHaveBeenCalledWith("vandrare@example.com", "hemligt123");
 });
 
-// Each message lands under its own field, not merely somewhere on screen.
 it("names the field each validation message belongs to", async () => {
   await renderWithProviders(<LoginScreen />);
 
@@ -109,7 +106,6 @@ it("rejects a password shorter than eight characters", async () => {
   expect(mockLogin).not.toHaveBeenCalled();
 });
 
-// Wrong credentials and a broken identity provider are different problems, and the message tells them apart.
 it("tells a wrong password apart from a failing login service", async () => {
   mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
   await renderWithProviders(<LoginScreen />);
@@ -123,9 +119,7 @@ it("tells a wrong password apart from a failing login service", async () => {
   expect(screen.getByTestId("login-error")).toHaveTextContent("Inloggning misslyckades. Försök igen.");
 });
 
-// An unverified account is a DISABLED account at Keycloak, which answers the same
-// `invalid_grant` as a wrong password. Telling such a user their password is wrong leaves
-// them with no way forward, so they are sent to the verification step instead.
+// keep-comment: Keycloak answers an unverified (disabled) account with the same invalid_grant as a wrong password
 it("sends a user whose address is not yet verified to the verification screen", async () => {
   mockLogin.mockRejectedValueOnce(new AccountNotVerifiedError());
   await renderWithProviders(<LoginScreen />);
@@ -140,8 +134,7 @@ it("sends a user whose address is not yet verified to the verification screen", 
   expect(screen.queryByTestId("login-error")).toBeNull();
 });
 
-// AccountNotVerifiedError EXTENDS InvalidCredentialsError, so an ordinary wrong password must
-// still stop at the message and not navigate anywhere.
+// keep-comment: AccountNotVerifiedError extends InvalidCredentialsError, so this guards the order of the checks
 it("does not send an ordinary wrong password to the verification screen", async () => {
   mockLogin.mockRejectedValueOnce(new InvalidCredentialsError());
   await renderWithProviders(<LoginScreen />);
@@ -168,13 +161,12 @@ it("clears the previous failure when the form is submitted again", async () => {
 
 it("offers a back button only where the caller asked for one", async () => {
   const { rerender } = await renderWithProviders(<LoginScreen />);
-  expect(screen.queryByTestId("icon-chevron-left")).toBeNull();
+  expect(screen.queryByTestId("back-button")).toBeNull();
 
   await rerender(<LoginScreen showBackButton />);
-  expect(screen.getByTestId("icon-chevron-left")).toBeTruthy();
+  expect(screen.getByTestId("back-button")).toBeTruthy();
 });
 
-// The column is pinned to the field width, so a validation message wraps inside it.
 it("keeps the error message inside the field column", async () => {
   await renderWithProviders(<LoginScreen />);
 
@@ -192,7 +184,7 @@ it("sizes the card and its button against the screen width", async () => {
   await renderWithProviders(<LoginScreen />);
 
   expect(screen.getByTestId("login-field-column")).toHaveStyle({ width: WIDTH * 0.65 });
-  // Paper's Surface splits the style: layout on the outer layer, colour and radius on the inner.
+  // keep-comment: Paper's Surface puts layout on the outer layer, colour and radius on the inner
   expect(screen.getByTestId("login-submit-container-outer-layer")).toHaveStyle({ width: WIDTH * 0.5 });
   expect(screen.getByTestId("login-submit-container")).toHaveStyle({ borderRadius: BORDER_RADIUS });
 });

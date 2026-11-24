@@ -14,7 +14,7 @@ import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LayoutAnimation, Linking, Platform, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { LayoutAnimation, Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Divider, Text, useTheme } from "react-native-paper";
 
 interface AccordionProps {
@@ -202,7 +202,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
+    paddingLeft: SCREEN_PADDING,
   },
   container: {
     paddingTop: 8,

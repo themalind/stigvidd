@@ -160,7 +160,7 @@ it("leaves the version out when the build has none, rather than an empty label",
 it("goes back from the header button", async () => {
   await show();
 
-  await fireEvent.press(screen.getByTestId("icon-chevron-left"));
+  await fireEvent.press(screen.getByTestId("back-button"));
   await settle();
 
   expect(mockBack).toHaveBeenCalled();

@@ -14,6 +14,7 @@ import {
   BORDER_RADIUS,
   MIN_NICKNAME_LENGTH,
   PRIVACY_POLICY_URL,
+  SCREEN_PADDING,
   SURFACE_BORDER_RADIUS,
   TERMS_OF_USE_URL,
 } from "@/constants/constants";
@@ -316,7 +317,7 @@ const s = StyleSheet.create({
   backButtonContainer: {
     position: "absolute",
     top: 0,
-    left: 0,
+    left: SCREEN_PADDING,
   },
   logoContainer: {
     flexDirection: "row",

@@ -459,15 +459,14 @@ it("heads the creator with a back button, the title and the info button", async 
 
   expect(screen.getByText("Skapa promenad")).toBeTruthy();
   expect(screen.getByTestId("create-hike-info")).toBeTruthy();
-  expect(paperIcon("chevron-left")).toBeTruthy();
+  expect(screen.getByTestId("back-button")).toBeTruthy();
 });
 
-// Android draws its own back affordance in the header, so the screen adds none.
 it("leaves the back arrow to Android's own header", async () => {
   Platform.OS = "android";
   try {
     await showGranted();
-    expect(paperIcon("chevron-left")).toBeNull();
+    expect(screen.queryByTestId("back-button")).toBeNull();
     expect(screen.getByText("Skapa promenad")).toBeTruthy();
   } finally {
     Platform.OS = "ios";
@@ -535,16 +534,14 @@ it("gives the creator the full height below the header, inset by the screen padd
   });
 });
 
-// The back button carries its own 4 px inset, so the header adds none on iOS; StyleSheet.create
-// resolves the Platform.select at import.
-it("lays the header out in a row without doubling the back button's inset", async () => {
+it("keeps the round back button off the screen edge", async () => {
   await showGranted();
 
   expect(screen.getByTestId("create-hike-header")).toHaveStyle({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    paddingLeft: 0,
+    paddingLeft: SCREEN_PADDING,
     paddingBottom: 8,
   });
 });

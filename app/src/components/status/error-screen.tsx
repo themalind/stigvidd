@@ -8,7 +8,7 @@
 import BackButton from "@/components/layout/back-button";
 import ErrorView from "@/components/status/error-view";
 import { SCREEN_PADDING } from "@/constants/constants";
-import { Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 type Props = {
@@ -38,6 +38,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     minHeight: 44,
-    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
+    paddingLeft: SCREEN_PADDING,
   },
 });

@@ -32,7 +32,7 @@ import { TFunction } from "i18next";
 import { useAtom } from "jotai";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Platform, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, IconButton, Searchbar, Text, useTheme } from "react-native-paper";
 
 const RECENT_SHARE_DAYS = 7;
@@ -306,7 +306,7 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
+    paddingLeft: SCREEN_PADDING,
   },
   headerTitle: {
     fontFamily: "Inter_600SemiBold",

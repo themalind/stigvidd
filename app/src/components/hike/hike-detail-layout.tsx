@@ -15,7 +15,7 @@ import CoordinateParser from "@/utils/geo/coordinate-parser";
 import FormattedTime from "@/utils/format/format-time-from-ms";
 import { ReactNode, startTransition, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dimensions, Platform, ScrollView, StyleSheet, View } from "react-native";
+import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 const MAP_HEIGHT = Dimensions.get("screen").height * 0.3;
@@ -122,7 +122,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     minHeight: 44,
-    paddingLeft: Platform.select({ ios: 0, default: SCREEN_PADDING }),
+    paddingLeft: SCREEN_PADDING,
     paddingRight: SCREEN_PADDING,
   },
   title: {

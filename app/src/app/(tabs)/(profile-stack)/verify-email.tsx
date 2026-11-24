@@ -10,7 +10,7 @@ import { resendVerification, verifyEmailCode } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import BackButton from "@/components/layout/back-button";
-import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
@@ -223,7 +223,7 @@ const s = StyleSheet.create({
   backButtonContainer: {
     position: "absolute",
     top: 0,
-    left: 0,
+    left: SCREEN_PADDING,
   },
   surface: {
     gap: 10,
