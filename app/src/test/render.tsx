@@ -9,7 +9,7 @@ import { AppDefaultTheme, AppTheme } from "@/constants/theme";
 import { ThemeProvider } from "expo-router/react-navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, RenderOptions } from "@testing-library/react-native";
-import { createStore, Provider as JotaiProvider } from "jotai";
+import { createStore, Provider as JotaiProvider, WritableAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { ReactElement, ReactNode } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -24,8 +24,11 @@ const METRICS = {
   insets: { top: 47, left: 0, right: 0, bottom: 34 },
 };
 
+// keep-comment: a derived atom that a test mocks as a primitive is cast to this
+export type SeededAtom = [WritableAtom<unknown, [never], unknown>, unknown];
+
 interface Options extends Omit<RenderOptions, "wrapper"> {
-  initialAtoms?: [any, unknown][];
+  initialAtoms?: SeededAtom[];
   theme?: AppTheme;
 }
 
@@ -56,7 +59,7 @@ export async function renderWithProviders(
   // keep-comment: jest.after-env.js disposes it, since a hook's gcTime can outlive the test
   rememberQueryClient(queryClient);
   for (const [atom, value] of initialAtoms) {
-    store.set(atom, value);
+    store.set(atom, value as never);
   }
 
   // keep-comment: scale 0, so Paper's 220 ms exit animation unmounts on the next tick

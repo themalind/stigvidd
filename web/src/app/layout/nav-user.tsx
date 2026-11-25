@@ -27,7 +27,7 @@ export function NavUser() {
 
   async function handleSignOut() {
     await logout();
-    navigate(paths.login);
+    void navigate(paths.login);
   }
 
   return (

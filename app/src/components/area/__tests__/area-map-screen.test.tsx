@@ -224,7 +224,7 @@ it("draws the area named in the route with its name on the back chip", async () 
   expect(source("area-trails")?.props.data.features).toHaveLength(1);
   expect(screen.getByText("1 badplats")).toBeTruthy();
 
-  fireEvent.press(screen.getByRole("button", { name: "Gå tillbaka" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Gå tillbaka" }));
   expect(mockBack).toHaveBeenCalled();
 });
 

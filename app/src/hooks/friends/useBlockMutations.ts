@@ -19,12 +19,12 @@ export function useBlockMutations() {
 
   // keep-comment: a block filters the blocker's own reads, so every list that can show the person is re-read
   const invalidateEverythingTheBlockTouches = () => {
-    queryClient.invalidateQueries({ queryKey: ["friends"] });
-    queryClient.invalidateQueries({ queryKey: ["blocks"] });
-    queryClient.invalidateQueries({ queryKey: ["reviews"] });
-    queryClient.invalidateQueries({ queryKey: ["obstacles"] });
-    queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
-    queryClient.invalidateQueries({ queryKey: ["users", "search"] });
+    void queryClient.invalidateQueries({ queryKey: ["friends"] });
+    void queryClient.invalidateQueries({ queryKey: ["blocks"] });
+    void queryClient.invalidateQueries({ queryKey: ["reviews"] });
+    void queryClient.invalidateQueries({ queryKey: ["obstacles"] });
+    void queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
+    void queryClient.invalidateQueries({ queryKey: ["users", "search"] });
   };
 
   const blockMutation = useMutation({

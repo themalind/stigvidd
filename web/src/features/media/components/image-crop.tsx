@@ -30,7 +30,9 @@ export default function ImageCrop({ src, onCropChange }: Props) {
   } | null>(null);
 
   function pointerPos(e: React.PointerEvent) {
-    const rect = imgRef.current!.getBoundingClientRect();
+    const img = imgRef.current;
+    if (!img) return null;
+    const rect = img.getBoundingClientRect();
     return {
       x: Math.min(Math.max(e.clientX - rect.left, 0), rect.width),
       y: Math.min(Math.max(e.clientY - rect.top, 0), rect.height),
@@ -40,13 +42,14 @@ export default function ImageCrop({ src, onCropChange }: Props) {
   function handleDown(e: React.PointerEvent) {
     (e.target as Element).setPointerCapture?.(e.pointerId);
     const p = pointerPos(e);
+    if (!p) return;
     setDragStart(p);
     setSel({ x: p.x, y: p.y, w: 0, h: 0 });
   }
 
   function handleMove(e: React.PointerEvent) {
-    if (!dragStart) return;
     const p = pointerPos(e);
+    if (!dragStart || !p) return;
     setSel({
       x: Math.min(dragStart.x, p.x),
       y: Math.min(dragStart.y, p.y),

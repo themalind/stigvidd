@@ -122,13 +122,14 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
   const mutation = useMutation({
     mutationFn: (request: CreateHikeSubmissionRequest) => createHikeSubmission(request),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
+      void queryClient.invalidateQueries({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
       setSuccessMsg(t("publish.submitted"));
       onDismiss();
     },
     onError: (error) => {
       const status = error instanceof ApiError ? error.status : null;
-      if (status === 409 || status === 429) queryClient.invalidateQueries({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
+      if (status === 409 || status === 429)
+        void queryClient.invalidateQueries({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
       setErrorMsg(
         status === 409
           ? t("publish.alreadySubmitted")

@@ -21,7 +21,7 @@ interface HikeFilterModalProps {
   filters: HikeFilterOptions;
   sharedByNames: string[];
   ranges: HikeFilterRanges;
-  onUpdateFilter: (key: keyof HikeFilterOptions, value: any) => void;
+  onUpdateFilter: <K extends keyof HikeFilterOptions>(key: K, value: HikeFilterOptions[K]) => void;
   onUpdateRangeFilter: (key: "length" | "duration", min: number, max: number) => void;
   onClearFilters: () => void;
 }

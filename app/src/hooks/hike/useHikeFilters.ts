@@ -123,7 +123,7 @@ export const useHikeFilters = <T>(hikes: T[] | undefined, accessors: HikeAccesso
     return result;
   }, [hikes, accessors, filters, sortBy, searchQuery]);
 
-  const updateFilter = (key: keyof HikeFilterOptions, value: any) => {
+  const updateFilter = <K extends keyof HikeFilterOptions>(key: K, value: HikeFilterOptions[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 

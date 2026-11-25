@@ -135,7 +135,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
       queryClient.setQueryData<Hike[]>(listKey, (hikes) =>
         hikes?.map((h) => (h.identifier === updated.identifier ? { ...h, ...updated } : h)),
       );
-      queryClient.invalidateQueries({ queryKey: listKey });
+      void queryClient.invalidateQueries({ queryKey: listKey });
     },
     onError: () => setErrorMsg(t("hike.updateError")),
   });
@@ -146,8 +146,8 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
       setDeletedHike(deleted);
       setSuccessMsg(t("hike.deleted"));
       router.back();
-      queryClient.invalidateQueries({ queryKey: listKey });
-      queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
+      void queryClient.invalidateQueries({ queryKey: listKey });
+      void queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
     },
     onError: () => setErrorMsg(t("hike.genericError")),
   });
@@ -157,14 +157,14 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
     onSuccess: (_, request) => {
       setShowShareModal(false);
       setSuccessMsg(t("hike.shared"));
-      queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
+      void queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
       trackShared("success", request);
     },
     onError: (error, request) => {
       setShowShareModal(false);
       const failure = shareFailure(error);
       if (failure === "recipient_unavailable") {
-        queryClient.invalidateQueries({ queryKey: ["friends"] });
+        void queryClient.invalidateQueries({ queryKey: ["friends"] });
         setErrorMsg(t("hike.recipientUnavailable"));
       } else {
         setErrorMsg(t("hike.genericError"));
@@ -261,7 +261,11 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         <HikeImageSection
           images={images}
           onOpen={setViewerIndex}
-          edit={{ max: MAX_HIKE_IMAGES, uploadingCount: hikeImages.uploadingCount, onAdd: unlessBanned(addImages) }}
+          edit={{
+            max: MAX_HIKE_IMAGES,
+            uploadingCount: hikeImages.uploadingCount,
+            onAdd: unlessBanned(() => void addImages()),
+          }}
         />
       }
       beforeActions={

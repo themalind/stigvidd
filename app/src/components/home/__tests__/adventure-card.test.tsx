@@ -10,6 +10,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
 import { UserLocation } from "@/hooks/location/useUserLocation";
 import { getAllByType } from "@/test/composites";
+import { defined } from "@/test/defined";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
@@ -139,7 +140,7 @@ describe("AdventureCard", () => {
     await showLoaded();
     expect(screen.queryByTestId("adventure-clear-filters")).toBeNull();
 
-    await act(async () => mockModal.props!.onUpdateFilter("city", "Sandared"));
+    await act(async () => defined(mockModal.props, "the filter modal").onUpdateFilter("city", "Sandared"));
     expect(screen.getByTestId("adventure-filter-summary")).toHaveTextContent("1 filter");
 
     await fireEvent.press(screen.getByTestId("adventure-clear-filters"));
@@ -153,7 +154,7 @@ describe("AdventureCard", () => {
 
   it("keeps the filters reachable beside a drawn trail", async () => {
     await showLoaded();
-    await act(async () => mockModal.props!.onUpdateFilter("city", "Sandared"));
+    await act(async () => defined(mockModal.props, "the filter modal").onUpdateFilter("city", "Sandared"));
 
     await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
@@ -247,17 +248,17 @@ describe("AdventureCard", () => {
   it("counts the active filters, treating a length range as one", async () => {
     await showLoaded();
 
-    await act(async () => mockModal.props!.onUpdateFilter("city", "Borås"));
+    await act(async () => defined(mockModal.props, "the filter modal").onUpdateFilter("city", "Borås"));
     expect(screen.getByTestId("adventure-filter-summary")).toHaveTextContent("1 filter");
 
-    await act(async () => mockModal.props!.onUpdateLengthFilter(4, 11));
+    await act(async () => defined(mockModal.props, "the filter modal").onUpdateLengthFilter(4, 11));
     expect(screen.getByTestId("adventure-filter-summary")).toHaveTextContent("2 filter");
   });
 
   it("draws only from the filtered trails", async () => {
     await showLoaded();
 
-    await act(async () => mockModal.props!.onUpdateFilter("city", "Sandared"));
+    await act(async () => defined(mockModal.props, "the filter modal").onUpdateFilter("city", "Sandared"));
     await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();
 
@@ -267,7 +268,7 @@ describe("AdventureCard", () => {
   it("says so when the filters match nothing, and clears them on request", async () => {
     await showLoaded();
 
-    await act(async () => mockModal.props!.onUpdateLengthFilter(100, 150));
+    await act(async () => defined(mockModal.props, "the filter modal").onUpdateLengthFilter(100, 150));
 
     expect(screen.getByTestId("adventure-no-match")).toBeTruthy();
     expect(screen.queryByTestId("adventure-roll")).toBeNull();
@@ -287,7 +288,7 @@ describe("AdventureCard", () => {
     expect(screen.getByText("Kvarnstigen")).toBeTruthy();
 
     // Kvarnstigen is in Borås, so this filter excludes what is on screen.
-    await act(async () => mockModal.props!.onUpdateFilter("city", "Sandared"));
+    await act(async () => defined(mockModal.props, "the filter modal").onUpdateFilter("city", "Sandared"));
 
     expect(screen.queryByText("Kvarnstigen")).toBeNull();
     expect(screen.getByTestId("adventure-roll")).toBeTruthy();

@@ -647,7 +647,7 @@ it("shows the area on a map once it has a boundary", async () => {
   expect(screen.getByText("På kartan")).toBeTruthy();
   expect(screen.getByTestId("area-map")).toBeTruthy();
 
-  fireEvent.press(screen.getByRole("button", { name: "Öppna karta" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Öppna karta" }));
 
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(home)/area/map/[identifier]",

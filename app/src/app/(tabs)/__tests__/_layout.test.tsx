@@ -9,7 +9,7 @@ import { pendingEventInvitationsCountAtom } from "@/atoms/event-atoms";
 import { pendingNotificationsCountAtom } from "@/atoms/friends-atoms";
 import { BADGE_FONT_FAMILY, BADGE_FONT_SIZE, BADGE_SIZE } from "@/components/display/count-badge";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
-import { renderWithProviders } from "@/test/render";
+import { renderWithProviders, SeededAtom } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
 import { screen } from "@testing-library/react-native";
 import type { ReactElement } from "react";
@@ -77,21 +77,29 @@ beforeEach(() => {
 function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme, pending = 0) {
   return renderWithProviders(<TabsLayout />, {
     theme,
-    initialAtoms: [[pendingNotificationsCountAtom, pending] as [typeof pendingNotificationsCountAtom, unknown]],
+    initialAtoms: [[pendingNotificationsCountAtom, pending] as SeededAtom],
   });
 }
 
-function options(): Record<string, any> {
+type Rendered = ReactElement<Record<string, unknown>>;
+
+interface TabOptions {
+  [option: string]: unknown;
+  tabBarIcon: (state: { focused: boolean }) => Rendered;
+  tabBarBackground: () => Rendered;
+}
+
+function options(): TabOptions {
   return router.__options;
 }
 
-function tab(name: string) {
-  return router.__screens[name] as Record<string, any>;
+function tab(name: string): TabOptions {
+  return router.__screens[name];
 }
 
 // The navigator calls tabBarIcon with the tab's state; calling it directly shows the glyph for each state.
-function icon(name: string, focused: boolean): ReactElement<Record<string, any>> {
-  return tab(name).tabBarIcon({ focused }) as ReactElement<Record<string, any>>;
+function icon(name: string, focused: boolean) {
+  return tab(name).tabBarIcon({ focused });
 }
 
 it("carries the five tabs a walker navigates by, in order", async () => {
@@ -114,7 +122,7 @@ it("carries the five tabs a walker navigates by, in order", async () => {
 
 it("counts pending event invitations on the events tab, not the profile tab", async () => {
   await renderWithProviders(<TabsLayout />, {
-    initialAtoms: [[pendingEventInvitationsCountAtom, 2] as [typeof pendingEventInvitationsCountAtom, unknown]],
+    initialAtoms: [[pendingEventInvitationsCountAtom, 2] as SeededAtom],
   });
 
   expect(tab("events").tabBarBadge).toBe(2);
@@ -248,14 +256,14 @@ it("paints the tab bar black in the dark theme", async () => {
 // The bar paints its own background behind itself, so the screen never shows through.
 it("backs the bar with the same colour it is painted", async () => {
   await show();
-  const background = options().tabBarBackground() as ReactElement<Record<string, any>>;
+  const background = options().tabBarBackground();
 
   expect(background.props.style).toEqual({ flex: 1, backgroundColor: "#ffffff" });
 });
 
 it("backs the bar in black in the dark theme too", async () => {
   await show(AppDarkTheme);
-  const background = options().tabBarBackground() as ReactElement<Record<string, any>>;
+  const background = options().tabBarBackground();
 
   expect(background.props.style).toEqual({ flex: 1, backgroundColor: "#000000" });
 });

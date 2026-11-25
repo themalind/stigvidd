@@ -5,13 +5,17 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import type { MaterialIcons } from "@expo/vector-icons";
 import { atom } from "jotai";
+import type { ComponentProps } from "react";
+
+type IconName = ComponentProps<typeof MaterialIcons>["name"];
 
 export type SnackbarState = {
   visible: boolean;
   message: string;
   type: "success" | "error" | "warning";
-  icon?: string;
+  icon?: IconName;
 };
 
 export const snackbarAtom = atom<SnackbarState>({
@@ -21,7 +25,7 @@ export const snackbarAtom = atom<SnackbarState>({
   icon: undefined,
 });
 
-export const showSuccessAtom = atom(null, (get, set, message: string, icon?: string) => {
+export const showSuccessAtom = atom(null, (get, set, message: string, icon?: IconName) => {
   set(snackbarAtom, {
     visible: true,
     message,
@@ -30,7 +34,7 @@ export const showSuccessAtom = atom(null, (get, set, message: string, icon?: str
   });
 });
 
-export const showErrorAtom = atom(null, (get, set, message: string, icon?: string) => {
+export const showErrorAtom = atom(null, (get, set, message: string, icon?: IconName) => {
   set(snackbarAtom, {
     visible: true,
     message,

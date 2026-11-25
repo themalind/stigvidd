@@ -8,6 +8,7 @@
 import UserTrailCollection from "@/components/user/user-trail-collection";
 import { UserFavoritesTrail } from "@/data/types";
 import { getAllByType } from "@/test/composites";
+import { defined } from "@/test/defined";
 import { stubMeasureInWindow } from "@/test/measure";
 import { renderWithProviders } from "@/test/render";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
@@ -190,7 +191,7 @@ it("counts a length range as a single filter", async () => {
   await fireEvent.press(screen.getByText("Fler filter…"));
   await fireEvent.press(screen.getByText("Alla orter"));
   // The city also appears on the trail card behind the sheet; the row is the later one.
-  await fireEvent.press(screen.getAllByText("Borås").at(-1)!);
+  await fireEvent.press(defined(screen.getAllByText("Borås").at(-1), "a Borås row"));
 
   const lengthSlider = getAllByType(RangeSlider).find((node) => node.props.maximumValue === 150);
   if (!lengthSlider) throw new Error("expected the length slider");

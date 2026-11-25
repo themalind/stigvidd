@@ -130,7 +130,7 @@ export default function HikeRecorder() {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       // keep-comment: last-known first, so the map does not wait on a cold GPS fix
       const last = await Location.getLastKnownPositionAsync().catch(() => null);
       if (cancelled) return;
@@ -157,13 +157,13 @@ export default function HikeRecorder() {
       setShowStartInfo(true);
       return;
     }
-    startTracking();
+    void startTracking();
   };
 
   const handleConfirmStart = async (dontShowAgain: boolean) => {
     setShowStartInfo(false);
     if (dontShowAgain) await dismissRecordingInfo();
-    startTracking();
+    void startTracking();
   };
 
   useEffect(() => {
@@ -278,7 +278,7 @@ export default function HikeRecorder() {
         visible={showDeleteDialog}
         onDismiss={() => setShowDeleteDialog(false)}
         onConfirm={() => {
-          resetTracking();
+          void resetTracking();
           setShowDeleteDialog(false);
         }}
         title={t("createHike.cancelTitle")}

@@ -94,7 +94,7 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
       }
     }
 
-    load(identifier);
+    void load(identifier);
     return () => {
       cancelled = true;
     };
@@ -191,7 +191,7 @@ export function useTrailCards(identifiers: string[]): {
       }
     }
 
-    load();
+    void load();
     return () => {
       cancelled = true;
     };

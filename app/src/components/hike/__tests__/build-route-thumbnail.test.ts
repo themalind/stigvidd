@@ -6,6 +6,11 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { buildRouteThumbnail } from "@/components/hike/build-route-thumbnail";
+import { defined } from "@/test/defined";
+
+function thumbnail(...args: Parameters<typeof buildRouteThumbnail>) {
+  return defined(buildRouteThumbnail(...args), "a thumbnail");
+}
 
 function pointsFrom(d: string): [number, number][] {
   return d
@@ -27,7 +32,7 @@ const SQUARE: GeoJSON.Position[] = [
 
 describe("buildRouteThumbnail", () => {
   it("fits the track inside the padded box", () => {
-    const { d } = buildRouteThumbnail(SQUARE, 52, 52, 6)!;
+    const { d } = thumbnail(SQUARE, 52, 52, 6);
 
     for (const [x, y] of pointsFrom(d)) {
       expect(x).toBeGreaterThanOrEqual(6);
@@ -39,7 +44,7 @@ describe("buildRouteThumbnail", () => {
 
   it("touches the padding on the axis it fills, and centres on the other", () => {
     // With the cos correction applied latitude spans further, so the vertical axis is the one that fills.
-    const { d } = buildRouteThumbnail(SQUARE, 52, 52, 6)!;
+    const { d } = thumbnail(SQUARE, 52, 52, 6);
     const points = pointsFrom(d);
     const ys = points.map(([, y]) => y);
     const xs = points.map(([x]) => x);
@@ -56,7 +61,7 @@ describe("buildRouteThumbnail", () => {
       [13.0, 57.05],
       [13.0, 57.1],
     ];
-    const { d } = buildRouteThumbnail(northward, 52, 52)!;
+    const { d } = thumbnail(northward, 52, 52);
     const xs = pointsFrom(d).map(([x]) => x);
 
     // No horizontal extent at all, parked on the centre line.
@@ -66,7 +71,7 @@ describe("buildRouteThumbnail", () => {
 
   it("corrects for longitude convergence rather than filling both axes", () => {
     // Equal degree spans: at 57°N the longitude span is shorter on the ground, so it renders shorter.
-    const { d } = buildRouteThumbnail(SQUARE, 52, 52, 6)!;
+    const { d } = thumbnail(SQUARE, 52, 52, 6);
     const points = pointsFrom(d);
     const drawnWidth = Math.max(...points.map(([x]) => x)) - Math.min(...points.map(([x]) => x));
     const drawnHeight = Math.max(...points.map(([, y]) => y)) - Math.min(...points.map(([, y]) => y));
@@ -75,7 +80,7 @@ describe("buildRouteThumbnail", () => {
   });
 
   it("puts north at the top", () => {
-    const { d } = buildRouteThumbnail(SQUARE, 52, 52)!;
+    const { d } = thumbnail(SQUARE, 52, 52);
     const points = pointsFrom(d);
 
     // SQUARE starts at the southern edge and its third point is the northern one.
@@ -83,7 +88,7 @@ describe("buildRouteThumbnail", () => {
   });
 
   it("reports endpoints that match the path", () => {
-    const { d, start, end } = buildRouteThumbnail(SQUARE, 52, 52)!;
+    const { d, start, end } = thumbnail(SQUARE, 52, 52);
     const points = pointsFrom(d);
 
     expect(start[0]).toBeCloseTo(points[0][0], 1);
@@ -94,7 +99,7 @@ describe("buildRouteThumbnail", () => {
 
   it("caps the point count and keeps the final position", () => {
     const long: GeoJSON.Position[] = Array.from({ length: 5000 }, (_, i) => [13 + i * 0.0001, 57 + i * 0.0002]);
-    const { d, end } = buildRouteThumbnail(long, 52, 52, 6)!;
+    const { d, end } = thumbnail(long, 52, 52, 6);
     const points = pointsFrom(d);
 
     expect(points.length).toBeLessThanOrEqual(120);
@@ -119,7 +124,7 @@ describe("buildRouteThumbnail", () => {
   });
 
   it("produces no NaN when the padding swallows the box", () => {
-    const { d } = buildRouteThumbnail(SQUARE, 12, 12, 8)!;
+    const { d } = thumbnail(SQUARE, 12, 12, 8);
 
     expect(pointsFrom(d).every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))).toBe(true);
   });

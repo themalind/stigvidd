@@ -21,6 +21,7 @@ import {
 } from "@/services/location-task";
 import { getDialog, hideDialog } from "@/services/dialog";
 import { useLocationTracking } from "@/services/use-location-tracking";
+import { defined } from "@/test/defined";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act } from "@testing-library/react-native";
@@ -276,6 +277,19 @@ describe("startTracking", () => {
       expect(mockStartUpdates).not.toHaveBeenCalled();
       expect(harness.hook().isTracking).toBe(true);
     });
+
+    it("reports a task that fails to start instead of failing silently", async () => {
+      mockStartUpdates.mockRejectedValue(new Error("location services off"));
+      const harness = await mount();
+
+      await act(async () => harness.hook().startTracking());
+
+      expect(harness.store.get(snackbarAtom)).toMatchObject({
+        visible: true,
+        type: "error",
+        message: "Något gick fel med inspelningen. Försök igen.",
+      });
+    });
   });
 
   describe("the segment it opens", () => {
@@ -463,7 +477,9 @@ describe("stopTracking", () => {
 
       expect(mockDrainLive).toHaveBeenCalled();
       expect(mockStopLive).toHaveBeenCalled();
-      expect(mockDrainLive.mock.invocationCallOrder.at(-1)).toBeLessThan(mockStopLive.mock.invocationCallOrder.at(-1)!);
+      expect(mockDrainLive.mock.invocationCallOrder.at(-1)).toBeLessThan(
+        defined(mockStopLive.mock.invocationCallOrder.at(-1), "a stop call"),
+      );
     });
 
     it("leaves the expo task alone", async () => {
@@ -530,7 +546,9 @@ describe("resetTracking", () => {
 
       await act(async () => harness.hook().resetTracking());
 
-      expect(mockStopLive.mock.invocationCallOrder.at(-1)).toBeLessThan(mockDrainLive.mock.invocationCallOrder.at(-1)!);
+      expect(mockStopLive.mock.invocationCallOrder.at(-1)).toBeLessThan(
+        defined(mockDrainLive.mock.invocationCallOrder.at(-1), "a drain call"),
+      );
     });
   });
 

@@ -11,6 +11,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { TrailShortInfoResponse } from "@/data/types";
 import { UserLocation } from "@/hooks/location/useUserLocation";
 import { getAllByType, getByType } from "@/test/composites";
+import { defined } from "@/test/defined";
 import { flushUntil, flushUntilGone } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
@@ -254,7 +255,7 @@ it("keeps the clear-filters link out of the way until something is filtered", as
 it("offers to clear once a filter has been set in the sheet", async () => {
   await show();
 
-  await act(() => mockModal.props!.onUpdateFilter("city", "Borås"));
+  await act(() => defined(mockModal.props, "the filter modal").onUpdateFilter("city", "Borås"));
 
   expect(screen.getByTestId("trails-clear-filters")).toBeTruthy();
   expect(screen.queryByText("Åsundens strandstig")).toBeNull();
@@ -263,7 +264,7 @@ it("offers to clear once a filter has been set in the sheet", async () => {
 it("clears the search and the filters together", async () => {
   await show();
   await search("kvarn");
-  await act(() => mockModal.props!.onUpdateFilter("city", "Borås"));
+  await act(() => defined(mockModal.props, "the filter modal").onUpdateFilter("city", "Borås"));
 
   await fireEvent.press(screen.getByTestId("trails-clear-filters"));
 
@@ -276,7 +277,7 @@ it("also clears from inside the sheet", async () => {
   await show();
   await search("kvarn");
 
-  await act(() => mockModal.props!.onClearFilters());
+  await act(() => defined(mockModal.props, "the filter modal").onClearFilters());
 
   expect(screen.getByText("Visar 3 av 3 leder")).toBeTruthy();
 });
@@ -295,7 +296,7 @@ it("shuts the sheet again when it asks to be closed", async () => {
   await show();
   await fireEvent.press(screen.getByTestId("trails-filter-button"));
 
-  await act(() => mockModal.props!.onClose());
+  await act(() => defined(mockModal.props, "the filter modal").onClose());
 
   expect(screen.queryByTestId("filter-modal")).toBeNull();
 });
@@ -304,21 +305,21 @@ it("shuts the sheet again when it asks to be closed", async () => {
 it("gives the sheet the places and difficulties the trails actually have", async () => {
   await show();
 
-  expect(mockModal.props!.cities).toEqual(["Borås", "Ulricehamn"]);
-  expect(mockModal.props!.classifications).toEqual([1, 2]);
+  expect(defined(mockModal.props, "the filter modal").cities).toEqual(["Borås", "Ulricehamn"]);
+  expect(defined(mockModal.props, "the filter modal").classifications).toEqual([1, 2]);
 });
 
 it("tells the sheet there is no position to measure from without a real fix", async () => {
   await show();
 
-  expect(mockModal.props!.hasLocation).toBe(false);
+  expect(defined(mockModal.props, "the filter modal").hasLocation).toBe(false);
 });
 
 it("tells the sheet it has a position once there is a real fix", async () => {
   mockLocation = { latitude: 57.72, longitude: 12.94, isFallback: false };
   await show();
 
-  expect(mockModal.props!.hasLocation).toBe(true);
+  expect(defined(mockModal.props, "the filter modal").hasLocation).toBe(true);
 });
 
 it("pulls the trails again on pull-to-refresh", async () => {

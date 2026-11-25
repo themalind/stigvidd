@@ -29,7 +29,7 @@ interface TrailFilterModalProps {
   filters: FilterOptions;
   sortBy: SortOption;
   onUpdateSort: (value: SortOption) => void;
-  onUpdateFilter: (key: keyof FilterOptions, value: any) => void;
+  onUpdateFilter: <K extends keyof FilterOptions>(key: K, value: FilterOptions[K]) => void;
   onUpdateLengthFilter: (min: number, max: number) => void;
   onClearFilters: () => void;
   hasLocation: boolean;

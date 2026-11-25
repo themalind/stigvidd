@@ -80,7 +80,7 @@ export default function ReportContentForm({
   const { mutate, isPending } = useMutation({
     mutationFn: (report: CreateContentReportRequest) => createContentReport(report),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: invalidateQueryKey });
+      void queryClient.invalidateQueries({ queryKey: invalidateQueryKey });
       if (contentType === "HikeImage") track("hike.image_reported", {});
       reset();
       onDismiss();

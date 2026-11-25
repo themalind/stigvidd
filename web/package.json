@@ -9,7 +9,7 @@
     "dev": "vite",
     "prebuild": "node ./scripts/codegen.mjs",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",

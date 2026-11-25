@@ -9,6 +9,7 @@ import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import { CONTRIBUTION_MARKER_COLORS, MARKER_COLORS, SWIMMING_MARKER_COLORS } from "@/components/map/marker-styles";
 import TrailMarkersMap from "@/components/map/trail-markers-map";
 import { FacilityType, MapMarkerFilter } from "@/data/types";
+import { defined } from "@/test/defined";
 import { flushUntil, settle } from "@/test/flush";
 import { cameraHandles, resetMapHandles, sourceHandle } from "@/test/maplibre";
 import { renderWithProviders } from "@/test/render";
@@ -254,17 +255,17 @@ it("opens a small cluster as a carousel and zooms a large one", async () => {
     { properties: { identifier: "t2" } },
   ]);
 
-  await fireEvent(source("trails")!, "press", clusterFeature(3));
+  await fireEvent(defined(source("trails"), "the trails source"), "press", clusterFeature(3));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalledWith(["t1", "t2"], { coordinate: [12.94, 57.72], radius: 16 }, 12);
 
   onClusterOpen.mockClear();
-  await fireEvent(source("trails")!, "press", clusterFeature(40));
+  await fireEvent(defined(source("trails"), "the trails source"), "press", clusterFeature(40));
   await settle();
 
   expect(onClusterOpen).not.toHaveBeenCalled();
-  expect(cameraHandles().at(-1)!.flyTo).toHaveBeenCalledWith(
+  expect(defined(cameraHandles().at(-1), "a camera").flyTo).toHaveBeenCalledWith(
     expect.objectContaining({ center: [12.94, 57.72], zoom: 12 }),
   );
 });
@@ -272,7 +273,11 @@ it("opens a small cluster as a carousel and zooms a large one", async () => {
 it("closes the open selection when a single facility is named", async () => {
   await show({ firePits: true });
 
-  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await fireEvent(
+    defined(source("firepits"), "the firepits source"),
+    "press",
+    pointFeature({ name: "Grillplatsen", isAccessible: true }),
+  );
   await settle();
 
   expect(onDismiss).toHaveBeenCalledTimes(1);
@@ -284,11 +289,11 @@ it("closes the open selection when a trail or facility cluster is zoomed instead
   sourceHandle("trails").getClusterExpansionZoom.mockResolvedValue(12);
   sourceHandle("firepits").getClusterExpansionZoom.mockResolvedValue(14);
 
-  await fireEvent(source("trails")!, "press", clusterFeature(40));
+  await fireEvent(defined(source("trails"), "the trails source"), "press", clusterFeature(40));
   await settle();
   expect(onDismiss).toHaveBeenCalledTimes(1);
 
-  await fireEvent(source("firepits")!, "press", clusterFeature(4));
+  await fireEvent(defined(source("firepits"), "the firepits source"), "press", clusterFeature(4));
   await settle();
   expect(onDismiss).toHaveBeenCalledTimes(2);
 });
@@ -298,7 +303,7 @@ it("keeps the selection to the carousel it opens when a cluster opens one", asyn
   sourceHandle("trails").getClusterExpansionZoom.mockResolvedValue(12);
   sourceHandle("trails").getClusterLeaves.mockResolvedValue([{ properties: { identifier: "t1" } }]);
 
-  await fireEvent(source("trails")!, "press", clusterFeature(3));
+  await fireEvent(defined(source("trails"), "the trails source"), "press", clusterFeature(3));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalled();
@@ -312,7 +317,7 @@ it("opens a large cluster that cannot be zoomed apart", async () => {
   sourceHandle("trails").getClusterExpansionZoom.mockResolvedValue(18);
   sourceHandle("trails").getClusterLeaves.mockResolvedValue([{ properties: { identifier: "t1" } }]);
 
-  await fireEvent(source("trails")!, "press", clusterFeature(40));
+  await fireEvent(defined(source("trails"), "the trails source"), "press", clusterFeature(40));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalledWith(["t1"], { coordinate: [12.94, 57.72], radius: 20 }, 18);
@@ -321,7 +326,7 @@ it("opens a large cluster that cannot be zoomed apart", async () => {
 it("opens a single trail straight into its own carousel", async () => {
   await show();
 
-  await fireEvent(source("trails")!, "press", pointFeature({ identifier: "t1" }));
+  await fireEvent(defined(source("trails"), "the trails source"), "press", pointFeature({ identifier: "t1" }));
   await settle();
 
   expect(onClusterOpen).toHaveBeenCalledWith(["t1"], { coordinate: [12.94, 57.72], radius: 9 });
@@ -332,12 +337,16 @@ it("zooms a facility cluster and names a single facility", async () => {
   await show({ firePits: true });
   sourceHandle("firepits").getClusterExpansionZoom.mockResolvedValue(14);
 
-  await fireEvent(source("firepits")!, "press", clusterFeature(4));
+  await fireEvent(defined(source("firepits"), "the firepits source"), "press", clusterFeature(4));
   await settle();
-  expect(cameraHandles().at(-1)!.flyTo).toHaveBeenCalledWith(expect.objectContaining({ zoom: 14 }));
+  expect(defined(cameraHandles().at(-1), "a camera").flyTo).toHaveBeenCalledWith(expect.objectContaining({ zoom: 14 }));
   expect(onClusterOpen).not.toHaveBeenCalled();
 
-  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await fireEvent(
+    defined(source("firepits"), "the firepits source"),
+    "press",
+    pointFeature({ name: "Grillplatsen", isAccessible: true }),
+  );
   await settle();
   expect(screen.getByText("Grillplatsen")).toBeTruthy();
 });
@@ -346,7 +355,11 @@ it("zooms a facility cluster and names a single facility", async () => {
 it("takes the name bubble down with the pin it belongs to", async () => {
   const { rerender } = await show({ firePits: true });
 
-  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await fireEvent(
+    defined(source("firepits"), "the firepits source"),
+    "press",
+    pointFeature({ name: "Grillplatsen", isAccessible: true }),
+  );
   await settle();
   expect(screen.getByText("Grillplatsen")).toBeTruthy();
 
@@ -383,7 +396,11 @@ it("keeps the bubble of a place that is two kinds while one of its pins is still
 it("clears the bubble when the map itself is pressed", async () => {
   await show({ firePits: true });
 
-  await fireEvent(source("firepits")!, "press", pointFeature({ name: "Grillplatsen", isAccessible: true }));
+  await fireEvent(
+    defined(source("firepits"), "the firepits source"),
+    "press",
+    pointFeature({ name: "Grillplatsen", isAccessible: true }),
+  );
   await settle();
   await fireEvent(screen.getByTestId("maplibre-Map"), "press");
 

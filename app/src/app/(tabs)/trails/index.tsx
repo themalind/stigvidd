@@ -41,7 +41,7 @@ export default function TrailsScreen() {
 
   const { data: trails, isLoading, isError, refetch, isFetching } = useTrails();
   const onRefresh = () => {
-    refetch();
+    void refetch();
   };
   const [chosenSource, setSource] = useAtom(trailListSourceAtom);
   const hasContributions = trails?.some((trail) => trail.isContribution) ?? false;

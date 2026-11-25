@@ -13,7 +13,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { USER_LOCATION_KEY } from "@/hooks/location/useUserLocation";
 import { getByType } from "@/test/composites";
 import { flushUntil, settle } from "@/test/flush";
-import { renderWithProviders } from "@/test/render";
+import { renderWithProviders, SeededAtom } from "@/test/render";
 import { QueryClient } from "@tanstack/react-query";
 import { fireEvent, screen, within } from "@testing-library/react-native";
 import { ActivityIndicator, AppState, AppStateStatus, Linking, Platform } from "react-native";
@@ -67,7 +67,7 @@ interface UserState {
 }
 
 function user({ isLoading = false, isError = false, error = null }: UserState = {}) {
-  return [[stigviddUserAtom, { isLoading, isError, error }]] as [unknown, unknown][];
+  return [[stigviddUserAtom, { isLoading, isError, error }] as SeededAtom];
 }
 
 // The AppState listener the screen installs for a return from settings, and its unsubscribe.

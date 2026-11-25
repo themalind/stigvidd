@@ -81,7 +81,7 @@ export default function TrailObstacleForm({ trailIdentifier, visible, onDismiss 
     mutationFn: (obstacle: CreateTrailObstacleRequest) => createTrailObstacle(obstacle),
     onSuccess: () => {
       forget();
-      queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+      void queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
       reset();
       onDismiss();
       setSuccessMsg(t("obstacle.reportSuccess"));

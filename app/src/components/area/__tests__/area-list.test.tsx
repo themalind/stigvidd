@@ -10,7 +10,7 @@ import { logger } from "@/services/logger";
 import { getByType } from "@/test/composites";
 import { flushUntil } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
-import { act, fireEvent, screen } from "@testing-library/react-native";
+import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import { StyleSheet } from "react-native";
 import AreaList from "../area-list";
@@ -162,9 +162,7 @@ it("keeps calling the kept popular list popular while the position's list loads"
 
   mockLocation = { data: { latitude: 57.721, longitude: 12.94, isFallback: false }, isPending: false };
   mockGetAreas.mockReturnValue(new Promise(() => {}));
-  await act(async () => {
-    rendered.rerender(<AreaListScreen />);
-  });
+  await rendered.rerender(<AreaListScreen />);
 
   expect(mockGetAreas).toHaveBeenCalledWith(57.72, 12.94);
   expect(screen.getByTestId("area-row-rya")).toBeTruthy();
@@ -180,9 +178,7 @@ it("counts one view when the position's list replaces the popular one", async ()
 
   mockLocation = { data: { latitude: 57.721, longitude: 12.94, isFallback: false }, isPending: false };
   mockGetAreas.mockResolvedValue(AREAS.slice(0, 2));
-  await act(async () => {
-    rendered.rerender(<AreaListScreen />);
-  });
+  await rendered.rerender(<AreaListScreen />);
   await flushUntil(() => screen.queryByText("Närmast"));
   expect(screen.getByText("Närmast")).toBeTruthy();
 

@@ -34,9 +34,9 @@ function layer(id: string) {
   return screen.queryAllByTestId("maplibre-Layer").find((node) => node.props.id === id);
 }
 
-function pressFeatures(...features: Record<string, unknown>[]) {
+async function pressFeatures(...features: Record<string, unknown>[]) {
   const stopPropagation = jest.fn();
-  fireEvent(source(), "press", {
+  await fireEvent(source(), "press", {
     nativeEvent: { features: features.map((properties) => ({ type: "Feature", properties })) },
     stopPropagation,
   });
@@ -105,7 +105,7 @@ it("enlarges the selected pin and draws it on top", async () => {
 it("selects the tapped obstacle and keeps the tap from reaching the map", async () => {
   await show([obstacle("o1")]);
 
-  const stopPropagation = pressFeatures({ identifier: "o1", issueType: "FallenTree" });
+  const stopPropagation = await pressFeatures({ identifier: "o1", issueType: "FallenTree" });
 
   expect(onSelect).toHaveBeenCalledWith(["o1"]);
   expect(stopPropagation).toHaveBeenCalled();
@@ -114,7 +114,7 @@ it("selects the tapped obstacle and keeps the tap from reaching the map", async 
 it("ignores a tap that carries no obstacle", async () => {
   await show([obstacle("o1")]);
 
-  pressFeatures();
+  await pressFeatures();
 
   expect(onSelect).not.toHaveBeenCalled();
 });
@@ -123,7 +123,7 @@ it("ignores a tap that carries no obstacle", async () => {
 it("hands over every obstacle under the finger, each once", async () => {
   await show([obstacle("o1"), obstacle("o2")]);
 
-  pressFeatures({ identifier: "o1" }, { identifier: "o2" }, { identifier: "o1" });
+  await pressFeatures({ identifier: "o1" }, { identifier: "o2" }, { identifier: "o1" });
 
   expect(onSelect).toHaveBeenCalledWith(["o1", "o2"]);
 });

@@ -91,10 +91,10 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
       }
     };
 
-    arm();
+    void arm();
 
     const appStateSub = AppState.addEventListener("change", (next) => {
-      if (next === "active") arm();
+      if (next === "active") void arm();
     });
 
     return () => {

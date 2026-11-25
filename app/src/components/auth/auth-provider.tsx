@@ -80,7 +80,7 @@ export function useInitAuth(): void {
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       const restored = await restoreSession().catch((error: unknown) => {
         logger.warn("Session restore failed", { errorMessage: String(error) });
         return null;

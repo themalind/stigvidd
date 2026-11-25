@@ -40,6 +40,8 @@ function useErrorInfo(error: unknown): ErrorInfo {
       case 502:
       case 503:
         return { title: t("error.500.title"), message: t("error.500.message"), icon: "cloud-off" };
+      default:
+        break;
     }
   }
   // The request never reached the server; the reconnect refetches it. keep-comment: why offline gets no retry button of its own

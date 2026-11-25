@@ -161,7 +161,7 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     return result;
   }, [trailsWithDistance, trails, filters, sortBy, userLocation, searchQuery]);
 
-  const updateFilter = (key: keyof FilterOptions, value: any) => {
+  const updateFilter = <K extends keyof FilterOptions>(key: K, value: FilterOptions[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
     if (key === "nearMe" && value === true) {
       setSortBy("distance-asc");

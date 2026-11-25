@@ -108,8 +108,8 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
   const images = trail?.trailImagesResponse || [];
   let coordinates: GeoJSON.Position[] = [];
 
-  if (coords) {
-    coordinates = CoordinateParser({ data: coords.coordinates, identifier: trail!.identifier });
+  if (coords && trail) {
+    coordinates = CoordinateParser({ data: coords.coordinates, identifier: trail.identifier });
   }
 
   const handleOpenFollowMap = () => {

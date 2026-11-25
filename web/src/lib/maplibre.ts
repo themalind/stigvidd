@@ -48,7 +48,7 @@ export function mapStyle(satellite: boolean): string | StyleSpecification {
 
 export function upsertSource(map: MapLibreMap, id: string, data: GeoJSON.FeatureCollection): void {
   const source = map.getSource<GeoJSONSource>(id);
-  if (source) source.setData(data);
+  if (source) void source.setData(data);
   else map.addSource(id, { type: "geojson", data });
 }
 

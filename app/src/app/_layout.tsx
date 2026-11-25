@@ -151,7 +151,7 @@ export default function RootLayout() {
   const setBasemap = useSetAtom(basemapAtom);
   const [preferencesRestored, setPreferencesRestored] = useState(false);
   useEffect(() => {
-    Promise.all([loadUserTheme(), loadBasemap()]).then(([userTheme, basemap]) => {
+    void Promise.all([loadUserTheme(), loadBasemap()]).then(([userTheme, basemap]) => {
       setUserTheme(userTheme);
       setBasemap(basemap);
       setPreferencesRestored(true);
@@ -159,11 +159,13 @@ export default function RootLayout() {
   }, [setUserTheme, setBasemap]);
 
   useEffect(() => {
-    loadStoredLanguage();
-    pruneTrailCardCache();
+    loadStoredLanguage().catch((error: unknown) =>
+      logger.warn("Loading the stored language failed", { errorMessage: String(error) }),
+    );
+    void pruneTrailCardCache();
     initOnlineStatus();
     initMapTiler();
-    initMapCache();
+    void initMapCache();
   }, []);
 
   useEffect(() => {

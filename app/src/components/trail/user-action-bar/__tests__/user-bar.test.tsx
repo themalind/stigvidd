@@ -87,7 +87,7 @@ describe("UserBar", () => {
     expect(screen.getByTestId("user-bar")).toHaveStyle({ backgroundColor: AppDarkTheme.colors.outlineVariant });
 
     await renderWithProviders(<UserBar trail={trail()} />, { theme: AppDefaultTheme });
-    expect(screen.getAllByTestId("user-bar").at(-1)!).toHaveStyle({
+    expect(screen.getAllByTestId("user-bar").at(-1)).toHaveStyle({
       backgroundColor: AppDefaultTheme.colors.outlineVariant,
     });
   });

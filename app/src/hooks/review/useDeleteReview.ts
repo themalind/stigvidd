@@ -22,10 +22,10 @@ export function useDeleteReview() {
       deleteReview(reviewIdentifier),
     onSuccess: (result, { trailIdentifier }) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
-        queryClient.invalidateQueries({ queryKey: ["reviews", trailIdentifier] });
+        void queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
+        void queryClient.invalidateQueries({ queryKey: ["reviews", trailIdentifier] });
         // keep-comment: brings the add option back
-        queryClient.invalidateQueries({ queryKey: ["review-exists", trailIdentifier] });
+        void queryClient.invalidateQueries({ queryKey: ["review-exists", trailIdentifier] });
         setSuccessMessage(t("review.deleted"));
       } else {
         setError(t("review.deleteError"));

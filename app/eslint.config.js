@@ -1,7 +1,9 @@
 // https://docs.expo.dev/guides/using-eslint/
+const path = require("node:path");
 const { defineConfig } = require("eslint/config");
 const expoConfig = require("eslint-config-expo/flat");
 const boundaries = require("eslint-plugin-boundaries");
+const tsRecommended = require("@typescript-eslint/eslint-plugin").configs["flat/recommended"];
 
 // The folders of src/ and who may import whom; docs/conventions/app.md explains each one.
 const layers = [
@@ -25,7 +27,26 @@ const to = (...types) => ({ to: { element: { types } } });
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ["dist/*"],
+    ignores: ["dist/*", ".expo/*", "coverage/*"],
+  },
+  {
+    files: ["**/*.{ts,tsx}"],
+    rules: {
+      ...Object.assign({}, ...tsRecommended.map((config) => config.rules)),
+      "@typescript-eslint/no-non-null-assertion": "error",
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: path.dirname(require.resolve("./tsconfig.json")) },
+    },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
+      "@typescript-eslint/await-thenable": "error",
+      "@typescript-eslint/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
+    },
   },
   {
     files: ["src/**/*.{ts,tsx,js,jsx}"],

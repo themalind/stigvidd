@@ -64,21 +64,21 @@ export default function TrailObstacleItem({
   const { mutate, isPending } = useMutation({
     mutationFn: () => addSolvedVote(obstacle.identifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+      void queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
     },
   });
 
   const { mutate: deleteSolvedVoteMutate, isPending: deleteSolvedVoteIsPending } = useMutation({
     mutationFn: () => deleteSolvedVote(obstacle.identifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+      void queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
     },
   });
 
   const { mutate: deleteObstacleMutate, isPending: deleteObstacleIsPending } = useMutation({
     mutationFn: (trailObstacleIdentifier: string) => deleteTrailObstacle(trailObstacleIdentifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+      void queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
     },
   });
 

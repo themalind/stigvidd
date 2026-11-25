@@ -23,12 +23,12 @@ export function useSharedHikeMutations() {
     mutationFn: (hikeIdentifier: string) => acceptSharedHike(hikeIdentifier),
     onSuccess: () => {
       // keep-comment: also covers the incoming list, keyed under the same prefix
-      queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
+      void queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
       setSuccessMsg(t("hike.hikeAdded"));
     },
     onError: (error) => {
       if (isApiStatus(error, 404)) {
-        queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
+        void queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
         setWarningMsg(t("hike.shareGone"));
         return;
       }
@@ -39,12 +39,12 @@ export function useSharedHikeMutations() {
   const rejectMutation = useMutation({
     mutationFn: (hikeIdentifier: string) => rejectSharedHike(hikeIdentifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["shared-hikes", "incoming"] });
+      void queryClient.invalidateQueries({ queryKey: ["shared-hikes", "incoming"] });
       setSuccessMsg(t("hike.incomingRejected"));
     },
     onError: (error) => {
       if (isApiStatus(error, 404)) {
-        queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
+        void queryClient.invalidateQueries({ queryKey: ["shared-hikes"] });
         setSuccessMsg(t("hike.incomingRejected"));
         return;
       }

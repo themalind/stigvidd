@@ -39,13 +39,13 @@ export function useCreateReview(onSuccess: () => void) {
     },
     onSuccess: (result, variables) => {
       if (result.success) {
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: ["trail", variables.trailIdentifier],
         });
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: ["reviews", variables.trailIdentifier],
         });
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: ["review-exists", variables.trailIdentifier],
         });
         setSuccess(t("review.added"));

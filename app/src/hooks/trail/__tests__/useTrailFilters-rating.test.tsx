@@ -5,6 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { FilterOptions } from "@/data/types";
 import { FilterableTrail, trailRating, useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { renderWithProviders } from "@/test/render";
 import { act } from "@testing-library/react-native";
@@ -42,7 +43,7 @@ async function renderFilters(trails: FilterableTrail[]) {
   await renderWithProviders(<Probe />);
   return {
     ids: () => hook.filteredTrails.map((t) => t.identifier),
-    setFilter: (key: Parameters<typeof hook.updateFilter>[0], value: unknown) =>
+    setFilter: <K extends keyof FilterOptions>(key: K, value: FilterOptions[K]) =>
       act(() => hook.updateFilter(key, value)),
     sortBy: () => hook.sortBy,
     setSort: (value: Parameters<typeof hook.setSortBy>[0]) => act(() => hook.setSortBy(value)),

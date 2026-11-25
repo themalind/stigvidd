@@ -133,7 +133,7 @@ export default function PublishedHikesScreen() {
     mutationFn: (submission: HikeSubmission) => withdrawHikeSubmission(submission.identifier),
     onSuccess: () => {
       setSuccessMsg(t("publish.withdrawn"));
-      queryClient.invalidateQueries({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
+      void queryClient.invalidateQueries({ queryKey: [HIKE_SUBMISSIONS_QUERY_ROOT] });
     },
     onError: () => setErrorMsg(t("hike.genericError")),
     onSettled: () => setToWithdraw(null),

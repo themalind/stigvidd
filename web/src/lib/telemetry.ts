@@ -157,11 +157,12 @@ function scheduleFlush(): void {
  * endpoint takes HTTP Basic.
  */
 async function ship(records: LogRecord[], keepalive: boolean): Promise<void> {
+  if (!LOGS_URL) return;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch(LOGS_URL!, {
+    const response = await fetch(LOGS_URL, {
       method: "POST",
       signal: controller.signal,
       keepalive,

@@ -138,7 +138,7 @@ it("opens the full map from the badge", async () => {
   const onOpen = jest.fn();
   await renderWithProviders(<AreaMap area={AREA} onOpen={onOpen} />);
 
-  fireEvent.press(screen.getByRole("button", { name: "Öppna karta" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Öppna karta" }));
 
   expect(onOpen).toHaveBeenCalledTimes(1);
 });

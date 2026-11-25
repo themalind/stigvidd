@@ -85,7 +85,7 @@ export default function TrailObstacleUpdateForm({
       queryClient.setQueriesData<TrailObstacle[]>({ queryKey: ["obstacles", trailIdentifier] }, (obstacles) =>
         obstacles?.map((o) => (o.identifier === obstacleIdentifier ? withEdit(o, request) : o)),
       );
-      queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
+      void queryClient.invalidateQueries({ queryKey: ["obstacles", trailIdentifier] });
       onDismiss();
       setSuccessMsg(t("obstacle.updated"));
     },

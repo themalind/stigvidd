@@ -27,7 +27,7 @@ export function useFriendMutations() {
 
   // 404: withdrawn, already answered or account deleted, so stale. keep-comment: three causes, one status
   const onGone = () => {
-    queryClient.invalidateQueries({ queryKey: ["friends"] });
+    void queryClient.invalidateQueries({ queryKey: ["friends"] });
     setWarningMsg(t("friends.requestGone"));
   };
 
@@ -35,7 +35,7 @@ export function useFriendMutations() {
     mutationFn: (requesterIdentifier: string) => acceptFriendRequest(requesterIdentifier),
     onSuccess: () => {
       // keep-comment: also covers incoming requests, keyed under the same prefix
-      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      void queryClient.invalidateQueries({ queryKey: ["friends"] });
       setSuccessMsg(t("friends.requestAccepted"));
     },
     onError: (error) => {
@@ -47,12 +47,12 @@ export function useFriendMutations() {
   const rejectMutation = useMutation({
     mutationFn: (requesterIdentifier: string) => rejectFriendRequest(requesterIdentifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["friends", "incoming"] });
+      void queryClient.invalidateQueries({ queryKey: ["friends", "incoming"] });
       setSuccessMsg(t("friends.requestRejected"));
     },
     onError: (error) => {
       if (isApiStatus(error, 404)) {
-        queryClient.invalidateQueries({ queryKey: ["friends"] });
+        void queryClient.invalidateQueries({ queryKey: ["friends"] });
         setSuccessMsg(t("friends.requestRejected"));
         return;
       }
@@ -63,7 +63,7 @@ export function useFriendMutations() {
   const sendRequestMutation = useMutation({
     mutationFn: (receiverNickName: string) => sendFriendRequest(receiverNickName),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["friends", "outgoing"] });
+      void queryClient.invalidateQueries({ queryKey: ["friends", "outgoing"] });
       setSuccessMsg(t("friends.requestSent"));
     },
     onError: () => {
@@ -74,7 +74,7 @@ export function useFriendMutations() {
   const removeFriendMutation = useMutation({
     mutationFn: (friendIdentifier: string) => removeFriend(friendIdentifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      void queryClient.invalidateQueries({ queryKey: ["friends"] });
       setSuccessMsg(t("friends.friendRemoved"));
     },
     onError: (error) => {
@@ -86,7 +86,7 @@ export function useFriendMutations() {
   const withdrawRequestMutation = useMutation({
     mutationFn: (receiverIdentifier: string) => removeFriend(receiverIdentifier),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["friends", "outgoing"] });
+      void queryClient.invalidateQueries({ queryKey: ["friends", "outgoing"] });
       setSuccessMsg(t("friends.requestWithdrawnByYou"));
     },
     onError: (error) => {
@@ -98,7 +98,7 @@ export function useFriendMutations() {
   const setNoteMutation = useMutation({
     mutationFn: ({ identifier, note }: { identifier: string; note: string | null }) => setFriendNote(identifier, note),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      void queryClient.invalidateQueries({ queryKey: ["friends"] });
       setSuccessMsg(t("friends.noteSaved"));
     },
     onError: (error) => {

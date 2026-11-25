@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Restore a session on load (exchange the stored refresh token).
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       try {
         const restored = await restoreSession();
         if (cancelled) return;

@@ -56,7 +56,7 @@ export default function CreateHikeScreen() {
   // keep-comment: the shared location query misses an in-app grant and would keep the Borås fallback app-wide
   const markGranted = useCallback(() => {
     setPhase("granted");
-    queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
+    void queryClient.invalidateQueries({ queryKey: USER_LOCATION_KEY });
   }, [queryClient]);
 
   const handleContinue = async () => {

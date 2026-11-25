@@ -51,7 +51,7 @@ export default function UserRating({ trail }: UserRatingProps) {
 
   const handleReviewAdded = () => {
     setShowModal(false);
-    queryClient.invalidateQueries({ queryKey: ["trail", trail.identifier] });
+    void queryClient.invalidateQueries({ queryKey: ["trail", trail.identifier] });
   };
 
   return (

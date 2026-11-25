@@ -448,12 +448,12 @@ describe("maybeFinalizeStaleHike", () => {
 
     const result = maybeFinalizeStaleHike(state, NOW + INACTIVITY_TIMEOUT + 1);
 
-    expect(result).not.toBeNull();
-    expect(result!.isTracking).toBe(false);
-    expect(result!.currentSegment).toBeNull();
-    expect(result!.hike.segments).toHaveLength(1);
-    expect(result!.hike.segments[0].endTime).toBe(lastMovement);
-    expect(result!.hike.totalTime).toBe(lastMovement - (NOW - 1000));
+    if (!result) throw new Error("expected a finalized hike");
+    expect(result.isTracking).toBe(false);
+    expect(result.currentSegment).toBeNull();
+    expect(result.hike.segments).toHaveLength(1);
+    expect(result.hike.segments[0].endTime).toBe(lastMovement);
+    expect(result.hike.totalTime).toBe(lastMovement - (NOW - 1000));
   });
 
   it("discards a stale segment that never covered the minimum distance", () => {
@@ -464,10 +464,10 @@ describe("maybeFinalizeStaleHike", () => {
 
     const result = maybeFinalizeStaleHike(state, NOW + INACTIVITY_TIMEOUT + 1);
 
-    expect(result).not.toBeNull();
-    expect(result!.isTracking).toBe(false);
-    expect(result!.hike.segments).toHaveLength(0);
-    expect(result!.hike.totalTime).toBe(0);
+    if (!result) throw new Error("expected a finalized hike");
+    expect(result.isTracking).toBe(false);
+    expect(result.hike.segments).toHaveLength(0);
+    expect(result.hike.totalTime).toBe(0);
   });
 
   it("rolls back the discarded short segment's distance from the total", () => {
@@ -480,9 +480,9 @@ describe("maybeFinalizeStaleHike", () => {
 
     const result = maybeFinalizeStaleHike(state, NOW + INACTIVITY_TIMEOUT + 1);
 
-    expect(result).not.toBeNull();
-    expect(result!.hike.segments).toHaveLength(0);
-    expect(result!.hike.totalDistance).toBe(0); // phantom distance removed
+    if (!result) throw new Error("expected a finalized hike");
+    expect(result.hike.segments).toHaveLength(0);
+    expect(result.hike.totalDistance).toBe(0); // phantom distance removed
   });
 
   it("clamps the kept time to the hard cap when the user keeps moving", () => {
@@ -495,9 +495,9 @@ describe("maybeFinalizeStaleHike", () => {
 
     const result = maybeFinalizeStaleHike(state, startTime + MAX_DURATION + 120_000);
 
-    expect(result).not.toBeNull();
-    expect(result!.hike.segments[0].endTime).toBe(startTime + MAX_DURATION);
-    expect(result!.hike.totalTime).toBe(MAX_DURATION);
+    if (!result) throw new Error("expected a finalized hike");
+    expect(result.hike.segments[0].endTime).toBe(startTime + MAX_DURATION);
+    expect(result.hike.totalTime).toBe(MAX_DURATION);
   });
 });
 

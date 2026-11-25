@@ -22,7 +22,7 @@ export function asTranslationKey(key: string): ParseKeys {
   return key as ParseKeys;
 }
 
-i18n.use(initReactI18next).init({
+void i18n.use(initReactI18next).init({
   resources: {
     sv: { translation: sv },
     en: { translation: en },

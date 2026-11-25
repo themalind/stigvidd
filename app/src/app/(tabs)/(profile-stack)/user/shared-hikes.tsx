@@ -23,7 +23,7 @@ import { Fontisto, MaterialCommunityIcons } from "@expo/vector-icons";
 import { SHARED_HIKES_STALE_TIME } from "@/constants/cache";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
-import { useMemo, useState } from "react";
+import { ComponentProps, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
@@ -284,7 +284,7 @@ function SectionHeader({
   color,
   subtitle,
 }: {
-  icon: string;
+  icon: ComponentProps<typeof MaterialCommunityIcons>["name"];
   label: string;
   color: string;
   subtitle?: string;
@@ -292,7 +292,7 @@ function SectionHeader({
   return (
     <View style={s.sectionHeader}>
       <View style={s.sectionHeaderRow}>
-        <MaterialCommunityIcons name={icon as any} size={18} color={color} />
+        <MaterialCommunityIcons name={icon} size={18} color={color} />
         <Text variant="titleSmall" style={[s.sectionLabel, { color }]}>
           {label}
         </Text>

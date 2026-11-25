@@ -8,6 +8,7 @@
 import HikeRecorder from "@/components/hike/recorder/hike-recorder";
 import { START_COORDINATE_BORAS } from "@/constants/constants";
 import { LocationData, Segment } from "@/data/types";
+import { defined } from "@/test/defined";
 import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { cameraHandles, resetMapHandles } from "@/test/maplibre";
@@ -83,7 +84,7 @@ async function show() {
 }
 
 function camera() {
-  return cameraHandles().at(-1)!;
+  return defined(cameraHandles().at(-1), "a camera");
 }
 
 function routeLayer() {

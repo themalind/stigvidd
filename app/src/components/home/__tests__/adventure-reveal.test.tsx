@@ -97,7 +97,8 @@ describe("AdventureReveal", () => {
     while (box && box.type !== "View") {
       box = box.parent;
     }
-    expect(StyleSheet.flatten(box!.props.style)?.flexDirection).not.toBe("row");
+    if (!box) throw new Error("expected a View around the title");
+    expect(StyleSheet.flatten(box.props.style)?.flexDirection).not.toBe("row");
   });
 
   it("falls back to the placeholder image for a trail with no photo", async () => {

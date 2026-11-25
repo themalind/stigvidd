@@ -16,7 +16,7 @@ backend  cd backend && dotnet build && ConnectionStrings__StigVidd="DataSource=:
 web      cd web && npm run lint && npm run generate:api && git diff --exit-code -- src/api/generated && npm test && npm run build
 site     cd site && npm run lint && npm run build
 app      cd app && npm run format:check && npm run lint && npm test -- --watchAll=false --silent && npx tsc --noEmit
-harness  node scripts/check-hooks.mjs          # after touching .claude/
+harness  node scripts/check-hooks.mjs && cd app && npm run format:check   # after touching .claude/ or scripts/
 updates  node --test scripts/update-checks.test.mjs   # report: node scripts/check-updates.mjs [--verbose|--strict]
 licence  reuse lint                            # container form + trap: docs/notes/reuse-lint-*.md
 stack    docker compose up -d, then /healthz and /readyz (checks the DB)
@@ -67,7 +67,10 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 
 - `"AdminOnly"` is an unchecked string; `EndpointAuthorizationTests` pins it and every route behind it.
 - Nullable warnings are errors. **Never use the null-forgiving `!`** in C# or TS, tests included. C# tests:
-  `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`.
+  `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`, or in app
+  `defined(x, "x")` from `@/test/defined`. Lint enforces the TS half (`no-non-null-assertion`); lint fails on any warning.
+- An unawaited promise fails type-aware lint (`no-floating-promises`). Mark it `void` only when the callee catches its
+  own errors (`invalidateQueries` does); otherwise `.catch((error: unknown) => logger.…)`. In RNTL tests, `await` it.
   A many-to-many join (`CityAreaFacility`, `CityAreaTrail`) needs no nullable navigation: query/add rows via
   `context.Set<Dictionary<string, object>>("CityAreaFacility")` + `EF.Property<int>(row, "CityAreaId")` (`CityAreaRepository.SetLinkAsync`).
 - A user walk ("contribution") is a `Trail` with a `TrailContribution` row; its source is the `HikeSubmission` with

@@ -26,6 +26,17 @@ export default defineConfig([
     },
     rules: {
       "react-refresh/only-export-components": "off",
+      "@typescript-eslint/no-non-null-assertion": "error",
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
+      "@typescript-eslint/await-thenable": "error",
+      "@typescript-eslint/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
     },
   },
   {

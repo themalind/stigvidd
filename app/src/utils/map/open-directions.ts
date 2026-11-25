@@ -26,7 +26,7 @@ export function openDirectionsToStart(position: GeoJSON.Position, t: TFunction, 
     message: message ?? t("map.directionsMessage"),
     icon: "directions",
     actions: [
-      { label: t("map.directionsConfirm"), onPress: () => Linking.openURL(url).catch(() => undefined) },
+      { label: t("map.directionsConfirm"), onPress: () => void Linking.openURL(url).catch(() => undefined) },
       { label: t("common.cancel"), variant: "text" },
     ],
   });

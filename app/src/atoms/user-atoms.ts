@@ -73,7 +73,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
     },
 
     onMutate: async (trailIdentifier: string) => {
-      queryClient.cancelQueries({
+      await queryClient.cancelQueries({
         queryKey: ["userFavorites", uid],
       });
 
@@ -98,7 +98,7 @@ export const addToFavoritesAtom = atomWithMutation((get) => {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ["userFavorites", uid],
       });
     },
@@ -116,7 +116,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
     },
 
     onMutate: async (trailIdentifier: string) => {
-      queryClient.cancelQueries({ queryKey: ["userWishlist", uid] });
+      await queryClient.cancelQueries({ queryKey: ["userWishlist", uid] });
 
       const previousWishlist = queryClient.getQueryData<UserWishlistTrail[]>(["userWishlist", uid]);
 
@@ -139,7 +139,7 @@ export const addToWishlistAtom = atomWithMutation((get) => {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ["userWishlist", uid],
       });
     },
@@ -178,7 +178,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
       logger.error("Failed to remove trail from wishlist", { error: String(error) });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ["userWishlist", uid],
       });
     },
@@ -216,7 +216,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
       logger.error("Failed to remove trail from favorites", { error: String(error) });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ["userFavorites", uid],
       });
     },

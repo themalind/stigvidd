@@ -38,7 +38,7 @@ export function LoginCard() {
       return;
     }
 
-    navigate(paths.dashboard);
+    void navigate(paths.dashboard);
   }
 
   return (

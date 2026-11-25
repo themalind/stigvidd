@@ -170,7 +170,7 @@ export function useLocationTracking() {
   }, [syncFromStorage]);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       if (!recoveryAttempted) {
         recoveryAttempted = true;
         await recoverInterruptedHike().catch((error: unknown) =>
@@ -195,7 +195,7 @@ export function useLocationTracking() {
 
   useEffect(() => {
     if (isTracking) {
-      pollingRef.current = setInterval(syncSafely, POLL_INTERVAL);
+      pollingRef.current = setInterval(() => void syncSafely(), POLL_INTERVAL);
     }
     return () => {
       if (pollingRef.current) {
@@ -230,7 +230,7 @@ export function useLocationTracking() {
     let subscription: Location.LocationSubscription | null = null;
     let active = true;
 
-    (async () => {
+    void (async () => {
       try {
         const sub = await Location.watchPositionAsync(
           { accuracy: Location.Accuracy.BestForNavigation, distanceInterval: MIN_DISTANCE },
@@ -263,6 +263,15 @@ export function useLocationTracking() {
   }, [isTracking, setLive]);
 
   const startTracking = async () => {
+    try {
+      await beginTracking();
+    } catch (error) {
+      logger.error("Starting the hike recording failed", { errorMessage: String(error) });
+      setError(t("createHike.trackingError"));
+    }
+  };
+
+  const beginTracking = async () => {
     const { status: fgPermission } = await Location.requestForegroundPermissionsAsync();
     if (fgPermission !== "granted") {
       setError(t("createHike.fgPermissionDenied"));
@@ -284,7 +293,7 @@ export function useLocationTracking() {
         actions: [
           {
             label: t("createHike.bgPermissionOpenSettings"),
-            onPress: () => Linking.openSettings().catch(() => undefined),
+            onPress: () => void Linking.openSettings().catch(() => undefined),
           },
           { label: t("createHike.bgPermissionContinue"), variant: "text" },
         ],

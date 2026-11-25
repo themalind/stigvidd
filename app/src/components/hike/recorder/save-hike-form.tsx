@@ -56,7 +56,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
   const { mutate, isPending } = useMutation({
     mutationFn: (newHike: CreateHikeRequest) => withUnauthorizedRetry(() => createHike(newHike)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["hikes"] });
+      void queryClient.invalidateQueries({ queryKey: ["hikes"] });
       onSaveSuccess();
       onDismiss();
       router.replace("/(tabs)/(profile-stack)/user/my-hikes");

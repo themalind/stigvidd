@@ -83,7 +83,7 @@ export default function SharedHikeDetailsScreen() {
       setRemovedHike(removed);
       setSuccessMsg(t("hike.sharedHikeDeleted"));
       router.back();
-      queryClient.invalidateQueries({ queryKey: sharedHikesQueryKey(user.data?.identifier) });
+      void queryClient.invalidateQueries({ queryKey: sharedHikesQueryKey(user.data?.identifier) });
     },
     onError: () => setErrorMsg(t("hike.genericError")),
   });
@@ -93,14 +93,14 @@ export default function SharedHikeDetailsScreen() {
     onSuccess: (_, request) => {
       setShowShareModal(false);
       setSuccessMsg(t("hike.shared"));
-      queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
+      void queryClient.invalidateQueries({ queryKey: outgoingSharesQueryKey });
       trackReshared("success", request);
     },
     onError: (error, request) => {
       setShowShareModal(false);
       const failure = shareFailure(error);
       if (failure === "recipient_unavailable") {
-        queryClient.invalidateQueries({ queryKey: ["friends"] });
+        void queryClient.invalidateQueries({ queryKey: ["friends"] });
         setErrorMsg(t("hike.recipientUnavailable"));
       } else if (failure === "not_allowed") {
         setErrorMsg(t("hike.reshareNotAllowed"));

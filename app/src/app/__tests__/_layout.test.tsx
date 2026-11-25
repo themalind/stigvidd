@@ -190,6 +190,7 @@ beforeEach(async () => {
   mockScreenContent = null;
   mockPathname = "/";
   mockLoadUserTheme.mockResolvedValue("auto");
+  mockLoadStoredLanguage.mockResolvedValue(undefined);
   mockRegisterPush.mockResolvedValue(undefined);
   store.set(userThemeAtom, "auto");
   store.set(snackbarAtom, { visible: false, message: "", type: "success" });
@@ -413,6 +414,16 @@ it("prepares the language, the map style and the tile cache at startup", async (
   expect(mockPruneTrailCardCache).toHaveBeenCalledTimes(1);
   expect(mockInitMapTiler).toHaveBeenCalledTimes(1);
   expect(mockInitMapCache).toHaveBeenCalledTimes(1);
+});
+
+it("logs a stored language it cannot read", async () => {
+  mockLoadStoredLanguage.mockRejectedValue(new Error("storage unavailable"));
+  await show();
+  await settle();
+
+  expect(mockLogWarn).toHaveBeenCalledWith("Loading the stored language failed", {
+    errorMessage: "Error: storage unavailable",
+  });
 });
 
 // Re-running these on every render would re-open the tile database mid-session.

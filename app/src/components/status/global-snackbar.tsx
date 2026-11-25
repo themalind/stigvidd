@@ -28,7 +28,7 @@ export function GlobalSnackbar() {
       }}
     >
       <View style={s.contentContainer}>
-        {snackbar.icon && <MaterialIcons name={snackbar.icon as any} size={20} color={theme.colors.onSecondary} />}
+        {snackbar.icon && <MaterialIcons name={snackbar.icon} size={20} color={theme.colors.onSecondary} />}
         <Text testID="snackbar-message" style={[s.message, { color: theme.colors.onSecondary }]}>
           {snackbar.message}
         </Text>
