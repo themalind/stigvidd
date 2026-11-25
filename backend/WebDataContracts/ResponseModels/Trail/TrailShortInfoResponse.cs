@@ -8,16 +8,16 @@ public class TrailShortInfoResponse
     public required string Identifier { get; set; }
     public required string Name { get; set; }
     public required decimal TrailLength { get; set; }
-    public bool Accessibility { get; set; }
-    public int? Classification { get; set; }
+    public required bool Accessibility { get; set; }
+    public required int Classification { get; set; }
     public required string City { get; set; }
-    public decimal AverageRating { get; set; }
+    public required decimal AverageRating { get; set; }
     public decimal? StartLatitude { get; set; }
     public decimal? StartLongitude { get; set; }
-    public bool IsContribution { get; set; }
+    public required bool IsContribution { get; set; }
 
     public static TrailShortInfoResponse Create(string identifier, string name, decimal trailLength,
-        bool accessibility, int? classification, string city, decimal averageRating = 0m,
+        bool accessibility, int classification, string city, decimal averageRating = 0m,
         decimal? startLatitude = null, decimal? startLongitude = null, bool isContribution = false)
     {
         return new TrailShortInfoResponse

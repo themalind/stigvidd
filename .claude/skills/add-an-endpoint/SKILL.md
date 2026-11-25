@@ -78,10 +78,11 @@ build now does most of this for you:
    `get…QueryKey` for invalidation, and put mutations there as `useX()` hooks. Components
    and `app/routes/` never import `@/api/generated/<tag>` or `@/api/mutator` — `npm run lint`
    refuses it (`no-restricted-imports` in `web/eslint.config.js`). Model types from
-   `@/api/generated/model` are fine anywhere. A response DTO only the admin reads gets
-   `required` on its non-nullable properties, or orval types every field as optional — but
-   not one another service deserializes (`TrailResponse` in the link service): a missing
-   field then throws there, and only the full `dotnet test` (LinkTests) shows it.
+   `@/api/generated/model` are fine anywhere. A response DTO gets `required` on every
+   property it always sends, or orval types the field as optional. The API writes every
+   property (no `JsonIgnoreCondition`), so this is safe even for a DTO another service
+   deserializes (`TrailResponse` in the link service), but that service's test fixtures must
+   then send the field too: LinkTests builds a typed `TrailResponse`, so the compiler says so.
 
 Steps 1 and 3 both happen automatically if you build the web app instead: `codegen.mjs`
 runs as its `prebuild`. Either way the client ends up in `git status`, which is the point.

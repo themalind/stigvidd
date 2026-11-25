@@ -10,14 +10,13 @@ export interface TrailShortInfoResponse {
   identifier: string;
   name: string;
   trailLength: number;
-  accessibility?: boolean;
-  /** @nullable */
-  classification?: number | null;
+  accessibility: boolean;
+  classification: number;
   city: string;
-  averageRating?: number;
+  averageRating: number;
   /** @nullable */
   startLatitude?: number | null;
   /** @nullable */
   startLongitude?: number | null;
-  isContribution?: boolean;
+  isContribution: boolean;
 }

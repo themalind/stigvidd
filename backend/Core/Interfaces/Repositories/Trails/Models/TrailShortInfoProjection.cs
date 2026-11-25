@@ -5,5 +5,5 @@ namespace Core.Interfaces.Repositories.Trails.Models;
 
 internal record TrailShortInfoProjection(
     string Identifier, string Name, decimal TrailLength, bool Accessibility,
-    int? Classification, string City, decimal AverageRating,
+    int Classification, string City, decimal AverageRating,
     decimal? StartLatitude, decimal? StartLongitude, bool IsContribution);

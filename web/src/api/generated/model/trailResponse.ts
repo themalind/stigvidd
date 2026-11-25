@@ -12,33 +12,21 @@ import type { VisitorInformationResponse } from "./visitorInformationResponse";
 
 export interface TrailResponse {
   identifier: string;
-  /** @nullable */
-  name?: string | null;
-  /** @nullable */
-  trailLength?: number | null;
-  /** @nullable */
-  classification?: number | null;
-  /** @nullable */
-  accessibility?: boolean | null;
-  /** @nullable */
-  accessibilityInfo?: string | null;
-  /** @nullable */
-  trailSymbol?: string | null;
-  /** @nullable */
-  trailSymbolImage?: string | null;
-  /** @nullable */
-  description?: string | null;
-  /** @nullable */
-  fullDescription?: string | null;
+  name: string;
+  trailLength: number;
+  classification: number;
+  accessibility: boolean;
+  accessibilityInfo: string;
+  trailSymbol: string;
+  trailSymbolImage: string;
+  description: string;
+  fullDescription: string;
   /** @nullable */
   coordinates?: string | null;
-  /** @nullable */
-  tags?: string | null;
-  /** @nullable */
-  createdBy?: string | null;
-  isVerified?: boolean;
-  /** @nullable */
-  city?: string | null;
+  tags: string;
+  createdBy: string;
+  isVerified: boolean;
+  city: string;
   visitorInformation?: VisitorInformationResponse | null;
   contribution?: TrailContributionResponse | null;
   /** @nullable */

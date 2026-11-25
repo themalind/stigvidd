@@ -3,21 +3,32 @@
 
 using System.Net;
 using AwesomeAssertions;
+using WebDataContracts.ResponseModels.Trail;
 
 namespace LinkTests;
 
 public class TrailPageTests
 {
-    private static object Trail(string name = "Sjöleden", object[]? images = null)
+    private static TrailResponse Trail(string name = "Sjöleden", TrailImageResponse[]? images = null)
     {
-        return new
+        return new TrailResponse
         {
-            identifier = "trail-1",
-            name,
-            trailLength = 4.2m,
-            city = "Borås",
-            description = "En lugn runda längs sjön.",
-            trailImagesResponse = images ?? [new { identifier = "img-1", imageUrl = "https://media.example.test/a.webp", altText = "Sjön" }],
+            Identifier = "trail-1",
+            Name = name,
+            TrailLength = 4.2m,
+            Classification = 1,
+            Accessibility = false,
+            AccessibilityInfo = "",
+            TrailSymbol = "",
+            TrailSymbolImage = "",
+            Description = "En lugn runda längs sjön.",
+            FullDescription = "",
+            Tags = "",
+            CreatedBy = "",
+            IsVerified = true,
+            City = "Borås",
+            TrailImagesResponse = images
+                ?? [new TrailImageResponse { Identifier = "img-1", ImageUrl = "https://media.example.test/a.webp", AltText = "Sjön" }],
         };
     }
 

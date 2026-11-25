@@ -6,20 +6,20 @@ namespace WebDataContracts.ResponseModels.Trail;
 public class TrailResponse
 {
     public required string Identifier { get; set; }
-    public string? Name { get; set; }
-    public decimal? TrailLength { get; set; }
-    public int? Classification { get; set; }
-    public bool? Accessibility { get; set; }
-    public string? AccessibilityInfo { get; set; }
-    public string? TrailSymbol { get; set; }
-    public string? TrailSymbolImage { get; set; }
-    public string? Description { get; set; }
-    public string? FullDescription { get; set; }
+    public required string Name { get; set; }
+    public required decimal TrailLength { get; set; }
+    public required int Classification { get; set; }
+    public required bool Accessibility { get; set; }
+    public required string AccessibilityInfo { get; set; }
+    public required string TrailSymbol { get; set; }
+    public required string TrailSymbolImage { get; set; }
+    public required string Description { get; set; }
+    public required string FullDescription { get; set; }
     public string? Coordinates { get; set; }
-    public string? Tags { get; set; }
-    public string? CreatedBy { get; set; }
-    public bool IsVerified { get; set; } = false;
-    public string? City { get; set; }
+    public required string Tags { get; set; }
+    public required string CreatedBy { get; set; }
+    public required bool IsVerified { get; set; }
+    public required string City { get; set; }
 
     public VisitorInformationResponse? VisitorInformation { get; set; }
     public TrailContributionResponse? Contribution { get; set; }
