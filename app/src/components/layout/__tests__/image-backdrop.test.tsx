@@ -7,15 +7,23 @@
 
 import { ImageBackdrop } from "@/components/layout/image-backdrop";
 import { render, screen } from "@testing-library/react-native";
-import { Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 
-it("stretches the image over the whole backdrop instead of the asset's own size", async () => {
+it("lets the insets size the image, overriding the asset's own size", async () => {
   await render(
     <ImageBackdrop source={{ uri: "file://background.jpg", width: 400, height: 300 }}>
       <Text>content</Text>
     </ImageBackdrop>,
   );
 
-  expect(screen.getByTestId("image-backdrop-image")).toHaveStyle({ width: "100%", height: "100%" });
+  const style = StyleSheet.flatten(screen.getByTestId("image-backdrop-image").props.style as object) as object;
+  expect(style).toMatchObject({ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 });
+  // keep-comment: the keys must be present and unset; a missing key leaves the asset's size in place on a device
+  expect(Object.entries(style)).toEqual(
+    expect.arrayContaining([
+      ["width", undefined],
+      ["height", undefined],
+    ]),
+  );
   expect(screen.getByText("content")).toBeTruthy();
 });

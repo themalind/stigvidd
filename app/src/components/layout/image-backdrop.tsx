@@ -25,6 +25,6 @@ export function ImageBackdrop({ source, style, children }: Props) {
 }
 
 const s = StyleSheet.create({
-  // keep-comment: Image sizes a bundled asset to its own pixels, which the insets alone do not override
-  image: { ...StyleSheet.absoluteFill, width: "100%", height: "100%" },
+  // keep-comment: Image sizes a bundled asset to its own pixels; unset (not 100%, which a scroll view resolves short) lets the insets fill
+  image: { ...StyleSheet.absoluteFill, width: undefined, height: undefined },
 });
