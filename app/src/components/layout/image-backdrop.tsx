@@ -18,8 +18,13 @@ interface Props {
 export function ImageBackdrop({ source, style, children }: Props) {
   return (
     <View style={style}>
-      <Image source={source} resizeMode="cover" style={StyleSheet.absoluteFill} />
+      <Image testID="image-backdrop-image" source={source} resizeMode="cover" style={s.image} />
       {children}
     </View>
   );
 }
+
+const s = StyleSheet.create({
+  // keep-comment: Image sizes a bundled asset to its own pixels, which the insets alone do not override
+  image: { ...StyleSheet.absoluteFill, width: "100%", height: "100%" },
+});
