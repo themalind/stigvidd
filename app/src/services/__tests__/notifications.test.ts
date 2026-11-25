@@ -321,6 +321,19 @@ describe("a rotated token", () => {
     expect(mockRegisterPushToken).toHaveBeenLastCalledWith("ExponentPushToken[xyz]", expect.any(String));
   });
 
+  it("logs a rotation the backend refuses", async () => {
+    await registerForPushNotificationsAsync();
+    const onRotate = mockAddPushTokenListener.mock.calls[0][0];
+    mockRegisterPushToken.mockRejectedValueOnce(new Error("offline"));
+
+    onRotate({ data: "ExponentPushToken[xyz]" });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(logger.error).toHaveBeenCalledWith("Re-registering a rotated push token failed", {
+      errorMessage: "Error: offline",
+    });
+  });
+
   // Registering twice across a login/logout cycle would otherwise stack listeners and send
   // the same rotation several times.
   it("is listened for exactly once across repeated registrations", async () => {

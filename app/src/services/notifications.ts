@@ -227,9 +227,11 @@ export async function registerForPushNotificationsAsync(): Promise<void> {
 
   // keep-comment: re-registers on rotation; the old listener goes first, or login cycles stack them
   _tokenListener?.remove();
-  _tokenListener = Notifications.addPushTokenListener(async ({ data: newToken }) => {
+  _tokenListener = Notifications.addPushTokenListener(({ data: newToken }) => {
     _currentExpoToken = newToken;
-    await registerPushToken(newToken, Platform.OS);
+    registerPushToken(newToken, Platform.OS).catch((error: unknown) =>
+      logger.error("Re-registering a rotated push token failed", { errorMessage: String(error) }),
+    );
   });
 }
 
