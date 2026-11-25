@@ -40,7 +40,7 @@
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/vector-icons": "^15.0.3",
-    "@hookform/resolvers": "^7.0.8",
+    "@hookform/resolvers": "^7.0.9",
     "@likashefqet/react-native-image-zoom": "^4.3.0",
     "@maplibre/maplibre-react-native": "11.5.1",
     "@miblanchard/react-native-slider": "^2.6.0",
@@ -75,7 +75,7 @@
     "expo-task-manager": "~58.0.14",
     "expo-updates": "~58.0.22",
     "geolib": "^4.0.2",
-    "i18next": "^27.2.5",
+    "i18next": "^27.2.9",
     "jotai": "^3.0.2",
     "jotai-tanstack-query": "^0.11.0",
     "jwt-decode": "^4.0.0",
@@ -104,7 +104,7 @@
     "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^14.1.0",
     "@types/jest": "30.0.0",
-    "@types/react": "~19.3.0",
+    "@types/react": "^19.3.2",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~58.0.4",
     "eslint-plugin-boundaries": "^7.4.4",
@@ -115,7 +115,24 @@
     "typescript": "~6.0.3"
   },
   "overrides": {
-    "postcss": "^8.5.28"
+    "postcss": "^8.5.28",
+    "@expo/fingerprint": {
+      "glob": "^14.0.6",
+      "minimatch": "^11.0.9"
+    },
+    "@jest/reporters": {
+      "glob": "^14.0.6"
+    },
+    "jest-config": {
+      "glob": "^14.0.6"
+    },
+    "jest-runtime": {
+      "glob": "^14.0.6"
+    },
+    "test-exclude": {
+      "glob": "^14.0.6",
+      "minimatch": "^11.0.9"
+    }
   },
   "private": true
 }
