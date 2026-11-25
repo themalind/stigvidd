@@ -191,7 +191,7 @@ export default function TrailMarkersMap({
     async (event: NativeSyntheticEvent<PressEventWithFeatures>, sourceRef: RefObject<GeoJSONSourceRef | null>) => {
       event.stopPropagation();
       setSelectedFacility(null);
-      const feature = event.nativeEvent.features?.[0];
+      const feature = event.nativeEvent.features[0];
       if (!feature) return;
       const props = feature.properties ?? {};
 
@@ -230,7 +230,7 @@ export default function TrailMarkersMap({
     (type: FacilityTypeValue) =>
       async (event: NativeSyntheticEvent<PressEventWithFeatures>, sourceRef: RefObject<GeoJSONSourceRef | null>) => {
         event.stopPropagation();
-        const feature = event.nativeEvent.features?.[0];
+        const feature = event.nativeEvent.features[0];
         if (!feature) return;
         const props = feature.properties ?? {};
         const [lng, lat] = lngLat((feature.geometry as GeoJSON.Point).coordinates);

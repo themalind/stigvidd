@@ -181,7 +181,7 @@ export default function TrailObstacleItem({
           <Text style={labelStyle}>{t("obstacle.description")}</Text>
           {/* keep-comment: trailing newlines from the input would render as blank lines */}
           <Text style={[s.description, { color: theme.colors.onSurface }]}>
-            {obstacle.description?.trim() || t("obstacle.removedDescription")}
+            {obstacle.description.trim() || t("obstacle.removedDescription")}
           </Text>
         </View>
         <View style={s.footer}>

@@ -160,7 +160,7 @@ export default function RegisterScreen() {
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
                     ]}
                   >
-                    {errors.nickName?.message ? t(asTranslationKey(errors.nickName.message)) : ""}
+                    {errors.nickName.message ? t(asTranslationKey(errors.nickName.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -197,7 +197,7 @@ export default function RegisterScreen() {
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
                     ]}
                   >
-                    {errors.email?.message ? t(asTranslationKey(errors.email.message)) : ""}
+                    {errors.email.message ? t(asTranslationKey(errors.email.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -224,7 +224,7 @@ export default function RegisterScreen() {
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
                     ]}
                   >
-                    {errors.password?.message ? t(asTranslationKey(errors.password.message)) : ""}
+                    {errors.password.message ? t(asTranslationKey(errors.password.message)) : ""}
                   </Text>
                 )}
               </View>
@@ -252,7 +252,7 @@ export default function RegisterScreen() {
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
                     ]}
                   >
-                    {errors.confirmPassword?.message ? t(asTranslationKey(errors.confirmPassword.message)) : ""}
+                    {errors.confirmPassword.message ? t(asTranslationKey(errors.confirmPassword.message)) : ""}
                   </Text>
                 )}
               </View>

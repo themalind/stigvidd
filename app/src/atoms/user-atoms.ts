@@ -173,7 +173,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
 
     onError: (error, _, context: { previousWishlist?: UserWishlistTrail[] } | undefined) => {
       if (context?.previousWishlist) {
-        queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist", uid], context?.previousWishlist);
+        queryClient.setQueryData<UserWishlistTrail[]>(["userWishlist", uid], context.previousWishlist);
       }
       logger.error("Failed to remove trail from wishlist", { error: String(error) });
     },

@@ -53,7 +53,7 @@ function TrailItem({ item, handlePress }: TrailItemProps) {
           {item.trailLength} km
         </Text>
         <View style={s.classificationContainer}>
-          {item.classification != null && item.classification !== 0 && (
+          {item.classification !== 0 && (
             <>
               <Text>{getDifficultyIcon(classificationParser(item.classification))}</Text>
               <Text style={s.infoText}>{classificationParser(item.classification)}</Text>

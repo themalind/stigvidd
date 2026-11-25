@@ -54,6 +54,7 @@ const baseRequest = {
   tags: [],
   isVerified: false,
   city: "Borås",
+  images: [],
 } as unknown as CreateTrailRequest;
 
 beforeEach(() => {

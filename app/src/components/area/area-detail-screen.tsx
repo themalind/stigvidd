@@ -66,7 +66,7 @@ export default function AreaDetailScreen({ routes }: Props) {
   }
 
   const trailCount = area.trails.length;
-  const totalKm = Math.round(area.trails.reduce((sum, tr) => sum + (tr.trailLength ?? 0), 0));
+  const totalKm = Math.round(area.trails.reduce((sum, tr) => sum + tr.trailLength, 0));
   const countedGroups = COUNTED_FACILITY_GROUPS.map((group) => {
     const members = area.facilities.filter((f) => hasFacilityType(f.facilityType, group.type));
     // keep-comment: only places the map can show, so "show on the map" never opens a map without them

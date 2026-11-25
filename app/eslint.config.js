@@ -53,6 +53,7 @@ module.exports = defineConfig([
       ],
       "@typescript-eslint/return-await": ["error", "in-try-catch"],
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/no-unnecessary-condition": "error",
       "@typescript-eslint/use-unknown-in-catch-callback-variable": "error",
       "@typescript-eslint/restrict-template-expressions": "error",
       "@typescript-eslint/only-throw-error": "error",

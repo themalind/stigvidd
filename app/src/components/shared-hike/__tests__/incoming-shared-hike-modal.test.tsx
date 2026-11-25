@@ -126,5 +126,5 @@ it("draws the route without offering the follow screen before it is accepted", a
 
   expect(screen.queryByLabelText("Visa kartvy")).toBeNull();
   const layerIds = screen.queryAllByTestId("maplibre-Layer").map((node) => node.props.id);
-  expect(layerIds.some((id: string) => id?.startsWith("incoming-hike-share"))).toBe(true);
+  expect(layerIds.some((id: string) => id.startsWith("incoming-hike-share"))).toBe(true);
 });

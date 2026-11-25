@@ -28,7 +28,7 @@ export function useHikeImageMutations(hikeIdentifier: string) {
 
   const patchImages = (update: (images: HikeImage[]) => HikeImage[]) =>
     queryClient.setQueryData<Hike[]>(listKey, (hikes) =>
-      hikes?.map((h) => (h.identifier === hikeIdentifier ? { ...h, images: update(h.images ?? []) } : h)),
+      hikes?.map((h) => (h.identifier === hikeIdentifier ? { ...h, images: update(h.images) } : h)),
     );
 
   const uploadMutation = useMutation({

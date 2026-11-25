@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { MIN_DISTANCE } from "@/services/location-task";
+import { cancellation } from "@/utils/cancellation";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import { AppState } from "react-native";
@@ -34,7 +35,7 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
 
   useEffect(() => {
     if (!enabled) return;
-    let active = true;
+    const { isCancelled, cancel } = cancellation();
     // keep-comment: a superseded arm must not install its watcher (it leaks) or write an older fix
     let generation = 0;
     let permissionAsked = false;
@@ -54,7 +55,7 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
     let movingNow = false;
 
     const apply = ({ coords }: Location.LocationObject) => {
-      if (!active) return;
+      if (isCancelled()) return;
       const speed = coords.speed ?? -1;
       movingNow = movingNow ? speed >= HEADING_OFF_SPEED : speed >= HEADING_ON_SPEED;
       const heading = movingNow && coords.heading != null && coords.heading >= 0 ? coords.heading : null;
@@ -67,16 +68,16 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
       subscriptionRef.current = null;
       try {
         const granted = await ensurePermission();
-        if (!granted || !active || myGeneration !== generation) return;
+        if (!granted || isCancelled() || myGeneration !== generation) return;
 
         // keep-comment: a placeholder only, often the pre-pocket position, hence the fresh fix below
         const last = await Location.getLastKnownPositionAsync();
-        if (last && active && myGeneration === generation) apply(last);
+        if (last && !isCancelled() && myGeneration === generation) apply(last);
 
         // keep-comment: High, not BestForNavigation, so it lands in about a second
         Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High })
           .then((fresh) => {
-            if (active && myGeneration === generation) apply(fresh);
+            if (!isCancelled() && myGeneration === generation) apply(fresh);
           })
           .catch(() => {});
 
@@ -84,7 +85,7 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
           { accuracy: Location.Accuracy.BestForNavigation, distanceInterval: MIN_DISTANCE },
           apply,
         );
-        if (active && myGeneration === generation) subscriptionRef.current = sub;
+        if (!isCancelled() && myGeneration === generation) subscriptionRef.current = sub;
         else sub.remove();
       } catch {
         // keep-comment: a failed arm keeps the last position
@@ -98,7 +99,7 @@ export function useLiveUserLocation(enabled = true): LiveUserLocation | null {
     });
 
     return () => {
-      active = false;
+      cancel();
       appStateSub.remove();
       subscriptionRef.current?.remove();
       subscriptionRef.current = null;

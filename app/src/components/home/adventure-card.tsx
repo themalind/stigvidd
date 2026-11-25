@@ -12,6 +12,7 @@ import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
 import { useRealUserLocation } from "@/hooks/location/useUserLocation";
+import { countSet } from "@/utils/count-set";
 import { guardedNavigate } from "@/utils/navigation";
 import { pickRandomTrail } from "@/components/home/pick-random-trail";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
@@ -44,7 +45,7 @@ export default function AdventureCard() {
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, maxDistance, ...rest } = filters;
     const hasLengthRange = minLength !== undefined || maxLength !== undefined;
-    return Object.values(rest).filter((v) => v !== undefined).length + (hasLengthRange ? 1 : 0);
+    return countSet(rest) + (hasLengthRange ? 1 : 0);
   }, [filters]);
 
   if (pick && !filteredTrails.some((trail) => trail.identifier === pick.identifier)) {

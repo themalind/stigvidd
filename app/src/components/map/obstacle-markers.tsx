@@ -92,7 +92,7 @@ export default function ObstacleMarkers({ id, obstacles, selectedIdentifier, onS
       event.stopPropagation();
       // keep-comment: each pin appears once per layer it is hit in (circle and symbol), so duplicates are dropped
       const tapped = new Set(
-        (event.nativeEvent.features ?? [])
+        event.nativeEvent.features
           .map((feature) => feature.properties?.identifier)
           .filter((identifier): identifier is string => typeof identifier === "string"),
       );

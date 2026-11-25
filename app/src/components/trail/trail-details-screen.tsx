@@ -132,7 +132,7 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
         <ScreenHeader
           testID="trail-details-header"
           title={trail?.name}
-          subtitle={trail?.city?.trim()}
+          subtitle={trail?.city.trim()}
           subtitleIcon="map-marker"
         />
         <View style={s.content}>

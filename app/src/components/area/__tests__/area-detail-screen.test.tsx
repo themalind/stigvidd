@@ -256,15 +256,6 @@ it("rounds the total rather than cutting it off", async () => {
   expect(stat(/12 km/)).toBeTruthy();
 });
 
-it("counts a trail whose length is missing without turning the total into NaN", async () => {
-  await show({
-    trails: [trail({ trailLength: undefined as unknown as number }), trail({ identifier: "t-2", trailLength: 3 })],
-  });
-
-  expect(stat(/2 leder/)).toBeTruthy();
-  expect(stat(/3 km/)).toBeTruthy();
-});
-
 it("drops the stats row entirely for an area with no trails", async () => {
   await show({ trails: [] });
 

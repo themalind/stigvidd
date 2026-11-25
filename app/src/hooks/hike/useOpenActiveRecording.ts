@@ -7,6 +7,7 @@
 
 import { readHikeState } from "@/services/location-task";
 import { logger } from "@/services/logger";
+import { cancellation } from "@/utils/cancellation";
 import { router, useNavigationContainerRef, usePathname } from "expo-router";
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
@@ -36,14 +37,14 @@ export function useOpenActiveRecording(signedIn: boolean) {
 
   useEffect(() => {
     if (!signedIn) return;
-    let active = true;
+    const { isCancelled, cancel } = cancellation();
 
     const openIfRecording = async () => {
       try {
         const { isTracking } = await readHikeState();
-        if (!isTracking || !active) return;
+        if (!isTracking || isCancelled()) return;
         for (let frame = 0; frame < MAX_FRAMES_TO_READY && !navigation.isReady(); frame++) await nextFrame();
-        if (!active || !navigation.isReady() || currentPath.current === RECORDER_PATH) return;
+        if (isCancelled() || !navigation.isReady() || currentPath.current === RECORDER_PATH) return;
         router.navigate(RECORDER_ROUTE, { withAnchor: true });
       } catch (error) {
         logger.error("Opening the active recording failed", { errorMessage: String(error) });
@@ -65,7 +66,7 @@ export function useOpenActiveRecording(signedIn: boolean) {
     });
 
     return () => {
-      active = false;
+      cancel();
       subscription.remove();
     };
   }, [signedIn, navigation]);

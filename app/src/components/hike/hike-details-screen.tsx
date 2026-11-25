@@ -190,7 +190,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
     );
   };
 
-  const images = hike.images ?? [];
+  const { images } = hike;
 
   const addImages = async () => {
     const limit = MAX_HIKE_IMAGES - images.length;

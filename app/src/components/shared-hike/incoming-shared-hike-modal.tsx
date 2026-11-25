@@ -45,8 +45,7 @@ export default function IncomingSharedHikeModal({
   const theme = useTheme();
   const { t } = useTranslation();
   const coordinates = useMemo(
-    () =>
-      sharedHike ? CoordinateParser({ data: sharedHike.coordinates ?? "", identifier: sharedHike.hikeIdentifier }) : [],
+    () => (sharedHike ? CoordinateParser({ data: sharedHike.coordinates, identifier: sharedHike.hikeIdentifier }) : []),
     [sharedHike],
   );
 

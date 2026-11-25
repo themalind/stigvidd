@@ -28,7 +28,7 @@ jest.mock("expo-router", () => {
     return ReactActual.createElement(View, { testID: "tabs" }, children);
   };
   const Screen = ({ name, options }: { name: string; options: object }) => {
-    jest.requireMock("expo-router").__screens[name] = options ?? {};
+    jest.requireMock("expo-router").__screens[name] = options;
     return null;
   };
   Screen.displayName = "Tabs.Screen";

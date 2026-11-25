@@ -31,7 +31,7 @@ export default function AreaTrailSection({ trails, trailRoute }: AreaTrailSectio
   return (
     <View style={s.section}>
       {trails.map((trail) => {
-        const difficulty = classificationParser(trail.classification ?? 0);
+        const difficulty = classificationParser(trail.classification);
         return (
           <Pressable
             key={trail.identifier}

@@ -171,7 +171,7 @@ export default function VerifyEmailScreen() {
                       { color: theme.colors.onErrorContainer, backgroundColor: theme.colors.errorContainer },
                     ]}
                   >
-                    {errors.code?.message ? t(asTranslationKey(errors.code.message)) : ""}
+                    {errors.code.message ? t(asTranslationKey(errors.code.message)) : ""}
                   </Text>
                 )}
               </View>

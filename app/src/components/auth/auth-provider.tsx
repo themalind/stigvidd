@@ -12,6 +12,7 @@ import { AuthUser, RegisterData } from "@/data/types";
 import { logger } from "@/services/logger";
 import { unregisterForPushNotificationsAsync } from "@/services/notifications";
 import { logoutKeycloak, passwordGrant, restoreSession, setSessionExpiredHandler } from "@/services/keycloak-auth";
+import { cancellation } from "@/utils/cancellation";
 import { useAtomValue, useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { useEffect } from "react";
@@ -79,19 +80,17 @@ export function useInitAuth(): void {
   }, [setUser, queryClient]);
 
   useEffect(() => {
-    let cancelled = false;
+    const { isCancelled, cancel } = cancellation();
     void (async () => {
       const restored = await restoreSession().catch((error: unknown) => {
         logger.warn("Session restore failed", { errorMessage: String(error) });
         return null;
       });
-      if (!cancelled) {
+      if (!isCancelled()) {
         setUser(restored);
         setIsLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return cancel;
   }, [setUser, setIsLoading]);
 }

@@ -148,16 +148,16 @@ export function useLocationTracking() {
     await drainNative();
 
     // keep-comment: atomic, so a task batch cannot write between the check and the finalize
-    let didFinalize = false;
+    const outcome = { finalized: false };
     const state = await mutateHikeState((current) => {
       const finalized = maybeFinalizeStaleHike(current, Date.now());
       if (finalized) {
-        didFinalize = true;
+        outcome.finalized = true;
         return finalized;
       }
       return null;
     });
-    if (didFinalize) await stopBackgroundSource();
+    if (outcome.finalized) await stopBackgroundSource();
     applyState(state);
   }, [applyState, drainNative, stopBackgroundSource]);
 
@@ -228,7 +228,7 @@ export function useLocationTracking() {
     }
 
     let subscription: Location.LocationSubscription | null = null;
-    let active = true;
+    const watch = { cancelled: false };
 
     void (async () => {
       try {
@@ -246,7 +246,7 @@ export function useLocationTracking() {
             setLive([...liveCoordsRef.current, candidate]);
           },
         );
-        if (active) {
+        if (!watch.cancelled) {
           subscription = sub;
         } else {
           sub.remove();
@@ -257,7 +257,7 @@ export function useLocationTracking() {
     })();
 
     return () => {
-      active = false;
+      watch.cancelled = true;
       subscription?.remove();
     };
   }, [isTracking, setLive]);

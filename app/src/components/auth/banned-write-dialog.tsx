@@ -26,7 +26,7 @@ export function BannedWriteDialog() {
       queryClient
         .query({ queryKey: ["currentUser", subjectId], queryFn: getStigViddUser, staleTime: 0 })
         .then((user) => {
-          if (user?.bannedAt) setVisible(true);
+          if (user.bannedAt) setVisible(true);
         })
         .catch(() => undefined);
 

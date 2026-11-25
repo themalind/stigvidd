@@ -157,13 +157,11 @@ const CarouselCard = memo(function CarouselCard({
                 {card.name}
               </Text>
               <View style={s.infoRow}>
-                {card.trailLength != null && (
-                  <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>{card.trailLength} km</Text>
-                )}
+                <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>{card.trailLength} km</Text>
                 <View style={s.difficultyRow}>
-                  {getDifficultyIcon(classificationParser(card.classification ?? 0))}
+                  {getDifficultyIcon(classificationParser(card.classification))}
                   <Text style={[s.infoText, { color: theme.colors.onSurfaceVariant }]}>
-                    {classificationParser(card.classification ?? 0)}
+                    {classificationParser(card.classification)}
                   </Text>
                 </View>
                 <Rating

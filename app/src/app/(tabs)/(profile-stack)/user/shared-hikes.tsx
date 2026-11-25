@@ -27,6 +27,7 @@ import { ComponentProps, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Button, Divider, Icon, IconButton, Surface, Text, useTheme } from "react-native-paper";
+import { countSet } from "@/utils/count-set";
 
 const PREVIEW_COUNT = 5;
 
@@ -90,7 +91,7 @@ export default function SharedHikesScreen() {
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, minDuration, maxDuration, ...rest } = filters;
     return (
-      Object.values(rest).filter((v) => v !== undefined).length +
+      countSet(rest) +
       (minLength !== undefined || maxLength !== undefined ? 1 : 0) +
       (minDuration !== undefined || maxDuration !== undefined ? 1 : 0)
     );
@@ -128,18 +129,18 @@ export default function SharedHikesScreen() {
         <View style={s.content}>
           {hikes && totalCount > 0 && <SharedHikeStatsBanner hikes={hikes} />}
 
-          {!incomingPending && !incomingError && (incomingRequests?.length ?? 0) > 0 && (
+          {!incomingError && incomingRequests.length > 0 && (
             <>
               <View style={s.section}>
                 <SectionHeader
                   icon="map-marker-plus"
-                  label={t("friends.incomingCount", { count: incomingRequests?.length })}
+                  label={t("friends.incomingCount", { count: incomingRequests.length })}
                   color={theme.colors.onSurfaceVariant}
                   subtitle={t("hike.tapBeforeDeciding")}
                 />
                 <Surface style={[s.card, { backgroundColor: theme.colors.surface }]} elevation={0}>
                   <View style={s.cardInner}>
-                    {(incomingExpanded ? incomingRequests : incomingRequests?.slice(0, PREVIEW_COUNT))?.map(
+                    {(incomingExpanded ? incomingRequests : incomingRequests.slice(0, PREVIEW_COUNT)).map(
                       (req, i, arr) => (
                         <View key={req.hikeIdentifier}>
                           <Pressable
@@ -189,11 +190,11 @@ export default function SharedHikesScreen() {
                         </View>
                       ),
                     )}
-                    {(incomingRequests?.length ?? 0) > PREVIEW_COUNT && (
+                    {incomingRequests.length > PREVIEW_COUNT && (
                       <Button mode="text" onPress={() => setIncomingExpanded((v) => !v)} style={s.showMoreButton}>
                         {incomingExpanded
                           ? t("friends.showLess")
-                          : t("friends.showAll", { count: incomingRequests?.length })}
+                          : t("friends.showAll", { count: incomingRequests.length })}
                       </Button>
                     )}
                   </View>

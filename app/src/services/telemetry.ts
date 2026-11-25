@@ -92,15 +92,15 @@ function createEventSink(url: string, token: string) {
 function installGlobalErrorHandlers(): void {
   const previousHandler = ErrorUtils.getGlobalHandler();
 
-  ErrorUtils.setGlobalHandler((error: Error, isFatal?: boolean) => {
+  ErrorUtils.setGlobalHandler((error: unknown, isFatal?: boolean) => {
     logger.error("Unhandled JS error", {
-      name: error?.name,
-      errorMessage: error?.message,
-      stack: error?.stack,
+      name: error instanceof Error ? error.name : typeof error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
       isFatal,
     });
 
-    previousHandler?.(error, isFatal);
+    previousHandler(error, isFatal);
   });
 
   // keep-comment: rejections never reach ErrorUtils; RN's tracker has no types, hence require

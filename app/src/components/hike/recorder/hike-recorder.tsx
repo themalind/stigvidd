@@ -16,6 +16,7 @@ import { LocationData } from "@/data/types";
 import { dismissRecordingInfo, shouldShowRecordingInfo } from "@/services/location-task";
 import { useLocationTracking } from "@/services/use-location-tracking";
 import { lineStringFromPositions } from "@/utils/geo/geojson";
+import { cancellation } from "@/utils/cancellation";
 import FormattedTime from "@/utils/format/format-time-from-ms";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import {
@@ -129,27 +130,25 @@ export default function HikeRecorder() {
   }, [hike.totalDistance]);
 
   useEffect(() => {
-    let cancelled = false;
+    const { isCancelled, cancel } = cancellation();
     void (async () => {
       // keep-comment: last-known first, so the map does not wait on a cold GPS fix
       const last = await Location.getLastKnownPositionAsync().catch(() => null);
-      if (cancelled) return;
+      if (isCancelled()) return;
       setInitialCenter(last ? [last.coords.longitude, last.coords.latitude] : FALLBACK_CENTER);
 
       setIsLocating(true);
       try {
         const precise = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        if (cancelled || routePositionsRef.current.length > 0) return;
+        if (isCancelled() || routePositionsRef.current.length > 0) return;
         moveCamera([precise.coords.longitude, precise.coords.latitude], 16);
       } catch {
         // keep-comment: no precise fix keeps the last-known centre
       } finally {
-        if (!cancelled) setIsLocating(false);
+        if (!isCancelled()) setIsLocating(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return cancel;
   }, [moveCamera]);
 
   const handleStartPress = async () => {

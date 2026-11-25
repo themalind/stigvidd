@@ -80,7 +80,7 @@ async function handleTrailPress(
   onZoomTo?: (center: [number, number], zoom: number) => void,
 ) {
   event.stopPropagation();
-  const features = event.nativeEvent.features ?? [];
+  const { features } = event.nativeEvent;
   const cluster = features.find((feature) => feature.properties?.point_count != null);
   if (cluster) {
     const clusterId = cluster.properties?.cluster_id as number;
@@ -113,7 +113,7 @@ async function handleFacilityPress(
   onZoomTo?: (center: [number, number], zoom: number) => void,
 ) {
   event.stopPropagation();
-  const feature = event.nativeEvent.features?.[0];
+  const feature = event.nativeEvent.features[0];
   if (!feature) return;
   // keep-comment: as on the map tab, a cluster always zooms in; past CLUSTER_MAX_ZOOM nothing clusters, so every place ends up alone
   if (feature.properties?.point_count != null) {

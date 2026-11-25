@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
 import { getTrailCard, getTrailCards } from "@/api/trails";
 import { TrailCard } from "@/data/types";
+import { cancellation } from "@/utils/cancellation";
 
 const CACHE_PREFIX = "@stigvidd_trail_card";
 const TTL_MS = 60 * 60 * 1000; // 1 hour — ratings and images can change, so don't cache indefinitely
@@ -58,7 +59,7 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
   useEffect(() => {
     if (!identifier) return;
 
-    let cancelled = false;
+    const { isCancelled, cancel } = cancellation();
 
     async function load(id: string) {
       const key = `${CACHE_PREFIX}_${id}`;
@@ -66,7 +67,7 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
 
       try {
         const raw = await AsyncStorage.getItem(key);
-        if (cancelled) return;
+        if (isCancelled()) return;
 
         if (raw) {
           const entry = JSON.parse(raw) as CacheEntry;
@@ -77,27 +78,25 @@ export function useTrailCard(identifier: string | null): { card: TrailCard | nul
           expired = entry.data;
         }
       } catch {
-        if (cancelled) return;
+        if (isCancelled()) return;
       }
 
       setIsLoading(true);
 
       try {
         const data = await getTrailCard(id);
-        if (cancelled) return;
+        if (isCancelled()) return;
         setCard(data);
         await AsyncStorage.setItem(key, JSON.stringify({ data, cachedAt: Date.now() } satisfies CacheEntry));
       } catch {
-        if (!cancelled && expired) setCard(expired);
+        if (!isCancelled() && expired) setCard(expired);
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!isCancelled()) setIsLoading(false);
       }
     }
 
     void load(identifier);
-    return () => {
-      cancelled = true;
-    };
+    return cancel;
   }, [identifier]);
 
   return { card, isLoading };
@@ -134,7 +133,7 @@ export function useTrailCards(identifiers: string[]): {
   useEffect(() => {
     if (identifiers.length === 0) return;
 
-    let cancelled = false;
+    const { isCancelled, cancel } = cancellation();
 
     async function load() {
       setIsError(false);
@@ -162,14 +161,14 @@ export function useTrailCards(identifiers: string[]): {
         }),
       );
 
-      if (cancelled) return;
+      if (isCancelled()) return;
       if (Object.keys(resolved).length > 0) setCards({ ...resolved });
       if (missing.length === 0) return;
 
       setIsLoading(true);
       try {
         const fetched = await getTrailCards(missing);
-        if (cancelled) return;
+        if (isCancelled()) return;
         for (const fetchedCard of fetched) {
           resolved[fetchedCard.identifier] = fetchedCard;
           AsyncStorage.setItem(
@@ -183,18 +182,16 @@ export function useTrailCards(identifiers: string[]): {
         const absent = missing.filter((id) => !returned.has(id));
         if (absent.length > 0) setNotFound(new Set(absent));
       } catch {
-        if (cancelled) return;
+        if (isCancelled()) return;
         if (Object.keys(expired).length > 0) setCards({ ...expired, ...resolved });
         setIsError(true);
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!isCancelled()) setIsLoading(false);
       }
     }
 
     void load();
-    return () => {
-      cancelled = true;
-    };
+    return cancel;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, reloadIndex]);
 

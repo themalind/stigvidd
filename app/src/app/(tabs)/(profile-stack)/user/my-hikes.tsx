@@ -17,6 +17,7 @@ import { HikeAccessors, HikeSortOption, useHikeFilters } from "@/hooks/hike/useH
 import { useMyHikes } from "@/hooks/hike/useMyHikes";
 import { formatDate } from "@/utils/format/format-date";
 import FormattedTime from "@/utils/format/format-time-from-ms";
+import { countSet } from "@/utils/count-set";
 import { guardedNavigate } from "@/utils/navigation";
 import { router } from "expo-router";
 import { memo, useCallback, useMemo, useState } from "react";
@@ -93,7 +94,7 @@ export default function MyHikesScreen() {
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, minDuration, maxDuration, ...rest } = filters;
     return (
-      Object.values(rest).filter((v) => v !== undefined).length +
+      countSet(rest) +
       (minLength !== undefined || maxLength !== undefined ? 1 : 0) +
       (minDuration !== undefined || maxDuration !== undefined ? 1 : 0)
     );

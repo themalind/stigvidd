@@ -19,7 +19,7 @@ export default function TrailFollowScreen() {
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
   const normalizedIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
 
-  const { card } = useTrailCard(normalizedIdentifier ?? null);
+  const { card } = useTrailCard(normalizedIdentifier);
 
   const { data: coords, isLoading, isError } = useTrailCoordinates(normalizedIdentifier);
   const { data: obstacleItems } = useTrailObstacles(normalizedIdentifier);

@@ -120,7 +120,7 @@ export default function SharedHikeDetailsScreen() {
 
   const openFollowMap = () => {
     // keep-comment: the follow screen reads the route from this key, so it paints without a second request
-    queryClient.setQueryData(hikeRouteQueryKey(sharedHike.hikeIdentifier), sharedHike.coordinates ?? "");
+    queryClient.setQueryData(hikeRouteQueryKey(sharedHike.hikeIdentifier), sharedHike.coordinates);
     guardedNavigate(() =>
       router.navigate({
         pathname: "/(tabs)/(profile-stack)/hike-follow/[identifier]",
@@ -143,7 +143,7 @@ export default function SharedHikeDetailsScreen() {
         { label: t("hike.sharedOn"), value: formatDate(sharedHike.sharedAt) },
       ]}
       info={sharedHike}
-      media={<HikeImageSection images={sharedHike.images ?? []} onOpen={setViewerIndex} />}
+      media={<HikeImageSection images={sharedHike.images} onOpen={setViewerIndex} />}
       actions={
         <View style={s.actionColumn}>
           {!sharedHike.allowResharing && (
@@ -189,7 +189,7 @@ export default function SharedHikeDetailsScreen() {
       />
       <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setShowBannedDialog(false)} />
       <ImageViewer
-        images={sharedHike.images ?? []}
+        images={sharedHike.images}
         visible={viewerIndex !== null}
         initialIndex={viewerIndex ?? 0}
         onDismiss={() => setViewerIndex(null)}

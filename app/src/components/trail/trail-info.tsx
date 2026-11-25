@@ -41,7 +41,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
           labelAccessory={
             hasSymbolImage && helpButton("trail-info-symbol-help", t("trail.markingTitle"), () => setSymbolModal(true))
           }
-          value={trail.trailSymbol?.trim() || t("trail.unmarked")}
+          value={trail.trailSymbol.trim() || t("trail.unmarked")}
         />
         <InfoItem label={t("trail.length")} value={`${trail.trailLength} km`} />
         <InfoItem
@@ -62,7 +62,7 @@ export default function TrailInfo({ trail }: TrailinfoProps) {
           )}
           value={trail.accessibility ? t("trail.adapted") : t("trail.notAdapted")}
         />
-        {!!trail.accessibilityInfo?.trim() && (
+        {!!trail.accessibilityInfo.trim() && (
           <InfoItem label={t("trail.variation")} value={trail.accessibilityInfo} fullWidth />
         )}
       </InfoGrid>

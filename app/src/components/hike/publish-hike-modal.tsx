@@ -95,7 +95,7 @@ export default function PublishHikeModal({ hike, nickName, onDismiss }: Props) {
   const [trim, setTrim] = useState<TrimRange>(() => fullRange(path));
   const trimLeavesPath = trimmedPath(path, trim).length >= 2;
 
-  const images = hike.images ?? [];
+  const { images } = hike;
   const [selectedImages, setSelectedImages] = useState<string[]>(() => images.map((i) => i.identifier));
   const [showName, setShowName] = useState(true);
   const [consent, setConsent] = useState(false);

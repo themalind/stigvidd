@@ -13,6 +13,7 @@ import { useRealUserLocation } from "@/hooks/location/useUserLocation";
 import { classificationParser } from "@/utils/classification-parser";
 import { formatDistanceKm } from "@/utils/format/format-distance";
 import { getDifficultyIcon } from "@/components/display/difficulty-icon";
+import { countSet } from "@/utils/count-set";
 import { guardedNavigate } from "@/utils/navigation";
 import { Entypo } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -69,7 +70,7 @@ export default function UserTrailCollection({
   const activeFilterCount = useMemo(() => {
     const { minLength, maxLength, maxDistance, ...rest } = filters;
     const hasLengthRange = minLength !== undefined || maxLength !== undefined;
-    return Object.values(rest).filter((v) => v !== undefined).length + (hasLengthRange ? 1 : 0);
+    return countSet(rest) + (hasLengthRange ? 1 : 0);
   }, [filters]);
 
   const sortFields = useMemo(
@@ -157,7 +158,7 @@ export default function UserTrailCollection({
 
                       <View style={s.metaRow}>
                         <View style={[s.difficulty, s.metaLeft]}>
-                          {trail.classification != null && trail.classification !== 0 && (
+                          {trail.classification !== 0 && (
                             <>
                               <Text>{getDifficultyIcon(classificationParser(trail.classification))}</Text>
                               <Text style={s.metaText} numberOfLines={1}>

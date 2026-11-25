@@ -199,7 +199,7 @@ export function logSegmentEnded(state: StoredHikeState, reason: RecordingStopRea
   if (!seg) return;
 
   const stats = state.filterStats ?? emptyFilterStats();
-  const received = stats.accepted + Object.values(stats.rejected).reduce((sum: number, n) => sum + (n ?? 0), 0);
+  const received = stats.accepted + Object.values(stats.rejected).reduce((sum: number, n) => sum + n, 0);
   const durationMinutes = Math.max(0, now - seg.startTime) / 60_000;
 
   logger.info("Hike recording segment ended", {
@@ -454,7 +454,7 @@ TaskManager.defineTask(
     }
 
     const { locations } = data;
-    if (!locations?.length) return;
+    if (locations.length === 0) return;
 
     try {
       const fixes: RawFix[] = locations.map((location) => ({

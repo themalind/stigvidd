@@ -93,7 +93,7 @@ export function getCoordinatesByTrailIdentifier(identifier: string): Promise<Coo
 export async function addTrail(request: CreateTrailRequest): Promise<{ success: boolean }> {
   const form = new FormData();
 
-  request.images?.forEach((image) => {
+  request.images.forEach((image) => {
     form.append("images", imageFormPart(image.imageUrl));
   });
 
