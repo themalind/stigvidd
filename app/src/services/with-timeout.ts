@@ -5,6 +5,13 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+export class TimeoutError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TimeoutError";
+  }
+}
+
 // The race rejects even if the platform ignores the abort. keep-comment: see docs/notes/android-fetch-no-timeout-stale-token-401.md
 export async function withTimeout<T>(
   request: (signal: AbortSignal) => Promise<T>,
@@ -16,7 +23,7 @@ export async function withTimeout<T>(
   const timeout = new Promise<never>((_, reject) => {
     timer = setTimeout(() => {
       controller.abort();
-      reject(new Error(message));
+      reject(new TimeoutError(message));
     }, timeoutMs);
   });
 

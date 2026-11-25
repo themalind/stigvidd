@@ -7,6 +7,8 @@
 
 import { Stack } from "expo-router";
 
+export { default as ErrorBoundary } from "@/components/status/route-error-boundary";
+
 // A linked trail opens with the list beneath it. keep-comment: why the anchor exists (docs/notes/router-push-into-unmounted-tab-has-no-back.md)
 export const unstable_settings = { anchor: "index" };
 

@@ -8,6 +8,8 @@
 import { Stack, useIsFocused } from "expo-router";
 import { useTheme } from "react-native-paper";
 
+export { default as ErrorBoundary } from "@/components/status/route-error-boundary";
+
 export default function SettingsLayout() {
   const theme = useTheme();
   const focused = useIsFocused();

@@ -595,19 +595,28 @@
       "title": "Not found",
       "message": "What you are looking for no longer exists."
     },
+    "429": {
+      "title": "Too many requests",
+      "message": "Wait a moment and try again."
+    },
     "500": {
       "title": "Server error",
       "message": "Something went wrong on the server. Please try again later."
     },
+    "connection": {
+      "title": "Can't reach the server",
+      "message": "Check your internet connection and try again."
+    },
     "default": {
       "title": "Something went wrong",
-      "message": "Check your internet connection and try again."
+      "message": "This could not be shown right now. Try again."
     },
     "offline": {
       "title": "No connection",
       "message": "The content will load once you are back online."
     },
-    "retry": "Try again"
+    "retry": "Try again",
+    "backToStart": "Back to the start"
   },
   "friends": {
     "title": "Friends",

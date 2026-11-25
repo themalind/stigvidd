@@ -595,19 +595,28 @@
       "title": "Hittades inte",
       "message": "Det du letar efter finns inte längre."
     },
+    "429": {
+      "title": "För många förfrågningar",
+      "message": "Vänta en liten stund och försök igen."
+    },
     "500": {
       "title": "Serverfel",
       "message": "Något gick fel på servern. Försök igen senare."
     },
+    "connection": {
+      "title": "Ingen kontakt med servern",
+      "message": "Kontrollera din internetanslutning och försök igen."
+    },
     "default": {
       "title": "Något gick fel",
-      "message": "Kontrollera din internetanslutning och försök igen."
+      "message": "Det gick inte att visa det här just nu. Försök igen."
     },
     "offline": {
       "title": "Ingen anslutning",
       "message": "Innehållet laddas när du är online igen."
     },
-    "retry": "Försök igen"
+    "retry": "Försök igen",
+    "backToStart": "Tillbaka till början"
   },
   "friends": {
     "title": "Vänner",

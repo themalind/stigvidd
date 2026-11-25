@@ -22,7 +22,8 @@ import { queryClientAtom } from "jotai-tanstack-query";
 import { AppState, AppStateStatus, Platform, View } from "react-native";
 import { Modal, Portal, Text } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
-import RootLayout from "../_layout";
+import RootErrorBoundary from "@/components/status/root-error-boundary";
+import RootLayout, { ErrorBoundary } from "../_layout";
 
 const mockLogWarn = jest.fn();
 const mockTrack = jest.fn();
@@ -209,6 +210,10 @@ afterEach(() => {
   if (realGetItem) storageGetItem.mockImplementation(realGetItem);
   Platform.OS = "ios";
   focusManager.setFocused(undefined);
+});
+
+it("catches a crash anywhere in the app as the last resort", () => {
+  expect(ErrorBoundary).toBe(RootErrorBoundary);
 });
 
 // Nothing is drawn until the stored session is restored, so the signed-out app never flashes.

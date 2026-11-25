@@ -8,6 +8,8 @@
 import { Stack } from "expo-router";
 import { useAuth } from "@/components/auth/auth-provider";
 
+export { default as ErrorBoundary } from "@/components/status/route-error-boundary";
+
 // Without it, a notification opening a deep screen leaves nothing beneath it: back leaves the tab and a tab press does nothing (docs/notes/router-push-into-unmounted-tab-has-no-back.md). keep-comment: non-obvious failure it prevents
 export const unstable_settings = { anchor: "profile-page" };
 

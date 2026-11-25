@@ -7,6 +7,8 @@
 
 import { Stack } from "expo-router";
 
+export { default as ErrorBoundary } from "@/components/status/route-error-boundary";
+
 export default function HomeStackLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>

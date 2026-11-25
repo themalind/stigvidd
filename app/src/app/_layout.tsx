@@ -127,6 +127,9 @@ function ActiveRecordingHandler() {
   return null;
 }
 
+// keep-comment: last resort above the providers; the tab stacks catch first and keep the tab bar
+export { default as ErrorBoundary } from "@/components/status/root-error-boundary";
+
 export default function RootLayout() {
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
