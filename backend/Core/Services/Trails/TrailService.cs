@@ -215,7 +215,7 @@ public class TrailService : ITrailService
                 t.Description,
                 t.FullDescription,
                 t.Tags,
-                t.CreatedBy!,
+                t.CreatedBy ?? string.Empty,
                 t.IsVerified, t.City,
                 t.TrailImages!.Select(img => TrailImageResponse.Create(
                     _trailResponseFactory.PresentableBaseUrl,

@@ -124,6 +124,34 @@ public class TrailServiceTests
     }
 
     [Fact]
+    public async Task GetTrailByIdentifier_WhenCreatorIsNull_SendsEmptyString()
+    {
+        // Arrange
+        Expression<Func<Trail, TrailWithContributionProjection>>? selector = null;
+        var repo = new Mock<ITrailRepository>();
+        repo.Setup(r => r.GetTrailByIdentifierAsync(Utilities.Identifiers.Trail4, It.IsAny<Expression<Func<Trail, TrailWithContributionProjection>>>(), It.IsAny<CancellationToken>()))
+            .Callback<string, Expression<Func<Trail, TrailWithContributionProjection>>, CancellationToken>((_, s, _) => selector = s)
+            .ReturnsAsync(RepositoryResult<TrailWithContributionProjection>.NotFound());
+        await Build(repo).GetTrailByIdentifierWithoutCoordinatesAsync(Utilities.Identifiers.Trail4, TestContext.Current.CancellationToken);
+        selector.Should().NotBeNull();
+        var trail = new Trail
+        {
+            Identifier = Utilities.Identifiers.Trail4,
+            Name = "Sjöleden",
+            TrailLength = 4.2M,
+            CreatedBy = null,
+            TrailImages = [],
+            TrailLinks = [],
+        };
+
+        // Act
+        var projected = selector.Compile()(trail);
+
+        // Assert
+        projected.Trail.CreatedBy.Should().Be(string.Empty);
+    }
+
+    [Fact]
     public async Task GetTrailByIdentifier_WhenNotFound_ReturnsNotFound()
     {
         // Arrange
