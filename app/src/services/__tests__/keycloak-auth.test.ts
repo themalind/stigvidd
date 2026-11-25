@@ -241,6 +241,15 @@ describe("passwordGrant failure logging", () => {
       { outcome: "network", errorMessage: "Network request failed" },
     ],
     [
+      "an unreachable Keycloak through expo/fetch",
+      () => {
+        global.fetch = jest
+          .fn()
+          .mockRejectedValue(new Error("fetch failed: The Internet connection appears to be offline."));
+      },
+      { outcome: "network", errorMessage: "fetch failed: The Internet connection appears to be offline." },
+    ],
+    [
       "a Keycloak outage",
       () => mockFetch(503),
       { outcome: "server_error", errorMessage: "Keycloak token request failed: HTTP 503" },

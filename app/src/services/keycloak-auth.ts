@@ -9,6 +9,7 @@ import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
 import { AuthUser } from "@/data/types";
 import { logger } from "./logger";
+import { isFetchFailure } from "./fetch-failure";
 import { withTimeout } from "./with-timeout";
 
 // keep-comment: no OIDC library, since they omit the password grant (deprecated in OAuth 2.1)
@@ -221,8 +222,7 @@ function describeGrantFailure(error: unknown): GrantFailure {
   if (error instanceof InvalidCredentialsError) return { outcome: "invalid_credentials" };
   if (!(error instanceof Error)) return { outcome: "unexpected", errorName: typeof error };
   if (error.message === TIMEOUT_MESSAGE || error.name === "AbortError") return { outcome: "timeout" };
-  // React Native's fetch rejects with a TypeError when no response arrives. keep-comment: hidden platform behaviour
-  if (error instanceof TypeError) return { outcome: "network", errorMessage: error.message };
+  if (isFetchFailure(error)) return { outcome: "network", errorMessage: error.message };
   if (error.message.startsWith(HTTP_FAILURE_MESSAGE)) return { outcome: "server_error", errorMessage: error.message };
   // A JSON.parse or jwt-decode message can quote the token response, which carries the email. keep-comment: GDPR reason only the name is logged
   return { outcome: "unexpected", errorName: error.name };
