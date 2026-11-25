@@ -21,6 +21,7 @@ import ClusterSource, {
 import {
   featureCollectionFromFacilities,
   featureCollectionFromMarkers,
+  lngLat,
   pointFeatureFromPosition,
 } from "@/utils/geo/geojson";
 import {
@@ -197,7 +198,7 @@ export default function TrailMarkersMap({
       if (props.point_count != null) {
         const clusterId = props.cluster_id as number;
         const pointCount = props.point_count as number;
-        const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+        const [lng, lat] = lngLat((feature.geometry as GeoJSON.Point).coordinates);
 
         const expansionZoom = await sourceRef.current?.getClusterExpansionZoom(clusterId);
         const action = decideClusterAction(pointCount, expansionZoom, TRAIL_CLUSTER_ACTION);
@@ -218,7 +219,7 @@ export default function TrailMarkersMap({
       }
 
       if (props.identifier) {
-        const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+        const [lng, lat] = lngLat((feature.geometry as GeoJSON.Point).coordinates);
         onClusterOpen([props.identifier as string], { coordinate: [lng, lat], radius: markerRadius(null) });
       }
     },
@@ -232,7 +233,7 @@ export default function TrailMarkersMap({
         const feature = event.nativeEvent.features?.[0];
         if (!feature) return;
         const props = feature.properties ?? {};
-        const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
+        const [lng, lat] = lngLat((feature.geometry as GeoJSON.Point).coordinates);
         onDismiss?.();
 
         if (props.point_count != null) {

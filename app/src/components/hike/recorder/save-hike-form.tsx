@@ -11,6 +11,7 @@ import { showErrorAtom } from "@/atoms/snackbar-atoms";
 import CountedTextInput from "@/components/form/counted-text-input";
 import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
+import { toRange } from "@/components/map/route-trimmer";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { ActiveHike, CreateHikeRequest } from "@/data/types";
 import { asTranslationKey } from "@/i18n";
@@ -217,10 +218,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             minimumTrackTintColor={theme.colors.primary}
             maximumTrackTintColor={theme.colors.outline}
             thumbTintColor={theme.colors.primary}
-            onValueChange={(value) => {
-              const [start, end] = value;
-              setTrim([Math.round(Math.min(start, end)), Math.round(Math.max(start, end))]);
-            }}
+            onValueChange={(value) => setTrim(toRange(value))}
           />
           <Text variant="bodySmall" style={[s.trimHint, { color: theme.colors.onSurfaceVariant }]}>
             {t("hike.trimHint")}

@@ -7,6 +7,13 @@
 
 import { Facility, TrailMarkerResponse, TrailObstacle } from "@/data/types";
 
+// keep-comment: GeoJSON types a position as number[], though the spec requires a longitude and a latitude
+export function lngLat(position: GeoJSON.Position): [lng: number, lat: number] {
+  const [lng, lat] = position;
+  if (lng === undefined || lat === undefined) throw new Error("A position needs a longitude and a latitude");
+  return [lng, lat];
+}
+
 export function featureCollectionFromMarkers(markers: TrailMarkerResponse[]): GeoJSON.FeatureCollection<GeoJSON.Point> {
   const features: GeoJSON.Feature<GeoJSON.Point>[] = [];
   for (const m of markers) {

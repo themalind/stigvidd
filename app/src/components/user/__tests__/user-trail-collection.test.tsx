@@ -114,7 +114,7 @@ it("opens the trail that was tapped", async () => {
 it("removes a trail without opening it", async () => {
   await show();
 
-  await fireEvent.press(screen.getAllByTestId("icon-cross")[0]);
+  await fireEvent.press(defined(screen.getAllByTestId("icon-cross")[0], "icon-cross"));
 
   expect(onDelete).toHaveBeenCalledWith("trail-1");
   expect(mockNavigate).not.toHaveBeenCalled();

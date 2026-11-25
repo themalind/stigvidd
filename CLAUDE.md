@@ -69,6 +69,7 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
 - Nullable warnings are errors. **Never use the null-forgiving `!`** in C# or TS, tests included. C# tests:
   `x.Should().NotBeNull();` then use `x`. TS tests: `if (!x) throw new Error("expected x");`, or in app
   `defined(x, "x")` from `@/test/defined`. Lint enforces the TS half (`no-non-null-assertion`); lint fails on any warning.
+  App has `noUncheckedIndexedAccess`: read a GeoJSON position with `lngLat()`, walk neighbours with `adjacentPairs()`.
 - An unawaited promise fails type-aware lint (`no-floating-promises`). Mark it `void` only when the callee catches its
   own errors (`invalidateQueries` does); otherwise `.catch((error: unknown) => logger.…)`. In RNTL tests, `await` it.
   A many-to-many join (`CityAreaFacility`, `CityAreaTrail`) needs no nullable navigation: query/add rows via

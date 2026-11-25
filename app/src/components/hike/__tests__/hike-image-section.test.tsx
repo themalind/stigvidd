@@ -9,6 +9,7 @@ import HikeImageSection from "@/components/hike/hike-image-section";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { HikeImage } from "@/data/types";
 import { getAllByType, getByType } from "@/test/composites";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
@@ -90,7 +91,7 @@ describe("with images", () => {
   it("opens the image that was tapped", async () => {
     await show({ list: images(3) });
 
-    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[2]);
+    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[2], "third thumb"));
 
     expect(onOpen).toHaveBeenCalledWith(2);
   });

@@ -33,7 +33,7 @@ it("lets the button grow past the slot's height for larger text, never clipping 
   await renderWithProviders(<ScreenTitleBar title="Leder" action={ACTION} />);
 
   const surface = screen.getByTestId("title-action").children[0];
-  if (typeof surface === "string") throw new Error("expected the button's surface view");
+  if (surface === undefined || typeof surface === "string") throw new Error("expected the button's surface view");
   const button = StyleSheet.flatten(surface.props.style);
   expect(button.minHeight).toBe(TITLE_BAR_ACTION_HEIGHT);
   expect(button.height).toBeUndefined();

@@ -452,7 +452,7 @@ describe("maybeFinalizeStaleHike", () => {
     expect(result.isTracking).toBe(false);
     expect(result.currentSegment).toBeNull();
     expect(result.hike.segments).toHaveLength(1);
-    expect(result.hike.segments[0].endTime).toBe(lastMovement);
+    expect(result.hike.segments[0]?.endTime).toBe(lastMovement);
     expect(result.hike.totalTime).toBe(lastMovement - (NOW - 1000));
   });
 
@@ -496,7 +496,7 @@ describe("maybeFinalizeStaleHike", () => {
     const result = maybeFinalizeStaleHike(state, startTime + MAX_DURATION + 120_000);
 
     if (!result) throw new Error("expected a finalized hike");
-    expect(result.hike.segments[0].endTime).toBe(startTime + MAX_DURATION);
+    expect(result.hike.segments[0]?.endTime).toBe(startTime + MAX_DURATION);
     expect(result.hike.totalTime).toBe(MAX_DURATION);
   });
 });
@@ -522,7 +522,7 @@ describe("finalizeActiveSegment", () => {
     expect(result.currentSegment).toBeNull();
     expect(result.hike.segments).toHaveLength(1);
     // End trimmed to the last recorded point, not "now": the process died there.
-    expect(result.hike.segments[0].endTime).toBe(lastMovement);
+    expect(result.hike.segments[0]?.endTime).toBe(lastMovement);
     expect(result.hike.totalTime).toBe(lastMovement - (NOW - 2000));
   });
 
@@ -547,7 +547,7 @@ describe("finalizeActiveSegment", () => {
     };
 
     const result = finalizeActiveSegment(state, "recovery");
-    expect(result.hike.segments[0].endTime).toBe(startTime + MAX_DURATION);
+    expect(result.hike.segments[0]?.endTime).toBe(startTime + MAX_DURATION);
     expect(result.hike.totalTime).toBe(MAX_DURATION);
   });
 

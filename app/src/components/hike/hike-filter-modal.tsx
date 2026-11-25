@@ -87,7 +87,7 @@ export const HikeFilterModal: React.FC<HikeFilterModalProps> = ({
               minimumValue={0}
               maximumValue={ranges.lengthMax}
               step={ranges.lengthStep}
-              onValueChange={(values: number[]) => onUpdateRangeFilter("length", values[0], values[1])}
+              onValueChange={([min = 0, max = min]: number[]) => onUpdateRangeFilter("length", min, max)}
               minimumTrackTintColor={theme.colors.secondary}
               maximumTrackTintColor={theme.colors.outlineVariant}
               thumbTintColor={theme.colors.primary}
@@ -108,7 +108,7 @@ export const HikeFilterModal: React.FC<HikeFilterModalProps> = ({
               minimumValue={0}
               maximumValue={ranges.durationMax}
               step={ranges.durationStep}
-              onValueChange={(values: number[]) => onUpdateRangeFilter("duration", values[0], values[1])}
+              onValueChange={([min = 0, max = min]: number[]) => onUpdateRangeFilter("duration", min, max)}
               minimumTrackTintColor={theme.colors.secondary}
               maximumTrackTintColor={theme.colors.outlineVariant}
               thumbTintColor={theme.colors.primary}

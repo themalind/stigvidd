@@ -229,7 +229,7 @@ it("draws a ticked box in the accent colour and an empty one in the outline colo
   await open();
 
   expect(screen.getByTestId("icon-check-box").props.color).toBe(AppDefaultTheme.colors.primary);
-  expect(screen.getAllByTestId("icon-check-box-outline-blank")[0].props.color).toBe(
+  expect(screen.getAllByTestId("icon-check-box-outline-blank")[0]?.props.color).toBe(
     AppDefaultTheme.colors.outlineVariant,
   );
 });

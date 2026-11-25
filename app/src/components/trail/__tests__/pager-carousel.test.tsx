@@ -12,6 +12,7 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { TrailOverview } from "@/data/types";
 import { getAllByType } from "@/test/composites";
 import { settle } from "@/test/flush";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { Image as ExpoImage } from "expo-image";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -53,7 +54,7 @@ function show(data: TrailOverview[] = THREE, onItemPress?: (item: TrailOverview)
 // The pager reads its page from the scroll offset; this is the event the platform sends when a swipe settles.
 async function swipeTo(index: number) {
   const [scroller] = screen.container.queryAll((node) => node.type === "RCTScrollView");
-  await fireEvent(scroller, "momentumScrollEnd", {
+  await fireEvent(defined(scroller, "scroller"), "momentumScrollEnd", {
     nativeEvent: { contentOffset: { x: PAGE * index }, contentSize: { width: PAGE * 3 } },
   });
 }
@@ -187,7 +188,7 @@ it("leaves the press to its host when it was given one", async () => {
 it("shows the trail's own first image", async () => {
   await show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/a.jpg" }] })]);
 
-  expect(getAllByType(ExpoImage)[0].props.source).toBe("https://stigvidd.se/a.jpg");
+  expect(getAllByType(ExpoImage)[0]?.props.source).toBe("https://stigvidd.se/a.jpg");
 });
 
 // A trail with no photographs still has to fill the page, so a bundled placeholder stands in.
@@ -195,20 +196,20 @@ it("falls back to the bundled placeholder when a trail has no images", async () 
   await show([trail({ trailImagesResponse: [] })]);
 
   // A require() is an asset handle rather than a URL; anything but a string is the local one.
-  expect(typeof getAllByType(ExpoImage)[0].props.source).not.toBe("string");
+  expect(typeof getAllByType(ExpoImage)[0]?.props.source).not.toBe("string");
 });
 
 it("hands the overlay the same image it is drawn over", async () => {
   await show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/mock/a.jpg" }] })]);
 
-  expect(getAllByType(ExampleImageOverlay)[0].props.source).toBe("https://stigvidd.se/mock/a.jpg");
+  expect(getAllByType(ExampleImageOverlay)[0]?.props.source).toBe("https://stigvidd.se/mock/a.jpg");
 });
 
 // The placeholder art is ours, so it must not be labelled as a stand-in for a photograph.
 it("labels a mock photograph, and leaves a real one alone", async () => {
   await show([trail({ trailImagesResponse: [{ identifier: "img-1", imageUrl: "https://stigvidd.se/mock/a.jpg" }] })]);
   const [overlay] = screen.container.queryAll((node) => node.props.pointerEvents === "none");
-  await fireEvent(overlay, "layout", {
+  await fireEvent(defined(overlay, "overlay"), "layout", {
     nativeEvent: { layout: { width: 300, height: 180 } },
   });
 
@@ -223,7 +224,7 @@ it("labels a mock photograph, and leaves a real one alone", async () => {
 it("sizes each page to the window, and the picture to the page", async () => {
   await show();
 
-  expect(getAllByType(ExpoImage)[0].props.style).toEqual(
+  expect(getAllByType(ExpoImage)[0]?.props.style).toEqual(
     expect.objectContaining({ width: PAGE, height: Math.round(PAGE * 0.6), borderRadius: BORDER_RADIUS }),
   );
 });

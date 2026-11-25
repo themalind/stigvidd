@@ -8,6 +8,7 @@
 import Map from "@/components/map/map";
 import StartMarker from "@/components/map/start-marker";
 import { BORDER_RADIUS, SCREEN_PADDING, START_COORDINATE_BORAS } from "@/constants/constants";
+import { lngLat } from "@/utils/geo/geojson";
 import { Camera } from "@maplibre/maplibre-react-native";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
@@ -38,7 +39,7 @@ export default function PointPickerMap({ value, onChange, label, hint, testID }:
       >
         <Camera
           initialViewState={{
-            center: [initialCenter[0], initialCenter[1]],
+            center: lngLat(initialCenter),
             zoom: value ? 13 : 9.5,
           }}
         />

@@ -19,6 +19,7 @@ import {
   SWIMMING_MARKER_COLORS,
 } from "@/components/map/marker-styles";
 import { AreaMapShapes, MapFacilityKind } from "@/utils/area/area-map-shapes";
+import { lngLat } from "@/utils/geo/geojson";
 import {
   GeoJSONSource,
   type GeoJSONSourceRef,
@@ -69,8 +70,7 @@ interface Props {
 }
 
 function pointOf(feature: GeoJSON.Feature): [number, number] {
-  const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates;
-  return [lng, lat];
+  return lngLat((feature.geometry as GeoJSON.Point).coordinates);
 }
 
 async function handleTrailPress(

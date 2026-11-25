@@ -82,7 +82,7 @@ describe("AdventureReveal", () => {
     await show();
 
     expect(images()).toHaveLength(1);
-    expect(images()[0].props.source).toEqual({ uri: "https://media.example/kype.jpg" });
+    expect(images()[0]?.props.source).toEqual({ uri: "https://media.example/kype.jpg" });
     expect(screen.getByText("★ 4.2")).toBeTruthy();
   });
 
@@ -106,7 +106,7 @@ describe("AdventureReveal", () => {
     await show();
 
     expect(images()).toHaveLength(1);
-    expect(images()[0].props.source).not.toEqual({ uri: expect.anything() });
+    expect(images()[0]?.props.source).not.toEqual({ uri: expect.anything() });
   });
 
   it("renders the trail without a rating when the card never arrives", async () => {

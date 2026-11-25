@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { adjacentPairs } from "@/utils/adjacent-pairs";
+
 // keep-comment: two waves of unrelated frequency read as wandering; one alone looks like a wave
 const PRIMARY_WAVES = 2.1;
 const SECONDARY_WAVES = 4.7;
@@ -28,23 +30,21 @@ export function buildDecorativeRoute(width: number, height: number, padding = 16
   const amplitude = Math.max(height - padding * 2, 0) / 2 / (1 + SECONDARY_WEIGHT);
   const midY = height / 2;
 
-  const points: [number, number][] = [];
-  for (let i = 0; i < SAMPLES; i++) {
-    const t = i / (SAMPLES - 1);
-    const y =
-      midY +
+  const pointAt = (t: number): [number, number] => [
+    padding + t * innerWidth,
+    midY +
       amplitude *
         (Math.sin(t * PRIMARY_WAVES * Math.PI + PRIMARY_PHASE) +
-          SECONDARY_WEIGHT * Math.sin(t * SECONDARY_WAVES * Math.PI + SECONDARY_PHASE));
-    points.push([padding + t * innerWidth, y]);
-  }
+          SECONDARY_WEIGHT * Math.sin(t * SECONDARY_WAVES * Math.PI + SECONDARY_PHASE)),
+  ];
+  const points = Array.from({ length: SAMPLES }, (_, i) => pointAt(i / (SAMPLES - 1)));
 
   let length = 0;
-  for (let i = 1; i < points.length; i++) {
-    length += Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]);
+  for (const [[x1, y1], [x2, y2]] of adjacentPairs(points)) {
+    length += Math.hypot(x2 - x1, y2 - y1);
   }
 
   const d = points.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`).join(" ");
 
-  return { d, length, start: points[0], end: points[points.length - 1] };
+  return { d, length, start: pointAt(0), end: pointAt(1) };
 }

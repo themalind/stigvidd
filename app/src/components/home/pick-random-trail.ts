@@ -20,5 +20,5 @@ export function pickRandomTrail<T extends { identifier: string }>(
 
   // keep-comment: a value close enough to 1 would index one past the end
   const index = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
-  return candidates[index];
+  return candidates[index] ?? null;
 }

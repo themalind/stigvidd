@@ -35,6 +35,7 @@ function hasMountedTarget(root: unknown): boolean {
   let level = root as NavigationLevel | undefined;
   while (level) {
     const focused = level.routes[level.index ?? level.routes.length - 1];
+    if (!focused) return false;
     if (!focused.state) return !focused.params || !("screen" in focused.params);
     level = focused.state;
   }

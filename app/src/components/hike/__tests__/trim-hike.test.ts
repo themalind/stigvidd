@@ -95,7 +95,8 @@ describe("recomputeTrimmedHike", () => {
 
     // Distance is the sum of the two within-segment legs, excluding the jump between segments.
     const within =
-      recomputeTrimmedHike([segments[0]], 0, 1).distance + recomputeTrimmedHike([segments[1]], 0, 1).distance;
+      recomputeTrimmedHike(segments.slice(0, 1), 0, 1).distance +
+      recomputeTrimmedHike(segments.slice(1, 2), 0, 1).distance;
     expect(result.distance).toBe(within);
   });
 });

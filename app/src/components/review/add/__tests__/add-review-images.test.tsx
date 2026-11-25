@@ -11,6 +11,7 @@ import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { closestByType, getAllByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { getDialog, hideDialog } from "@/services/dialog";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { resizeImage } from "@/utils/image/resize-image";
 import { fireEvent, screen } from "@testing-library/react-native";
@@ -209,7 +210,7 @@ it("removes the picture whose cross is pressed, and only that one", async () => 
   await pick("tva");
   await pick("tre");
 
-  await fireEvent.press(screen.getAllByTestId("add-review-image-delete")[1]);
+  await fireEvent.press(defined(screen.getAllByTestId("add-review-image-delete")[1], "second delete"));
   await settle();
 
   expect(sources()).toEqual(["file:///dcim/ett-liten.jpg", "file:///dcim/tre-liten.jpg"]);
@@ -244,7 +245,7 @@ it("offers the picker again once a picture is removed", async () => {
   await pick("tva");
   await pick("tre");
 
-  await fireEvent.press(screen.getAllByTestId("add-review-image-delete")[0]);
+  await fireEvent.press(defined(screen.getAllByTestId("add-review-image-delete")[0], "first delete"));
   await settle();
 
   expect(screen.getByTestId("add-review-image-add")).toBeTruthy();
@@ -267,7 +268,7 @@ it("shows each thumbnail as a quarter-width portrait, cropped to fill", async ()
   await show();
   await pick("vandring");
 
-  const image = getAllByType(Image)[0];
+  const image = defined(getAllByType(Image)[0], "first thumbnail");
   expect(image.props.contentFit).toBe("cover");
   expect(image.props.style).toMatchObject({ width: BUTTON_WIDTH, aspectRatio: 3 / 4 });
 });

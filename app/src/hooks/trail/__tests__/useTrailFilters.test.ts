@@ -216,7 +216,7 @@ describe("useTrailFilters", () => {
       const noCoords = [makeTrail({ identifier: "x", startLatitude: undefined, startLongitude: undefined })];
       const { result } = await renderHook(() => useTrailFilters(noCoords, BORAS));
 
-      expect(result.current.filteredTrails[0].distanceKm).toBeUndefined();
+      expect(result.current.filteredTrails[0]?.distanceKm).toBeUndefined();
     });
 
     it("ignores the near-me filter when the user's location is unknown", async () => {
@@ -328,7 +328,7 @@ describe("useTrailFilters", () => {
       await act(() => result.current.setSearchQuery("bok"));
 
       expect(result.current.filteredTrails).toHaveLength(1);
-      expect(result.current.filteredTrails[0].ratingResponse).toEqual([{ rating: 5 }]);
+      expect(result.current.filteredTrails[0]?.ratingResponse).toEqual([{ rating: 5 }]);
     });
   });
 });

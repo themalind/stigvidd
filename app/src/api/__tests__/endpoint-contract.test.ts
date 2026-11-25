@@ -23,6 +23,7 @@ jest.mock("@/services/logger", () => ({
 jest.mock("@/services/keycloak-auth", () => ({ getValidAccessToken: jest.fn() }));
 
 import { getValidAccessToken } from "@/services/keycloak-auth";
+import { defined } from "@/test/defined";
 import { File } from "expo-file-system";
 import { ApiError, problemStrings } from "../core/api-error";
 import { getAreaByIdentifier, getAreas } from "../areas";
@@ -1068,7 +1069,7 @@ describe("endpoints that are not plain JSON", () => {
     const init = fetchMock.mock.calls[0][1];
     const body = init.body as unknown as RecordingFormData;
     expect(body.parts).toHaveLength(1);
-    const [key, part] = body.parts[0];
+    const [key, part] = defined(body.parts[0], "image part");
     expect(key).toBe("image");
     expect(part).toBeInstanceOf(File);
     expect((part as File).uri).toBe("file:///cache/cover.jpg");

@@ -52,6 +52,6 @@ describe("sharesFrom", () => {
 
   it("does not reorder the list it was given", () => {
     sharesFrom(hikes, "anna");
-    expect(hikes[0].hikeName).toBe("old");
+    expect(hikes[0]?.hikeName).toBe("old");
   });
 });

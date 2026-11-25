@@ -7,6 +7,7 @@
 
 import { showWarningAtom } from "@/atoms/snackbar-atoms";
 import { AppDefaultTheme } from "@/constants/theme";
+import { lngLat } from "@/utils/geo/geojson";
 import { USER_LOCATION_KEY, useUserLocation } from "@/hooks/location/useUserLocation";
 import { Ionicons } from "@expo/vector-icons";
 import { type CameraRef } from "@maplibre/maplibre-react-native";
@@ -61,7 +62,7 @@ export default function CenterOnUserButton({ cameraRef, onPress, position }: Pro
       void recover();
       return;
     }
-    cameraRef.current?.flyTo({ center: [center[0], center[1]], zoom: 14, duration: 800 });
+    cameraRef.current?.flyTo({ center: lngLat(center), zoom: 14, duration: 800 });
   };
 
   const noPosition = center === null;

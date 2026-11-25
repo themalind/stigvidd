@@ -104,9 +104,9 @@ describe("logger sink", () => {
     expect(sink).toHaveBeenCalledTimes(1);
     const [records] = sink.mock.calls[0] as [LogRecord[]];
     expect(records).toHaveLength(1);
-    expect(records[0].message).toBe("upload failed for ***@example.com");
-    expect(records[0].context).toEqual({ accessToken: "[redacted]", status: 500 });
-    expect(records[0].level).toBe("error");
+    expect(records[0]?.message).toBe("upload failed for ***@example.com");
+    expect(records[0]?.context).toEqual({ accessToken: "[redacted]", status: 500 });
+    expect(records[0]?.level).toBe("error");
   });
 
   it("keeps the batch for retry when the sink throws", async () => {
@@ -121,7 +121,7 @@ describe("logger sink", () => {
     // Same record delivered again rather than dropped on the floor.
     expect(sink).toHaveBeenCalledTimes(2);
     const [retried] = sink.mock.calls[1] as [LogRecord[]];
-    expect(retried[0].message).toBe("first");
+    expect(retried[0]?.message).toBe("first");
   });
 });
 
@@ -156,7 +156,7 @@ describe("logger sink watchdog", () => {
     expect(healthy).toHaveBeenCalledTimes(1);
 
     const [retried] = healthy.mock.calls[0] as [LogRecord[]];
-    expect(retried[0].message).toBe("first");
+    expect(retried[0]?.message).toBe("first");
   });
 });
 
@@ -231,7 +231,7 @@ describe("logger lifecycle", () => {
 
     const persisted = JSON.parse(stored as string) as LogRecord[];
     expect(persisted).toHaveLength(1);
-    expect(persisted[0].message).toBe("boom");
+    expect(persisted[0]?.message).toBe("boom");
   });
 
   it("persists a line logged after backgrounding while the flush is still in flight", async () => {

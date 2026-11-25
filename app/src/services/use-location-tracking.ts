@@ -378,8 +378,9 @@ export function useLocationTracking() {
           logSegmentEnded(state, "user");
           const endTime = Date.now();
           // keep-comment: GPS span, as recomputeTrimmedHike saves it
-          const coords = seg.coordinates;
-          const segmentDuration = coords.length > 1 ? coords[coords.length - 1].timeStamp - coords[0].timeStamp : 0;
+          const first = seg.coordinates[0];
+          const last = seg.coordinates.at(-1);
+          const segmentDuration = first && last ? last.timeStamp - first.timeStamp : 0;
           const completedSegment: Segment = { ...seg, endTime };
 
           if (completedSegment.distance >= MIN_SEGMENT_DISTANCE) {

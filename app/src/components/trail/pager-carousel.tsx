@@ -72,9 +72,7 @@ export default function PagerCarousel({
   };
 
   const imageSource = (item: TrailOverview) =>
-    item.trailImagesResponse && item.trailImagesResponse.length > 0
-      ? item.trailImagesResponse[0].imageUrl
-      : require("../../assets/images/noImage.png");
+    item.trailImagesResponse?.[0]?.imageUrl ?? require("../../assets/images/noImage.png");
 
   return (
     <View>

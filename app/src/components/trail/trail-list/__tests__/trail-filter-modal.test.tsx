@@ -9,6 +9,7 @@ import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-mod
 import { AppDefaultTheme } from "@/constants/theme";
 import { FilterOptions } from "@/data/types";
 import { getAllByType } from "@/test/composites";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
 import { act, fireEvent, screen } from "@testing-library/react-native";
@@ -80,7 +81,7 @@ it("turns a chosen city into a filter, and 'all cities' back into none", async (
 
   await show({ filters: { city: "Borås" } });
   await openSelect("Borås");
-  await fireEvent.press(screen.getAllByText("Alla orter")[0]);
+  await fireEvent.press(defined(screen.getAllByText("Alla orter")[0], "Alla orter"));
   expect(onUpdateFilter).toHaveBeenCalledWith("city", undefined);
 });
 
@@ -95,7 +96,7 @@ it("sends the difficulty back as a number, zero included", async () => {
 
   await show({ filters: { classification: 0 } });
   await openSelect("Inte klassificerad");
-  await fireEvent.press(screen.getAllByText("Alla svårighetsgrader")[0]);
+  await fireEvent.press(defined(screen.getAllByText("Alla svårighetsgrader")[0], "Alla svårighetsgrader"));
   expect(onUpdateFilter).toHaveBeenCalledWith("classification", undefined);
 });
 
@@ -168,7 +169,7 @@ it("sends a minimum rating back as a number, and 'all' as no filter", async () =
   expect(onUpdateFilter).toHaveBeenCalledWith("minRating", 3);
 
   await show({ filters: { minRating: 4 } });
-  await fireEvent.press(screen.getAllByTestId("filter-rating-all")[0]);
+  await fireEvent.press(defined(screen.getAllByTestId("filter-rating-all")[0], "filter-rating-all"));
   expect(onUpdateFilter).toHaveBeenCalledWith("minRating", undefined);
 });
 

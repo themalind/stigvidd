@@ -158,7 +158,7 @@ it("starts from the dialog, and remembers the choice not to see it again", async
   await settle();
   await fireEvent.press(screen.getByText("Visa inte detta igen"));
   // The dialog's own start button, not the one behind it.
-  await fireEvent.press(screen.getAllByText("Starta vandring")[1]);
+  await fireEvent.press(defined(screen.getAllByText("Starta vandring")[1], "second Starta vandring"));
   await settle();
 
   expect(mockDismissInfo).toHaveBeenCalledTimes(1);
@@ -171,7 +171,7 @@ it("keeps the info dialog's choice out of it when the box is left unticked", asy
 
   await fireEvent.press(screen.getByText("Starta vandring"));
   await settle();
-  await fireEvent.press(screen.getAllByText("Starta vandring")[1]);
+  await fireEvent.press(defined(screen.getAllByText("Starta vandring")[1], "second Starta vandring"));
   await settle();
 
   expect(mockDismissInfo).not.toHaveBeenCalled();

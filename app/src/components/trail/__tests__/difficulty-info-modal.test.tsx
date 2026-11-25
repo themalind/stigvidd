@@ -8,6 +8,7 @@
 import DifficultyInfoModal from "@/components/trail/difficulty-info-modal";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { settle } from "@/test/flush";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen, within } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
@@ -60,9 +61,10 @@ describe("what the modal explains", () => {
   it("gives each level the marker used on the trail card", async () => {
     await show();
 
-    expect(within(cards()[0]).getByTestId("icon-circle")).toBeTruthy();
-    expect(within(cards()[1]).getByTestId("icon-diamond")).toBeTruthy();
-    expect(within(cards()[2]).getByTestId("icon-triangle")).toBeTruthy();
+    const [easy, medium, hard] = cards();
+    expect(within(defined(easy, "easy card")).getByTestId("icon-circle")).toBeTruthy();
+    expect(within(defined(medium, "medium card")).getByTestId("icon-diamond")).toBeTruthy();
+    expect(within(defined(hard, "hard card")).getByTestId("icon-triangle")).toBeTruthy();
   });
 
   it("stays out of sight until it is opened", async () => {
@@ -83,8 +85,9 @@ describe("marking the trail's own level", () => {
 
     const marked = highlighted();
     expect(marked).toHaveLength(1);
-    expect(within(marked[0]).getByText(label)).toBeTruthy();
-    expect(within(marked[0]).getByText("Den här leden")).toBeTruthy();
+    const card = defined(marked[0], "marked card");
+    expect(within(card).getByText(label)).toBeTruthy();
+    expect(within(card).getByText("Den här leden")).toBeTruthy();
   });
 
   // A level the app does not know must leave every card plain rather than guess one.

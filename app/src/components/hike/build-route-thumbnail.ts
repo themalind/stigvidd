@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { lngLat } from "@/utils/geo/geojson";
+
 // keep-comment: past this the points are closer than a thumbnail pixel
 const MAX_POINTS = 120;
 
@@ -24,12 +26,9 @@ function downsample(path: GeoJSON.Position[]): GeoJSON.Position[] {
   if (path.length <= MAX_POINTS) return path;
 
   const stride = (path.length - 1) / (MAX_POINTS - 1);
-  const sampled: GeoJSON.Position[] = [];
-  for (let i = 0; i < MAX_POINTS - 1; i++) {
-    sampled.push(path[Math.round(i * stride)]);
-  }
-  sampled.push(path[path.length - 1]);
-  return sampled;
+  const picked = new Set(Array.from({ length: MAX_POINTS - 1 }, (_, i) => Math.round(i * stride)));
+  picked.add(path.length - 1);
+  return path.filter((_, index) => picked.has(index));
 }
 
 // keep-comment: null when there is nothing to draw, which tells the caller to show the icon
@@ -47,7 +46,8 @@ export function buildRouteThumbnail(
   let maxLng = -Infinity;
   let minLat = Infinity;
   let maxLat = -Infinity;
-  for (const [lng, lat] of points) {
+  for (const position of points) {
+    const [lng, lat] = lngLat(position);
     if (lng < minLng) minLng = lng;
     if (lng > maxLng) maxLng = lng;
     if (lat < minLat) minLat = lat;
@@ -68,13 +68,16 @@ export function buildRouteThumbnail(
   const offsetY = (height - spanY * scale) / 2;
 
   // keep-comment: latitude grows north, SVG y grows down
-  const project = (position: GeoJSON.Position): [number, number] => [
-    offsetX + (position[0] - minLng) * aspect * scale,
-    offsetY + (maxLat - position[1]) * scale,
-  ];
+  const project = (position: GeoJSON.Position): [number, number] => {
+    const [lng, lat] = lngLat(position);
+    return [offsetX + (lng - minLng) * aspect * scale, offsetY + (maxLat - lat) * scale];
+  };
 
   const projected = points.map(project);
   const d = projected.map(([x, y], index) => `${index === 0 ? "M" : "L"}${x.toFixed(2)} ${y.toFixed(2)}`).join(" ");
 
-  return { d, start: projected[0], end: projected[projected.length - 1] };
+  const [start] = projected;
+  const end = projected.at(-1);
+  if (!start || !end) return null;
+  return { d, start, end };
 }

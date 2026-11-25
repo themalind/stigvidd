@@ -158,7 +158,7 @@ describe("ImageGallery — large image and thumbnails follow each other", () => 
   });
 
   it("hides the thumbnail row for a single image", async () => {
-    await renderWithProviders(<ImageGallery images={[IMAGES[0]]} />);
+    await renderWithProviders(<ImageGallery images={IMAGES.slice(0, 1)} />);
 
     expect(screen.getByTestId("gallery-page-0")).toBeTruthy();
     expect(screen.queryByTestId("gallery-thumb-0")).toBeNull();

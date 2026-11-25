@@ -10,6 +10,7 @@ import { Trail } from "@/data/types";
 import { flushUntil, flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { SCREEN_PADDING } from "@/constants/constants";
+import { defined } from "@/test/defined";
 import { act, fireEvent, screen, within } from "@testing-library/react-native";
 
 const mockGetTrail = jest.fn();
@@ -200,7 +201,7 @@ it("opens the nature guide in this stack", async () => {
   await show();
 
   const [misc] = screen.container.queryAll((node) => node.type === "TrailMiscInfo");
-  misc.props.onOpenGuide();
+  defined(misc, "TrailMiscInfo").props.onOpenGuide();
 
   expect(mockNavigate).toHaveBeenCalledWith("/(tabs)/(map)/guide");
 });

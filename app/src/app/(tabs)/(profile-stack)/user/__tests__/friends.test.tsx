@@ -8,6 +8,7 @@
 import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDefaultTheme } from "@/constants/theme";
 import { flushUntil } from "@/test/flush";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import FriendsScreen from "../friends";
@@ -133,7 +134,7 @@ async function drainQueries() {
 
 // Each action button names itself, since the icon inside is hidden from accessibility.
 function actionButton(label: string, index = 0) {
-  return screen.getAllByLabelText(label)[index];
+  return defined(screen.getAllByLabelText(label)[index], label);
 }
 
 beforeEach(() => {
@@ -421,7 +422,7 @@ describe("the blocked section", () => {
     mockGetBlocked.mockResolvedValue([blockedUser("Grima"), blockedUser("Bill")]);
     await openBlocked("Blockerade (2)");
 
-    await fireEvent.press(screen.getAllByTestId("unblock-user")[1]);
+    await fireEvent.press(defined(screen.getAllByTestId("unblock-user")[1], "second unblock"));
 
     expect(mockUnblock).toHaveBeenCalledWith("id-Bill");
   });

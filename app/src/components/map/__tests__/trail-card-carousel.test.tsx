@@ -9,6 +9,7 @@ import TrailCardCarousel from "@/components/map/trail-card-carousel";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { AppDefaultTheme } from "@/constants/theme";
 import { TrailCard } from "@/data/types";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Dimensions } from "react-native";
@@ -195,8 +196,8 @@ it("hands the pressed card's identifier to the caller", async () => {
   const onShowOnMap = jest.fn();
   await show(["a", "b", "c"], { onReadMore, onShowOnMap });
 
-  await fireEvent.press(screen.getAllByText("Läs mer")[0]);
-  await fireEvent.press(screen.getAllByText("Se på karta")[0]);
+  await fireEvent.press(defined(screen.getAllByText("Läs mer")[0], "Läs mer"));
+  await fireEvent.press(defined(screen.getAllByText("Se på karta")[0], "Se på karta"));
 
   expect(onReadMore).toHaveBeenCalledWith("a");
   expect(onShowOnMap).toHaveBeenCalledWith("a");

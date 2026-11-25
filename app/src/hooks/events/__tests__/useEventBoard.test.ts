@@ -34,7 +34,7 @@ describe("firstUnreadPostId", () => {
   });
 
   it("skips the user's own posts", () => {
-    expect(firstUnreadPostId([posts[1]], "2026-11-01T07:00:00Z")).toBeUndefined();
+    expect(firstUnreadPostId(posts.slice(1, 2), "2026-11-01T07:00:00Z")).toBeUndefined();
   });
 
   it("is the first post when nothing has been read", () => {

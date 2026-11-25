@@ -4,6 +4,7 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "types": ["jest", "geojson", "node"],
     "paths": {

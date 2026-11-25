@@ -12,6 +12,7 @@ import { EVENTS_TAB_ROUTES } from "@/components/event/event-routes";
 import { EventParticipants, HikingEvent } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { SCREEN_PADDING } from "@/constants/constants";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen, within } from "@testing-library/react-native";
 
@@ -290,7 +291,7 @@ describe("EventDetailsScreen", () => {
     await fireEvent.press(screen.getByTestId("event-leave-dialog-cancel"));
     expect(mockLeave).not.toHaveBeenCalled();
 
-    await fireEvent.press(screen.getAllByText("Lämna")[0]);
+    await fireEvent.press(defined(screen.getAllByText("Lämna")[0], "Lämna"));
     await fireEvent.press(screen.getByTestId("event-leave-dialog-confirm"));
     await flushUntil(() => mockBack.mock.calls.length > 0);
 

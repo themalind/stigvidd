@@ -188,11 +188,11 @@ it("gives the white line a dark halo so it reads over any photograph", async () 
   await show();
 
   const [halo, line] = getAllByType(Path);
-  expect(halo.props.stroke).toBe("rgba(0,0,0,0.35)");
-  expect(halo.props.strokeWidth).toBe(7);
-  expect(line.props.stroke).toBe("#ffffff");
-  expect(line.props.strokeWidth).toBe(3);
-  expect(line.props.strokeLinecap).toBe("round");
+  expect(halo?.props.stroke).toBe("rgba(0,0,0,0.35)");
+  expect(halo?.props.strokeWidth).toBe(7);
+  expect(line?.props.stroke).toBe("#ffffff");
+  expect(line?.props.strokeWidth).toBe(3);
+  expect(line?.props.strokeLinecap).toBe("round");
 });
 
 it("marks where the route starts", async () => {

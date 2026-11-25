@@ -65,10 +65,7 @@ export function useEventBoard(identifier: string | undefined) {
 // The oldest post after the read marker, not counting the user's own; posts are newest first. keep-comment: where the "new posts" divider goes
 export function firstUnreadPostId(posts: EventPost[], lastReadPostAt: string | null): string | undefined {
   const readUpTo = lastReadPostAt === null ? Number.NEGATIVE_INFINITY : Date.parse(lastReadPostAt);
-  for (let i = posts.length - 1; i >= 0; i--) {
-    if (!posts[i].isMine && Date.parse(posts[i].createdAt) > readUpTo) return posts[i].identifier;
-  }
-  return undefined;
+  return posts.findLast((post) => !post.isMine && Date.parse(post.createdAt) > readUpTo)?.identifier;
 }
 
 type BoardData = InfiniteData<EventBoard, string | undefined>;

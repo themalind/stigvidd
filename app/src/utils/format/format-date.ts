@@ -6,5 +6,5 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 export const formatDate = (dateString: string): string => {
-  return dateString.split("T")[0];
+  return dateString.split("T", 1)[0] ?? dateString;
 };

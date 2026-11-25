@@ -8,6 +8,7 @@
 import AddReviewForm from "@/components/review/add/add-review-form";
 import { getByType } from "@/test/composites";
 import { settle } from "@/test/flush";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import StarRating from "react-native-star-rating-widget";
@@ -139,7 +140,7 @@ it("opens each help dialog on its own", async () => {
   ];
   expect(helpButtons).toHaveLength(3);
 
-  await fireEvent.press(helpButtons[0]);
+  await fireEvent.press(defined(helpButtons[0], "first help button"));
   expect(screen.getByText("Sätt ett betyg ⭐️⭐️")).toBeTruthy();
   expect(screen.queryByText("Lägg till bilder")).toBeNull();
   expect(screen.queryByText("Skriv något")).toBeNull();

@@ -128,7 +128,7 @@ describe("AdventureCard", () => {
 
     expect(screen.getByTestId("adventure-hero")).toBeTruthy();
     // The bundled cover, not a remote one, so the pitch renders offline.
-    expect(getAllByType(Image)[0].props.source).not.toEqual({ uri: expect.anything() });
+    expect(getAllByType(Image)[0]?.props.source).not.toEqual({ uri: expect.anything() });
 
     await fireEvent.press(screen.getByTestId("adventure-roll"));
     await settle();

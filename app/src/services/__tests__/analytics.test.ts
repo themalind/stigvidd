@@ -16,6 +16,7 @@ import { track, setEventSink, flushEvents, resetAnalytics, analyticsBufferSizes 
 import { resetConsent, setConsent, loadConsent } from "@/services/consent";
 import { logger, resetLogger, setLogSink, flush } from "@/services/logger";
 import type { EventName } from "@/services/event-catalogue";
+import { defined } from "@/test/defined";
 
 type Sent = Record<string, unknown>[];
 
@@ -66,7 +67,7 @@ describe("consent gating", () => {
 
     expect(sent).toHaveLength(1);
     expect(sent[0]).toHaveLength(1);
-    expect(sent[0][0]).toMatchObject({ event: "consent.granted" });
+    expect(sent[0]?.[0]).toMatchObject({ event: "consent.granted" });
   });
 
   it("DISCARDS what was held when consent is declined, rather than keeping it for later", async () => {
@@ -165,7 +166,7 @@ describe("what leaves the device", () => {
     (track as (e: EventName, p: Record<string, unknown>) => void)(event, props);
     await flushEvents();
 
-    return sent[0][0];
+    return defined(sent[0]?.[0], "a sent event");
   }
 
   it("never writes an analytics event to AsyncStorage", async () => {

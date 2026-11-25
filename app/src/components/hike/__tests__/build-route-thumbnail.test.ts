@@ -84,17 +84,19 @@ describe("buildRouteThumbnail", () => {
     const points = pointsFrom(d);
 
     // SQUARE starts at the southern edge and its third point is the northern one.
-    expect(points[0][1]).toBeGreaterThan(points[2][1]);
+    expect(defined(points[0], "first point")[1]).toBeGreaterThan(defined(points[2], "third point")[1]);
   });
 
   it("reports endpoints that match the path", () => {
     const { d, start, end } = thumbnail(SQUARE, 52, 52);
     const points = pointsFrom(d);
 
-    expect(start[0]).toBeCloseTo(points[0][0], 1);
-    expect(start[1]).toBeCloseTo(points[0][1], 1);
-    expect(end[0]).toBeCloseTo(points[points.length - 1][0], 1);
-    expect(end[1]).toBeCloseTo(points[points.length - 1][1], 1);
+    const first = defined(points[0], "first point");
+    const last = defined(points.at(-1), "last point");
+    expect(start[0]).toBeCloseTo(first[0], 1);
+    expect(start[1]).toBeCloseTo(first[1], 1);
+    expect(end[0]).toBeCloseTo(last[0], 1);
+    expect(end[1]).toBeCloseTo(last[1], 1);
   });
 
   it("caps the point count and keeps the final position", () => {
@@ -102,10 +104,11 @@ describe("buildRouteThumbnail", () => {
     const { d, end } = thumbnail(long, 52, 52, 6);
     const points = pointsFrom(d);
 
+    const last = defined(points.at(-1), "last point");
     expect(points.length).toBeLessThanOrEqual(120);
-    expect(end[0]).toBeCloseTo(points[points.length - 1][0], 1);
+    expect(end[0]).toBeCloseTo(last[0], 1);
     // The last sample is the track's own last point: the far corner of the box.
-    expect(points[points.length - 1][1]).toBeCloseTo(6);
+    expect(last[1]).toBeCloseTo(6);
   });
 
   it("returns null for a track with nothing to draw", () => {

@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { defined } from "@/test/defined";
+import { adjacentPairs } from "@/utils/adjacent-pairs";
 import { buildDecorativeRoute } from "@/utils/geo/decorative-route";
 
 function pointsFrom(d: string): [number, number][] {
@@ -40,8 +42,8 @@ describe("buildDecorativeRoute", () => {
     const points = pointsFrom(d);
 
     let measured = 0;
-    for (let i = 1; i < points.length; i++) {
-      measured += Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]);
+    for (const [[x1, y1], [x2, y2]] of adjacentPairs(points)) {
+      measured += Math.hypot(x2 - x1, y2 - y1);
     }
 
     // The path string rounds to two decimals, so allow a hair of drift.
@@ -58,17 +60,16 @@ describe("buildDecorativeRoute", () => {
     const { d, start, end } = buildDecorativeRoute(300, 120);
     const points = pointsFrom(d);
 
-    expect(start[0]).toBeCloseTo(points[0][0], 1);
-    expect(end[0]).toBeCloseTo(points[points.length - 1][0], 1);
+    expect(start[0]).toBeCloseTo(defined(points[0], "first point")[0], 1);
+    expect(end[0]).toBeCloseTo(defined(points.at(-1), "last point")[0], 1);
   });
 
   it("wanders rather than sweeping in one direction", () => {
     const points = pointsFrom(buildDecorativeRoute(300, 120, 16).d);
 
     let reversals = 0;
-    for (let i = 2; i < points.length; i++) {
-      const previous = points[i - 1][1] - points[i - 2][1];
-      const current = points[i][1] - points[i - 1][1];
+    const steps = adjacentPairs(points).map(([[, y1], [, y2]]) => y2 - y1);
+    for (const [previous, current] of adjacentPairs(steps)) {
       if (previous * current < 0) reversals++;
     }
 

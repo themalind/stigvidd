@@ -46,17 +46,17 @@ describe("groupAreas", () => {
   });
 
   it("searches name and municipality without caring about accents or case", () => {
-    expect(names({ search: "ALMENAS" })[0].names).toEqual(["Almenäs"]);
-    expect(names({ search: "ulricehamn" })[0].names).toEqual(["Åsunden"]);
+    expect(names({ search: "ALMENAS" })[0]?.names).toEqual(["Almenäs"]);
+    expect(names({ search: "ulricehamn" })[0]?.names).toEqual(["Åsunden"]);
   });
 
   it("keeps only the chosen municipality", () => {
-    expect(names({ municipality: "Ulricehamn" })[0].names).toEqual(["Åsunden"]);
+    expect(names({ municipality: "Ulricehamn" })[0]?.names).toEqual(["Åsunden"]);
   });
 
   it("keeps only areas that have every chosen feature", () => {
-    expect(names({ features: ["swimming"] })[0].names).toEqual(["Åsunden", "Almenäs"]);
-    expect(names({ features: ["swimming", "accessible"] })[0].names).toEqual(["Almenäs"]);
+    expect(names({ features: ["swimming"] })[0]?.names).toEqual(["Åsunden", "Almenäs"]);
+    expect(names({ features: ["swimming", "accessible"] })[0]?.names).toEqual(["Almenäs"]);
   });
 
   it("returns no groups when nothing matches", () => {

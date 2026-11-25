@@ -10,7 +10,7 @@ import MapPreviewOverlay from "@/components/map/map-preview-overlay";
 import { ROUTE_LINE_COLOR, routeCasingPaint } from "@/components/map/marker-styles";
 import StartMarker from "@/components/map/start-marker";
 import { SCREEN_PADDING } from "@/constants/constants";
-import { lineStringFromPositions } from "@/utils/geo/geojson";
+import { lineStringFromPositions, lngLat } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
 import { SINGLE_POINT_ZOOM, initialViewFor } from "@/utils/map/initial-view";
 import { MeetingPoint, openDirectionsToStart } from "@/utils/map/open-directions";
@@ -58,12 +58,13 @@ export default function RoutePreviewMap({
   const routeShape = useMemo(() => lineStringFromPositions(path), [path]);
   const shown = useMemo(() => (meetingPoint ? [...path, meetingPoint.position] : path), [path, meetingPoint]);
   const bounds = useMemo(() => getBoundsFromTrail(shown), [shown]);
-  const target = meetingPoint?.position ?? path[0];
+  const start = path[0];
+  const target = meetingPoint?.position ?? start;
 
   const handleMapReady = useCallback(() => {
+    const [only] = shown;
     // fitBounds zooms a single point to the maximum. keep-comment: MapLibre edge case
-    if (shown.length === 1)
-      cameraRef.current?.jumpTo({ center: shown[0] as [number, number], zoom: SINGLE_POINT_ZOOM });
+    if (shown.length === 1 && only) cameraRef.current?.jumpTo({ center: lngLat(only), zoom: SINGLE_POINT_ZOOM });
     else if (bounds) cameraRef.current?.fitBounds(bounds, { padding: FIT_PADDING, duration: 0 });
   }, [bounds, shown]);
 
@@ -95,13 +96,13 @@ export default function RoutePreviewMap({
               />
             </GeoJSONSource>
           )}
-          {path.length > 0 && (
+          {start && (
             <StartMarker
               id={`${idPrefix}-start`}
-              position={path[0]}
+              position={start}
               label={t("map.start")}
               // keep-comment: with an overlay its pill gives directions; the cover would swallow this tap
-              onPress={onOpen ? undefined : () => openDirectionsToStart(path[0], t)}
+              onPress={onOpen ? undefined : () => openDirectionsToStart(start, t)}
             />
           )}
           {meetingPoint && (

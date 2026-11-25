@@ -46,7 +46,7 @@ describe("featureCollectionFromMarkers", () => {
       },
     ];
 
-    expect(featureCollectionFromMarkers(markers).features[0].properties).toMatchObject({ isContribution: true });
+    expect(featureCollectionFromMarkers(markers).features[0]?.properties).toMatchObject({ isContribution: true });
   });
 
   it("skips markers missing a start coordinate", () => {
@@ -60,7 +60,7 @@ describe("featureCollectionFromMarkers", () => {
     const fc = featureCollectionFromMarkers(markers);
 
     expect(fc.features).toHaveLength(1);
-    expect(fc.features[0].id).toBe("t1");
+    expect(fc.features[0]?.id).toBe("t1");
   });
 
   it("keeps a zero coordinate (falsy but valid)", () => {
@@ -71,7 +71,7 @@ describe("featureCollectionFromMarkers", () => {
     const fc = featureCollectionFromMarkers(markers);
 
     expect(fc.features).toHaveLength(1);
-    expect(fc.features[0].geometry.coordinates).toEqual([0, 0]);
+    expect(fc.features[0]?.geometry.coordinates).toEqual([0, 0]);
   });
 
   it("returns an empty feature collection for no markers", () => {

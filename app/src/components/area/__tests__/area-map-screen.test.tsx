@@ -9,6 +9,7 @@ import AreaMapScreen from "@/components/area/area-map-screen";
 import { HOME_AREA_ROUTES } from "@/components/area/area-routes";
 import { MAP_FADE_MS } from "@/components/map/map";
 import { CityArea, FacilityType } from "@/data/types";
+import { defined } from "@/test/defined";
 import { flushUntil } from "@/test/flush";
 import { cameraHandles, sourceHandle } from "@/test/maplibre";
 import { renderWithProviders } from "@/test/render";
@@ -44,6 +45,27 @@ jest.mock("@/hooks/location/useLiveUserLocation", () => ({
   useLiveUserLocation: () => mockUseLiveUserLocation(),
 }));
 
+const TRAIL: CityArea["trails"][number] = {
+  identifier: "t",
+  name: "Runt sjön",
+  trailLength: 3,
+  classification: 1,
+  averageRating: 0,
+  path: [
+    [12.95, 57.72],
+    [12.97, 57.74],
+  ],
+};
+
+const FACILITY: CityArea["facilities"][number] = {
+  identifier: "bad",
+  name: "",
+  facilityType: FacilityType.SwimmingArea,
+  isAccessible: false,
+  latitude: 57.71,
+  longitude: 12.93,
+};
+
 const AREA: CityArea = {
   identifier: "kypesjon",
   name: "Kypesjön",
@@ -58,29 +80,8 @@ const AREA: CityArea = {
       ],
     ],
   ],
-  trails: [
-    {
-      identifier: "t",
-      name: "Runt sjön",
-      trailLength: 3,
-      classification: 1,
-      averageRating: 0,
-      path: [
-        [12.95, 57.72],
-        [12.97, 57.74],
-      ],
-    },
-  ],
-  facilities: [
-    {
-      identifier: "bad",
-      name: "",
-      facilityType: FacilityType.SwimmingArea,
-      isAccessible: false,
-      latitude: 57.71,
-      longitude: 12.93,
-    },
-  ],
+  trails: [TRAIL],
+  facilities: [FACILITY],
 };
 
 function source(id: string) {
@@ -179,7 +180,7 @@ it("opens the trail card on a tapped trail and goes on to the trail", async () =
   expect(mockGetTrailCards).toHaveBeenCalledWith(["t"]);
   expect(screen.queryByTestId("area-map-legend")).toBeNull();
 
-  await fireEvent.press(screen.getAllByText("Läs mer")[0]);
+  await fireEvent.press(defined(screen.getAllByText("Läs mer")[0], "Läs mer"));
   expect(mockNavigate).toHaveBeenCalledWith({
     pathname: "/(tabs)/(home)/trail/[identifier]",
     params: { identifier: "t" },
@@ -353,9 +354,7 @@ it("zooms a cluster of facilities past zoom 16 until each place stands alone", a
 it("calls a tapped fire pit a fire pit rather than its imported name", async () => {
   await show({
     ...AREA,
-    facilities: [
-      { ...AREA.facilities[0], identifier: "g", name: "Rya åsar - grillplats", facilityType: FacilityType.FirePit },
-    ],
+    facilities: [{ ...FACILITY, identifier: "g", name: "Rya åsar - grillplats", facilityType: FacilityType.FirePit }],
   });
   const [firePit] = source("area-firePit")?.props.data.features ?? [];
 
@@ -375,15 +374,15 @@ it("frames only the accessible places of the asked kind", async () => {
   await show({
     ...AREA,
     facilities: [
-      { ...AREA.facilities[0], identifier: "g", facilityType: FacilityType.FirePit, isAccessible: true },
+      { ...FACILITY, identifier: "g", facilityType: FacilityType.FirePit, isAccessible: true },
       {
-        ...AREA.facilities[0],
+        ...FACILITY,
         identifier: "v",
         facilityType: FacilityType.Shelter,
         isAccessible: true,
         latitude: 57.8,
       },
-      { ...AREA.facilities[0], identifier: "g2", facilityType: FacilityType.FirePit, latitude: 57.79 },
+      { ...FACILITY, identifier: "g2", facilityType: FacilityType.FirePit, latitude: 57.79 },
     ],
   });
 
@@ -410,12 +409,12 @@ describe("filter", () => {
   const MIXED: CityArea = {
     ...AREA,
     trails: [
-      { ...AREA.trails[0], identifier: "t", isAccessible: false },
-      { ...AREA.trails[0], identifier: "ramp", isAccessible: true },
+      { ...TRAIL, identifier: "t", isAccessible: false },
+      { ...TRAIL, identifier: "ramp", isAccessible: true },
     ],
     facilities: [
-      { ...AREA.facilities[0], identifier: "bad", isAccessible: false },
-      { ...AREA.facilities[0], identifier: "g", facilityType: FacilityType.FirePit, isAccessible: true },
+      { ...FACILITY, identifier: "bad", isAccessible: false },
+      { ...FACILITY, identifier: "g", facilityType: FacilityType.FirePit, isAccessible: true },
     ],
   };
   const ids = (id: string) =>
@@ -445,8 +444,8 @@ describe("filter", () => {
     await show({
       ...AREA,
       facilities: [
-        { ...AREA.facilities[0], latitude: undefined, longitude: undefined },
-        { ...AREA.facilities[0], identifier: "v", facilityType: FacilityType.Shelter },
+        { ...FACILITY, latitude: undefined, longitude: undefined },
+        { ...FACILITY, identifier: "v", facilityType: FacilityType.Shelter },
       ],
     });
 

@@ -9,7 +9,8 @@ import Map from "@/components/map/map";
 import { routeCasingPaint } from "@/components/map/marker-styles";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { formatDistanceKm } from "@/utils/format/format-distance";
-import { lineStringFromPositions } from "@/utils/geo/geojson";
+import { adjacentPairs } from "@/utils/adjacent-pairs";
+import { lineStringFromPositions, lngLat } from "@/utils/geo/geojson";
 import getBoundsFromTrail from "@/utils/geo/get-bounds-from-trail";
 import { haversineDistance } from "@/utils/geo/haversine";
 import { Camera, type CameraRef, GeoJSONSource, Layer } from "@maplibre/maplibre-react-native";
@@ -23,8 +24,10 @@ export type TrimRange = [start: number, end: number];
 
 export function lengthOfPath(path: GeoJSON.Position[]): number {
   let metres = 0;
-  for (let i = 1; i < path.length; i++) {
-    metres += haversineDistance(path[i - 1][1], path[i - 1][0], path[i][1], path[i][0]);
+  for (const [from, to] of adjacentPairs(path)) {
+    const [fromLng, fromLat] = lngLat(from);
+    const [toLng, toLat] = lngLat(to);
+    metres += haversineDistance(fromLat, fromLng, toLat, toLng);
   }
   return metres;
 }
@@ -44,8 +47,8 @@ export function trimIndices(path: GeoJSON.Position[], trim: TrimRange): { start:
   return { start: trim[0] > 0 ? trim[0] : null, end: trim[1] < lastIndex ? trim[1] : null };
 }
 
-function toRange(value: number[]): TrimRange {
-  const [start, end] = value;
+export function toRange(value: number[]): TrimRange {
+  const [start = 0, end = start] = value;
   return [Math.round(Math.min(start, end)), Math.round(Math.max(start, end))];
 }
 

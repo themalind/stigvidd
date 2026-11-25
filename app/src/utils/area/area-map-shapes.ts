@@ -37,11 +37,12 @@ export function facilityKind(facilityType: number): MapFacilityKind {
 
 export function areaMapShapes(area: CityArea): AreaMapShapes {
   const boundary = area.boundary ?? [];
-  const trails = area.trails.flatMap((trail) =>
-    trail.path && trail.path.length > 1
-      ? [{ identifier: trail.identifier, path: trail.path, isAccessible: trail.isAccessible === true }]
-      : [],
-  );
+  const trails = area.trails.flatMap((trail) => {
+    const [start, next] = trail.path ?? [];
+    return trail.path && start && next
+      ? [{ identifier: trail.identifier, path: trail.path, start, isAccessible: trail.isAccessible === true }]
+      : [];
+  });
   const paths = trails.map((trail) => trail.path);
   const facilities = area.facilities.flatMap((facility) =>
     facility.longitude == null || facility.latitude == null
@@ -69,11 +70,11 @@ export function areaMapShapes(area: CityArea): AreaMapShapes {
     },
     trails: {
       type: "FeatureCollection",
-      features: trails.map(({ identifier, path, isAccessible }) => ({
+      features: trails.map(({ identifier, start, isAccessible }) => ({
         type: "Feature",
         id: identifier,
         properties: { identifier, isAccessible },
-        geometry: { type: "Point", coordinates: path[0] },
+        geometry: { type: "Point", coordinates: start },
       })),
     },
     facilities: {

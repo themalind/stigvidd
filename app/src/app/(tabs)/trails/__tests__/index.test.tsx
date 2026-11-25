@@ -436,12 +436,12 @@ it("marks the clear-filters link with the tertiary accent", async () => {
 // The hiker is a dark drawing on light and a light one on dark, so the asset itself changes.
 it("swaps the hiker drawing for the theme on screen", async () => {
   await show(TRAILS);
-  const light = getAllByType(Image)[0].props.source;
+  const light = getAllByType(Image)[0]?.props.source;
 
   await screen.unmount();
 
   await show(TRAILS, { theme: AppDarkTheme });
-  const dark = getAllByType(Image)[0].props.source;
+  const dark = getAllByType(Image)[0]?.props.source;
 
   expect(dark).not.toEqual(light);
 });

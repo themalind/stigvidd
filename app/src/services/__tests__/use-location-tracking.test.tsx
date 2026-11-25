@@ -207,7 +207,7 @@ describe("startTracking", () => {
       const dialog = getDialog();
       if (!dialog) throw new Error("expected a dialog");
       expect(dialog.actions.map((a) => a.label)).toEqual(["Öppna inställningar", "Fortsätt ändå"]);
-      await act(async () => dialog.actions[0].onPress?.());
+      await act(async () => dialog.actions[0]?.onPress?.());
       expect(openSettings).toHaveBeenCalled();
     });
 
@@ -349,7 +349,9 @@ describe("startTracking", () => {
 
       await act(async () => harness.hook().startTracking());
 
-      expect(mockDrainLive.mock.invocationCallOrder[0]).toBeLessThan(mockStartLive.mock.invocationCallOrder[0]);
+      expect(mockDrainLive.mock.invocationCallOrder[0]).toBeLessThan(
+        defined(mockStartLive.mock.invocationCallOrder[0], "startLive call"),
+      );
     });
   });
 });

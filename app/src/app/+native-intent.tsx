@@ -12,10 +12,10 @@ const SHARED_LINK = /^(?:[a-z][a-z0-9+.-]*:\/\/)?(?:[^/]*\/)?(trail|event)\/([^/
 
 // Several tabs have trail/ and event/ routes, so a bare /trail/<id> or /event/<id> would land in whichever expo-router picks. keep-comment: why the rewrite exists
 export function redirectSystemPath({ path, initial }: { path: string; initial: boolean }) {
-  const link = SHARED_LINK.exec(path);
-  if (!link) return path;
-  const kind = link[1].toLowerCase();
-  const target = `/${kind}s/${kind}/${link[2]}`;
+  const [, linkKind, identifier] = SHARED_LINK.exec(path) ?? [];
+  if (!linkKind || !identifier) return path;
+  const kind = linkKind.toLowerCase();
+  const target = `/${kind}s/${kind}/${identifier}`;
   if (initial) return target;
   // keep-comment: tab first, since singular only replaces an earlier trail or event in a focused stack
   router.navigate(`/${kind}s` as never);

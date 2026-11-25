@@ -108,7 +108,7 @@ it("keeps the map covered while the route loads, so its jump to the route is not
 
 // One point is a real route — a recording with a single fix — and it has a trailhead but no line.
 it("marks the start of a one-point route without drawing a line", async () => {
-  await renderWithProviders(<RouteFollowView idPrefix="hike" path={[PATH[0]]} />);
+  await renderWithProviders(<RouteFollowView idPrefix="hike" path={PATH.slice(0, 1)} />);
 
   expect(layer("hike-route-line")).toBeFalsy();
   expect(layer("hike-start-point")).toBeTruthy();

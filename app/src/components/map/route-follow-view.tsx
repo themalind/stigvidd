@@ -111,9 +111,10 @@ export default function RouteFollowView({
   // keep-comment: directly above the line, so the start marker and the puck, added later, stay on top of the pins
   const obstacleAnchor = path.length > 1 ? lineLayerId : undefined;
 
+  const start = path[0];
   const openDirections = useCallback(() => {
-    if (path.length > 0) openDirectionsToStart(path[0], t);
-  }, [path, t]);
+    if (start) openDirectionsToStart(start, t);
+  }, [start, t]);
 
   // Whichever of the map and the route arrives last does the fit. keep-comment: two triggers on purpose
   const fitToRoute = useCallback(() => {
@@ -175,8 +176,8 @@ export default function RouteFollowView({
             onSelect={selectObstacles}
           />
         )}
-        {path.length > 0 && (
-          <StartMarker id={`${idPrefix}-start`} position={path[0]} label={t("map.start")} onPress={openDirections} />
+        {start && (
+          <StartMarker id={`${idPrefix}-start`} position={start} label={t("map.start")} onPress={openDirections} />
         )}
         {meetingPoint && (
           <StartMarker

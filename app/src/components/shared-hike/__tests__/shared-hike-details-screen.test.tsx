@@ -10,6 +10,7 @@ import { snackbarAtom } from "@/atoms/snackbar-atoms";
 import SharedHikeDetailsScreen from "@/components/shared-hike/shared-hike-details-screen";
 import { SharedHike } from "@/data/types";
 import { flushUntil, flushUntilGone, settle } from "@/test/flush";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 
@@ -97,7 +98,7 @@ async function show(overrides: Partial<SharedHike> = {}) {
 async function reshareWith(...nickNames: string[]) {
   await fireEvent.press(screen.getByTestId("shared-hike-share"));
   // keep-comment: opening the modal enables its friends query, so the list lands a tick or two after the press
-  await flushUntil(() => screen.queryByText(nickNames[nickNames.length - 1]));
+  await flushUntil(() => screen.queryByText(defined(nickNames.at(-1), "a nick name")));
   for (const nickName of nickNames) await fireEvent.press(screen.getByText(nickName));
   await fireEvent.press(
     screen.getByText(nickNames.length === 1 ? "Dela med 1 vän" : `Dela med ${nickNames.length} vänner`),
@@ -296,7 +297,7 @@ describe("images", () => {
   it("opens the viewer on the tapped image, without a bin", async () => {
     await show({ images: [photo(1), photo(2)] });
 
-    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[1]);
+    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[1], "second thumb"));
     await settle();
 
     expect(screen.getByTestId("review-image-list").props.initialScrollIndex).toBe(1);
@@ -307,7 +308,7 @@ describe("images", () => {
     mockCreateReport.mockResolvedValue({ identifier: "report-1" });
     await show({ images: [photo(1), photo(2)] });
 
-    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[1]);
+    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[1], "second thumb"));
     await settle();
     await fireEvent.press(screen.getByTestId("image-viewer-report"));
     await flushUntil(() => screen.queryByTestId("report-submit"));
@@ -328,7 +329,7 @@ describe("images", () => {
     mockWriteBlocked = "banned";
     await show({ images: [photo(1)] });
 
-    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[0]);
+    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[0], "first thumb"));
     await settle();
     await fireEvent.press(screen.getByTestId("image-viewer-report"));
     await settle();

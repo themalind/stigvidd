@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { HikeAccessors, useHikeFilters } from "@/hooks/hike/useHikeFilters";
+import { defined } from "@/test/defined";
 import { act, renderHook } from "@testing-library/react-native";
 
 // The two shapes the hook serves: Hike uses name/createdAt, SharedHike uses hikeName/sharedAt
@@ -138,10 +139,11 @@ describe("useHikeFilters", () => {
     });
 
     it("leaves out a sharer who deleted their account, and searching still works", async () => {
+      const first = defined(SHARED[0], "a shared hike");
       const withDeleted = [
         ...SHARED,
-        { ...SHARED[0], hikeIdentifier: "d", hikeName: "Mossleden", sharedByName: null },
-        { ...SHARED[0], hikeIdentifier: "e", hikeName: "Kärrleden", sharedByName: null },
+        { ...first, hikeIdentifier: "d", hikeName: "Mossleden", sharedByName: null },
+        { ...first, hikeIdentifier: "e", hikeName: "Kärrleden", sharedByName: null },
       ];
       const { result } = await renderHook(() => useHikeFilters(withDeleted, sharedAccessors));
 

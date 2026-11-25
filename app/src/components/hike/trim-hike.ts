@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { LatLng, Segment } from "@/data/types";
+import { adjacentPairs } from "@/utils/adjacent-pairs";
 import { getDistance } from "geolib";
 
 export type TrimmedHike = {
@@ -35,9 +36,9 @@ export function recomputeTrimmedHike(segments: Segment[], startIndex: number, en
   const kept = flat.slice(start, end + 1);
 
   let distance = 0;
-  for (let i = 1; i < kept.length; i++) {
-    if (kept[i].segment === kept[i - 1].segment) {
-      distance += getDistance(kept[i - 1].data, kept[i].data);
+  for (const [previous, point] of adjacentPairs(kept)) {
+    if (point.segment === previous.segment) {
+      distance += getDistance(previous.data, point.data);
     }
   }
 

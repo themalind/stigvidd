@@ -13,6 +13,7 @@ import { AppDefaultTheme } from "@/constants/theme";
 import { Hike } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { formatDate } from "@/utils/format/format-date";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { View } from "react-native";
@@ -110,7 +111,7 @@ async function show(overrides: Partial<Hike> = {}, hikeFollowRoute: HikeFollowRo
 async function confirmDelete() {
   await fireEvent.press(screen.getByTestId("hike-delete"));
   // The dialog repeats the label of the button that opened it; the confirm is the second. keep-comment: why index 1
-  await fireEvent.press(screen.getAllByText("Ta bort")[1]);
+  await fireEvent.press(defined(screen.getAllByText("Ta bort")[1], "second Ta bort"));
 }
 
 beforeEach(() => {
@@ -207,7 +208,7 @@ it("deletes only after confirming, then leaves the screen", async () => {
   expect(mockDeleteHike).not.toHaveBeenCalled();
   expect(screen.getByText("Vill du ta bort promenaden?")).toBeTruthy();
 
-  await fireEvent.press(screen.getAllByText("Ta bort")[1]);
+  await fireEvent.press(defined(screen.getAllByText("Ta bort")[1], "second Ta bort"));
   await settle();
 
   expect(mockDeleteHike).toHaveBeenCalledWith("hike-1");
@@ -427,7 +428,7 @@ describe("images", () => {
   it("opens the viewer on the tapped image, and the owner can delete it there", async () => {
     await show({ images: [photo(1), photo(2)] });
 
-    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[1]);
+    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[1], "second thumb"));
     await settle();
     expect(screen.getByTestId("review-image-list").props.initialScrollIndex).toBe(1);
 
@@ -846,7 +847,7 @@ describe("publishing", () => {
     await show({ images: [{ identifier: "img-1", imageUrl: "https://media.stigvidd.se/hikes/1.jpg" }] });
     await settle();
 
-    await fireEvent.press(screen.getAllByTestId("hike-image-thumb")[0]);
+    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[0], "first thumb"));
     await settle();
     await fireEvent.press(screen.getByTestId("image-viewer-delete"));
     await settle();

@@ -110,7 +110,7 @@ describe("the first mount of a process", () => {
       hike: { segments: [expect.objectContaining({ distance: 400 })], totalDistance: 400 },
     });
     // Closed at the last fix, so the timer does not count the time the app was dead.
-    expect(stored.hike.segments[0].endTime).toBe(NOW - 90_000);
+    expect(stored.hike.segments[0]?.endTime).toBe(NOW - 90_000);
     expect(mockStopUpdates).toHaveBeenCalledWith(LOCATION_TASK_NAME);
   });
 });

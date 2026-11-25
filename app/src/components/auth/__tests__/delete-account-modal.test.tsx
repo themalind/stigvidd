@@ -9,6 +9,7 @@ import DeleteAccountModal from "@/components/auth/delete-account-modal";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { flushUntil, flushUntilGone, pressWhileHeld, settle } from "@/test/flush";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Dimensions } from "react-native";
@@ -53,15 +54,15 @@ async function send() {
 }
 
 // "Radera konto" is the modal title, the dialog title and the confirm button; the button is the last.
+const confirmButton = () => defined(screen.getAllByText("Radera konto").at(-1), "confirm button");
+
 async function confirmDeletion() {
-  const labels = screen.getAllByText("Radera konto");
-  await fireEvent.press(labels[labels.length - 1]);
+  await fireEvent.press(confirmButton());
   await settle();
 }
 
 async function confirmHeldDeletion() {
-  const labels = screen.getAllByText("Radera konto");
-  await pressWhileHeld(labels[labels.length - 1]);
+  await pressWhileHeld(confirmButton());
 }
 
 async function reachConfirmation(password = PASSWORD) {

@@ -157,7 +157,7 @@ export const TrailFilterModal: React.FC<TrailFilterModalProps> = ({
           step={1}
           labelStyle={filterSectionTitleStyle}
           label={([min, max]) => t("filter.trailLength", { min, max })}
-          onCommit={([min, max]) => onUpdateLengthFilter(min, max)}
+          onCommit={([min = 0, max = min]) => onUpdateLengthFilter(min, max)}
         />
       </FilterSection>
 

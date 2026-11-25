@@ -13,6 +13,7 @@ import { settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { ZOOM_TYPE, Zoomable } from "@likashefqet/react-native-image-zoom";
 import { act, fireEvent, screen } from "@testing-library/react-native";
+import { defined } from "@/test/defined";
 import { Image } from "expo-image";
 import { Dimensions, StyleSheet } from "react-native";
 
@@ -227,7 +228,7 @@ describe("closing", () => {
 
 describe("zooming", () => {
   function zoom() {
-    return getAllByType(Zoomable)[0];
+    return defined(getAllByType(Zoomable)[0], "zoomable");
   }
 
   it("lets a picture be pinched and double-tapped up to five times its size", async () => {

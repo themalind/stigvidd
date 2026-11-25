@@ -5,6 +5,8 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
+import { lngLat } from "./geojson";
+
 export function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371000; // Earth's radius in meters
   const toRad = (deg: number) => (deg * Math.PI) / 180;
@@ -23,5 +25,8 @@ export function isNearTrail(
   trailCoords: GeoJSON.Position[],
   thresholdMeters: number = 500,
 ): boolean {
-  return trailCoords.some(([lon, lat]) => haversineDistance(userLat, userLon, lat, lon) <= thresholdMeters);
+  return trailCoords.some((position) => {
+    const [lon, lat] = lngLat(position);
+    return haversineDistance(userLat, userLon, lat, lon) <= thresholdMeters;
+  });
 }

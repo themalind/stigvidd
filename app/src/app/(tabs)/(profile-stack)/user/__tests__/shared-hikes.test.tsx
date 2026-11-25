@@ -8,6 +8,7 @@
 import { SharedHike } from "@/data/types";
 import { flushUntil, settle } from "@/test/flush";
 import { stubMeasureInWindow } from "@/test/measure";
+import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Platform } from "react-native";
@@ -198,10 +199,10 @@ it("accepts and rejects the invitation the button belongs to", async () => {
   mockIncoming = { data: incoming(2), isPending: false, isError: false };
   await show();
 
-  await fireEvent.press(screen.getAllByLabelText("Acceptera")[1]);
+  await fireEvent.press(defined(screen.getAllByLabelText("Acceptera")[1], "second Acceptera"));
   expect(mockAccept).toHaveBeenCalledWith("in-1");
 
-  await fireEvent.press(screen.getAllByLabelText("Avvisa")[0]);
+  await fireEvent.press(defined(screen.getAllByLabelText("Avvisa")[0], "Avvisa"));
   expect(mockReject).toHaveBeenCalledWith("in-0");
 });
 
@@ -211,8 +212,8 @@ it("takes no second answer while one is in flight", async () => {
   mockMutationsPending = true;
   await show();
 
-  await fireEvent.press(screen.getAllByLabelText("Acceptera")[0]);
-  await fireEvent.press(screen.getAllByLabelText("Avvisa")[0]);
+  await fireEvent.press(defined(screen.getAllByLabelText("Acceptera")[0], "Acceptera"));
+  await fireEvent.press(defined(screen.getAllByLabelText("Avvisa")[0], "Avvisa"));
 
   expect(mockAccept).not.toHaveBeenCalled();
   expect(mockReject).not.toHaveBeenCalled();

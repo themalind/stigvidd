@@ -100,7 +100,7 @@ it("rules between the satellites, not before the first", async () => {
 });
 
 it("draws no rule for a single satellite", async () => {
-  await show({ satellites: [SATELLITES[0]] });
+  await show({ satellites: SATELLITES.slice(0, 1) });
 
   expect(screen.queryByTestId("stats-hero-separator")).toBeNull();
 });

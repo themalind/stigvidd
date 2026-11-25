@@ -337,8 +337,8 @@ describe("overlapping arms", () => {
     await settle();
 
     // The overtaken arm's watcher is removed on arrival rather than kept alongside.
-    expect(watchers[1].remove).toHaveBeenCalledTimes(1);
-    expect(watchers[0].remove).not.toHaveBeenCalled();
+    expect(watchers[1]?.remove).toHaveBeenCalledTimes(1);
+    expect(watchers[0]?.remove).not.toHaveBeenCalled();
     // And its seed never reaches the puck.
     expect(harness.live()?.position).toEqual([12.5, 57.5]);
   });

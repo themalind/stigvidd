@@ -121,7 +121,7 @@ it("stops ticking at the recipient limit and says why", async () => {
   await show();
 
   await goToFriends();
-  await screen.findByText(names[0]);
+  await screen.findByText("vän0");
   expect(screen.queryByText(/högst/)).toBeNull();
   for (const name of names) {
     await fireEvent.press(screen.getByText(name));

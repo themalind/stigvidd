@@ -117,67 +117,70 @@ export default function UserTrailCollection({
           {!isEmpty && <Divider bold={true} />}
 
           {filteredTrails.length ? (
-            filteredTrails.map((trail) => (
-              <Pressable
-                key={trail.identifier}
-                onPress={() =>
-                  guardedNavigate(() =>
-                    router.navigate({
-                      pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
-                      params: { identifier: trail.identifier },
-                    }),
-                  )
-                }
-              >
-                <View style={s.trailContainer}>
-                  {/* keep-comment: length, since the API returns [] for a trail without images */}
-                  {trail.trailImages?.length ? (
-                    <View>
-                      <Image style={s.trailImage} source={trail.trailImages[0].imageUrl} contentFit="cover" />
-                      <ExampleImageOverlay source={trail.trailImages[0].imageUrl} />
-                    </View>
-                  ) : null}
-                  <View style={s.cardBody}>
-                    <View style={s.titleRatingContainer}>
-                      <Text style={s.trailName} numberOfLines={1}>
-                        {trail.name}
-                      </Text>
-                      {trail.ratingResponse?.length ? (
-                        <Rating ratings={trail.ratingResponse} starColor={theme.colors.tertiary} />
-                      ) : null}
-                    </View>
-                    <View style={s.metaRow}>
-                      <Text style={[s.metaText, s.metaLeft]} numberOfLines={1}>
-                        {trail.city}
-                      </Text>
-                      <Text style={s.metaText}>{trail.trailLength} km</Text>
-                    </View>
+            filteredTrails.map((trail) => {
+              // keep-comment: optional index, since the API returns [] for a trail without images
+              const imageUrl = trail.trailImages?.[0]?.imageUrl;
+              return (
+                <Pressable
+                  key={trail.identifier}
+                  onPress={() =>
+                    guardedNavigate(() =>
+                      router.navigate({
+                        pathname: "/(tabs)/(profile-stack)/trail/[identifier]",
+                        params: { identifier: trail.identifier },
+                      }),
+                    )
+                  }
+                >
+                  <View style={s.trailContainer}>
+                    {imageUrl ? (
+                      <View>
+                        <Image style={s.trailImage} source={imageUrl} contentFit="cover" />
+                        <ExampleImageOverlay source={imageUrl} />
+                      </View>
+                    ) : null}
+                    <View style={s.cardBody}>
+                      <View style={s.titleRatingContainer}>
+                        <Text style={s.trailName} numberOfLines={1}>
+                          {trail.name}
+                        </Text>
+                        {trail.ratingResponse?.length ? (
+                          <Rating ratings={trail.ratingResponse} starColor={theme.colors.tertiary} />
+                        ) : null}
+                      </View>
+                      <View style={s.metaRow}>
+                        <Text style={[s.metaText, s.metaLeft]} numberOfLines={1}>
+                          {trail.city}
+                        </Text>
+                        <Text style={s.metaText}>{trail.trailLength} km</Text>
+                      </View>
 
-                    <View style={s.metaRow}>
-                      <View style={[s.difficulty, s.metaLeft]}>
-                        {trail.classification != null && trail.classification !== 0 && (
-                          <>
-                            <Text>{getDifficultyIcon(classificationParser(trail.classification))}</Text>
-                            <Text style={s.metaText} numberOfLines={1}>
-                              {classificationParser(trail.classification)}
-                            </Text>
-                          </>
+                      <View style={s.metaRow}>
+                        <View style={[s.difficulty, s.metaLeft]}>
+                          {trail.classification != null && trail.classification !== 0 && (
+                            <>
+                              <Text>{getDifficultyIcon(classificationParser(trail.classification))}</Text>
+                              <Text style={s.metaText} numberOfLines={1}>
+                                {classificationParser(trail.classification)}
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                        {trail.distanceKm != null && (
+                          <Text style={s.metaText}>
+                            {t("filter.distanceAway", { distance: formatDistanceKm(trail.distanceKm) })}
+                          </Text>
                         )}
                       </View>
-                      {trail.distanceKm != null && (
-                        <Text style={s.metaText}>
-                          {t("filter.distanceAway", { distance: formatDistanceKm(trail.distanceKm) })}
-                        </Text>
-                      )}
                     </View>
+                    <Pressable onPress={() => onDelete(trail.identifier)} style={s.trash}>
+                      <Entypo name="cross" size={24} color={theme.colors.onBackground} />
+                    </Pressable>
                   </View>
-                  <Pressable onPress={() => onDelete(trail.identifier)} style={s.trash}>
-                    <Entypo name="cross" size={24} color={theme.colors.onBackground} />
-                  </Pressable>
-                </View>
-                <Divider bold={true} />
-              </Pressable>
-            ))
+                  <Divider bold={true} />
+                </Pressable>
+              );
+            })
           ) : isEmpty ? (
             <View style={[s.noTrailMsgContainer, s.emptyCollection]}>
               <Text style={s.noTrailMsg}>{noTrailsSavedInfo}</Text>

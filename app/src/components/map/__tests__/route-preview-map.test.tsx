@@ -45,7 +45,7 @@ function shownDialog() {
 
 async function confirmDirections() {
   await act(async () => {
-    shownDialog().actions[0].onPress?.();
+    shownDialog().actions[0]?.onPress?.();
   });
 }
 
@@ -122,7 +122,7 @@ it("draws no map at all for a route with no points", async () => {
 
 // One point is a real walk — a recording with a single fix — and it has a trailhead but no line.
 it("marks the start of a one-point walk without drawing a line", async () => {
-  await show({ path: [PATH[0]] });
+  await show({ path: PATH.slice(0, 1) });
 
   expect(source("hike-route")).toBeFalsy();
   expect(source("hike-start")).toBeTruthy();
@@ -141,7 +141,7 @@ it("fits the whole walk on screen once the map is ready", async () => {
 
 // A single point has a zero-area bounding box, which fitBounds resolves to maximum zoom.
 it("centres a one-point walk at a readable zoom instead of fitting it", async () => {
-  await show({ path: [PATH[0]] });
+  await show({ path: PATH.slice(0, 1) });
 
   await mapLoaded();
 

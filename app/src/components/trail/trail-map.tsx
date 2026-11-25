@@ -33,6 +33,7 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
 
   const bounds = useMemo(() => getBoundsFromTrail(trail), [trail]);
   const lineShape = useMemo(() => lineStringFromPositions(trail), [trail]);
+  const start = trail[0];
 
   const fitToTrail = useCallback(() => {
     if (bounds) cameraRef.current?.fitBounds(bounds, { padding: FIT_PADDING, duration: 0 });
@@ -71,7 +72,7 @@ export default function TrailMap({ trail, onPress }: TrailMapProps) {
                 />
               </GeoJSONSource>
             )}
-            {trail.length > 0 && <StartMarker id="trail-start" position={trail[0]} label={t("map.start")} />}
+            {start && <StartMarker id="trail-start" position={start} label={t("map.start")} />}
           </Map>
         )}
         <MapPreviewOverlay
