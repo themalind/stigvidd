@@ -19,7 +19,7 @@ with the iOS 27 SDK. React Native 0.88 says so in
 UIViewControllerBasedStatusBarAppearance is NO"). The warning only shows in the Xcode/device
 log, never in JS.
 
-**Fix, two parts (the first alone did NOT work, build 17, 2026-11-25):**
+**Fix, two parts (the first alone did NOT work; both together confirmed on device, build 17 + preview OTA, 2026-11-25):**
 
 1. `app.json` → `expo.ios.infoPlist.UIViewControllerBasedStatusBarAppearance: true`. Native:
    needs a new EAS build, OTA cannot carry it. Check with `npx expo config --type introspect --json`.
