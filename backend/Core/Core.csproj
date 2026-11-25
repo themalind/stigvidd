@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="FluentValidation" Version="12.2.0" />
     <PackageReference Include="Keycloak.AuthServices.Sdk" Version="3.0.0" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.1.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.1.1" />
     <PackageReference Include="MailKit" Version="5.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.14" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
