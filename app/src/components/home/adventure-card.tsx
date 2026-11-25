@@ -7,13 +7,7 @@
 
 import AdventureReveal from "@/components/home/adventure-reveal";
 import { TrailFilterModal } from "@/components/trail/trail-list/trail-filter-modal";
-import {
-  BORDER_RADIUS,
-  OVERLAY_TEXT_SHADOW,
-  SCREEN_PADDING,
-  SLIM_BUTTON_HEIGHT,
-  SURFACE_BORDER_RADIUS,
-} from "@/constants/constants";
+import { BORDER_RADIUS, OVERLAY_TEXT_SHADOW, SCREEN_PADDING, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { TrailShortInfoResponse } from "@/data/types";
 import { useTrailFilters } from "@/hooks/trail/useTrailFilters";
 import { useTrails } from "@/hooks/trail/useTrails";
@@ -30,6 +24,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 
 const HERO_HEIGHT = 260;
+const ROLL_BUTTON_HEIGHT = 40;
 
 // Draws a random trail. Its own filter state, so narrowing the draw leaves the trails tab alone. keep-comment: filter state is deliberately not shared
 export default function AdventureCard() {
@@ -290,7 +285,7 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    height: SLIM_BUTTON_HEIGHT,
+    height: ROLL_BUTTON_HEIGHT,
     borderRadius: SURFACE_BORDER_RADIUS,
   },
   rollButtonText: {
