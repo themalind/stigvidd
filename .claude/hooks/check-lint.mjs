@@ -72,7 +72,8 @@ export function introduced(now, base) {
   for (const f of now) {
     const k = key(f);
     const left = budget.get(k) ?? 0;
-    if (left > 0) budget.set(k, left - 1); // an occurrence that already existed
+    if (left > 0)
+      budget.set(k, left - 1); // an occurrence that already existed
     else fresh.push(f);
   }
   return fresh;

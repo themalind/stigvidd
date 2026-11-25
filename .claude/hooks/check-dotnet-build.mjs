@@ -65,8 +65,7 @@ export function parseErrors(out) {
     if (!m) continue;
     const [, file, line, col, code, text] = m;
     const key = `${file.replace(/\\/g, "/")}|${line}|${col}|${code}`;
-    if (!seen.has(key))
-      seen.set(key, { file: file.replace(/\\/g, "/"), line: +line, col: +col, code, text });
+    if (!seen.has(key)) seen.set(key, { file: file.replace(/\\/g, "/"), line: +line, col: +col, code, text });
   }
   return [...seen.values()];
 }
@@ -159,8 +158,14 @@ function selfTest(withCompiler) {
 
   const errs = parseErrors(FIXTURE);
   ok(errs.length === 3, `parse: ${errs.length} errors, expected 3 (MSBuild prints each twice)`);
-  ok(errs.some((e) => e.code === "CS8602"), "the nullable-as-error diagnostic was not parsed");
-  ok(errs.every((e) => !/\[/.test(e.text)), "the trailing [project] was left in the message");
+  ok(
+    errs.some((e) => e.code === "CS8602"),
+    "the nullable-as-error diagnostic was not parsed",
+  );
+  ok(
+    errs.every((e) => !/\[/.test(e.text)),
+    "the trailing [project] was left in the message",
+  );
   ok(parseErrors("    5 Error(s)\nBuild FAILED.").length === 0, "a summary line parsed as an error");
   n += 4;
 
@@ -186,9 +191,11 @@ function selfTest(withCompiler) {
   if (root) {
     const p = owningProject(root, "backend/Core/Services/FacilityService.cs");
     ok(p !== null && /Core\.csproj$/.test(p), `owningProject resolved to ${p}`);
-    ok(owningProject(root, "docs/notes/INDEX.md") === null ||
-       !/\.csproj$/.test(owningProject(root, "docs/notes/INDEX.md") ?? ""),
-       "a non-project path resolved to a project");
+    ok(
+      owningProject(root, "docs/notes/INDEX.md") === null ||
+        !/\.csproj$/.test(owningProject(root, "docs/notes/INDEX.md") ?? ""),
+      "a non-project path resolved to a project",
+    );
     n += 2;
   }
 
@@ -197,12 +204,19 @@ function selfTest(withCompiler) {
     const rel = "backend/Core/Spatial/ZzHookSelfTest.cs";
     const abs = path.join(root, rel);
     try {
-      writeFileSync(abs, "namespace Core.Spatial;\ninternal static class ZzHookSelfTest\n{\n    internal static int L(string? s) => s.Length;\n}\n");
-      const r = run("dotnet", ["build", owningProject(root, rel), "--no-restore", "-v", "q", "--nologo"],
-                    { cwd: path.join(root, "backend"), timeout: 90_000 });
+      writeFileSync(
+        abs,
+        "namespace Core.Spatial;\ninternal static class ZzHookSelfTest\n{\n    internal static int L(string? s) => s.Length;\n}\n",
+      );
+      const r = run("dotnet", ["build", owningProject(root, rel), "--no-restore", "-v", "q", "--nologo"], {
+        cwd: path.join(root, "backend"),
+        timeout: 90_000,
+      });
       const got = r ? attribute(parseErrors(r.stdout + "\n" + r.stderr), root, rel) : { mine: [] };
-      ok(got.mine.some((e) => e.code === "CS8602"),
-         "the planted nullable defect was NOT reported — the check does not bite");
+      ok(
+        got.mine.some((e) => e.code === "CS8602"),
+        "the planted nullable defect was NOT reported — the check does not bite",
+      );
       n++;
     } finally {
       rmSync(abs, { force: true });

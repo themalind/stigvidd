@@ -50,8 +50,7 @@ export function decide(command) {
     // exits. There is no TTY here, so the watcher never even redraws — the turn just
     // sits. `web/package.json` carries a `test:watch` script that is exactly this.
     if (/^vitest\b/i.test(seg) && !/^vitest\s+(?:run|list|bench\s+--run)\b/i.test(seg)) {
-      if (!/(?:^|\s)--run\b/i.test(seg))
-        return ["vitest", "Vitest in watch mode", "`vitest run`"];
+      if (!/(?:^|\s)--run\b/i.test(seg)) return ["vitest", "Vitest in watch mode", "`vitest run`"];
     }
     if (/^npm\s+run\s+test:watch\b/i.test(seg))
       return ["npm run test:watch", "Vitest in watch mode in web/", "`npm test`"];
@@ -101,9 +100,9 @@ function selfTest() {
 
   const cases = [
     ["cd app && npx expo start", true],
-    ["CI=1 npx expo start", true],                       // bash prefix
-    ['$env:CI="1"; npx expo start', true],               // PowerShell prefix
-    ["set CI=1 && npx expo start", true],                // cmd prefix
+    ["CI=1 npx expo start", true], // bash prefix
+    ['$env:CI="1"; npx expo start', true], // PowerShell prefix
+    ["set CI=1 && npx expo start", true], // cmd prefix
     ["cd app && npm start", true],
     ["cd web && npm run dev", true],
     ["cd backend/StigviddAPI && dotnet run", true],
@@ -117,7 +116,7 @@ function selfTest() {
     ["cd web && npm run test:watch", true],
     ["cd web && npx vitest --ui", true],
     ["cd web && npx vitest watch", true],
-    ["cd web && npx vitest src/api", true],              // a filter is still watch mode
+    ["cd web && npx vitest src/api", true], // a filter is still watch mode
     // Must stay silent: each of these terminates.
     ["docker compose up -d", false],
     ["docker compose up -d --build", false],
@@ -128,7 +127,7 @@ function selfTest() {
     ["cd web && vite build", false],
     ["cd app && npm test -- --watchAll=false", false],
     ["cd app && npx jest --watchAll=false", false],
-    ["cd web && npm test", false],                       // `npm test` IS `vitest run`
+    ["cd web && npm test", false], // `npm test` IS `vitest run`
     ["cd web && npx vitest run", false],
     ["cd web && npx vitest run src/api/mutator.test.ts", false],
     ["cd web && npx vitest --run", false],

@@ -104,7 +104,8 @@ export function parseHolds(text) {
       Number.isInteger(hold.major) &&
       typeof hold.reason === "string" &&
       hold.reason.trim() !== "";
-    if (!valid) throw new Error(`update-holds.json: each hold needs area, name, major and a reason: ${JSON.stringify(hold)}`);
+    if (!valid)
+      throw new Error(`update-holds.json: each hold needs area, name, major and a reason: ${JSON.stringify(hold)}`);
   }
   return holds;
 }
@@ -130,7 +131,10 @@ export function assess({ sdks = [], packages = [], vulnerabilities = [], failure
     .map((pkg) => `${pkg.area}: ${pkg.name} has no readable version (${pkg.current} -> ${pkg.latest})`);
   const unused = holds
     .filter((hold) => !allMajors.some((pkg) => holdFor(pkg, [hold])))
-    .map((hold) => `${hold.area}: the hold on ${hold.name} ${hold.major} matches nothing, remove it from update-holds.json`);
+    .map(
+      (hold) =>
+        `${hold.area}: the hold on ${hold.name} ${hold.major} matches nothing, remove it from update-holds.json`,
+    );
   const allFailures = [...failures, ...unreadable, ...unused];
   return {
     behindSdks,

@@ -11,13 +11,14 @@ EditorConfig by default, so the TS code was reindented to 4 spaces. `--no-editor
 avoided the reindent, but it applied prettier's default `printWidth: 80`, which still rewrapped
 untouched lines.
 
-**What holds now.** app/, web/ and site/ each have prettier 3.6.2 in devDependencies, their own
-`.prettierrc` (the same settings: printWidth 120, trailingComma all) and a `.prettierignore`.
-`npm run format:check` runs for all three in CI.
+**What holds now (2026-11-25).** One `.prettierrc` at the repo root (printWidth 120, trailingComma
+all) serves every file; app/, web/ and site/ keep only their own prettier in devDependencies and a
+`.prettierignore`. `.editorconfig` also says 2 spaces for JS/TS/JSON. `npm run format:check` runs
+for all three in CI, and app's also checks `scripts/` and `.claude/hooks/`.
 [format-prettier.mjs](../../.claude/hooks/format-prettier.mjs) runs each workspace's own
-`node_modules/prettier/bin/prettier.cjs`, from inside that workspace. Do that by hand too. A
-file with no `.prettierrc` above it, such as root files or `.claude/`, still falls through to
-`.editorconfig`, so `npx -y prettier` there reindents to 4 spaces.
+`node_modules/prettier/bin/prettier.cjs`, from inside that workspace. Do that by hand too. It does
+not format `scripts/` or `.claude/hooks/` after an edit: run app's prettier on them
+(`cd app && node node_modules/prettier/bin/prettier.cjs --write ../scripts ../.claude/hooks`).
 
 Prettier's output is the project's style. Do not hand-restore the old wrapping afterwards.
 

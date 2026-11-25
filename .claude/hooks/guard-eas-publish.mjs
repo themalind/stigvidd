@@ -70,7 +70,7 @@ function selfTest() {
   const cases = [
     ['eas update --branch production --message "x"', "deny"],
     ['eas update --branch preview --environment preview -m "x"', "deny"],
-    ['cd /d/projekt/stigvidd/app && timeout 300 eas update:republish --group abc --non-interactive', "deny"],
+    ["cd /d/projekt/stigvidd/app && timeout 300 eas update:republish --group abc --non-interactive", "deny"],
     ["npx eas-cli update --branch preview", "deny"],
     ["eas update:rollback", "deny"],
     ['$env:EXPO_NO_DOTENV="1"; eas update --branch preview', "deny"],

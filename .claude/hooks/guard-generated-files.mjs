@@ -139,17 +139,15 @@ function selfTest() {
   ];
   for (const [p, want] of cases) {
     const got = classify(p.replace(/\\/g, "/"));
-    ok(
-      (got?.[0] ?? null) === want,
-      `classify(${p}) => ${got?.[0] ?? "null"}, expected ${want ?? "null"}`,
-    );
+    ok((got?.[0] ?? null) === want, `classify(${p}) => ${got?.[0] ?? "null"}, expected ${want ?? "null"}`);
     if (want) ok((got?.[1] ?? "").length > 40, `${p} denied with no usable instruction`);
   }
   // The tool-name gate: a Read of a generated file is fine, only writes are not.
-  ok(decide("Read", { file_path: "web/src/api/generated/x.ts" }) === null,
-     "Read of a generated file was not left alone");
-  ok(decide("Bash", { command: "cat web/openapi.json" }) === null,
-     "Bash was routed into the write guard");
+  ok(
+    decide("Read", { file_path: "web/src/api/generated/x.ts" }) === null,
+    "Read of a generated file was not left alone",
+  );
+  ok(decide("Bash", { command: "cat web/openapi.json" }) === null, "Bash was routed into the write guard");
   return done(cases.length + 2);
 }
 

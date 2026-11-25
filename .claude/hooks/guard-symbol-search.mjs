@@ -73,7 +73,20 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync,
 import { homedir } from "node:os";
 import path from "node:path";
 import process from "node:process";
-import { readEvent, repoRoot, relKey, under, fold, commandsIn, run, deny, stateDir, mtime, checker, WIN } from "./lib.mjs";
+import {
+  readEvent,
+  repoRoot,
+  relKey,
+  under,
+  fold,
+  commandsIn,
+  run,
+  deny,
+  stateDir,
+  mtime,
+  checker,
+  WIN,
+} from "./lib.mjs";
 
 // ---------------------------------------------------------------------------
 // gate 1 — is this search one bare identifier?
@@ -108,7 +121,7 @@ const IDENT = /^[A-Za-z_][A-Za-z0-9_]*$/;
 export function identOf(raw) {
   let s = String(raw ?? "").trim();
   if (!s) return null;
-  for (let again = true; again; ) {
+  for (let again = true; again;) {
     again = false;
     for (const re of WRAPPERS) {
       const next = s.replace(re, "");
@@ -150,10 +163,32 @@ const GREPS = new Set(["grep", "egrep", "fgrep", "rg", "ripgrep", "ag", "ack", "
 // and `git grep` to the repo, so for those a path operand is optional.
 const NEEDS_PATH = new Set(["grep", "egrep", "fgrep"]);
 const LONG_WITH_VALUE = new Set([
-  "--include", "--exclude", "--exclude-dir", "--exclude-from", "--file", "--glob", "--iglob",
-  "--type", "--type-not", "--type-add", "--after-context", "--before-context", "--context",
-  "--max-count", "--max-depth", "--replace", "--color", "--colour", "--binary-files",
-  "--devices", "--directories", "--label", "--ignore-file", "--pre", "--sort", "--sortr",
+  "--include",
+  "--exclude",
+  "--exclude-dir",
+  "--exclude-from",
+  "--file",
+  "--glob",
+  "--iglob",
+  "--type",
+  "--type-not",
+  "--type-add",
+  "--after-context",
+  "--before-context",
+  "--context",
+  "--max-count",
+  "--max-depth",
+  "--replace",
+  "--color",
+  "--colour",
+  "--binary-files",
+  "--devices",
+  "--directories",
+  "--label",
+  "--ignore-file",
+  "--pre",
+  "--sort",
+  "--sortr",
 ]);
 // Short flags whose value is the next token when it is not glued on. `-A 3`, `-m 1`, `-e X`.
 const SHORT_WITH_VALUE = "eftTgmABCdD";
@@ -176,7 +211,11 @@ export function extsOf(value) {
   const s = String(value ?? "").trim();
   if (!s) return [];
   const brace = s.match(/\.?\{([A-Za-z0-9,]+)\}$/);
-  if (brace) return brace[1].split(",").filter(Boolean).map((e) => e.toLowerCase());
+  if (brace)
+    return brace[1]
+      .split(",")
+      .filter(Boolean)
+      .map((e) => e.toLowerCase());
   const dotted = s.match(/\.([A-Za-z0-9]+)$/);
   if (dotted) return [dotted[1].toLowerCase()];
   return /^[A-Za-z0-9]+$/.test(s) ? [s.toLowerCase()] : []; //  rg --type cs
@@ -222,7 +261,7 @@ export function argvOf(seg) {
       // anywhere else it stays literal. Getting that wrong turned a quoted Windows path —
       // "backend\Core", the form that actually runs — into `backendCore`, and gate 4 then
       // found no declaration under it and went silent. Single quotes escape nothing.
-      else if (c === "\\" && q === '"' && "$`\"\\\n".includes(s[i + 1] ?? "")) cur += s[++i] ?? "";
+      else if (c === "\\" && q === '"' && '$`"\\\n'.includes(s[i + 1] ?? "")) cur += s[++i] ?? "";
       else cur += c;
       continue;
     }
@@ -796,9 +835,7 @@ function message(d) {
   if (d.wantFile) {
     // `explore` takes symbol names, so suggest the stem rather than the basename.
     const stem = name.replace(/\.[^.]+$/, "");
-    const list = shown
-      .map((n) => `  ${n.filePath}${n.endLine ? `  (${n.endLine} lines)` : ""}`)
-      .join("\n");
+    const list = shown.map((n) => `  ${n.filePath}${n.endLine ? `  (${n.endLine} lines)` : ""}`).join("\n");
     const head = one
       ? `${d.what} is looking for a file CodeGraph has already located:`
       : `${d.what} is looking for a filename CodeGraph holds ${countPhrase(d, "path")} for:`;
@@ -868,13 +905,17 @@ function report() {
   process.stdout.write(
     `.codegraph/    ${root && existsSync(path.join(root, ".codegraph")) ? "present" : "ABSENT — every search passes through"}\n`,
   );
-  process.stdout.write(`launcher       ${l ? `${l.cmd} ${l.pre.join(" ")}  [${l.from}]` : "NONE — every search passes through"}\n`);
+  process.stdout.write(
+    `launcher       ${l ? `${l.cmd} ${l.pre.join(" ")}  [${l.from}]` : "NONE — every search passes through"}\n`,
+  );
   if (root && l) {
     const t0 = Date.now();
     const rows = queryIndex(root, "GeoPointFactory");
     const ms = Date.now() - t0;
     const hit = exactHit(rows, "GeoPointFactory", false);
-    process.stdout.write(`query          ${rows ? `${rows.length} row(s) in ${ms} ms` : "FAILED"}, exact hit: ${hit ? `${hit.kind} at ${hit.filePath}:${hit.startLine}` : "none"}\n`);
+    process.stdout.write(
+      `query          ${rows ? `${rows.length} row(s) in ${ms} ms` : "FAILED"}, exact hit: ${hit ? `${hit.kind} at ${hit.filePath}:${hit.startLine}` : "none"}\n`,
+    );
   }
   return 0;
 }
@@ -888,23 +929,114 @@ function report() {
 // against a shape codegraph does not emit.
 const FIXTURES = {
   trailrepository: [
-    { node: { id: "method:247cfb5f", kind: "method", name: "TrailRepository", qualifiedName: "Core.Repositories::TrailRepository::TrailRepository", filePath: "backend/Core/Repositories/TrailRepository.cs", language: "csharp", startLine: 27, endLine: 31 }, score: 114.2 },
-    { node: { id: "class:8faf25d1", kind: "class", name: "TrailRepository", qualifiedName: "Core.Repositories::TrailRepository", filePath: "backend/Core/Repositories/TrailRepository.cs", language: "csharp", startLine: 20, endLine: 402 }, score: 113.1 },
+    {
+      node: {
+        id: "method:247cfb5f",
+        kind: "method",
+        name: "TrailRepository",
+        qualifiedName: "Core.Repositories::TrailRepository::TrailRepository",
+        filePath: "backend/Core/Repositories/TrailRepository.cs",
+        language: "csharp",
+        startLine: 27,
+        endLine: 31,
+      },
+      score: 114.2,
+    },
+    {
+      node: {
+        id: "class:8faf25d1",
+        kind: "class",
+        name: "TrailRepository",
+        qualifiedName: "Core.Repositories::TrailRepository",
+        filePath: "backend/Core/Repositories/TrailRepository.cs",
+        language: "csharp",
+        startLine: 20,
+        endLine: 402,
+      },
+      score: 113.1,
+    },
   ],
   geopointfactory: [
-    { node: { id: "class:f81e0446", kind: "class", name: "GeoPointFactory", qualifiedName: "Core.Common::GeoPointFactory", filePath: "backend/Core/Common/GeoPointFactory.cs", language: "csharp", startLine: 10, endLine: 53 }, score: 113.4 },
-    { node: { id: "file:backend/Core/Common/GeoPointFactory.cs", kind: "file", name: "GeoPointFactory.cs", qualifiedName: "backend/Core/Common/GeoPointFactory.cs", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 1, endLine: 54 }, score: 100.0 },
+    {
+      node: {
+        id: "class:f81e0446",
+        kind: "class",
+        name: "GeoPointFactory",
+        qualifiedName: "Core.Common::GeoPointFactory",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        language: "csharp",
+        startLine: 10,
+        endLine: 53,
+      },
+      score: 113.4,
+    },
+    {
+      node: {
+        id: "file:backend/Core/Common/GeoPointFactory.cs",
+        kind: "file",
+        name: "GeoPointFactory.cs",
+        qualifiedName: "backend/Core/Common/GeoPointFactory.cs",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 1,
+        endLine: 54,
+      },
+      score: 100.0,
+    },
     // The fuzzy tail: same file, different names. An exact-match rule is what ignores these.
-    { node: { id: "method:aa11", kind: "method", name: "FromLonLat", qualifiedName: "Core.Common::GeoPointFactory::FromLonLat", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 33, endLine: 36 }, score: 40.2 },
+    {
+      node: {
+        id: "method:aa11",
+        kind: "method",
+        name: "FromLonLat",
+        qualifiedName: "Core.Common::GeoPointFactory::FromLonLat",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 33,
+        endLine: 36,
+      },
+      score: 40.2,
+    },
   ],
   fromlonlat: [
-    { node: { id: "method:aa11", kind: "method", name: "FromLonLat", qualifiedName: "Core.Common::GeoPointFactory::FromLonLat", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 33, endLine: 36 }, score: 112.0 },
+    {
+      node: {
+        id: "method:aa11",
+        kind: "method",
+        name: "FromLonLat",
+        qualifiedName: "Core.Common::GeoPointFactory::FromLonLat",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 33,
+        endLine: 36,
+      },
+      score: 112.0,
+    },
   ],
   "trailrepository.cs": [
-    { node: { id: "file:backend/Core/Repositories/TrailRepository.cs", kind: "file", name: "TrailRepository.cs", qualifiedName: "backend/Core/Repositories/TrailRepository.cs", filePath: "backend/Core/Repositories/TrailRepository.cs", startLine: 1, endLine: 402 }, score: 100.0 },
+    {
+      node: {
+        id: "file:backend/Core/Repositories/TrailRepository.cs",
+        kind: "file",
+        name: "TrailRepository.cs",
+        qualifiedName: "backend/Core/Repositories/TrailRepository.cs",
+        filePath: "backend/Core/Repositories/TrailRepository.cs",
+        startLine: 1,
+        endLine: 402,
+      },
+      score: 100.0,
+    },
   ],
   "geopointfactory.cs": [
-    { node: { id: "file:backend/Core/Common/GeoPointFactory.cs", kind: "file", name: "GeoPointFactory.cs", qualifiedName: "backend/Core/Common/GeoPointFactory.cs", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 1, endLine: 54 }, score: 100.0 },
+    {
+      node: {
+        id: "file:backend/Core/Common/GeoPointFactory.cs",
+        kind: "file",
+        name: "GeoPointFactory.cs",
+        qualifiedName: "backend/Core/Common/GeoPointFactory.cs",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 1,
+        endLine: 54,
+      },
+      score: 100.0,
+    },
   ],
   // Rows, but NO exact match — the case that makes the exact-name rule load-bearing rather
   // than decorative. Verbatim: `GeoPoint` is a plausible thing to grep for and the index
@@ -912,20 +1044,108 @@ const FIXTURES = {
   // is the missing-plural typo. Drop the name check and BOTH of these start denying, which
   // is exactly the fail-open this pair exists to catch.
   geopoint: [
-    { node: { id: "class:f81e0446", kind: "class", name: "GeoPointFactory", qualifiedName: "Core.Common::GeoPointFactory", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 10, endLine: 53 }, score: 59.5 },
-    { node: { id: "file:backend/Core/Common/GeoPointFactory.cs", kind: "file", name: "GeoPointFactory.cs", qualifiedName: "backend/Core/Common/GeoPointFactory.cs", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 1, endLine: 54 }, score: 50.5 },
-    { node: { id: "method:297b2b58", kind: "method", name: "FromLonLat", qualifiedName: "Core.Common::GeoPointFactory::FromLonLat", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 33, endLine: 34 }, score: 36.1 },
-    { node: { id: "constant:ac8fa655", kind: "constant", name: "Wgs84Srid", qualifiedName: "Core.Common::GeoPointFactory::Wgs84Srid", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 12, endLine: 12 }, score: 28.8 },
+    {
+      node: {
+        id: "class:f81e0446",
+        kind: "class",
+        name: "GeoPointFactory",
+        qualifiedName: "Core.Common::GeoPointFactory",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 10,
+        endLine: 53,
+      },
+      score: 59.5,
+    },
+    {
+      node: {
+        id: "file:backend/Core/Common/GeoPointFactory.cs",
+        kind: "file",
+        name: "GeoPointFactory.cs",
+        qualifiedName: "backend/Core/Common/GeoPointFactory.cs",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 1,
+        endLine: 54,
+      },
+      score: 50.5,
+    },
+    {
+      node: {
+        id: "method:297b2b58",
+        kind: "method",
+        name: "FromLonLat",
+        qualifiedName: "Core.Common::GeoPointFactory::FromLonLat",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 33,
+        endLine: 34,
+      },
+      score: 36.1,
+    },
+    {
+      node: {
+        id: "constant:ac8fa655",
+        kind: "constant",
+        name: "Wgs84Srid",
+        qualifiedName: "Core.Common::GeoPointFactory::Wgs84Srid",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 12,
+        endLine: 12,
+      },
+      score: 28.8,
+    },
   ],
   trailobstacleservice: [
-    { node: { id: "method:0ee00a12", kind: "method", name: "TrailObstaclesService", qualifiedName: "Core.Services::TrailObstaclesService::TrailObstaclesService", filePath: "backend/Core/Services/TrailObstaclesService.cs", startLine: 18, endLine: 28 }, score: 40.5 },
-    { node: { id: "interface:db583f4e", kind: "interface", name: "ITrailObstaclesService", qualifiedName: "Core.Interfaces.Services::ITrailObstaclesService", filePath: "backend/Core/Interfaces/Services/ITrailObstaclesService.cs", startLine: 5, endLine: 13 }, score: 39.3 },
-    { node: { id: "class:fa140f31", kind: "class", name: "TrailObstaclesService", qualifiedName: "Core.Services::TrailObstaclesService", filePath: "backend/Core/Services/TrailObstaclesService.cs", startLine: 11, endLine: 187 }, score: 38.5 },
+    {
+      node: {
+        id: "method:0ee00a12",
+        kind: "method",
+        name: "TrailObstaclesService",
+        qualifiedName: "Core.Services::TrailObstaclesService::TrailObstaclesService",
+        filePath: "backend/Core/Services/TrailObstaclesService.cs",
+        startLine: 18,
+        endLine: 28,
+      },
+      score: 40.5,
+    },
+    {
+      node: {
+        id: "interface:db583f4e",
+        kind: "interface",
+        name: "ITrailObstaclesService",
+        qualifiedName: "Core.Interfaces.Services::ITrailObstaclesService",
+        filePath: "backend/Core/Interfaces/Services/ITrailObstaclesService.cs",
+        startLine: 5,
+        endLine: 13,
+      },
+      score: 39.3,
+    },
+    {
+      node: {
+        id: "class:fa140f31",
+        kind: "class",
+        name: "TrailObstaclesService",
+        qualifiedName: "Core.Services::TrailObstaclesService",
+        filePath: "backend/Core/Services/TrailObstaclesService.cs",
+        startLine: 11,
+        endLine: 187,
+      },
+      score: 38.5,
+    },
   ],
   // A find whose basename is not the name of any file node: the exact-name rule rejects it
   // on the name alone, before kind ever comes up.
   "wgs84srid.cs": [
-    { node: { id: "constant:ac8fa655", kind: "constant", name: "Wgs84Srid", qualifiedName: "Core.Common::GeoPointFactory::Wgs84Srid", filePath: "backend/Core/Common/GeoPointFactory.cs", startLine: 12, endLine: 12 }, score: 28.8 },
+    {
+      node: {
+        id: "constant:ac8fa655",
+        kind: "constant",
+        name: "Wgs84Srid",
+        qualifiedName: "Core.Common::GeoPointFactory::Wgs84Srid",
+        filePath: "backend/Core/Common/GeoPointFactory.cs",
+        startLine: 12,
+        endLine: 12,
+      },
+      score: 28.8,
+    },
   ],
   // SYNTHETIC, and the only two rows here that are. Kind discrimination needs a case where
   // the NAME matches exactly and the kind is wrong, and this tree cannot supply one: a file
@@ -935,37 +1155,191 @@ const FIXTURES = {
   // where they ARE indexed would otherwise have `grep -rn Dockerfile` answered with "it is
   // a file at ./Dockerfile" when what was asked for was every mention of the word.
   dockerfile: [
-    { node: { id: "file:Dockerfile", kind: "file", name: "Dockerfile", qualifiedName: "Dockerfile", filePath: "Dockerfile", startLine: 1, endLine: 40 }, score: 100.0 },
+    {
+      node: {
+        id: "file:Dockerfile",
+        kind: "file",
+        name: "Dockerfile",
+        qualifiedName: "Dockerfile",
+        filePath: "Dockerfile",
+        startLine: 1,
+        endLine: 40,
+      },
+      score: 100.0,
+    },
   ],
   "loosepart.cs": [
-    { node: { id: "class:synthetic1", kind: "class", name: "LoosePart.cs", qualifiedName: "Nowhere::LoosePart.cs", filePath: "backend/Core/Nowhere.cs", startLine: 3, endLine: 90 }, score: 90.0 },
+    {
+      node: {
+        id: "class:synthetic1",
+        kind: "class",
+        name: "LoosePart.cs",
+        qualifiedName: "Nowhere::LoosePart.cs",
+        filePath: "backend/Core/Nowhere.cs",
+        startLine: 3,
+        endLine: 90,
+      },
+      score: 90.0,
+    },
   ],
   // Two exact matches in two different files, and the reason the message lists instead of
   // picking: taking the widest named one of them and silently dropped the other. Synthetic
   // now — the second Program lived in backend/MapData, a project that has been removed — but
   // the behaviour it pins is the same one the real two Utilities.cs still exercise below.
   program: [
-    { node: { id: "class:92521596", kind: "class", name: "Program", qualifiedName: "Tool::Program", filePath: "backend/Tool/Program.cs", startLine: 6, endLine: 151 }, score: 113.0 },
-    { node: { id: "class:c38cf800", kind: "class", name: "Program", qualifiedName: "StigviddAPI::Program", filePath: "backend/StigviddAPI/Program.cs", startLine: 20, endLine: 248 }, score: 112.4 },
+    {
+      node: {
+        id: "class:92521596",
+        kind: "class",
+        name: "Program",
+        qualifiedName: "Tool::Program",
+        filePath: "backend/Tool/Program.cs",
+        startLine: 6,
+        endLine: 151,
+      },
+      score: 113.0,
+    },
+    {
+      node: {
+        id: "class:c38cf800",
+        kind: "class",
+        name: "Program",
+        qualifiedName: "StigviddAPI::Program",
+        filePath: "backend/StigviddAPI/Program.cs",
+        startLine: 20,
+        endLine: 248,
+      },
+      score: 112.4,
+    },
   ],
   // The same defect on the Glob path, where the old text asserted "That path IS the answer"
   // about one of the two `Utilities.cs` this repo really has.
   "utilities.cs": [
-    { node: { id: "file:backend/Tests/IntegrationTests/Utilities.cs", kind: "file", name: "Utilities.cs", qualifiedName: "backend/Tests/IntegrationTests/Utilities.cs", filePath: "backend/Tests/IntegrationTests/Utilities.cs", startLine: 1, endLine: 839 }, score: 100.0 },
-    { node: { id: "file:backend/Tests/UnitTests/Utilities.cs", kind: "file", name: "Utilities.cs", qualifiedName: "backend/Tests/UnitTests/Utilities.cs", filePath: "backend/Tests/UnitTests/Utilities.cs", startLine: 1, endLine: 818 }, score: 100.0 },
+    {
+      node: {
+        id: "file:backend/Tests/IntegrationTests/Utilities.cs",
+        kind: "file",
+        name: "Utilities.cs",
+        qualifiedName: "backend/Tests/IntegrationTests/Utilities.cs",
+        filePath: "backend/Tests/IntegrationTests/Utilities.cs",
+        startLine: 1,
+        endLine: 839,
+      },
+      score: 100.0,
+    },
+    {
+      node: {
+        id: "file:backend/Tests/UnitTests/Utilities.cs",
+        kind: "file",
+        name: "Utilities.cs",
+        qualifiedName: "backend/Tests/UnitTests/Utilities.cs",
+        filePath: "backend/Tests/UnitTests/Utilities.cs",
+        startLine: 1,
+        endLine: 818,
+      },
+      score: 100.0,
+    },
   ],
   // A name the tree holds 40+ times: `codegraph query Create --limit 40` returns 40 rows and
   // all 40 are exact, so the count is a floor and the denial has to say so. Eight of the real
   // rows, which is enough to exceed LIST_CAP and to show +N more.
   create: [
-    { node: { id: "method:df912b75", kind: "method", name: "Create", qualifiedName: "Core.Factories::CityAreaResponseFactory::Create", filePath: "backend/Core/Factories/CityAreaResponseFactory.cs", startLine: 18, endLine: 55 }, score: 113.0 },
-    { node: { id: "method:0ed716ce", kind: "method", name: "Create", qualifiedName: "Core.Factories::CityAreaResponseFactory::Create", filePath: "backend/Core/Factories/CityAreaResponseFactory.cs", startLine: 57, endLine: 60 }, score: 112.9 },
-    { node: { id: "method:4e8c1a69", kind: "method", name: "Create", qualifiedName: "Core.Factories::HikeResponseFactory::Create", filePath: "backend/Core/Factories/HikeResponseFactory.cs", startLine: 8, endLine: 23 }, score: 112.8 },
-    { node: { id: "method:120e0a62", kind: "method", name: "Create", qualifiedName: "Core.Factories::ReviewResponseFactory::Create", filePath: "backend/Core/Factories/ReviewResponseFactory.cs", startLine: 16, endLine: 33 }, score: 112.7 },
-    { node: { id: "method:1f78af36", kind: "method", name: "Create", qualifiedName: "Core.Factories::ReviewResponseFactory::Create", filePath: "backend/Core/Factories/ReviewResponseFactory.cs", startLine: 35, endLine: 44 }, score: 112.6 },
-    { node: { id: "method:548c9042", kind: "method", name: "Create", qualifiedName: "Core.Factories::TrailResponseFactory::Create", filePath: "backend/Core/Factories/TrailResponseFactory.cs", startLine: 16, endLine: 65 }, score: 112.5 },
-    { node: { id: "method:fe89c60c", kind: "method", name: "Create", qualifiedName: "Core.Factories::UserResponseFactory::Create", filePath: "backend/Core/Factories/UserResponseFactory.cs", startLine: 18, endLine: 73 }, score: 112.4 },
-    { node: { id: "method:b3682695", kind: "method", name: "Create", qualifiedName: "Core.Factories::FacilityResponseFactory::Create", filePath: "backend/Core/Factories/FacilityResponseFactory.cs", startLine: 28, endLine: 41 }, score: 112.3 },
+    {
+      node: {
+        id: "method:df912b75",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::CityAreaResponseFactory::Create",
+        filePath: "backend/Core/Factories/CityAreaResponseFactory.cs",
+        startLine: 18,
+        endLine: 55,
+      },
+      score: 113.0,
+    },
+    {
+      node: {
+        id: "method:0ed716ce",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::CityAreaResponseFactory::Create",
+        filePath: "backend/Core/Factories/CityAreaResponseFactory.cs",
+        startLine: 57,
+        endLine: 60,
+      },
+      score: 112.9,
+    },
+    {
+      node: {
+        id: "method:4e8c1a69",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::HikeResponseFactory::Create",
+        filePath: "backend/Core/Factories/HikeResponseFactory.cs",
+        startLine: 8,
+        endLine: 23,
+      },
+      score: 112.8,
+    },
+    {
+      node: {
+        id: "method:120e0a62",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::ReviewResponseFactory::Create",
+        filePath: "backend/Core/Factories/ReviewResponseFactory.cs",
+        startLine: 16,
+        endLine: 33,
+      },
+      score: 112.7,
+    },
+    {
+      node: {
+        id: "method:1f78af36",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::ReviewResponseFactory::Create",
+        filePath: "backend/Core/Factories/ReviewResponseFactory.cs",
+        startLine: 35,
+        endLine: 44,
+      },
+      score: 112.6,
+    },
+    {
+      node: {
+        id: "method:548c9042",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::TrailResponseFactory::Create",
+        filePath: "backend/Core/Factories/TrailResponseFactory.cs",
+        startLine: 16,
+        endLine: 65,
+      },
+      score: 112.5,
+    },
+    {
+      node: {
+        id: "method:fe89c60c",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::UserResponseFactory::Create",
+        filePath: "backend/Core/Factories/UserResponseFactory.cs",
+        startLine: 18,
+        endLine: 73,
+      },
+      score: 112.4,
+    },
+    {
+      node: {
+        id: "method:b3682695",
+        kind: "method",
+        name: "Create",
+        qualifiedName: "Core.Factories::FacilityResponseFactory::Create",
+        filePath: "backend/Core/Factories/FacilityResponseFactory.cs",
+        startLine: 28,
+        endLine: 41,
+      },
+      score: 112.3,
+    },
   ],
   // Identifier-shaped and NOT a symbol. `codegraph query` really does return [] for these,
   // which is the whole reason no heuristic has to recognise a config key.
@@ -1083,7 +1457,18 @@ function selfTest() {
     if (ident.toLowerCase() !== "create") return rows;
     const pad = [];
     for (let i = rows.length; i < QUERY_LIMIT; i++)
-      pad.push({ node: { id: `method:pad${i}`, kind: "method", name: "Create", qualifiedName: `Padding${i}::Create`, filePath: `backend/Core/Factories/Pad${i}.cs`, startLine: 1, endLine: 9 }, score: 10 });
+      pad.push({
+        node: {
+          id: `method:pad${i}`,
+          kind: "method",
+          name: "Create",
+          qualifiedName: `Padding${i}::Create`,
+          filePath: `backend/Core/Factories/Pad${i}.cs`,
+          startLine: 1,
+          endLine: 9,
+        },
+        score: 10,
+      });
     return [...rows, ...pad];
   };
   // A fixed root, so gate 4 resolves scope paths identically on all three platforms. The
@@ -1120,12 +1505,12 @@ function selfTest() {
     // must never land on the file node while a file search must land on nothing else.
     if (d) {
       n++;
-      ok(
-        d.nodes[0].kind === kind,
-        `${JSON.stringify(ev.tool_input)} matched a ${d.nodes[0].kind}, want ${kind}`,
-      );
+      ok(d.nodes[0].kind === kind, `${JSON.stringify(ev.tool_input)} matched a ${d.nodes[0].kind}, want ${kind}`);
       n++;
-      ok(d.nodes.length === 1, `${JSON.stringify(ev.tool_input)} should resolve to ONE declaration, got ${d.nodes.length}`);
+      ok(
+        d.nodes.length === 1,
+        `${JSON.stringify(ev.tool_input)} should resolve to ONE declaration, got ${d.nodes.length}`,
+      );
       n++;
       ok(/codegraph_explore\(/.test(message(d)), "the denial must carry the call that works");
       n++;
@@ -1146,7 +1531,7 @@ function selfTest() {
     // FILE that happens to be called that, and a file search must not be answered with a
     // code node that happens to be named like a filename.
     { tool_name: "Grep", tool_input: { pattern: "Dockerfile" } },
-    { tool_name: "Bash", tool_input: { command: 'grep -rn Dockerfile docker-compose.yml' } },
+    { tool_name: "Bash", tool_input: { command: "grep -rn Dockerfile docker-compose.yml" } },
     { tool_name: "Glob", tool_input: { pattern: "**/LoosePart.cs" } },
     { tool_name: "Grep", tool_input: { pattern: "ConnectionStrings__StigVidd" } }, // [] from the index
     { tool_name: "Grep", tool_input: { pattern: "TODO" } },
@@ -1216,7 +1601,10 @@ function selfTest() {
     n++;
     ok(
       decide(
-        { tool_name: "Bash", tool_input: { command: "cat <<'EOF' > note.md\nrun `grep -rn FromLonLat backend/`\nEOF" } },
+        {
+          tool_name: "Bash",
+          tool_input: { command: "cat <<'EOF' > note.md\nrun `grep -rn FromLonLat backend/`\nEOF" },
+        },
         fresh().deps(),
       ) === null,
       "a backtick-quoted grep leaves no usable path operand, so gate 4 silences it",
@@ -1229,31 +1617,74 @@ function selfTest() {
   {
     const scopeCases = [
       // [event, expect a deny?, why]
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory docs/" } }, false, "docs/ holds no declaration"],
+      [
+        { tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory docs/" } },
+        false,
+        "docs/ holds no declaration",
+      ],
       [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory CLAUDE.md" } }, false, "a named .md file"],
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory docs/notes/" } }, false, "the notes workflow"],
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn --include=*.md GeoPointFactory ." } }, false, "an --include filter"],
+      [
+        { tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory docs/notes/" } },
+        false,
+        "the notes workflow",
+      ],
+      [
+        { tool_name: "Bash", tool_input: { command: "grep -rn --include=*.md GeoPointFactory ." } },
+        false,
+        "an --include filter",
+      ],
       [{ tool_name: "Bash", tool_input: { command: "rg -n -g *.md GeoPointFactory" } }, false, "rg -g"],
       [{ tool_name: "Bash", tool_input: { command: "rg -n -t md GeoPointFactory" } }, false, "rg --type"],
       [{ tool_name: "Grep", tool_input: { pattern: "GeoPointFactory", path: "docs" } }, false, "the Grep tool's path"],
       [{ tool_name: "Grep", tool_input: { pattern: "GeoPointFactory", glob: "*.md" } }, false, "the Grep tool's glob"],
       [{ tool_name: "Grep", tool_input: { pattern: "GeoPointFactory", type: "md" } }, false, "the Grep tool's type"],
       // A directory holding only the CALLERS is a usage search, and must be silent too.
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory backend/Core/Factories/" } }, false, "callers only"],
-      [{ tool_name: "Bash", tool_input: { command: 'find docs -name "TrailRepository.cs"' } }, false, "find outside the tree"],
+      [
+        { tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory backend/Core/Factories/" } },
+        false,
+        "callers only",
+      ],
+      [
+        { tool_name: "Bash", tool_input: { command: 'find docs -name "TrailRepository.cs"' } },
+        false,
+        "find outside the tree",
+      ],
       [{ tool_name: "Glob", tool_input: { pattern: "docs/**/GeoPointFactory.cs" } }, false, "a glob rooted in docs/"],
       // ...and everything that WAS a deny still is. This half is what stops gate 4 from
       // quietly turning the whole guard off.
       [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory backend/" } }, true, "the declaring tree"],
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory backend/Core/Common" } }, true, "the declaring dir"],
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory backend/Core/Common/GeoPointFactory.cs" } }, true, "the declaring file itself"],
+      [
+        { tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory backend/Core/Common" } },
+        true,
+        "the declaring dir",
+      ],
+      [
+        {
+          tool_name: "Bash",
+          tool_input: { command: "grep -rn GeoPointFactory backend/Core/Common/GeoPointFactory.cs" },
+        },
+        true,
+        "the declaring file itself",
+      ],
       [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory ." } }, true, "`.` restricts nothing"],
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn --include=*.cs GeoPointFactory ." } }, true, "an --include that DOES match"],
-      [{ tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory docs/ backend/" } }, true, "one operand of several matches"],
+      [
+        { tool_name: "Bash", tool_input: { command: "grep -rn --include=*.cs GeoPointFactory ." } },
+        true,
+        "an --include that DOES match",
+      ],
+      [
+        { tool_name: "Bash", tool_input: { command: "grep -rn GeoPointFactory docs/ backend/" } },
+        true,
+        "one operand of several matches",
+      ],
       [{ tool_name: "Bash", tool_input: { command: "rg -n GeoPointFactory" } }, true, "no scope at all"],
       [{ tool_name: "Grep", tool_input: { pattern: "GeoPointFactory" } }, true, "the Grep tool with no path"],
       [{ tool_name: "Glob", tool_input: { pattern: "**/GeoPointFactory.cs" } }, true, "a wildcard-rooted glob"],
-      [{ tool_name: "Glob", tool_input: { pattern: "backend/Core/Common/GeoPointFactory.cs" } }, true, "a fully literal glob"],
+      [
+        { tool_name: "Glob", tool_input: { pattern: "backend/Core/Common/GeoPointFactory.cs" } },
+        true,
+        "a fully literal glob",
+      ],
     ];
     for (const [ev, wantDeny, why] of scopeCases) {
       n++;
@@ -1351,7 +1782,10 @@ function selfTest() {
       expired: () => true,
     };
     n++;
-    ok(decide({ tool_name: "Grep", tool_input: { pattern: "TrailRepository" } }, deps) === null, "an expired budget must mean silence");
+    ok(
+      decide({ tool_name: "Grep", tool_input: { pattern: "TrailRepository" } }, deps) === null,
+      "an expired budget must mean silence",
+    );
     n++;
     ok(queried === 0, "an expired budget must not spawn a query");
   }
@@ -1372,18 +1806,30 @@ function selfTest() {
       [{ tool_name: "Bash", tool_input: { command: "grep.exe -rn TrailRepository backend/" } }, true],
       [{ tool_name: "Bash", tool_input: { command: "rg.exe -n GeoPointFactory" } }, true],
       [{ tool_name: "Bash", tool_input: { command: 'find.exe backend -name "TrailRepository.cs"' } }, true],
-      [{ tool_name: "Bash", tool_input: { command: '"C:/Program Files/Git/usr/bin/grep.exe" -rn FromLonLat backend/' } }, true],
+      [
+        {
+          tool_name: "Bash",
+          tool_input: { command: '"C:/Program Files/Git/usr/bin/grep.exe" -rn FromLonLat backend/' },
+        },
+        true,
+      ],
       // Counts and pipelines keep their Windows spelling too.
       [{ tool_name: "Bash", tool_input: { command: "grep -rc TrailRepository backend\\Core" } }, false],
       [{ tool_name: "Bash", tool_input: { command: "grep -rn TrailRepository backend/ | wc.exe -l" } }, false],
       // An UNQUOTED path with a space is not a command in any shell, so not recognising it is
       // correct rather than a fail-open — `C:/Program` is the head a shell would try too.
-      [{ tool_name: "Bash", tool_input: { command: "C:/Program Files/Git/usr/bin/grep.exe -rn FromLonLat backend/" } }, false],
+      [
+        { tool_name: "Bash", tool_input: { command: "C:/Program Files/Git/usr/bin/grep.exe -rn FromLonLat backend/" } },
+        false,
+      ],
     ];
     for (const [ev, wantDeny] of winCases) {
       n++;
       const d = decide(ev, fresh().deps());
-      ok(wantDeny ? d !== null : d === null, `windows shape ${JSON.stringify(ev.tool_input)} should ${wantDeny ? "DENY" : "pass"}`);
+      ok(
+        wantDeny ? d !== null : d === null,
+        `windows shape ${JSON.stringify(ev.tool_input)} should ${wantDeny ? "DENY" : "pass"}`,
+      );
     }
   }
 
@@ -1398,10 +1844,46 @@ function selfTest() {
   // ...and a genuine sibling pair must NOT be collapsed by that filter.
   {
     const siblings = [
-      { node: { kind: "class", name: "Result", qualifiedName: "Core.Common::Result", filePath: "backend/Core/Common/Result.cs", startLine: 3, endLine: 33 } },
-      { node: { kind: "method", name: "Result", qualifiedName: "Core.Common::Result::Result", filePath: "backend/Core/Common/Result.cs", startLine: 9, endLine: 13 } },
-      { node: { kind: "class", name: "Result", qualifiedName: "Core.Common::Result<T>", filePath: "backend/Core/Common/Result.cs", startLine: 35, endLine: 44 } },
-      { node: { kind: "method", name: "Result", qualifiedName: "Core.Common::Result<T>::Result", filePath: "backend/Core/Common/Result.cs", startLine: 39, endLine: 43 } },
+      {
+        node: {
+          kind: "class",
+          name: "Result",
+          qualifiedName: "Core.Common::Result",
+          filePath: "backend/Core/Common/Result.cs",
+          startLine: 3,
+          endLine: 33,
+        },
+      },
+      {
+        node: {
+          kind: "method",
+          name: "Result",
+          qualifiedName: "Core.Common::Result::Result",
+          filePath: "backend/Core/Common/Result.cs",
+          startLine: 9,
+          endLine: 13,
+        },
+      },
+      {
+        node: {
+          kind: "class",
+          name: "Result",
+          qualifiedName: "Core.Common::Result<T>",
+          filePath: "backend/Core/Common/Result.cs",
+          startLine: 35,
+          endLine: 44,
+        },
+      },
+      {
+        node: {
+          kind: "method",
+          name: "Result",
+          qualifiedName: "Core.Common::Result<T>::Result",
+          filePath: "backend/Core/Common/Result.cs",
+          startLine: 39,
+          endLine: 43,
+        },
+      },
     ];
     n++;
     ok(exactHits(siblings, "Result", false).length === 2, "two non-overlapping declarations must both survive");
@@ -1448,18 +1930,35 @@ function selfTest() {
     n++;
     ok(/\+\d+ more/.test(m), "past LIST_CAP the denial must say how many it left out");
     n++;
-    ok(m.split("\n").filter((l) => /^  (method|class|file) /.test(l)).length === LIST_CAP, `exactly ${LIST_CAP} hits should be listed`);
+    ok(
+      m.split("\n").filter((l) => /^  (method|class|file) /.test(l)).length === LIST_CAP,
+      `exactly ${LIST_CAP} hits should be listed`,
+    );
   }
   // The Grep tool's own count mode: no heuristic, and it must not even reach gate 3.
   {
     let queried = false;
-    const deps = { indexPresent: true, query: (i) => { queried = true; return q(i); }, seen: () => false, remember: () => {} };
+    const deps = {
+      indexPresent: true,
+      query: (i) => {
+        queried = true;
+        return q(i);
+      },
+      seen: () => false,
+      remember: () => {},
+    };
     n++;
-    ok(decide({ tool_name: "Grep", tool_input: { pattern: "TrailRepository", output_mode: "count" } }, deps) === null, "output_mode=count must pass through");
+    ok(
+      decide({ tool_name: "Grep", tool_input: { pattern: "TrailRepository", output_mode: "count" } }, deps) === null,
+      "output_mode=count must pass through",
+    );
     n++;
     ok(queried === false, "a count must not spawn a query at all");
     n++;
-    ok(decide({ tool_name: "Grep", tool_input: { pattern: "TrailRepository", output_mode: "content" } }, deps) !== null, "...but content mode is still guarded");
+    ok(
+      decide({ tool_name: "Grep", tool_input: { pattern: "TrailRepository", output_mode: "content" } }, deps) !== null,
+      "...but content mode is still guarded",
+    );
   }
 
   // --- launcher resolution, end to end, opt-in ------------------------------------
@@ -1475,9 +1974,15 @@ function selfTest() {
       n++;
       ok(exactHit(rows, "GeoPointFactory", false)?.kind === "class", "live exact hit is not the class");
       n++;
-      ok(exactHit(rows, "GeoPointFactory", false)?.filePath === "backend/Core/Common/GeoPointFactory.cs", "live hit has the wrong path");
+      ok(
+        exactHit(rows, "GeoPointFactory", false)?.filePath === "backend/Core/Common/GeoPointFactory.cs",
+        "live hit has the wrong path",
+      );
       n++;
-      ok(exactHit(queryIndex(root, "zzzNotARealSymbolXyz"), "zzzNotARealSymbolXyz", false) === null, "a nonsense identifier must not hit");
+      ok(
+        exactHit(queryIndex(root, "zzzNotARealSymbolXyz"), "zzzNotARealSymbolXyz", false) === null,
+        "a nonsense identifier must not hit",
+      );
       // The memo: a second resolution must be the SAME OBJECT, not a second probe round.
       // Identity is the only observable difference, and it is the one that matters — without
       // it, N identifiers on a line meant N probe rounds (measured: 32 s for N=8).

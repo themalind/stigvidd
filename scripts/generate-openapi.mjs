@@ -61,7 +61,7 @@ const HOST_CONFIG = {
   // "requires a valid absolute URI for 'AuthServerUrl'" and names neither file nor section.
   "KeycloakAdminClient__auth-server-url": "https://keycloak.invalid/auth",
   "Keycloak__auth-server-url": "https://keycloak.invalid/auth",
-  "KeycloakAdminClient__credentials__secret": "generate-openapi-not-a-real-secret",
+  KeycloakAdminClient__credentials__secret: "generate-openapi-not-a-real-secret",
 };
 
 function main() {
@@ -95,30 +95,22 @@ function main() {
   const staging = join(tmpdir(), `stigvidd-openapi-${process.pid}.json`);
 
   try {
-    const result = spawnSync(
-      "dotnet",
-      [ASSEMBLY, "--export-openapi", staging],
-      {
-        cwd: PROJECT_DIR, // the content root, so appsettings.json is found
-        env: { ...process.env, ...HOST_CONFIG },
-        encoding: "utf8",
-        shell: false, // dotnet is a real executable on all three platforms
-      },
-    );
+    const result = spawnSync("dotnet", [ASSEMBLY, "--export-openapi", staging], {
+      cwd: PROJECT_DIR, // the content root, so appsettings.json is found
+      env: { ...process.env, ...HOST_CONFIG },
+      encoding: "utf8",
+      shell: false, // dotnet is a real executable on all three platforms
+    });
 
     if (result.error || result.status !== 0) {
-      console.error(
-        "generate-openapi : error SV0003: StigviddAPI failed to export the OpenAPI document.",
-      );
+      console.error("generate-openapi : error SV0003: StigviddAPI failed to export the OpenAPI document.");
       if (result.stdout) console.error(result.stdout.trimEnd());
       if (result.stderr) console.error(result.stderr.trimEnd());
       return 1;
     }
 
     if (!existsSync(staging) || readFileSync(staging, "utf8").length === 0) {
-      console.error(
-        "generate-openapi : error SV0004: the export reported success but wrote nothing.",
-      );
+      console.error("generate-openapi : error SV0004: the export reported success but wrote nothing.");
       return 1;
     }
 

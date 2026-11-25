@@ -64,7 +64,7 @@ export function decide(command, env, cwd = null, root = null) {
   if (ef && !/\s--project(?:=|\s)/.test(ef))
     return [
       "deny",
-      "`dotnet ef` without --project exits with \"No project was found\" — measured in " +
+      '`dotnet ef` without --project exits with "No project was found" — measured in ' +
         "this tree, from backend/.\n" +
         "The DbContext and its IDesignTimeDbContextFactory both live in Infrastructure:\n" +
         `  cd backend && ${ef.trim()} --project Infrastructure\n` +
@@ -93,12 +93,7 @@ function main() {
   const ev = readEvent();
   if (String(ev.tool_name ?? "") !== "Bash") return 0;
   const root = process.env.CLAUDE_PROJECT_DIR ?? null;
-  const d = decide(
-    String(ev.tool_input?.command ?? ""),
-    new Set(Object.keys(process.env)),
-    ev.cwd ?? null,
-    root,
-  );
+  const d = decide(String(ev.tool_input?.command ?? ""), new Set(Object.keys(process.env)), ev.cwd ?? null, root);
   if (!d) return 0;
   return d[0] === "deny" ? deny(d[1]) : speak(d[1]);
 }
@@ -147,8 +142,10 @@ function selfTest() {
   // reconstructed it from the verb alone and silently dropped the migration's name, so the
   // command it offered could not be pasted.
   const efMsg = decide("cd backend && dotnet ef migrations add AddFacilityPoint", bare)?.[1] ?? "";
-  ok(/dotnet ef migrations add AddFacilityPoint --project Infrastructure/.test(efMsg),
-     `the dotnet ef suggestion lost part of the command: ${efMsg.split("\n")[2] ?? ""}`);
+  ok(
+    /dotnet ef migrations add AddFacilityPoint --project Infrastructure/.test(efMsg),
+    `the dotnet ef suggestion lost part of the command: ${efMsg.split("\n")[2] ?? ""}`,
+  );
   return done(cases.length + 7);
 }
 

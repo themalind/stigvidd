@@ -295,7 +295,7 @@ export function commandsIn(command) {
   const out = [];
   for (const at of starts) {
     let seg = s.slice(at).replace(/^\s+/, "");
-    for (let again = true; again; ) {
+    for (let again = true; again;) {
       again = false;
       for (const re of PREFIX_PATTERNS) {
         const m = seg.match(re);

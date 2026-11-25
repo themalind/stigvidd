@@ -100,7 +100,8 @@ const FALLBACK_PLAN_AGE_MS = 10 * 60 * 1000;
 // Words any plan contains. The document-frequency ceiling below misses them because the
 // index is small; measured, "this", "before" and "session" alone matched four notes.
 const STOPWORDS = new Set(
-  ("the and for with this that these those from into onto than then when what which who why how " +
+  (
+    "the and for with this that these those from into onto than then when what which who why how " +
     "was were are been being has have had not but its they them their there here also " +
     "only just once twice same such each every any all both either other another more most less " +
     "very much many some one two three first last new old add adds added fix fixed get set use " +
@@ -108,12 +109,15 @@ const STOPWORDS = new Set(
     "must can could should would will may might does did done thing things way ways part case " +
     "keep kept line lines name names change changes changed step steps plan note notes session " +
     "claude repo project measured rule rules because instead still even back out off over under " +
-    "update updates code file files path paths form you your").split(" "),
+    "update updates code file files path paths form you your"
+  ).split(" "),
 );
 
 export function tokenize(text) {
   const out = [];
-  for (const t of String(text ?? "").toLowerCase().split(/[^a-z0-9]+/))
+  for (const t of String(text ?? "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/))
     if (t.length >= 3 && !STOPWORDS.has(t)) out.push(t);
   return out;
 }
@@ -262,7 +266,8 @@ export function areasFor(paths) {
 /** Repo-ish paths mentioned anywhere in free text. */
 export function pathsNamedIn(text) {
   const out = new Set();
-  const re = /(?:^|[\s(`'"[])((?:backend|web|app|docs|scripts|proxy|db|keycloak|media|ci|\.github|\.claude)\/[A-Za-z0-9_./-]*|docker-compose\.yml|Jenkinsfile)/g;
+  const re =
+    /(?:^|[\s(`'"[])((?:backend|web|app|docs|scripts|proxy|db|keycloak|media|ci|\.github|\.claude)\/[A-Za-z0-9_./-]*|docker-compose\.yml|Jenkinsfile)/g;
   for (const m of String(text ?? "").matchAll(re)) out.add(m[1]);
   return [...out];
 }
@@ -308,8 +313,7 @@ const EDIT_TOOLS = new Set(["Edit", "Write", "MultiEdit", "NotebookEdit"]);
 const READ_HEADS = /^(?:sed|cat|head|tail|less|grep|egrep|rg|find|ls|awk|wc|tree)$/;
 const FILE_READ_HEADS = /^(?:sed|cat|head|tail|less)$/;
 const SCRIPT_HEADS = /^(?:python3?|py|perl|node|ruby)$/;
-const WRITES_IN_SCRIPT =
-  /open\([^)]*,\s*['"][wa]b?\+?['"]|\.write_text\(|\.write_bytes\(|writeFileSync|appendFileSync/;
+const WRITES_IN_SCRIPT = /open\([^)]*,\s*['"][wa]b?\+?['"]|\.write_text\(|\.write_bytes\(|writeFileSync|appendFileSync/;
 const IN_PLACE = /\s-[a-zA-Z]*i\b/;
 // Output that is not the repo: a redirect there is plumbing, not an edit.
 const NOT_REPO = /^(?:\/tmp\/|\/dev\/|\$|%TEMP%|''$)|\/scratchpad\/|\/\.claude\/plans\//;
@@ -609,8 +613,7 @@ function planText(ev) {
       .filter((f) => f.endsWith(".md"))
       .map((f) => ({ f, m: statSync(path.join(dir, f)).mtimeMs }))
       .sort((a, b) => b.m - a.m)[0];
-    if (best && Date.now() - best.m < FALLBACK_PLAN_AGE_MS)
-      return readFileSync(path.join(dir, best.f), "utf8");
+    if (best && Date.now() - best.m < FALLBACK_PLAN_AGE_MS) return readFileSync(path.join(dir, best.f), "utf8");
   } catch {
     /* no plans dir */
   }
@@ -706,8 +709,7 @@ export function shouldAsk(st, stats, shipped) {
 /** The single most expensive thing the transcript shows, named so it can be answered. */
 export function biggestSink(stats) {
   const top = stats.rereads[0];
-  if (top && top.count >= 3 && top.count * 3 >= stats.preEdit)
-    return `${top.file} was read ${top.count} times`;
+  if (top && top.count >= 3 && top.count * 3 >= stats.preEdit) return `${top.file} was read ${top.count} times`;
   return `${stats.preEdit} tool calls went by before the first edit`;
 }
 
@@ -991,10 +993,20 @@ const FIXTURE_INDEX = `# Agent notes
 // A transcript in the shape Claude Code writes: tool calls inside assistant messages, results
 // inside user messages, hook output as `attachment` records.
 const use = (name, input) => ({ type: "assistant", message: { content: [{ type: "tool_use", name, input }] } });
-const res = (content, is_error = true) => ({ type: "user", message: { content: [{ type: "tool_result", content, is_error }] } });
+const res = (content, is_error = true) => ({
+  type: "user",
+  message: { content: [{ type: "tool_result", content, is_error }] },
+});
 const FIXTURE_TRANSCRIPT = [
-  { type: "attachment", timestamp: "2026-10-01T08:00:00Z", attachment: { type: "hook_blocking_error",
-    blockingError: "docs/notes/ has entries that match this plan:\n docs/notes/srid-4326.md\n docs/notes/spatialite-per-os.md" } },
+  {
+    type: "attachment",
+    timestamp: "2026-10-01T08:00:00Z",
+    attachment: {
+      type: "hook_blocking_error",
+      blockingError:
+        "docs/notes/ has entries that match this plan:\n docs/notes/srid-4326.md\n docs/notes/spatialite-per-os.md",
+    },
+  },
   { type: "attachment", attachment: { type: "hook_success", content: "unrelated, mentions docs/notes/other.md" } },
   use("Read", { file_path: "/r/backend/Core/Services/TrailService.cs" }),
   use("Read", { file_path: "/r/backend/Core/Services/TrailService.cs", offset: 200 }),
@@ -1017,8 +1029,10 @@ function selfTest() {
   ok(!tokenize("refactoring").includes("actor"), "tokenize produced a substring token");
   ok(tokenize("a of the SRID 4326").join(",") === "srid,4326", `tokenize: ${tokenize("a of the SRID 4326")}`);
   ok(tokenize("this session was measured before").length === 0, "stopwords reached the scorer");
-  ok(scoreEntries(parseIndex(FIXTURE_INDEX), "openapi quantum").length === 0,
-     "a single shared token matched a multi-token query");
+  ok(
+    scoreEntries(parseIndex(FIXTURE_INDEX), "openapi quantum").length === 0,
+    "a single shared token matched a multi-token query",
+  );
   n += 4;
 
   // -- index parsing, including a wrapped summary --------------------------------
@@ -1043,34 +1057,63 @@ function selfTest() {
   );
   ok(paths.length === 4, `pathsNamedIn: ${paths.length} paths (${paths})`);
   const areas = areasFor(paths);
-  ok(areas.some((a) => a.area === "the API surface"), "the API-surface area was not recognised");
-  ok(areas.some((a) => a.area === "the mobile app"), "the app area was not recognised");
-  ok(areas.some((a) => a.area === "the deployment stack"), "the compose area was not recognised");
+  ok(
+    areas.some((a) => a.area === "the API surface"),
+    "the API-surface area was not recognised",
+  );
+  ok(
+    areas.some((a) => a.area === "the mobile app"),
+    "the app area was not recognised",
+  );
+  ok(
+    areas.some((a) => a.area === "the deployment stack"),
+    "the compose area was not recognised",
+  );
   // Order matters: a Controllers path is the API surface, not merely "the backend".
-  ok(areasFor(["backend/StigviddAPI/Controllers/X.cs"])[0].area === "the API surface",
-     "a controller path fell through to the generic backend area");
+  ok(
+    areasFor(["backend/StigviddAPI/Controllers/X.cs"])[0].area === "the API surface",
+    "a controller path fell through to the generic backend area",
+  );
   ok(areasFor(["backend/Core/Services/X.cs"])[0].area === "the backend", "a service path did not fall through");
   n += 6;
 
   // -- obligations minus what the session ran -----------------------------------
   const ranNothing = ranWhat([]);
   const need = outstanding(["backend/StigviddAPI/Controllers/X.cs", "web/src/pages/Y.tsx"], ranNothing);
-  ok(need.some((c) => /dotnet test/.test(c)), "a backend change did not oblige dotnet test");
-  ok(need.some((c) => /generate:api/.test(c)), "an API-surface change did not oblige regeneration");
-  ok(need.some((c) => /npm run build/.test(c)), "a web change did not oblige the type check");
+  ok(
+    need.some((c) => /dotnet test/.test(c)),
+    "a backend change did not oblige dotnet test",
+  );
+  ok(
+    need.some((c) => /generate:api/.test(c)),
+    "an API-surface change did not oblige regeneration",
+  );
+  ok(
+    need.some((c) => /npm run build/.test(c)),
+    "a web change did not oblige the type check",
+  );
   const ranAll = ranWhat([
     'ConnectionStrings__StigVidd="DataSource=:memory:" dotnet test --no-build',
     "cd web && npm run generate:api && npm run lint && npm run build",
   ]);
-  ok(outstanding(["backend/StigviddAPI/Controllers/X.cs", "web/src/pages/Y.tsx"], ranAll).length === 0,
-     "checks the session demonstrably ran were still demanded");
-  ok(outstanding(["app/src/x.ts"], ranNothing).some((c) => /tsc --noEmit/.test(c)),
-     "an app change did not oblige a type check nothing else does");
+  ok(
+    outstanding(["backend/StigviddAPI/Controllers/X.cs", "web/src/pages/Y.tsx"], ranAll).length === 0,
+    "checks the session demonstrably ran were still demanded",
+  );
+  ok(
+    outstanding(["app/src/x.ts"], ranNothing).some((c) => /tsc --noEmit/.test(c)),
+    "an app change did not oblige a type check nothing else does",
+  );
   ok(outstanding(["README.md"], ranNothing).length === 0, "a docs-only change obliged a build");
   n += 6;
 
   // -- the rendered rounds carry their point ------------------------------------
-  const before = renderBefore("/r", "touch backend/StigviddAPI/Controllers/X.cs", scoreEntries(entries, "openapi contract"), areas);
+  const before = renderBefore(
+    "/r",
+    "touch backend/StigviddAPI/Controllers/X.cs",
+    scoreEntries(entries, "openapi contract"),
+    areas,
+  );
   ok(/docs\/notes\//.test(before), "round 1 named no note path");
   ok(/dotnet test` will NOT/.test(before), "round 1 dropped the not-covered-by section");
   const fixtureStats = sessionStats(FIXTURE_TRANSCRIPT);
@@ -1086,8 +1129,10 @@ function selfTest() {
   ok(s.bashReads === 3, `bashReads ${s.bashReads}, expected 3 (sed -n, grep, cat)`);
   ok(s.codegraph === 1, `codegraph ${s.codegraph}, expected 1`);
   ok(s.bashEdits === 1, `bashEdits ${s.bashEdits}, expected 1 — the python heredoc write`);
-  ok(s.rereads[0]?.file === "Services/TrailService.cs" && s.rereads[0]?.count === 3,
-     `rereads ${JSON.stringify(s.rereads)} — a file read 3x via Read and sed must show`);
+  ok(
+    s.rereads[0]?.file === "Services/TrailService.cs" && s.rereads[0]?.count === 3,
+    `rereads ${JSON.stringify(s.rereads)} — a file read 3x via Read and sed must show`,
+  );
   ok(s.shown.join() === "srid-4326.md,spatialite-per-os.md", `shown ${s.shown} — only hook recalls count`);
   ok(s.opened.join() === "srid-4326.md", `opened ${s.opened}`);
   ok(s.refused === 1, `refused ${s.refused}, expected 1 — exit codes are not refusals`);
@@ -1097,12 +1142,17 @@ function selfTest() {
   // -- what counts as an edit through Bash --------------------------------------
   ok(isBashEdit("sed -i 's/a/b/' backend/X.cs"), "sed -i was not an edit");
   ok(!isBashEdit("sed -n '1,40p' backend/X.cs | grep -i foo"), "sed -n | grep -i read as sed -i");
-  ok(isBashEdit("cat > docs/notes/x.md <<'EOF'\nbody with -> and > arrows\nEOF"), "a heredoc into a repo file was not an edit");
+  ok(
+    isBashEdit("cat > docs/notes/x.md <<'EOF'\nbody with -> and > arrows\nEOF"),
+    "a heredoc into a repo file was not an edit",
+  );
   ok(!isBashEdit("dotnet test 2>&1 | tail -5"), "2>&1 read as a redirect");
   ok(!isBashEdit("node -e 'const f = (a) => a > 1' > /dev/null"), "a quoted > or /dev/null read as an edit");
   ok(!isBashEdit("git log --oneline > /tmp/claude-1000/x/scratchpad/log.txt"), "a scratchpad redirect read as an edit");
-  ok(!isBashEdit("cat > /tmp/x/scratchpad/m.py <<'EOF'\nimport os\npython3 -c 1\nopen(F,'w').write(s)\nEOF"),
-     "writing a script to the scratchpad read as running it");
+  ok(
+    !isBashEdit("cat > /tmp/x/scratchpad/m.py <<'EOF'\nimport os\npython3 -c 1\nopen(F,'w').write(s)\nEOF"),
+    "writing a script to the scratchpad read as running it",
+  );
   n += 7;
 
   // -- the gate ------------------------------------------------------------------
@@ -1131,14 +1181,18 @@ function selfTest() {
   ]);
   ok(sum.promote.map((p) => p.note).join() === "a.md", `promote ${JSON.stringify(sum.promote)}`);
   ok(sum.noisy.map((p) => p.note).join() === "c.md", `noisy ${JSON.stringify(sum.noisy)}`);
-  ok(sum.trend.length === 2 && sum.trend[0].week === "2026-09-14" && sum.trend[0].n === 2,
-     `trend ${JSON.stringify(sum.trend.map((t) => [t.week, t.n]))}`);
+  ok(
+    sum.trend.length === 2 && sum.trend[0].week === "2026-09-14" && sum.trend[0].n === 2,
+    `trend ${JSON.stringify(sum.trend.map((t) => [t.week, t.n]))}`,
+  );
   ok(/Promotion candidates/.test(renderReport(sum, "x")), "the report dropped the promotion list");
   n += 4;
 
   // -- gating: round 2 must not speak without a baseline, and must not loop --------
-  ok(phaseAfter({ session_id: "no-such-session-for-self-test" }) === 0,
-     "round 2 spoke for a session that has no baseline");
+  ok(
+    phaseAfter({ session_id: "no-such-session-for-self-test" }) === 0,
+    "round 2 spoke for a session that has no baseline",
+  );
   ok(phaseAfter({ session_id: "x", stop_hook_active: true }) === 0, "round 2 ignored stop_hook_active");
   n += 2;
 

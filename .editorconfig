@@ -11,6 +11,11 @@ charset = utf-8
 trim_trailing_whitespace = false
 insert_final_newline = false
 
+# keep-comment: what Prettier writes in app/, web/ and site/, so the editor does not fight it
+[*.{js,jsx,mjs,cjs,ts,tsx,json,css,html,yml,yaml}]
+indent_size = 2
+insert_final_newline = true
+
 # xUnit1051: calls that accept a CancellationToken must pass
 # TestContext.Current.CancellationToken, so a cancelled run stops promptly.
 # An error, not a warning, because a warning here is invisible: the backend

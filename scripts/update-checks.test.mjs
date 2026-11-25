@@ -193,7 +193,10 @@ test("a hold that matches nothing needs action, so it gets removed", () => {
 
 test("a hold without a reason is refused", () => {
   assert.deepEqual(parseHolds(JSON.stringify([HOLD_TS7])), [HOLD_TS7]);
-  assert.throws(() => parseHolds(JSON.stringify([{ ...HOLD_TS7, reason: " " }])), /needs area, name, major and a reason/);
+  assert.throws(
+    () => parseHolds(JSON.stringify([{ ...HOLD_TS7, reason: " " }])),
+    /needs area, name, major and a reason/,
+  );
   assert.throws(() => parseHolds(JSON.stringify([{ ...HOLD_TS7, major: "7" }])), /needs area/);
   assert.throws(() => parseHolds("{}"), /must be a list/);
 });

@@ -331,6 +331,7 @@ pipeline {
                 sh '''
                   set -e
                   npm ci
+                  npm run format:check
                   npm run lint
                   npm run generate:api
                   if ! git diff --exit-code -- src/api/generated; then
@@ -355,6 +356,7 @@ pipeline {
               sh '''
                 set -e
                 npm ci
+                npm run format:check
                 npm run lint
                 npm test
                 npm run build

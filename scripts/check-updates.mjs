@@ -41,7 +41,13 @@ async function output(command, cwd = ROOT) {
     return stdout;
   } catch (error) {
     if (error.stdout) return error.stdout;
-    throw new Error(`${command}: ${String(error.stderr || error.message).trim().split("\n")[0]}`);
+    throw new Error(
+      `${command}: ${
+        String(error.stderr || error.message)
+          .trim()
+          .split("\n")[0]
+      }`,
+    );
   }
 }
 
@@ -83,7 +89,10 @@ async function checkDotnet() {
 }
 
 async function fullCheck() {
-  const projects = (await output("git ls-files *.csproj")).split("\n").map((line) => line.trim()).filter(Boolean);
+  const projects = (await output("git ls-files *.csproj"))
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
   let pinned = new Set();
   const failures = [];
   try {

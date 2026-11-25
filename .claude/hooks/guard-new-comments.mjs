@@ -50,7 +50,11 @@ function isExempt(line) {
 
 /** Comment lines present in `newText` but not (verbatim, trimmed) in `oldText`. */
 export function addedComments(oldText, newText) {
-  const before = new Set(lines(oldText ?? "").map((l) => l.trim()).filter(Boolean));
+  const before = new Set(
+    lines(oldText ?? "")
+      .map((l) => l.trim())
+      .filter(Boolean),
+  );
   const added = [];
   lines(newText ?? "").forEach((line, i) => {
     if (!isCommentLine(line)) return;
@@ -93,7 +97,10 @@ export function classify(keyIn, oldText, newText) {
   const added = addedComments(oldText, newText);
   if (!added.length) return null;
 
-  const shown = added.slice(0, 5).map((c) => `  line ${c.line}: ${c.text}`).join("\n");
+  const shown = added
+    .slice(0, 5)
+    .map((c) => `  line ${c.line}: ${c.text}`)
+    .join("\n");
   const more = added.length > 5 ? `\n  ...and ${added.length - 5} more` : "";
 
   return [
@@ -176,7 +183,10 @@ export function sweep(key, text, sessionId, dir = path.join(stateDir(), "comment
   seen.add(key);
   markSwept(dir, sessionId, seen);
 
-  const shown = found.slice(0, SWEEP_SHOWN).map((c) => `  line ${c.line}: ${c.text}`).join("\n");
+  const shown = found
+    .slice(0, SWEEP_SHOWN)
+    .map((c) => `  line ${c.line}: ${c.text}`)
+    .join("\n");
   const more = found.length > SWEEP_SHOWN ? `\n  ...and ${found.length - SWEEP_SHOWN} more` : "";
   return (
     `${key} still has ${found.length} older comment line(s) with no keep-comment marker:\n` +
@@ -229,12 +239,22 @@ function selfTest() {
     [CS_WIN, "", "// a brand new narrative comment\nclass X {}", "deny"],
     [TS, "", "/** JSDoc-style narrative */\nexport const x = 1;", "deny"],
     [APP, "", `${APP_HEADER}\n// narrative after the notice\nexport const x = 1;`, "deny"],
-    [APP, "", "// This Source Code Form is subject to the terms of the Mozilla Public License, and more\nexport const x = 1;", "deny"], // near-miss of a notice line
+    [
+      APP,
+      "",
+      "// This Source Code Form is subject to the terms of the Mozilla Public License, and more\nexport const x = 1;",
+      "deny",
+    ], // near-miss of a notice line
     // stays silent
     [CS, "// same comment\nvar x = 1;", "// same comment\nvar x = 2;", null], // unchanged comment
     [CS, "var x = 1;", "var x = 2;", null], // no comment at all
     [CS, "var x = 1;\n// old note\n", "var x = 2;\n", null], // comment REMOVED
-    [CS, "", "// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors\n// SPDX-License-Identifier: AGPL-3.0-or-later\n", null],
+    [
+      CS,
+      "",
+      "// SPDX-FileCopyrightText: 2025-2026 The Stigvidd Authors\n// SPDX-License-Identifier: AGPL-3.0-or-later\n",
+      null,
+    ],
     [APP, "", `${APP_HEADER}\nexport const x = 1;`, null], // the full MPL notice of a new app file
     [APP, "", APP_HEADER.replace(/\n/g, "\r\n") + "\r\nexport const x = 1;", null], // CRLF, as Windows writes it
     [CS, "", "// Arrange\nvar x = 1;", null],
@@ -248,18 +268,25 @@ function selfTest() {
     [CS, "", "\t// Arrange\n\tvar x = 1;", null],
     [CS, "", "        // a narrative comment that happens to be indented\n        var x = 1;", "deny"],
     [CS, "", "        // indented but escaped keep-comment: the order matters\n        var x = 1;", null],
-    [CS, "", "var url = \"https://example.com\"; // not a comment start", null],
+    [CS, "", 'var url = "https://example.com"; // not a comment start', null],
     [CS, "", "// a necessary workaround keep-comment: EF requires this exact order\nvar x = 1;", null],
     ["docs/notes/some-note.md", "", "// a comment inside prose docs", null],
     ["web/src/api/generated/model/x.ts", "", "// generated narrative", null],
     [".claude/hooks/some-hook.mjs", "", "// hooks keep their own verbose style", null],
-    ["backend/Tests/UnitTests/ServiceTests/X.cs", "", "// Arrange — seeds two rows for the comparison\nvar x = 1;", null],
+    [
+      "backend/Tests/UnitTests/ServiceTests/X.cs",
+      "",
+      "// Arrange — seeds two rows for the comparison\nvar x = 1;",
+      null,
+    ],
   ];
 
   for (const [p, oldText, newText, want] of classifyCases) {
     const got = classify(p, oldText, newText);
-    ok((got?.[0] ?? null) === want,
-      `classify(${p}, ..., ${JSON.stringify(newText.slice(0, 40))}) => ${got?.[0] ?? "null"}, expected ${want ?? "null"}`);
+    ok(
+      (got?.[0] ?? null) === want,
+      `classify(${p}, ..., ${JSON.stringify(newText.slice(0, 40))}) => ${got?.[0] ?? "null"}, expected ${want ?? "null"}`,
+    );
   }
 
   // decide() per-tool wiring -------------------------------------------------
@@ -277,14 +304,24 @@ function selfTest() {
   ok(
     decide(
       "MultiEdit",
-      { file_path: CS, edits: [{ old_string: "a", new_string: "a" }, { old_string: "b", new_string: "// c\nb" }] },
+      {
+        file_path: CS,
+        edits: [
+          { old_string: "a", new_string: "a" },
+          { old_string: "b", new_string: "// c\nb" },
+        ],
+      },
       root,
     )?.[0] === "deny",
     "MultiEdit's second edit adding a comment was not denied",
   );
   // A brand-new file (nothing to read from disk) with only the mandatory header is fine.
   ok(
-    decide("Write", { file_path: CS, content: "// SPDX-FileCopyrightText: x\n// SPDX-License-Identifier: y\nclass X {}" }, "/does/not/exist") === null,
+    decide(
+      "Write",
+      { file_path: CS, content: "// SPDX-FileCopyrightText: x\n// SPDX-License-Identifier: y\nclass X {}" },
+      "/does/not/exist",
+    ) === null,
     "a new file with only the SPDX header was denied",
   );
   ok(

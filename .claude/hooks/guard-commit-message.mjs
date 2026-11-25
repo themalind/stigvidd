@@ -61,11 +61,9 @@ function selfTest() {
   const { ok, done } = checker("guard-commit-message");
 
   const heredocClaude =
-    'git commit -m "$(cat <<\'EOF\'\nAdd batch reprocessing\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>\nEOF\n)"';
-  const heredocClean =
-    'git commit -m "$(cat <<\'EOF\'\nAdd media batch reprocessing\nEOF\n)"';
-  const heredocEmoji =
-    'git commit -m "$(cat <<\'EOF\'\nAdd feature\n\n🤖 Generated with Claude Code\nEOF\n)"';
+    "git commit -m \"$(cat <<'EOF'\nAdd batch reprocessing\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>\nEOF\n)\"";
+  const heredocClean = "git commit -m \"$(cat <<'EOF'\nAdd media batch reprocessing\nEOF\n)\"";
+  const heredocEmoji = "git commit -m \"$(cat <<'EOF'\nAdd feature\n\n🤖 Generated with Claude Code\nEOF\n)\"";
 
   const cases = [
     [heredocClaude, "deny"],
@@ -79,7 +77,7 @@ function selfTest() {
     ['git add -A && git commit -m "Fix bug"', null],
     ['$env:X="1"; git commit -m "Fix bug"', null],
     ['echo claude && git commit -m "Add feature"', null],
-    ['npm test', null],
+    ["npm test", null],
   ];
 
   for (const [command, want] of cases) {
@@ -92,10 +90,7 @@ function selfTest() {
 
   ok(decide("Read", { file_path: "x" }) === null, "Read was routed into the commit guard");
   ok(extractMessage('-m "Fix bug"') === "Fix bug", "simple -m extraction failed");
-  ok(
-    extractMessage(heredocClean).trim() === "Add media batch reprocessing",
-    "heredoc extraction failed",
-  );
+  ok(extractMessage(heredocClean).trim() === "Add media batch reprocessing", "heredoc extraction failed");
 
   return done(cases.length + 3);
 }

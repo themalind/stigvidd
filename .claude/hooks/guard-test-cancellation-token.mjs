@@ -61,9 +61,7 @@ export function writtenText(toolName, input) {
   if (toolName === "Write") return String(input?.content ?? "");
   if (toolName === "Edit") return String(input?.new_string ?? "");
   if (toolName === "MultiEdit")
-    return (Array.isArray(input?.edits) ? input.edits : [])
-      .map((e) => String(e?.new_string ?? ""))
-      .join("\n");
+    return (Array.isArray(input?.edits) ? input.edits : []).map((e) => String(e?.new_string ?? "")).join("\n");
   return "";
 }
 
@@ -161,32 +159,48 @@ function selfTest() {
       `classify(${p}, ${JSON.stringify(text.slice(0, 48))}) => ${got?.[0] ?? "null"}, expected ${want ?? "null"}`,
     );
     if (want) {
-      ok((got?.[1] ?? "").includes("TestContext.Current.CancellationToken"),
-         `${p} denied without naming the token that works`);
+      ok(
+        (got?.[1] ?? "").includes("TestContext.Current.CancellationToken"),
+        `${p} denied without naming the token that works`,
+      );
       ok(/line \d+:/.test(got?.[1] ?? ""), `${p} denied without pointing at a line`);
     }
   }
 
   // CRLF, because this repo has had both and lines() is what makes the split agnostic.
-  ok(offenders("ok();\r\nawait X(CancellationToken.None);\r\n")[0]?.line === 2,
-     "CRLF input did not report the right line number");
+  ok(
+    offenders("ok();\r\nawait X(CancellationToken.None);\r\n")[0]?.line === 2,
+    "CRLF input did not report the right line number",
+  );
   // Only the first banned form per line is reported, so a count stays a line count.
-  ok(offenders("await X(CancellationToken.None, default(CancellationToken));").length === 1,
-     "one line reported more than once");
+  ok(
+    offenders("await X(CancellationToken.None, default(CancellationToken));").length === 1,
+    "one line reported more than once",
+  );
 
   // Per-tool input shapes. Reading the wrong field yields undefined and a hook that
   // silently never fires — the single most common way one of these guards dies.
   ok(writtenText("Write", { content: "a" }) === "a", "Write reads content");
   ok(writtenText("Edit", { new_string: "b" }) === "b", "Edit reads new_string");
-  ok(writtenText("MultiEdit", { edits: [{ new_string: "c" }, { new_string: "d" }] }) === "c\nd",
-     "MultiEdit reads every edit's new_string");
+  ok(
+    writtenText("MultiEdit", { edits: [{ new_string: "c" }, { new_string: "d" }] }) === "c\nd",
+    "MultiEdit reads every edit's new_string",
+  );
   // An Edit's OLD text is not what is being written: removing a bad line must not deny.
-  ok(decide("Edit", { file_path: T, old_string: "X(CancellationToken.None);", new_string: "X(TestContext.Current.CancellationToken);" }) === null,
-     "removing an offending line was denied");
+  ok(
+    decide("Edit", {
+      file_path: T,
+      old_string: "X(CancellationToken.None);",
+      new_string: "X(TestContext.Current.CancellationToken);",
+    }) === null,
+    "removing an offending line was denied",
+  );
   // Tool gate: reading or grepping a file full of them is fine.
   ok(decide("Read", { file_path: T }) === null, "Read was routed into the write guard");
-  ok(decide("Bash", { command: "grep -rn CancellationToken.None backend/Tests" }) === null,
-     "Bash was routed into the write guard");
+  ok(
+    decide("Bash", { command: "grep -rn CancellationToken.None backend/Tests" }) === null,
+    "Bash was routed into the write guard",
+  );
 
   return done(cases.length + 8);
 }

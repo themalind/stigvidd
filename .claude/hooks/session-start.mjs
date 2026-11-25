@@ -104,8 +104,7 @@ export function compose(root) {
   out.push(
     existsSync(path.join(root, ".codegraph"))
       ? "CodeGraph: indexed — codegraph_explore before grep (see CLAUDE.md)."
-      : "CodeGraph: NO .codegraph/ index in this checkout — use grep/Read; " +
-          "guard-symbol-search.mjs stays silent.",
+      : "CodeGraph: NO .codegraph/ index in this checkout — use grep/Read; " + "guard-symbol-search.mjs stays silent.",
   );
 
   // --- the contract chain and the EF model ---------------------------------------
@@ -118,10 +117,7 @@ export function compose(root) {
     const names = readdirSync(dir)
       .filter((f) => /^\d+_.*\.cs$/.test(f) && !/\.Designer\.cs$/.test(f))
       .sort();
-    if (names.length)
-      out.push(
-        `Migrations: ${names.length}, newest ${names[names.length - 1].replace(/\.cs$/, "")}.`,
-      );
+    if (names.length) out.push(`Migrations: ${names.length}, newest ${names[names.length - 1].replace(/\.cs$/, "")}.`);
   } catch {
     /* not a checkout of this repo */
   }
@@ -137,9 +133,7 @@ export function compose(root) {
 
   // --- memory ----------------------------------------------------------------------
   try {
-    const n = readdirSync(path.join(root, "docs", "notes")).filter(
-      (f) => f.endsWith(".md") && f !== "INDEX.md",
-    ).length;
+    const n = readdirSync(path.join(root, "docs", "notes")).filter((f) => f.endsWith(".md") && f !== "INDEX.md").length;
     if (n)
       out.push(
         `Notes: ${n} in docs/notes/ — search before re-deriving: ` +
@@ -194,30 +188,44 @@ function selfTest() {
 
   // -- the contract chain, in each state it can be in -----------------------------
   const st = (...ps) => ps.map((p) => ({ x: " ", y: "M", p }));
-  ok(classify(st("backend/StigviddAPI/Controllers/FacilitiesController.cs")).length === 1,
-     "a controller change with no regenerated client went unmentioned");
-  ok(classify(st("backend/WebDataContracts/FacilityResponse.cs")).length === 1,
-     "a WebDataContracts change went unmentioned");
-  ok(classify(st("backend/StigviddAPI/Controllers/X.cs",
-                 "web/src/api/generated/x.ts")).length === 0,
-     "a fully regenerated chain must be silent");
+  ok(
+    classify(st("backend/StigviddAPI/Controllers/FacilitiesController.cs")).length === 1,
+    "a controller change with no regenerated client went unmentioned",
+  );
+  ok(
+    classify(st("backend/WebDataContracts/FacilityResponse.cs")).length === 1,
+    "a WebDataContracts change went unmentioned",
+  );
+  ok(
+    classify(st("backend/StigviddAPI/Controllers/X.cs", "web/src/api/generated/x.ts")).length === 0,
+    "a fully regenerated chain must be silent",
+  );
   // The snapshot is gitignored, so it cannot appear in porcelain output — but if one
   // ever did, it must not be read as evidence the client was regenerated.
-  ok(classify(st("backend/StigviddAPI/Controllers/X.cs", "web/openapi.json")).length === 1,
-     "a stale client must be flagged even when the snapshot shows up somehow");
-  ok(classify(st("backend/Core/Services/FacilityService.cs")).length === 0,
-     "a service-only change must not claim the contract drifted");
+  ok(
+    classify(st("backend/StigviddAPI/Controllers/X.cs", "web/openapi.json")).length === 1,
+    "a stale client must be flagged even when the snapshot shows up somehow",
+  );
+  ok(
+    classify(st("backend/Core/Services/FacilityService.cs")).length === 0,
+    "a service-only change must not claim the contract drifted",
+  );
   n += 5;
 
   // -- the EF model snapshot, with and without a migration beside it --------------
-  ok(classify([{ x: " ", y: "M", p: "backend/Infrastructure/Migrations/StigViddDbContextModelSnapshot.cs" }])
-       .some((s) => /snapshot/i.test(s)),
-     "a lone model-snapshot change went unmentioned");
-  ok(classify([
-       { x: " ", y: "M", p: "backend/Infrastructure/Migrations/StigViddDbContextModelSnapshot.cs" },
-       { x: "?", y: "?", p: "backend/Infrastructure/Migrations/20260822182423_Foo.cs" },
-     ]).length === 0,
-     "a scaffolded migration + its snapshot must be silent — that is the normal shape");
+  ok(
+    classify([{ x: " ", y: "M", p: "backend/Infrastructure/Migrations/StigViddDbContextModelSnapshot.cs" }]).some((s) =>
+      /snapshot/i.test(s),
+    ),
+    "a lone model-snapshot change went unmentioned",
+  );
+  ok(
+    classify([
+      { x: " ", y: "M", p: "backend/Infrastructure/Migrations/StigViddDbContextModelSnapshot.cs" },
+      { x: "?", y: "?", p: "backend/Infrastructure/Migrations/20260822182423_Foo.cs" },
+    ]).length === 0,
+    "a scaffolded migration + its snapshot must be silent — that is the normal shape",
+  );
   n += 2;
 
   // -- the composed text, against this actual checkout ---------------------------

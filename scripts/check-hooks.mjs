@@ -94,8 +94,7 @@ if (settings) {
         }
       }
   for (const f of hookFiles)
-    if (!registered.has(f))
-      fail(`${f} exists but is registered in no event — it will never run`);
+    if (!registered.has(f)) fail(`${f} exists but is registered in no event — it will never run`);
   note(`  ok  ${registered.size} registration(s), all exec form, all resolving to a file`);
 }
 
