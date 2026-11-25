@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { paths } from "@/config/paths";
 import type { Attention } from "@/api/attention";
+import { defined } from "@/testing/defined";
 import NavMain from "./nav-main";
 
 beforeEach(() => {
@@ -89,10 +90,10 @@ describe("NavMain", () => {
   it("shows a folded group with the work waiting on all its pages", () => {
     renderAt(paths.dashboard, { attention: { ...ATTENTION, importsAwaitingReview: 1, failedMails: 4 } });
 
-    expect(screen.getByRole("button", { name: "Contributions" }).closest("li")).toHaveTextContent("2 waiting");
-    expect(screen.getByRole("button", { name: "Community" }).closest("li")).toHaveTextContent("3 waiting");
-    expect(screen.getByRole("button", { name: "Import" }).closest("li")).toHaveTextContent("1 waiting");
-    expect(screen.getByRole("button", { name: "Mail" }).closest("li")).toHaveTextContent("4 waiting");
+    expect(screen.getByRole("button", { name: /^Contributions,\s*2\s*waiting$/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Community,\s*3\s*waiting$/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Import,\s*1\s*waiting$/ })).toBeVisible();
+    expect(screen.getByRole("button", { name: /^Mail,\s*4\s*waiting$/ })).toBeVisible();
   });
 
   it("shows each page's count once its group is open, not the group's sum as well", () => {
@@ -103,23 +104,24 @@ describe("NavMain", () => {
     expect(screen.getAllByText(/waiting/)).toHaveLength(2);
   });
 
-  it("makes room for a folded group's badge, so it never covers the chevron", async () => {
+  // keep-comment: the chevron ends every group row, so the chevrons line up whether or not a badge is shown
+  it("puts each folded group's badge right before its chevron, inside the row", () => {
     renderAt(paths.dashboard, { attention: { ...ATTENTION, importsAwaitingReview: 1, failedMails: 4 } });
-    for (const group of ["Contributions", "Community", "Mail"]) {
-      expect(screen.getByRole("button", { name: group })).toHaveClass("pr-9");
+
+    for (const group of ["Contributions", "Community", "Import", "Mail"]) {
+      const button = screen.getByRole("button", { name: new RegExp(`^${group},\\s*\\d+\\s*waiting$`) });
+      const badge = defined(within(button).getByText(/waiting/).parentElement, `${group}'s badge`);
+
+      expect(badge.nextElementSibling?.tagName.toLowerCase()).toBe("svg");
+      expect(badge.nextElementSibling?.nextElementSibling).toBeNull();
     }
-    const importButton = screen.getByRole("button", { name: "Import" });
-
-    expect(importButton).toHaveClass("pr-9");
-
-    await userEvent.click(importButton);
-    expect(screen.getByRole("button", { name: "Import" })).not.toHaveClass("pr-9");
   });
 
-  it("leaves a folded group without a badge its normal padding", () => {
+  it("ends a group row with only its chevron when nothing waits", () => {
     renderAt(paths.dashboard, { attention: { ...ATTENTION, importsAwaitingReview: 0 } });
+    const chevron = defined(screen.getByRole("button", { name: "Import" }).querySelector("svg:last-child"), "chevron");
 
-    expect(screen.getByRole("button", { name: "Import" })).not.toHaveClass("pr-9");
+    expect(chevron.parentElement?.children).toHaveLength(1);
   });
 
   it("shows no badge where nothing waits", () => {

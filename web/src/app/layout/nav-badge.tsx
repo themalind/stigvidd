@@ -4,8 +4,12 @@
 import { SidebarMenuBadge } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
-const COLORS =
-  "bg-primary text-primary-foreground peer-hover/menu-button:text-primary-foreground peer-data-[active=true]/menu-button:text-primary-foreground";
+const COLORS = "bg-primary text-primary-foreground";
+// keep-comment: the side badge is the button's sibling, so the button's hover and active states would recolour it
+const SIBLING_COLORS = cn(
+  COLORS,
+  "peer-hover/menu-button:text-primary-foreground peer-data-[active=true]/menu-button:text-primary-foreground",
+);
 
 function Count({ count }: { count: number }) {
   return (
@@ -23,7 +27,7 @@ export function NavBadge({ count }: { count: number }) {
 
   return (
     <>
-      <SidebarMenuBadge className={COLORS}>
+      <SidebarMenuBadge className={SIBLING_COLORS}>
         <Count count={count} />
       </SidebarMenuBadge>
       <span
@@ -34,8 +38,8 @@ export function NavBadge({ count }: { count: number }) {
   );
 }
 
-// keep-comment: inside an open group, where the sub-button lays its children out in a row
-export function NavSubBadge({ count }: { count: number }) {
+// keep-comment: in a row of the button's own children: a group's header or one of its pages
+export function NavInlineBadge({ count }: { count: number }) {
   if (count === 0) return null;
 
   return (

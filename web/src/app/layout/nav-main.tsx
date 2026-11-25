@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { pages } from "../pages";
-import { NavBadge, NavSubBadge } from "./nav-badge";
+import { NavBadge, NavInlineBadge } from "./nav-badge";
 import { badgeCount, buildNav, isUnder, type NavGroupItem, type NavPage } from "./nav-items";
 
 const nav = buildNav(pages);
@@ -69,18 +69,15 @@ function NavGroupEntry({ item: { group, pages: children }, attention }: { item: 
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton
-        aria-expanded={expanded}
-        onClick={() => setExpanded((was) => !was)}
-        // keep-comment: the badge is absolutely placed at the right edge, so room is made for it left of the chevron
-        className={cn(showsTotal && "pr-9")}
-      >
+      <SidebarMenuButton aria-expanded={expanded} onClick={() => setExpanded((was) => !was)}>
         <Icon />
-        <span>{group.title}</span>
-        <ChevronRight className={cn("ml-auto transition-transform", expanded && "rotate-90")} aria-hidden />
+        <span className="truncate">{group.title}</span>
+        <span className="ml-auto flex shrink-0 items-center gap-2">
+          {/* keep-comment: an open group shows each page's count instead, so the sum is not counted twice */}
+          {showsTotal && <NavInlineBadge count={total} />}
+          <ChevronRight className={cn("size-6 shrink-0 transition-transform", expanded && "rotate-90")} aria-hidden />
+        </span>
       </SidebarMenuButton>
-      {/* keep-comment: an open group shows each page's count instead, so the sum is not counted twice */}
-      {showsTotal && <NavBadge count={total} />}
       {expanded && (
         <SidebarMenuSub>
           {children.map((child) => {
@@ -92,7 +89,7 @@ function NavGroupEntry({ item: { group, pages: children }, attention }: { item: 
                   <NavLink to={path}>
                     <ChildIcon />
                     <span className="truncate">{title}</span>
-                    <NavSubBadge count={badgeCount([child], attention)} />
+                    <NavInlineBadge count={badgeCount([child], attention)} />
                   </NavLink>
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
