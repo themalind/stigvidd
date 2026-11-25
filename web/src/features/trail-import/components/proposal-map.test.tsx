@@ -4,7 +4,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, expect, it, vi } from "vitest";
-import { maps } from "@/testing/fake-maplibre";
+import { firstMap, maps } from "@/testing/fake-maplibre";
 import { ProposalMap } from "./proposal-map";
 
 vi.mock("maplibre-gl", () => import("@/testing/fake-maplibre"));
@@ -33,7 +33,7 @@ beforeEach(() => {
 
 it("draws the next proposal while the tiles of the first are still loading", () => {
   const { rerender } = render(<ProposalMap feature={A} />);
-  const map = maps[0];
+  const map = firstMap();
   map.emit("style.load");
 
   rerender(<ProposalMap feature={B} />);
@@ -44,7 +44,7 @@ it("draws the next proposal while the tiles of the first are still loading", () 
 it("keeps a hidden layer hidden after switching to satellite", async () => {
   const user = userEvent.setup();
   render(<ProposalMap feature={A} trail={B} />);
-  const map = maps[0];
+  const map = firstMap();
   map.emit("style.load");
 
   await user.click(screen.getByRole("button", { name: /matched trail/i }));

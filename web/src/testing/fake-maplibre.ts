@@ -4,6 +4,12 @@
 // keep-comment: use as vi.mock("maplibre-gl", () => import("@/testing/fake-maplibre")); jsdom has no WebGL
 export const maps: FakeMap[] = [];
 
+export function firstMap(): FakeMap {
+  const [map] = maps;
+  if (!map) throw new Error("expected a map to have been created");
+  return map;
+}
+
 type Handler = (...args: unknown[]) => void;
 
 export class FakeMap {

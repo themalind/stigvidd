@@ -7,6 +7,7 @@ import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AdminTrailListItemResponse, FacilityResponse, MediaItemResponse } from "@/api/generated/model";
 import { saveStagedFiles, saveStagedTarget } from "@/features/media/utils/staged-media";
+import { defined } from "@/testing/defined";
 import { libraryPage, mediaItem } from "@/testing/fixtures/media";
 import { trailListItem } from "@/testing/fixtures/trails";
 import { renderWithProviders } from "@/testing/render";
@@ -245,7 +246,7 @@ describe("files staged before a refresh", () => {
     await userEvent.click(uploadButton());
 
     await waitFor(() => expect(images.addTrailImages).toHaveBeenCalledOnce());
-    expect(images.addTrailImages.mock.calls[0][1].map((f: File) => f.name)).toEqual(["just-picked.jpg"]);
+    expect(images.addTrailImages.mock.calls[0]?.[1].map((f: File) => f.name)).toEqual(["just-picked.jpg"]);
   });
 
   it("are kept in step with what is staged now", async () => {
@@ -313,8 +314,8 @@ describe("the symbol, which takes a single image", () => {
     await userEvent.click(uploadButton());
 
     await waitFor(() => expect(images.setTrailSymbol).toHaveBeenCalledOnce());
-    expect(images.setTrailSymbol.mock.calls[0][0]).toBe("t-1");
-    expect(images.setTrailSymbol.mock.calls[0][1]).toBeInstanceOf(File);
+    expect(images.setTrailSymbol.mock.calls[0]?.[0]).toBe("t-1");
+    expect(images.setTrailSymbol.mock.calls[0]?.[1]).toBeInstanceOf(File);
     expect(images.addTrailImages).not.toHaveBeenCalled();
     expect(toasts.success).toHaveBeenCalledWith("Trail symbol updated.");
   });
@@ -332,7 +333,7 @@ describe("the images already attached", () => {
     await pick("Trail", /Knalleleden/);
 
     await waitFor(() => expect(calls("GET", MEDIA)).toHaveLength(1));
-    expect(calls("GET", MEDIA)[0].url).toContain("OwnerIdentifier=t-1");
+    expect(calls("GET", MEDIA)[0]?.url).toContain("OwnerIdentifier=t-1");
   });
 
   it("shows the gallery images, not the trail's symbol", async () => {
@@ -443,7 +444,7 @@ describe("uploading", () => {
     await userEvent.click(uploadButton());
 
     await waitFor(() => expect(images.addTrailImages).toHaveBeenCalledOnce());
-    const [identifier, files, options] = images.addTrailImages.mock.calls[0];
+    const [identifier, files, options] = defined(images.addTrailImages.mock.calls[0], "an upload");
     expect(identifier).toBe("t-1");
     expect(files).toHaveLength(2);
     expect(options).toEqual({ maxWidth: 1920, maxHeight: 1920, quality: 82, format: "webp" });
@@ -462,7 +463,7 @@ describe("uploading", () => {
     await userEvent.click(uploadButton());
 
     await waitFor(() => expect(images.addTrailImages).toHaveBeenCalledOnce());
-    expect(images.addTrailImages.mock.calls[0][2]).toEqual({ quality: 82 });
+    expect(images.addTrailImages.mock.calls[0]?.[2]).toEqual({ quality: 82 });
   });
 
   it("clears what was staged once the upload has landed, and shows the new images", async () => {
@@ -516,7 +517,7 @@ describe("uploading", () => {
     await userEvent.click(uploadButton());
 
     await waitFor(() => expect(images.addFacilityImages).toHaveBeenCalledOnce());
-    expect(images.addFacilityImages.mock.calls[0][0]).toBe("f-1");
+    expect(images.addFacilityImages.mock.calls[0]?.[0]).toBe("f-1");
     expect(images.addTrailImages).not.toHaveBeenCalled();
     await waitFor(() => expect(toasts.success).toHaveBeenCalledWith("1 image(s) added to facility."));
     expect(calls("GET", TRAILS)).toHaveLength(1);

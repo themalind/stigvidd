@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AdminHikeSubmissionListItemResponse } from "@/api/generated/model";
+import { defined } from "@/testing/defined";
 import { renderWithProviders } from "@/testing/render";
 
 const api = await vi.hoisted(async () => {
@@ -54,7 +55,7 @@ beforeEach(() => {
     Rejected: [],
   };
   api.mock.on("GET", LIST, () => {
-    const status = new URL(api.mock.calls[api.mock.calls.length - 1].url, "http://x").searchParams.get("status");
+    const status = new URL(defined(api.mock.calls.at(-1), "an API call").url, "http://x").searchParams.get("status");
     return byStatus[status ?? ""] ?? [];
   });
 });

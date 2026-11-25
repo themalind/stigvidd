@@ -63,8 +63,8 @@ export function extractTokens(source: string): string[] {
   const seen = new Set<string>();
   const names: string[] = [];
 
-  for (const match of source.matchAll(tokenPattern())) {
-    const name = match[1];
+  for (const [, name] of source.matchAll(tokenPattern())) {
+    if (name === undefined) continue;
     const key = name.toLowerCase();
     if (!seen.has(key)) {
       seen.add(key);
@@ -221,8 +221,8 @@ const attributePattern = /([A-Za-z_:][-A-Za-z0-9_:.]*)(?:\s*=\s*("[^"]*"|'[^']*'
 function readAttributes(source: string): ReadonlyMap<string, string> {
   const attrs = new Map<string, string>();
 
-  for (const match of source.matchAll(attributePattern)) {
-    attrs.set(match[1].toLowerCase(), unquote(match[2] ?? ""));
+  for (const [, name, value] of source.matchAll(attributePattern)) {
+    if (name !== undefined) attrs.set(name.toLowerCase(), unquote(value ?? ""));
   }
 
   return attrs;
@@ -491,8 +491,9 @@ export function describeLoss(report: LossReport): string {
 }
 
 function joinWithAnd(parts: string[]): string {
-  if (parts.length === 1) return parts[0];
-  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+  const rest = parts.slice(0, -1);
+  const last = parts.at(-1) ?? "";
+  return rest.length === 0 ? last : `${rest.join(", ")} and ${last}`;
 }
 
 // ── URLs ─────────────────────────────────────────────────────────────────────

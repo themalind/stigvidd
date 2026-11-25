@@ -125,8 +125,9 @@ export function useRouteEditor(initial: LngLat[]) {
     },
 
     applyRedraw() {
-      if (anchors.length !== 2) return;
-      edit(replaceSection(path, anchors[0], anchors[1], draft));
+      const [from, to] = anchors;
+      if (anchors.length !== 2 || from === undefined || to === undefined) return;
+      edit(replaceSection(path, from, to, draft));
       clearDrawing();
     },
 

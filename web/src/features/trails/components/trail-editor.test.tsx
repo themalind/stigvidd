@@ -6,6 +6,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { TrailResponse, UpdateTrailRequest } from "@/api/generated/model";
 import { ApiError } from "@/api/mutator";
+import { defined } from "@/testing/defined";
 import { trailDetail } from "@/testing/fixtures/trails";
 import { renderWithProviders } from "@/testing/render";
 
@@ -29,7 +30,7 @@ const full = trailDetail();
 
 const render = (ui: React.ReactElement) => renderWithProviders(ui);
 const puts = () => api.mock.calls.filter((call) => call.method === "PUT");
-const sent = () => puts()[0].body as UpdateTrailRequest;
+const sent = () => defined(puts()[0], "a PUT").body as UpdateTrailRequest;
 
 const open = () => userEvent.click(screen.getByRole("button"));
 const saveButton = () => screen.getByRole("button", { name: /Save changes/ });

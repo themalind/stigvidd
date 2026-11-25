@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { OutboxEmailSummaryResponse } from "@/api/generated/model";
+import { defined } from "@/testing/defined";
 import { renderWithProviders } from "@/testing/render";
 
 const api = await vi.hoisted(async () => {
@@ -54,7 +55,7 @@ let mail = summary();
 let total = 1;
 
 function lastQuery() {
-  return new URL(api.mock.calls[api.mock.calls.length - 1].url, "http://x").searchParams;
+  return new URL(defined(api.mock.calls.at(-1), "an API call").url, "http://x").searchParams;
 }
 
 const calls = (method: string, path: string) =>
@@ -141,7 +142,7 @@ describe("the outbox list", () => {
     renderPage("/mail-outbox?status=Failed");
 
     expect(await screen.findByText("vandrare@example.com")).toBeInTheDocument();
-    expect(calls("GET", OUTBOX)[0].url).toContain("status=Failed");
+    expect(calls("GET", OUTBOX)[0]?.url).toContain("status=Failed");
     expect(screen.getByRole("button", { name: "Failed" })).toHaveAttribute("aria-pressed", "true");
   });
 

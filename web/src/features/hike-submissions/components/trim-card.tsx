@@ -30,7 +30,7 @@ export function TrimCard({ editor, savedPath, saving, onSave }: Props) {
           step={1}
           minStepsBetweenThumbs={1}
           thumbLabel="Trim"
-          onValueChange={(v) => editor.setRange([v[0], v[1]])}
+          onValueChange={([from = 0, to = from]) => editor.setRange([from, to])}
         />
         <div className="flex justify-between text-sm">
           <span>Trimmed at start: {formatMetres(pathLengthMetres(path.slice(0, range[0] + 1)))}</span>

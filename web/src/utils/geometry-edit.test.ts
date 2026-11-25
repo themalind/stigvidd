@@ -69,8 +69,8 @@ describe("findJumps", () => {
     const jumps = findJumps([a, b, c, far, [12.94, 57.7303]]);
 
     expect(jumps).toHaveLength(1);
-    expect(jumps[0].index).toBe(2);
-    expect(jumps[0].metres).toBeGreaterThan(1000);
+    expect(jumps[0]?.index).toBe(2);
+    expect(jumps[0]?.metres).toBeGreaterThan(1000);
   });
 
   it("uses the threshold given", () => {

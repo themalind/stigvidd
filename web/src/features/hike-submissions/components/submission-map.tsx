@@ -3,7 +3,7 @@
 
 import type { MapLayerMouseEvent, Map as MapLibreMap, MapMouseEvent } from "maplibre-gl";
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
-import { type Jump, type LngLat, midpoints } from "@/utils/geometry-edit";
+import { type Jump, jumpSegment, type LngLat, midpoints } from "@/utils/geometry-edit";
 import { useMapLibre } from "@/hooks/use-maplibre";
 import { fitTo, MAP_COLORS, upsertSource as setData } from "@/lib/maplibre";
 
@@ -78,11 +78,18 @@ export function handlesOf(path: LngLat[], mode: EditMode): GeoJSON.FeatureCollec
 function jumpsOf(path: LngLat[], jumps: Jump[]): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
-    features: jumps.map((jump) => ({
-      type: "Feature",
-      properties: { metres: Math.round(jump.metres) },
-      geometry: { type: "LineString", coordinates: [path[jump.index], path[jump.index + 1]] },
-    })),
+    features: jumps.flatMap((jump) => {
+      const segment = jumpSegment(path, jump);
+      return segment
+        ? [
+            {
+              type: "Feature" as const,
+              properties: { metres: Math.round(jump.metres) },
+              geometry: { type: "LineString" as const, coordinates: segment },
+            },
+          ]
+        : [];
+    }),
   };
 }
 
@@ -159,8 +166,9 @@ function ensureLayers(map: MapLibreMap) {
 }
 
 function drawAll(map: MapLibreMap, { path, keptRange, jumps, redrawAnchors, draft, mode }: Props) {
-  const anchors = redrawAnchors.map((i) => path[i]).filter(Boolean);
-  const draftLine = anchors.length === 2 ? [anchors[0], ...draft, anchors[1]] : [...anchors, ...draft];
+  const anchors = redrawAnchors.map((i) => path[i]).filter((point) => point !== undefined);
+  const [from, to] = anchors;
+  const draftLine = from && to && anchors.length === 2 ? [from, ...draft, to] : [...anchors, ...draft];
 
   setData(map, "trimmed", line(path));
   setData(map, "kept", line(path.slice(keptRange[0], keptRange[1] + 1)));

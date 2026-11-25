@@ -78,7 +78,8 @@ describe("scanHtml", () => {
     const tags = scanHtml(html).filter((piece) => piece.kind === "tag");
 
     expect(tags).toHaveLength(2);
-    expect(tags[0].kind === "tag" && tags[0].attrs.get("href")).toBe("https://x.test");
+    const [first] = tags;
+    expect(first?.kind === "tag" && first.attrs.get("href")).toBe("https://x.test");
   });
 
   it("treats a lone < as text rather than a tag", () => {

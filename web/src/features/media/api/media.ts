@@ -77,7 +77,9 @@ export function useInvalidateMedia() {
 
 async function upload({ targetType, targetId, files, options }: UploadRequest): Promise<string> {
   if (targetType === "trail-symbol") {
-    await setTrailSymbol(targetId, files[0], options);
+    const [symbol] = files;
+    if (!symbol) throw new Error("No trail symbol file was picked.");
+    await setTrailSymbol(targetId, symbol, options);
     return "Trail symbol updated.";
   }
 

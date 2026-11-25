@@ -10,6 +10,7 @@ import {
   type StyleSpecification,
 } from "maplibre-gl";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
+import { toLngLat } from "@/utils/geometry-edit";
 
 // keep-comment: a bundled maplibre cannot find its own worker, and without one no source ever loads
 setWorkerUrl(workerUrl);
@@ -56,6 +57,6 @@ export function fitTo(map: MapLibreMap, points: GeoJSON.Position[], options: Fit
   if (points.length < 2) return;
 
   const bounds = new LngLatBounds();
-  for (const [lng, lat] of points) bounds.extend([lng, lat]);
+  for (const point of points) bounds.extend(toLngLat(point));
   map.fitBounds(bounds, options);
 }

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { AuthorStatisticResponse, ReporterStatisticResponse } from "@/api/generated/model";
+import { defined } from "@/testing/defined";
 import { authorStatistic, reporterStatistic } from "@/testing/fixtures/users";
 import { renderWithProviders } from "@/testing/render";
 
@@ -34,7 +35,7 @@ function pageOf(url: string) {
 }
 
 function lastPage() {
-  return pageOf(api.mock.calls[api.mock.calls.length - 1].url);
+  return pageOf(defined(api.mock.calls.at(-1), "an API call").url);
 }
 
 function paged<T>(items: T[], hasMore = false) {
@@ -80,7 +81,7 @@ describe("the reporters tab", () => {
     const row = await screen.findByTestId("reporter-row");
     expect(row).toHaveTextContent("VandrarVennen");
     expect(row).toHaveTextContent("67%");
-    expect(calls("GET", REPORTERS)[0].url).toContain("pageSize=25");
+    expect(calls("GET", REPORTERS)[0]?.url).toContain("pageSize=25");
   });
 
   // Pending reports are not evidence either way, so a reporter with nothing decided must not
@@ -129,7 +130,7 @@ describe("the reporters tab", () => {
     await user.click(screen.getByTestId("next-page"));
 
     expect(await screen.findByText("SidaTvå")).toBeInTheDocument();
-    expect(pageOf(calls("GET", REPORTERS)[1].url)).toBe(2);
+    expect(pageOf(defined(calls("GET", REPORTERS)[1], "second reporters call").url)).toBe(2);
     expect(screen.getByTestId("next-page")).toBeDisabled();
 
     await user.click(screen.getByTestId("previous-page"));
@@ -163,7 +164,7 @@ describe("the reporters tab", () => {
     api.mock.on("GET", REPORTERS, () => {
       const page = lastPage();
       if (page === 2 && fail) throw new Error("Nope");
-      return paged(reporters[page - 1], page < reporters.length);
+      return paged(reporters[page - 1] ?? [], page < reporters.length);
     });
     renderWithProviders(<UsersPage />);
 

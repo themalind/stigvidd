@@ -85,7 +85,7 @@ describe("UserMappingCard", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save mapping" }));
 
     await waitFor(() => expect(calls("PUT", `${MAPPINGS}/7`)).toHaveLength(1));
-    expect(calls("PUT", `${MAPPINGS}/7`)[0].body).toEqual({
+    expect(calls("PUT", `${MAPPINGS}/7`)[0]?.body).toEqual({
       keycloakSubjectId: "sub-1",
       nickName: "Anna",
       email: "anna@example.se",
@@ -99,7 +99,7 @@ describe("UserMappingCard", () => {
     await userEvent.click(screen.getByRole("button", { name: /Search/ }));
 
     await waitFor(() => expect(calls("GET", SEARCH)).toHaveLength(1));
-    expect(calls("GET", SEARCH)[0].url).toBe(`${SEARCH}?search=anna`);
+    expect(calls("GET", SEARCH)[0]?.url).toBe(`${SEARCH}?search=anna`);
   });
 
   it("asks Keycloak again when the same search is repeated", async () => {

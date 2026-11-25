@@ -848,6 +848,7 @@ describe("editing the boundary on the map", () => {
     withArea({ boundary: [SQUARE[0], MOVED] });
     const draw = await openEditor("Edit boundary");
     const [first] = draw.features;
+    if (!first) throw new Error("expected a drawn part");
 
     act(() => draw.emit("select", first.id));
     await userEvent.click(screen.getByRole("button", { name: "Delete selected part" }));

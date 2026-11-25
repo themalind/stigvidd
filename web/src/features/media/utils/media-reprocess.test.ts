@@ -35,8 +35,8 @@ describe("presetByKey", () => {
     expect(presetByKey("unknown-preset" as never)).toEqual(REPROCESS_PRESETS[REPROCESS_PRESETS.length - 1]);
   });
 
-  it("keeps custom last, which is what the fallback relies on", () => {
-    expect(REPROCESS_PRESETS[REPROCESS_PRESETS.length - 1].key).toBe("custom");
+  it("lists custom last", () => {
+    expect(REPROCESS_PRESETS.at(-1)?.key).toBe("custom");
   });
 });
 

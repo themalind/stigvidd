@@ -95,7 +95,7 @@ export function StagedFiles({ files, single, onAdd, onRemove, onClear, onCropCha
         </>
       )}
 
-      {previews.length === 1 && (
+      {previews.length === 1 && previews[0] && (
         <div className="space-y-2">
           <Label>Crop</Label>
           <ImageCrop src={previews[0].url} onCropChange={onCropChange} />

@@ -31,7 +31,8 @@ export function ReportQueue({ filters, onPageChange, renderAuthorActions }: Prop
   const step = (offset: number) => {
     if (reports.length === 0) return;
     const index = reports.findIndex((r) => r.identifier === selected);
-    setPicked(reports[Math.min(Math.max(index + offset, 0), reports.length - 1)].identifier);
+    const next = reports[Math.min(Math.max(index + offset, 0), reports.length - 1)];
+    if (next) setPicked(next.identifier);
   };
 
   useKeyboardShortcuts({ j: () => step(1), k: () => step(-1) });

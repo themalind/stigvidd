@@ -150,6 +150,7 @@ describe("failures", () => {
     ]);
 
     const [showA, showB] = await screen.findAllByRole("button", { name: /show failures/i });
+    if (!showA || !showB) throw new Error("expected two show-failures buttons");
     await userEvent.click(showA);
     await userEvent.click(showB);
     await screen.findByText("Reason B");
@@ -215,10 +216,12 @@ describe("retrying", () => {
       job({ identifier: "job-b", ...settled, failedCount: 1 }),
     ]);
     const [, showB] = await screen.findAllByRole("button", { name: /show failures/i });
+    if (!showB) throw new Error("expected job B's show-failures button");
     await userEvent.click(showB);
     await screen.findByText("Reason B");
 
     const [retryA] = screen.getAllByRole("button", { name: /retry failed/i });
+    if (!retryA) throw new Error("expected job A's retry button");
     await userEvent.click(retryA);
 
     await waitFor(() => expect(toasts.success).toHaveBeenCalled());

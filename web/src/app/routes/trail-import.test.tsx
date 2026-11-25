@@ -8,6 +8,7 @@ import type { ImportSessionStatus } from "@/api/generated/model";
 import type { Session } from "@/features/trail-import/api/trail-import";
 import { pollWhileAnalysing } from "@/features/trail-import/api/trail-import";
 import { answerConfirm } from "@/testing/confirm";
+import { defined } from "@/testing/defined";
 import { session } from "@/testing/fixtures/trail-import";
 import { renderWithProviders } from "@/testing/render";
 
@@ -40,7 +41,11 @@ function renderPage(list: Session[]) {
   renderWithProviders(<TrailImportPage />, { initialEntries: ["/trail-import"] });
 }
 
-const card = async () => (await screen.findAllByTestId("session-card"))[0];
+const card = async () => defined((await screen.findAllByTestId("session-card"))[0], "a session card");
+const twoCards = async () => {
+  const [first, second] = await screen.findAllByTestId("session-card");
+  return [defined(first, "first session card"), defined(second, "second session card")] as const;
+};
 const analyseButton = async () => within(await card()).getByRole("button", { name: /Analyse/ });
 
 beforeEach(() => {
@@ -75,7 +80,7 @@ describe("the session list", () => {
   it("links to the review only once the analysis is done", async () => {
     renderPage([session(), session({ id: 2, status: "Uploaded", analyzedAt: null })]);
 
-    const [ready, uploaded] = await screen.findAllByTestId("session-card");
+    const [ready, uploaded] = await twoCards();
     expect(within(ready).getByRole("link", { name: "Review" })).toHaveAttribute("href", "/trail-import/1");
     expect(within(uploaded).queryByRole("link", { name: "Review" })).toBeNull();
   });
@@ -123,7 +128,7 @@ describe("uploading", () => {
     await userEvent.click(screen.getByRole("button", { name: "Upload" }));
 
     await waitFor(() => expect(calls("POST", SESSIONS)).toHaveLength(1));
-    const body = calls("POST", SESSIONS)[0].body;
+    const body = calls("POST", SESSIONS)[0]?.body;
     if (!(body instanceof FormData)) throw new Error("expected a multipart body");
     expect((body.get("file") as File).name).toBe("boras-2027.geojson");
     expect(body.get("source")).toBe("ulricehamn");
@@ -141,7 +146,7 @@ describe("uploading", () => {
     await userEvent.click(screen.getByRole("button", { name: "Upload" }));
 
     await waitFor(() => expect(calls("POST", SESSIONS)).toHaveLength(1));
-    const body = calls("POST", SESSIONS)[0].body;
+    const body = calls("POST", SESSIONS)[0]?.body;
     if (!(body instanceof FormData)) throw new Error("expected a multipart body");
     expect(body.has("source")).toBe(false);
   });
@@ -175,7 +180,7 @@ describe("analysing", () => {
     await userEvent.click(await analyseButton());
 
     await waitFor(() => expect(calls("POST", ANALYZE)).toHaveLength(1));
-    expect(calls("POST", ANALYZE)[0].url).toContain("force=false");
+    expect(calls("POST", ANALYZE)[0]?.url).toContain("force=false");
     expect(toasts.success).toHaveBeenCalledWith("Analysis queued. This page updates itself while it runs.");
     await waitFor(() => expect(calls("GET", SESSIONS).length).toBeGreaterThan(1));
   });
@@ -191,7 +196,7 @@ describe("analysing", () => {
     expect(await answerConfirm("yes")).toContain(REFUSAL);
 
     await waitFor(() => expect(calls("POST", ANALYZE)).toHaveLength(2));
-    expect(calls("POST", ANALYZE)[1].url).toContain("force=true");
+    expect(calls("POST", ANALYZE)[1]?.url).toContain("force=true");
     expect(toasts.error).not.toHaveBeenCalled();
   });
 
@@ -234,7 +239,7 @@ describe("analysing", () => {
   it("names a second run for what it is", async () => {
     renderPage([session({ status: "Uploaded", analyzedAt: null }), session({ id: 2 })]);
 
-    const [fresh, analysed] = await screen.findAllByTestId("session-card");
+    const [fresh, analysed] = await twoCards();
     expect(within(fresh).getByRole("button", { name: "Analyse" })).toBeInTheDocument();
     expect(within(analysed).getByRole("button", { name: "Analyse again" })).toBeInTheDocument();
   });

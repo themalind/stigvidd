@@ -27,7 +27,8 @@ function collection(features: GeoJSON.Feature[]): GeoJSON.FeatureCollection {
 
 function sources(feature: Coordinates, trail: Coordinates | null): Record<string, GeoJSON.FeatureCollection> {
   const trailLine = trail ?? [];
-  const last = feature.length - 1;
+  const start = feature[0];
+  const end = feature.at(-1);
 
   return {
     feature: collection(
@@ -41,11 +42,11 @@ function sources(feature: Coordinates, trail: Coordinates | null): Record<string
         : [{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: trailLine } }],
     ),
     "feature-ends": collection(
-      feature.length === 0
+      start === undefined || end === undefined
         ? []
         : [
-            { type: "Feature", properties: { role: "start" }, geometry: { type: "Point", coordinates: feature[0] } },
-            { type: "Feature", properties: { role: "end" }, geometry: { type: "Point", coordinates: feature[last] } },
+            { type: "Feature", properties: { role: "start" }, geometry: { type: "Point", coordinates: start } },
+            { type: "Feature", properties: { role: "end" }, geometry: { type: "Point", coordinates: end } },
           ],
     ),
   };

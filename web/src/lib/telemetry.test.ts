@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { defined } from "@/testing/defined";
 
 /**
  * telemetry.ts reads VITE_OO_LOGS_URL / VITE_OO_LOGS_TOKEN at MODULE LOAD, so every test
@@ -29,9 +30,13 @@ async function loadTelemetry(
 
 /** The body of the nth fetch call, parsed back out of the JSON it was sent as. */
 function sentRecords(fetchMock: ReturnType<typeof vi.fn>, call = 0): unknown[] {
-  const init = fetchMock.mock.calls[call][1] as RequestInit;
+  const init = defined(fetchMock.mock.calls[call], `fetch call ${call}`)[1] as RequestInit;
 
   return JSON.parse(init.body as string) as unknown[];
+}
+
+function firstRecord<T>(fetchMock: ReturnType<typeof vi.fn>): T {
+  return defined(sentRecords(fetchMock)[0], "a sent record") as T;
 }
 
 let fetchMock: ReturnType<typeof vi.fn>;
@@ -149,7 +154,7 @@ describe("shipping", () => {
     telemetry.logger.info("hello");
     await telemetry.flush();
 
-    const [record] = sentRecords(fetchMock) as { _timestamp: number }[];
+    const record = firstRecord<{ _timestamp: number }>(fetchMock);
 
     // Milliseconds would be silently accepted and land the record in 1970, outside every
     // dashboard's window and outside ZO_INGEST_ALLOWED_UPTO.
@@ -204,8 +209,8 @@ describe("shipping", () => {
     telemetry.logger.info("leaving");
     await telemetry.flush(true);
 
-    expect((fetchMock.mock.calls[0][1] as RequestInit).keepalive).toBe(false);
-    expect((fetchMock.mock.calls[1][1] as RequestInit).keepalive).toBe(true);
+    expect((fetchMock.mock.calls[0]?.[1] as RequestInit | undefined)?.keepalive).toBe(false);
+    expect((fetchMock.mock.calls[1]?.[1] as RequestInit | undefined)?.keepalive).toBe(true);
   });
 });
 
@@ -225,7 +230,7 @@ describe("redaction", () => {
     });
     await telemetry.flush();
 
-    const [record] = sentRecords(fetchMock) as Record<string, unknown>[];
+    const record = firstRecord<Record<string, unknown>>(fetchMock);
 
     for (const key of ["accessToken", "refreshToken", "Authorization", "latitude", "longitude", "geometry"]) {
       expect(record[key]).toBe("[redacted]");
@@ -242,7 +247,7 @@ describe("redaction", () => {
     telemetry.logger.error("failed for admin@stigvidd.se with Bearer eyJhbGciOi.eyJzdWIi.sig at 57.70887,11.97456");
     await telemetry.flush();
 
-    const [record] = sentRecords(fetchMock) as { message: string }[];
+    const record = firstRecord<{ message: string }>(fetchMock);
 
     expect(record.message).not.toContain("admin@stigvidd.se");
     expect(record.message).not.toContain("eyJhbGciOi");
@@ -260,9 +265,7 @@ describe("redaction", () => {
     });
     await telemetry.flush();
 
-    const [record] = sentRecords(fetchMock) as {
-      request: { headers: { authorization: string } };
-    }[];
+    const record = firstRecord<{ request: { headers: { authorization: string } } }>(fetchMock);
 
     expect(record.request.headers.authorization).toBe("[redacted]");
   });
@@ -274,7 +277,7 @@ describe("redaction", () => {
     telemetry.logger.error("real message", { level: "debug", message: "spoofed" });
     await telemetry.flush();
 
-    const [record] = sentRecords(fetchMock) as { level: string; message: string }[];
+    const record = firstRecord<{ level: string; message: string }>(fetchMock);
 
     expect(record.level).toBe("error");
     expect(record.message).toBe("real message");

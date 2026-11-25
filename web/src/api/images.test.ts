@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { defined } from "@/testing/defined";
 
 const customFetch = vi.hoisted(() => vi.fn());
 vi.mock("@/api/mutator", () => ({ customFetch }));
@@ -13,7 +14,7 @@ function png(name: string) {
 }
 
 function sentBody(): FormData {
-  return customFetch.mock.calls[0][1].body as FormData;
+  return defined(customFetch.mock.calls[0], "a request")[1].body as FormData;
 }
 
 beforeEach(() => {
@@ -59,7 +60,7 @@ describe("addTrailImages", () => {
   it("sets no Content-Type, so the browser can write the multipart boundary", async () => {
     await addTrailImages("abc", [png("a.png")]);
 
-    expect(customFetch.mock.calls[0][1]).not.toHaveProperty("headers");
+    expect(customFetch.mock.calls[0]?.[1]).not.toHaveProperty("headers");
   });
 });
 

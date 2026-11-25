@@ -6,6 +6,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/api/mutator";
 import { QueryBoundary } from "@/components/query-boundary";
+import { defined } from "@/testing/defined";
 import { renderWithProviders } from "@/testing/render";
 
 const api = await vi.hoisted(async () => {
@@ -222,8 +223,9 @@ describe("running the import", () => {
     await userEvent.click(importButton());
 
     await waitFor(() => expect(transfer.importData).toHaveBeenCalledOnce());
-    expect(vi.mocked(transfer.importData).mock.calls[0][0]).toBeInstanceOf(File);
-    expect((vi.mocked(transfer.importData).mock.calls[0][0] as File).name).toBe("host.zip");
+    const [file] = defined(vi.mocked(transfer.importData).mock.calls[0], "an import");
+    expect(file).toBeInstanceOf(File);
+    expect((file as File).name).toBe("host.zip");
   });
 
   // Two clicks on a restore that replaces the host must not be two restores.

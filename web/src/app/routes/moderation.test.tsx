@@ -6,6 +6,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useLocation } from "react-router";
 import type { ContentReportDetailResponse, ContentReportSummaryResponse } from "@/api/generated/model";
+import { defined } from "@/testing/defined";
 import { renderWithProviders } from "@/testing/render";
 
 const api = await vi.hoisted(async () => {
@@ -174,7 +175,7 @@ describe("the queue", () => {
     renderPage([summary(), summary({ identifier: "report-2", contentSnapshot: "Something else" })]);
     await screen.findByText("Something unpleasant");
 
-    await user.click(screen.getAllByTestId("report-row")[1]);
+    await user.click(defined(screen.getAllByTestId("report-row")[1], "second report row"));
 
     expect(await screen.findByText("Something else")).toBeInTheDocument();
     expect(screen.getAllByTestId("report-row")[1]).toHaveAttribute("aria-current", "true");
@@ -197,7 +198,7 @@ describe("filters", () => {
     renderPage([summary({ status: "Upheld" })], "/moderation?status=Upheld");
 
     expect(await screen.findByTestId("content-snapshot")).toBeInTheDocument();
-    expect(calls("GET", REPORTS)[0].url).toContain("status=Upheld");
+    expect(calls("GET", REPORTS)[0]?.url).toContain("status=Upheld");
     expect(screen.getByRole("button", { name: "Upheld" })).toHaveAttribute("aria-pressed", "true");
   });
 
@@ -206,7 +207,7 @@ describe("filters", () => {
     renderPage([summary()], "/moderation?page=3");
     await screen.findByText(/Page 3/);
 
-    await user.click(screen.getAllByRole("button", { name: "All" })[0]);
+    await user.click(defined(screen.getAllByRole("button", { name: "All" })[0], "All"));
 
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("?status=All"));
     await waitFor(() => expect(listParams().get("page")).toBe("1"));

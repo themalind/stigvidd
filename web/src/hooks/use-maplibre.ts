@@ -5,6 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Map as MapLibreMap, NavigationControl, ScaleControl } from "maplibre-gl";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { fitTo, mapStyle } from "@/lib/maplibre";
+import { toLngLat } from "@/utils/geometry-edit";
 
 const BORAS: [number, number] = [12.94, 57.72];
 
@@ -37,12 +38,12 @@ export function useMapLibre({ satellite, zoom, draw, fitPoints, fitPadding, setu
   useEffect(() => {
     if (!containerRef.current) return;
     const { satellite, zoom, fitPoints, setup } = latest.current;
-    const [lng, lat] = fitPoints()[0] ?? BORAS;
+    const first = fitPoints()[0];
 
     const map = new MapLibreMap({
       container: containerRef.current,
       style: mapStyle(satellite),
-      center: [lng, lat],
+      center: first ? toLngLat(first) : BORAS,
       zoom,
     });
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");

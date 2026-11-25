@@ -3,7 +3,7 @@
 
 import { render } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { maps } from "@/testing/fake-maplibre";
+import { firstMap, maps } from "@/testing/fake-maplibre";
 import type { LngLat } from "@/utils/geometry-edit";
 import { handlesOf, SubmissionMap } from "./submission-map";
 
@@ -40,7 +40,7 @@ beforeEach(() => {
 
 it("draws the line as soon as the style loads, before the tiles have arrived", () => {
   show();
-  const map = maps[0];
+  const map = firstMap();
 
   map.emit("style.load");
 
@@ -55,20 +55,20 @@ it("offers a handle halfway along each segment, only while moving points", () =>
   expect(handlesOf(PATH, "delete").features).toHaveLength(0);
 
   show();
-  maps[0].emit("style.load");
+  firstMap().emit("style.load");
 
-  expect(maps[0].layers).toContain("handles");
+  expect(firstMap().layers).toContain("handles");
 });
 
 it("draws nothing before the style has loaded", () => {
   show();
 
-  expect(maps[0].layers).toHaveLength(0);
+  expect(firstMap().layers).toHaveLength(0);
 });
 
 it("redraws after the satellite toggle replaces the style", () => {
   const { rerender } = show();
-  const map = maps[0];
+  const map = firstMap();
   map.emit("style.load");
 
   rerender(

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { defined } from "@/testing/defined";
 import { libraryPage, mediaItem } from "@/testing/fixtures/media";
 
 const api = await vi.hoisted(async () => {
@@ -33,7 +34,7 @@ describe("getMediaForOwner", () => {
     await getMediaForOwner("trail-1");
 
     expect(api.mock.calls).toHaveLength(1);
-    const query = new URLSearchParams(api.mock.calls[0].url.split("?")[1]);
+    const query = new URL(defined(api.mock.calls[0], "a request").url, "http://x").searchParams;
     expect(query.get("OwnerIdentifier")).toBe("trail-1");
     expect(query.get("Page")).toBe("1");
   });
@@ -45,7 +46,7 @@ describe("getMediaForOwner", () => {
     const media = await getMediaForOwner("trail-1");
 
     expect(media.map((m) => m.identifier)).toEqual(["a", "b", "c"]);
-    expect(new URLSearchParams(api.mock.calls[1].url.split("?")[1]).get("Page")).toBe("2");
+    expect(new URL(defined(api.mock.calls[1], "a second request").url, "http://x").searchParams.get("Page")).toBe("2");
   });
 
   it("stops at a ceiling rather than spinning on a server that always says there is more", async () => {

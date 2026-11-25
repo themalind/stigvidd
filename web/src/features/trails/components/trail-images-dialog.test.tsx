@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import type { TrailImageResponse } from "@/api/generated/model";
 import { ApiError } from "@/api/mutator";
 import { answerConfirm } from "@/testing/confirm";
+import { defined } from "@/testing/defined";
 import { trailDetail } from "@/testing/fixtures/trails";
 import { renderWithProviders } from "@/testing/render";
 
@@ -44,6 +45,7 @@ async function open(images = [image("img-1"), image("img-2")]) {
 }
 
 const deleteButtons = () => screen.getAllByTitle("Delete image");
+const deleteButton = (index: number) => defined(deleteButtons()[index], `delete button ${index}`);
 const calls = (method: string, path: string) =>
   api.mock.calls.filter((call) => call.method === method && call.path === path);
 
@@ -117,7 +119,7 @@ describe("deleting an image", () => {
   it("asks first", async () => {
     await open();
 
-    await userEvent.click(deleteButtons()[0]);
+    await userEvent.click(deleteButton(0));
 
     expect(await screen.findByRole("alertdialog", { name: "Delete this image?" })).toBeInTheDocument();
     expect(api.mock.calls.filter((call) => call.method === "DELETE")).toHaveLength(0);
@@ -126,7 +128,7 @@ describe("deleting an image", () => {
   it("deletes nothing when the answer is no", async () => {
     await open();
 
-    await userEvent.click(deleteButtons()[0]);
+    await userEvent.click(deleteButton(0));
     await answerConfirm("no");
 
     expect(api.mock.calls.filter((call) => call.method === "DELETE")).toHaveLength(0);
@@ -136,7 +138,7 @@ describe("deleting an image", () => {
   it("deletes the image that was clicked, and only that one", async () => {
     await open();
 
-    await userEvent.click(deleteButtons()[1]);
+    await userEvent.click(deleteButton(1));
     await answerConfirm("yes");
 
     await waitFor(() => expect(deleteButtons()).toHaveLength(1));
@@ -152,7 +154,7 @@ describe("deleting an image", () => {
     });
     await open();
 
-    await userEvent.click(deleteButtons()[0]);
+    await userEvent.click(deleteButton(0));
     await answerConfirm("yes");
 
     await waitFor(() => expect(toasts.toast.error).toHaveBeenCalledWith("Failed to delete image."));
@@ -160,7 +162,7 @@ describe("deleting an image", () => {
     expect(toasts.toast.success).not.toHaveBeenCalled();
     // The button is disabled while the request is in flight, so a failure that
     // never re-enables it leaves the image undeletable until the panel is reopened.
-    expect(deleteButtons()[0]).toBeEnabled();
+    expect(deleteButton(0)).toBeEnabled();
   });
 
   it("keeps every image that is being deleted locked, not just the last one", async () => {
@@ -169,19 +171,19 @@ describe("deleting an image", () => {
     }
     await open();
 
-    await userEvent.click(deleteButtons()[0]);
+    await userEvent.click(deleteButton(0));
     await answerConfirm("yes");
-    await userEvent.click(deleteButtons()[1]);
+    await userEvent.click(deleteButton(1));
     await answerConfirm("yes");
 
-    await waitFor(() => expect(deleteButtons()[1]).toBeDisabled());
-    expect(deleteButtons()[0]).toBeDisabled();
+    await waitFor(() => expect(deleteButton(1)).toBeDisabled());
+    expect(deleteButton(0)).toBeDisabled();
   });
 
   it("opens an enlarged view when an image is clicked", async () => {
     await open();
 
-    await userEvent.click(screen.getAllByRole("presentation")[0]);
+    await userEvent.click(defined(screen.getAllByRole("presentation")[0], "the image"));
 
     expect(await screen.findByText("Enlarged image")).toBeInTheDocument();
   });
@@ -194,7 +196,7 @@ describe("uploading", () => {
     await userEvent.upload(fileInput(), new File(["x"], "photo.jpg", { type: "image/jpeg" }));
 
     await waitFor(() => expect(deleteButtons()).toHaveLength(3));
-    const body = calls("POST", IMAGES)[0].body;
+    const body = calls("POST", IMAGES)[0]?.body;
     if (!(body instanceof FormData)) throw new Error("expected a multipart body");
     expect(body.getAll("images")).toEqual([expect.objectContaining({ name: "photo.jpg" })]);
     expect(toasts.toast.success).toHaveBeenCalledWith("1 image uploaded.");

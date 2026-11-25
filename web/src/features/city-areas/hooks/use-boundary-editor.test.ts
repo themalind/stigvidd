@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { GeoJSONStoreFeatures } from "terra-draw";
 import { toBoundary, toFeatures } from "./use-boundary-editor";
 
-const RING = [
+const RING: [number, number][] = [
   [12.9, 57.7],
   [12.95, 57.7],
   [12.95, 57.75],
@@ -26,6 +26,7 @@ describe("boundary editor conversion", () => {
 
   it("leaves out a part still being drawn and the select handles", () => {
     const [part] = toFeatures([[RING]]);
+    if (!part) throw new Error("expected a polygon feature");
     const drawing: GeoJSONStoreFeatures = {
       ...part,
       id: "drawing",

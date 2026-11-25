@@ -6,6 +6,7 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { DecideProposalRequest } from "@/api/generated/model";
 import type { Preview, Proposal } from "@/features/trail-import/api/trail-import";
+import { defined } from "@/testing/defined";
 import { preview, proposal } from "@/testing/fixtures/trail-import";
 import { renderWithProviders } from "@/testing/render";
 import type { RelinkTarget } from "./relink-picker";
@@ -64,7 +65,7 @@ function show(
 
 const drawn = () => screen.findByTestId("proposal-map");
 const button = (name: RegExp | string) => screen.getByRole("button", { name });
-const saved = () => server.decideProposal.mock.calls[0][0];
+const saved = () => defined(server.decideProposal.mock.calls[0], "a saved decision")[0];
 
 beforeEach(() => {
   vi.clearAllMocks();

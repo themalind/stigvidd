@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2026 The Stigvidd Authors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import { adjacentPairs } from "./adjacent-pairs";
+
 // keep-comment: [longitude, latitude], the order GeoJSON and MapLibre use, unlike the wire format
 export type LngLat = [number, number];
 
@@ -34,6 +36,19 @@ export function parseCoordinates(json: string): LngLat[] {
   }
 }
 
+// keep-comment: GeoJSON types a position as number[], though the spec requires a longitude and a latitude
+export function toLngLat(position: GeoJSON.Position): LngLat {
+  const [lng, lat] = position;
+  if (lng === undefined || lat === undefined) throw new Error("A position needs a longitude and a latitude");
+  return [lng, lat];
+}
+
+export function jumpSegment(path: LngLat[], jump: Jump): [LngLat, LngLat] | null {
+  const from = path[jump.index];
+  const to = path[jump.index + 1];
+  return from && to ? [from, to] : null;
+}
+
 export function serializeCoordinates(path: LngLat[]): string {
   return JSON.stringify(path.map(([longitude, latitude]) => ({ latitude, longitude })));
 }
@@ -48,16 +63,16 @@ export function distanceMetres(a: LngLat, b: LngLat): number {
 
 export function pathLengthMetres(path: LngLat[]): number {
   let total = 0;
-  for (let i = 1; i < path.length; i++) total += distanceMetres(path[i - 1], path[i]);
+  for (const [a, b] of adjacentPairs(path)) total += distanceMetres(a, b);
   return total;
 }
 
 export function findJumps(path: LngLat[], thresholdMetres = DEFAULT_JUMP_METRES): Jump[] {
   const jumps: Jump[] = [];
-  for (let i = 1; i < path.length; i++) {
-    const metres = distanceMetres(path[i - 1], path[i]);
-    if (metres > thresholdMetres) jumps.push({ index: i - 1, metres });
-  }
+  adjacentPairs(path).forEach(([a, b], index) => {
+    const metres = distanceMetres(a, b);
+    if (metres > thresholdMetres) jumps.push({ index, metres });
+  });
   return jumps.sort((a, b) => b.metres - a.metres);
 }
 
@@ -79,7 +94,7 @@ export function insertPoint(path: LngLat[], afterIndex: number, at: LngLat): Lng
 }
 
 export function midpoints(path: LngLat[]): LngLat[] {
-  return path.slice(1).map((b, i) => [(path[i][0] + b[0]) / 2, (path[i][1] + b[1]) / 2]);
+  return adjacentPairs(path).map(([a, b]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
 }
 
 // keep-comment: drawn runs outward from the chosen end, so extending the start puts the last drawn point first
@@ -106,7 +121,9 @@ export function replaceSection(path: LngLat[], from: number, to: number, drawn: 
 export const LOOP_CLOSE_METRES = 150;
 
 export function isLoop(path: LngLat[], closeMetres = LOOP_CLOSE_METRES): boolean {
-  return path.length > 2 && distanceMetres(path[0], path[path.length - 1]) <= closeMetres;
+  const first = path[0];
+  const last = path.at(-1);
+  return path.length > 2 && first !== undefined && last !== undefined && distanceMetres(first, last) <= closeMetres;
 }
 
 // keep-comment: rotates a loop to begin and end at index; null when the path is not a loop

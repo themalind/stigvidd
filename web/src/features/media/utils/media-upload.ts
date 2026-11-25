@@ -73,7 +73,7 @@ export function acceptImages(staged: File[], incoming: FileList | File[], allowM
 
   if (images.length === 0) return staged;
 
-  return allowMultiple ? [...staged, ...images] : [images[0]];
+  return allowMultiple ? [...staged, ...images] : images.slice(0, 1);
 }
 
 // Owner type as well as id: a trail's symbol carries the trail's own identifier, so

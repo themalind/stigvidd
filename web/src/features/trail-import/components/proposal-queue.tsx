@@ -56,7 +56,8 @@ export function ProposalQueue({
   const step = (offset: number) => {
     if (proposals.length === 0) return;
     const index = proposals.findIndex((p) => p.id === selected?.id);
-    setPicked(proposals[Math.min(Math.max(index + offset, 0), proposals.length - 1)].id);
+    const next = proposals[Math.min(Math.max(index + offset, 0), proposals.length - 1)];
+    if (next) setPicked(next.id);
   };
 
   useKeyboardShortcuts({ j: () => step(1), k: () => step(-1) });

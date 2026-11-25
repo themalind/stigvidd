@@ -18,7 +18,7 @@ export function createApiMock() {
 
   const customFetch = vi.fn(async (url: string, options: RequestInit = {}) => {
     const method = (options.method ?? "GET").toUpperCase();
-    const path = url.split("?")[0];
+    const path = url.split("?", 1)[0] ?? url;
     const body = typeof options.body === "string" ? JSON.parse(options.body) : options.body;
     calls.push({ method, url, path, body });
 

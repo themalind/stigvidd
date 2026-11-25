@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { useLocation } from "react-router";
 import type { ProposalDecision } from "@/api/generated/model";
 import type { Proposal, Session } from "@/features/trail-import/api/trail-import";
+import { defined } from "@/testing/defined";
 import { diff, preview, proposal, session } from "@/testing/fixtures/trail-import";
 import { renderWithProviders } from "@/testing/render";
 
@@ -278,7 +279,7 @@ describe("filters", () => {
 
     expect(await screen.findByText("No proposal is both Medium and Undecided.")).toBeInTheDocument();
 
-    await userEvent.click(screen.getAllByRole("button", { name: "Show all" })[0]);
+    await userEvent.click(defined(screen.getAllByRole("button", { name: "Show all" })[0], "Show all"));
 
     await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent("?decision=All"));
     expect(await screen.findByRole("checkbox", { name: "Select Kranslingan" })).toBeInTheDocument();

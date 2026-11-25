@@ -50,7 +50,7 @@ export default function UserMappingCard() {
   function pickKeycloakUser(user: KeycloakUserResponse) {
     setKeycloakUser(user);
     setEmail(user.email ?? user.username);
-    setNickName((current) => current || user.username.split("@")[0].slice(0, 20));
+    setNickName((current) => current || (user.username.split("@", 1)[0] ?? "").slice(0, 20));
   }
 
   const canSave =

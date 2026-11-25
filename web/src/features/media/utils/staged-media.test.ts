@@ -34,6 +34,7 @@ describe("staged files", () => {
     await saveStagedFiles([pngFile("hike.png", "the-bytes")]);
 
     const [restored] = await loadStagedFiles();
+    if (!restored) throw new Error("expected a restored file");
 
     expect(await restored.text()).toBe("the-bytes");
   });
@@ -56,6 +57,7 @@ describe("staged files", () => {
     await saveStagedFiles([pngFile("hike.png", "x")]);
 
     const [restored] = await loadStagedFiles();
+    if (!restored) throw new Error("expected a restored file");
 
     expect(restored.name).toBe("hike.png");
     expect(restored.type).toBe("image/png");

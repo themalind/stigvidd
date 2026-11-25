@@ -3,7 +3,7 @@
 
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { useEffect } from "react";
-import type { Jump, LngLat } from "@/utils/geometry-edit";
+import { type Jump, jumpSegment, type LngLat } from "@/utils/geometry-edit";
 import { useMapLibre } from "@/hooks/use-maplibre";
 import { MAP_COLORS, upsertSource } from "@/lib/maplibre";
 
@@ -29,11 +29,18 @@ function sources(path: LngLat[], gaps: Jump[]): Record<string, GeoJSON.FeatureCo
       path.length < 2 ? [] : [{ type: "Feature", properties: {}, geometry: { type: "LineString", coordinates: path } }],
     ),
     gaps: collection(
-      gaps.map((gap) => ({
-        type: "Feature",
-        properties: {},
-        geometry: { type: "LineString", coordinates: [path[gap.index], path[gap.index + 1]] },
-      })),
+      gaps.flatMap((gap) => {
+        const segment = jumpSegment(path, gap);
+        return segment
+          ? [
+              {
+                type: "Feature" as const,
+                properties: {},
+                geometry: { type: "LineString" as const, coordinates: segment },
+              },
+            ]
+          : [];
+      }),
     ),
     points: collection(
       path.map((coordinates, index) => ({

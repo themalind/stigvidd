@@ -6,6 +6,7 @@ import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useMapLibre } from "@/hooks/use-maplibre";
 import { fitTo, MAP_COLORS, upsertSource } from "@/lib/maplibre";
+import { type LngLat, toLngLat } from "@/utils/geometry-edit";
 import type { AdminCityAreaBoundaryPreviewResponse, AdminCityAreaPreviewFacilityResponse } from "@/api/generated/model";
 import type { BoundaryCoordinates } from "@/features/city-areas/api/city-areas";
 import { useBoundaryEditor } from "@/features/city-areas/hooks/use-boundary-editor";
@@ -107,19 +108,25 @@ function areaMapPoints({
   return [...rings, ...trails.flatMap((trail) => trail.path), ...places.map((place) => place.position)];
 }
 
-function ringArea(ring: GeoJSON.Position[]): number {
-  const xs = ring.map(([x]) => x);
-  const ys = ring.map(([, y]) => y);
-  return (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
+function ringBox(ring: GeoJSON.Position[]) {
+  const points = ring.map(toLngLat);
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
 }
 
-function labelPosition(boundary: BoundaryCoordinates): GeoJSON.Position | null {
-  const rings = boundary.map((polygon) => polygon[0]).filter((ring) => ring && ring.length > 0);
-  if (rings.length === 0) return null;
-  const largest = rings.reduce((best, ring) => (ringArea(ring) > ringArea(best) ? ring : best));
-  const xs = largest.map(([x]) => x);
-  const ys = largest.map(([, y]) => y);
-  return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+function ringArea(ring: GeoJSON.Position[]): number {
+  const { minX, maxX, minY, maxY } = ringBox(ring);
+  return (maxX - minX) * (maxY - minY);
+}
+
+function labelPosition(boundary: BoundaryCoordinates): LngLat | null {
+  const rings = boundary.flatMap(([outer]) => (outer && outer.length > 0 ? [outer] : []));
+  const [first, ...rest] = rings;
+  if (!first) return null;
+  const largest = rest.reduce((best, ring) => (ringArea(ring) > ringArea(best) ? ring : best), first);
+  const { minX, maxX, minY, maxY } = ringBox(largest);
+  return [(minX + maxX) / 2, (minY + maxY) / 2];
 }
 
 function nameLabel(name: string): HTMLElement {
@@ -230,8 +237,7 @@ export function AreaMap({ editing, onEdit, ...props }: AreaMapProps) {
     const markers = neighbours.flatMap((neighbour) => {
       const position = labelPosition(neighbour.boundary);
       if (!position) return [];
-      const [lng, lat] = position;
-      return [new Marker({ element: nameLabel(neighbour.name) }).setLngLat([lng, lat]).addTo(loadedMap)];
+      return [new Marker({ element: nameLabel(neighbour.name) }).setLngLat(position).addTo(loadedMap)];
     });
     return () => markers.forEach((marker) => marker.remove());
   }, [loadedMap, neighbours]);

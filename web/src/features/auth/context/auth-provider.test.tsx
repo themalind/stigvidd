@@ -3,6 +3,7 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import { defined } from "@/testing/defined";
 import { createTestQueryClient, renderWithProviders } from "@/testing/render";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
@@ -167,7 +168,7 @@ describe("a session that expires mid-use", () => {
     renderAuth();
 
     await waitFor(() => expect(keycloak.setSessionExpiredHandler).toHaveBeenCalled());
-    expect(keycloak.setSessionExpiredHandler.mock.calls[0][0]).toBeTypeOf("function");
+    expect(keycloak.setSessionExpiredHandler.mock.calls[0]?.[0]).toBeTypeOf("function");
   });
 
   // What the handler is for: a refresh that Keycloak genuinely rejects has to flip the
@@ -177,7 +178,7 @@ describe("a session that expires mid-use", () => {
     renderAuth();
     await waitFor(() => expect(state()).toBe("signed in as admin"));
 
-    const expire = keycloak.setSessionExpiredHandler.mock.calls[0][0] as () => void;
+    const expire = defined(keycloak.setSessionExpiredHandler.mock.calls[0], "a handler")[0] as () => void;
     expire();
 
     await waitFor(() => expect(state()).toBe("signed out"));
@@ -189,7 +190,7 @@ describe("a session that expires mid-use", () => {
     const client = renderAuth();
     await waitFor(() => expect(state()).toBe("signed in as admin"));
 
-    const expire = keycloak.setSessionExpiredHandler.mock.calls[0][0] as () => void;
+    const expire = defined(keycloak.setSessionExpiredHandler.mock.calls[0], "a handler")[0] as () => void;
     expire();
 
     await waitFor(() => expect(state()).toBe("signed out"));
