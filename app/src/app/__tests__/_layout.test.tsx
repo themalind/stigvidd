@@ -282,6 +282,22 @@ it("dresses the app in the dark theme, status bar and all", async () => {
   expect(getByType(StatusBar).props.style).toBe("light");
 });
 
+it("gives iOS screens the theme's status bar style, not the system's", async () => {
+  await show();
+  expect(getByType(Stack).props.screenOptions.statusBarStyle).toBe("dark");
+
+  await rerender("bivack");
+  expect(getByType(Stack).props.screenOptions.statusBarStyle).toBe("light");
+});
+
+it("leaves Android's status bar to StatusBar", async () => {
+  Platform.OS = "android";
+  await show();
+  await rerender("bivack");
+
+  expect(getByType(Stack).props.screenOptions.statusBarStyle).toBeUndefined();
+});
+
 // Every theme in the picker has to reach the app, not just the two that "auto" switches between.
 it("dresses the app in a picked theme beyond light and dark", async () => {
   const norrsken = APP_THEMES.find((t) => t.id === "norrsken")?.theme;

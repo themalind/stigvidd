@@ -19,13 +19,21 @@ with the iOS 27 SDK. React Native 0.88 says so in
 UIViewControllerBasedStatusBarAppearance is NO"). The warning only shows in the Xcode/device
 log, never in JS.
 
-**Fix:** `app.json` → `expo.ios.infoPlist.UIViewControllerBasedStatusBarAppearance: true`.
-iOS then asks the root view controller. Since expo-modules-core 58.0.30 that is
-`ExpoRootViewController`, which returns `RCTStatusBarAppearance.style`, the value JS last set.
-Check the resolved plist with `npx expo config --type introspect --json`.
+**Fix, two parts (the first alone did NOT work, build 17, 2026-11-25):**
 
-- It is a native change: it needs a new EAS build. An OTA update cannot carry it.
-- Caveat: a react-native-screens screen presented as a native modal answers for itself with
-  `RNSStatusBarStyleAuto`, which follows the **system** trait, not the app's chosen theme
-  (`react-native-screens/ios/RNSScreenWindowTraits.mm`). A React Native `Modal` follows JS
-  (`RCTFabricModalHostViewController`).
+1. `app.json` → `expo.ios.infoPlist.UIViewControllerBasedStatusBarAppearance: true`. Native:
+   needs a new EAS build, OTA cannot carry it. Check with `npx expo config --type introspect --json`.
+2. The root `<Stack screenOptions={{ statusBarStyle }}>` in `app/src/app/_layout.tsx` (iOS only).
+   JS, so it ships by OTA to any build that has part 1.
+
+**Why part 1 alone fails:** `ExpoRootViewController` returns `RCTStatusBarAppearance.style` (what
+JS set), but iOS never asks it. react-native-screens swizzles every `UIViewController`'s
+`childViewControllerForStatusBarStyle` (`UIViewController+RNScreens.mm`) to hand the question
+to its screen stack, whose top `RNSScreen` answers. With no `statusBarStyle` on any screen
+that is `RNSStatusBarStyleAuto`, which follows the **system** trait
+(`RNSScreenWindowTraits.mm`). The app's themes (bivack, norrsken…) are chosen in the app and
+never set the native trait, so in-app dark on a light phone gave black text on black.
+Nested stacks inherit the root screen's style unless they set their own.
+
+- A React Native `Modal` follows JS (`RCTFabricModalHostViewController`), so `image-viewer.tsx`'s
+  `<StatusBar style="light" />` still works there.

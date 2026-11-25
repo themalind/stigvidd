@@ -46,7 +46,7 @@ import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider, ThemeProvider as PaperThemeProvider } from "react-native-paper";
 import "react-native-reanimated";
@@ -130,7 +130,7 @@ function ActiveRecordingHandler() {
 export default function RootLayout() {
   const setUserTheme = useSetAtom(userThemeAtom);
   const theme = useUserTheme();
-  // keep-comment: iOS applies this only with UIViewControllerBasedStatusBarAppearance in app.json, see docs/notes/ios-27-sdk-ignores-app-level-status-bar-style.md
+  // keep-comment: iOS reads it from the root Stack's screen, not StatusBar, see docs/notes/ios-27-sdk-ignores-app-level-status-bar-style.md
   const statusBarStyle = theme.dark ? "light" : "dark";
 
   // keep-comment: outside the render gate below, which waits on it
@@ -191,7 +191,7 @@ export default function RootLayout() {
             <PaperProvider theme={theme}>
               <NotificationHandler />
               <ActiveRecordingHandler />
-              <Stack>
+              <Stack screenOptions={{ statusBarStyle: Platform.OS === "ios" ? statusBarStyle : undefined }}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               </Stack>
               {/* keep-comment: a Portal, so it must stay inside PaperProvider's portal host */}
