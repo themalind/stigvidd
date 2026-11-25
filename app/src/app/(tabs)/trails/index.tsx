@@ -23,7 +23,7 @@ import { guardedNavigate } from "@/utils/navigation";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useAtom } from "jotai";
-import React, { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useMemo, useRef, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";

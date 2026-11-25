@@ -138,7 +138,7 @@ export default function AreaMapLayers({
   const firePitSource = useRef<GeoJSONSourceRef>(null);
   const shelterSource = useRef<GeoJSONSourceRef>(null);
   const facilitySources = { swimming: swimmingSource, firePit: firePitSource, shelter: shelterSource };
-  const interactive = !!(onTrailPress || onFacilityPress);
+  const interactive = !!(onTrailPress ?? onFacilityPress);
 
   const shown = useCallback(
     (feature: GeoJSON.Feature, on: boolean) =>

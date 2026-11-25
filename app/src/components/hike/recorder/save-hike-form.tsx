@@ -218,7 +218,7 @@ export default function SaveHikeForm({ hike, onDismiss, onSaveSuccess }: Props) 
             maximumTrackTintColor={theme.colors.outline}
             thumbTintColor={theme.colors.primary}
             onValueChange={(value) => {
-              const [start, end] = value as number[];
+              const [start, end] = value;
               setTrim([Math.round(Math.min(start, end)), Math.round(Math.max(start, end))]);
             }}
           />

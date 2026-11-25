@@ -276,17 +276,15 @@ export async function getValidAccessToken(): Promise<string | null> {
   const token = refreshToken ?? localStorage.getItem(REFRESH_TOKEN_KEY);
   if (!token) return null;
 
-  if (!refreshPromise) {
-    refreshPromise = refreshGrant(token)
-      .then((user) => {
-        if (user && accessToken) return accessToken;
-        if (!(refreshToken ?? localStorage.getItem(REFRESH_TOKEN_KEY))) return null;
-        throw new SessionUnavailableError();
-      })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
+  refreshPromise ??= refreshGrant(token)
+    .then((user) => {
+      if (user && accessToken) return accessToken;
+      if (!(refreshToken ?? localStorage.getItem(REFRESH_TOKEN_KEY))) return null;
+      throw new SessionUnavailableError();
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
 
   return refreshPromise;
 }

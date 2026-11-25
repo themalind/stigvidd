@@ -77,7 +77,7 @@ export function track<N extends EventName>(event: N, props: EventCatalogue[N]): 
 
   const record: AnalyticsEvent = {
     // keep-comment: first, so a prop named `event` or `level` cannot shadow the envelope
-    ...(redact(coarsen(props as Record<string, unknown>)) ?? {}),
+    ...(redact(coarsen(props)) ?? {}),
     _timestamp: Date.now() * 1000, // keep-comment: OpenObserve wants microseconds
     level: "info",
     message: event,

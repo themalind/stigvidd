@@ -28,7 +28,7 @@ export const stigviddUserAtom = atomWithQuery((get) => {
   return {
     queryKey: ["currentUser", subjectId],
     queryFn: async () => {
-      return await getStigViddUser();
+      return getStigViddUser();
     },
     enabled: !!subjectId,
     retry: retryUnlessAuthFailure,
@@ -153,7 +153,7 @@ export const removeFromWishlistAtom = atomWithMutation((get) => {
   return {
     mutationKey: ["removeFromWishlist"],
     mutationFn: async (trailIdentifier: string) => {
-      return await removeUserWishlist(trailIdentifier);
+      return removeUserWishlist(trailIdentifier);
     },
 
     onMutate: async (trailIdentifier: string) => {
@@ -192,7 +192,7 @@ export const removeFromFavoritesAtom = atomWithMutation((get) => {
   return {
     mutationKey: ["removeFromFavorites"],
     mutationFn: async (trailIdentifier: string) => {
-      return await removeUserFavorite(trailIdentifier);
+      return removeUserFavorite(trailIdentifier);
     },
 
     onMutate: async (trailIdentifier: string) => {

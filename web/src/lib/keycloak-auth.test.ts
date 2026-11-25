@@ -143,7 +143,7 @@ describe("keycloak-auth", () => {
       vi.mocked(fetch).mockResolvedValue(new Response("", { status: 500 }));
       const { passwordGrant, InvalidCredentialsError } = await loadAuth();
 
-      const error = await passwordGrant("a", "b").catch((e: Error) => e);
+      const error = await passwordGrant("a", "b").catch((e: unknown) => e);
 
       expect(error).not.toBeInstanceOf(InvalidCredentialsError);
       expect((error as Error).message).toContain("HTTP 500");
@@ -179,7 +179,7 @@ describe("keycloak-auth", () => {
       vi.mocked(fetch).mockResolvedValue(new Response("", { status: 503 }));
       const { passwordGrant } = await loadAuth();
 
-      await expect(passwordGrant("a", "b")).rejects.toThrowError(/^Keycloak token request failed: HTTP 503$/);
+      await expect(passwordGrant("a", "b")).rejects.toThrow(/^Keycloak token request failed: HTTP 503$/);
 
       expect(warn).toHaveBeenCalledExactlyOnceWith("Admin login failed", {
         outcome: "unavailable",

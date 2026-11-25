@@ -9,7 +9,7 @@ import AlertDialog from "@/components/dialog/alert-dialog";
 import { ZOOM_TYPE, Zoomable } from "@likashefqet/react-native-image-zoom";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Animated,

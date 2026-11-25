@@ -14,7 +14,6 @@ import { renderWithProviders } from "@/test/render";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { onlineManager } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
-import React from "react";
 import { StyleSheet } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 

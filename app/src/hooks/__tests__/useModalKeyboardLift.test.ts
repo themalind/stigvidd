@@ -23,8 +23,8 @@ const originalOS = Platform.OS;
 beforeEach(() => {
   handlers = {};
   jest.spyOn(Keyboard, "addListener").mockImplementation((event, handler) => {
-    handlers[event] = handler as Handler;
-    return { remove: jest.fn() } as unknown as ReturnType<typeof Keyboard.addListener>;
+    handlers[event] = handler;
+    return { remove: jest.fn() };
   });
 });
 

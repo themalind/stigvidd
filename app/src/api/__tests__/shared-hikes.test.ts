@@ -38,7 +38,7 @@ function mockFetch(ok: boolean, body: unknown = []) {
     ok,
     status: ok ? 200 : 500,
     json: jest.fn().mockResolvedValue(body),
-  } as unknown as Response);
+  });
 }
 
 const shared = { hikeIdentifier: "h1", hikeName: "Testpromenad" } as SharedHike;

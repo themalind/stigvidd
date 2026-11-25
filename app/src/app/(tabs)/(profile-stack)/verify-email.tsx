@@ -9,15 +9,16 @@ import { ApiError } from "@/api/core/api-error";
 import { resendVerification, verifyEmailCode } from "@/api/auth";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { ImageBackdrop } from "@/components/layout/image-backdrop";
 import ScreenHeader from "@/components/layout/screen-header";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, router, useLocalSearchParams } from "expo-router";
 import { useSetAtom } from "jotai";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Dimensions, ImageBackground, StyleSheet, Text, View } from "react-native";
+import { Dimensions, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -129,7 +130,7 @@ export default function VerifyEmailScreen() {
         extraScrollHeight={20}
         contentContainerStyle={s.scrollContent}
       >
-        <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
+        <ImageBackdrop source={background} style={s.backgroundImage}>
           <View style={s.backButtonContainer} pointerEvents="box-none">
             <ScreenHeader />
           </View>
@@ -203,7 +204,7 @@ export default function VerifyEmailScreen() {
               </View>
             </View>
           </View>
-        </ImageBackground>
+        </ImageBackdrop>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

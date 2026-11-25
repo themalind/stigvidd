@@ -129,7 +129,7 @@ export const useTrailFilters = <T extends FilterableTrail>(trails: T[] | undefin
     }
 
     if (filters.nearMe && userLocation) {
-      const maxDistance = filters.maxDistance || NEARBY_RADIUS_KM;
+      const maxDistance = filters.maxDistance ?? NEARBY_RADIUS_KM;
       result = result.filter((trail) => trail.distanceKm != null && trail.distanceKm <= maxDistance);
     }
 

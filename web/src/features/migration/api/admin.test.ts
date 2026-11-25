@@ -26,7 +26,7 @@ describe("exportData", () => {
   let clicked: ReturnType<typeof stubClick>;
 
   // `mock.instances` records the `this` each call was made on — the anchor itself.
-  const savedAs = () => (clicked.mock.instances[0] as unknown as HTMLAnchorElement).download;
+  const savedAs = () => (clicked.mock.instances[0] as HTMLAnchorElement).download;
 
   beforeEach(() => {
     clicked = stubClick();
@@ -201,7 +201,7 @@ describe("logging a failed transfer", () => {
   it("logs a failed export as an error", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reply("nope", { status: 502 })));
 
-    await expect(exportData()).rejects.toThrowError(/^Export failed \(HTTP 502\)$/);
+    await expect(exportData()).rejects.toThrow(/^Export failed \(HTTP 502\)$/);
 
     expect(logger.error).toHaveBeenCalledExactlyOnceWith("API request failed", {
       method: "GET",
@@ -217,7 +217,7 @@ describe("logging a failed transfer", () => {
       vi.fn().mockResolvedValue(reply('{"message":"Archive was produced by a newer version."}', { status: 400 })),
     );
 
-    await expect(importData(new File(["zip-bytes"], "host.zip"))).rejects.toThrowError(
+    await expect(importData(new File(["zip-bytes"], "host.zip"))).rejects.toThrow(
       /^Archive was produced by a newer version\.$/,
     );
 

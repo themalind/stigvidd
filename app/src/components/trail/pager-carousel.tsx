@@ -12,7 +12,7 @@ import { guardedNavigate } from "@/utils/navigation";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image as ExpoImage } from "expo-image";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   FlatList,
   NativeScrollEvent,

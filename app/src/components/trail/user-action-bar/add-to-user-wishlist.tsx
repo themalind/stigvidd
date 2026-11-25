@@ -45,7 +45,7 @@ export default function AddToUserWishlist({ trailIdentifier }: Props) {
           if (error instanceof ApiError && error.status === 409) {
             setWarning(t("userActions.alreadyInList"));
           } else {
-            setError(`${error}`);
+            setError(String(error));
           }
         },
       });

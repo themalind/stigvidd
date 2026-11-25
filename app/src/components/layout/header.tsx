@@ -7,7 +7,7 @@
 
 import { SCREEN_PADDING } from "@/constants/constants";
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";

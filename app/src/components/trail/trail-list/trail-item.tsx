@@ -11,7 +11,7 @@ import { classificationParser } from "@/utils/classification-parser";
 import { getDifficultyIcon } from "@/components/display/difficulty-icon";
 import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";
 

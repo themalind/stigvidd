@@ -24,7 +24,7 @@ export function BannedWriteDialog() {
     // keep-comment: 403 also means "not yours" on some routes, so only a re-read profile can say it is a ban.
     const confirmBan = () =>
       queryClient
-        .fetchQuery({ queryKey: ["currentUser", subjectId], queryFn: getStigViddUser, staleTime: 0 })
+        .query({ queryKey: ["currentUser", subjectId], queryFn: getStigViddUser, staleTime: 0 })
         .then((user) => {
           if (user?.bannedAt) setVisible(true);
         })

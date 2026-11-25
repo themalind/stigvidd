@@ -42,9 +42,9 @@ function respond(...responses: { status?: number; ok?: boolean; body?: unknown; 
       ok,
       statusText,
       json: jest.fn().mockResolvedValue(body),
-    } as unknown as Response);
+    });
   }
-  global.fetch = fetchMock as unknown as typeof fetch;
+  global.fetch = fetchMock;
   return fetchMock;
 }
 

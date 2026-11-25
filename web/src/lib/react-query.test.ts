@@ -47,7 +47,7 @@ describe("the query cache", () => {
     const client = createQueryClient();
 
     await client
-      .fetchQuery({ queryKey: ["first"], queryFn: () => Promise.reject(new ApiError("Nope", 404)) })
+      .query({ queryKey: ["first"], queryFn: () => Promise.reject(new ApiError("Nope", 404)) })
       .catch(() => undefined);
 
     expect(toasts.toast.error).not.toHaveBeenCalled();
@@ -58,7 +58,7 @@ describe("the query cache", () => {
     client.setQueryData(["list"], ["cached"]);
 
     await client
-      .fetchQuery({
+      .query({
         queryKey: ["list"],
         queryFn: () => Promise.reject(new ApiError("Nope", 400)),
         staleTime: 0,
@@ -74,9 +74,7 @@ describe("the query cache", () => {
     client.setQueryData(["poll"], "cached");
     let next: () => Promise<string> = () => Promise.reject(new ApiError("Down", 503));
     const refetch = () =>
-      client
-        .fetchQuery({ queryKey: ["poll"], queryFn: () => next(), staleTime: 0, retry: false })
-        .catch(() => undefined);
+      client.query({ queryKey: ["poll"], queryFn: () => next(), staleTime: 0, retry: false }).catch(() => undefined);
 
     await refetch();
     await refetch();

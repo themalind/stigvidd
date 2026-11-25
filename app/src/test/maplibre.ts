@@ -28,7 +28,7 @@ interface MapLibreMock {
   resetHandles: () => void;
 }
 
-const maplibre = jest.requireMock("@maplibre/maplibre-react-native") as MapLibreMock;
+const maplibre = jest.requireMock<MapLibreMock>("@maplibre/maplibre-react-native");
 
 // keep-comment: oldest first; the last tree's camera is cameraHandles().at(-1)
 export function cameraHandles() {

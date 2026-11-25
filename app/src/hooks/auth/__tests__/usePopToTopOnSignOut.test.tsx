@@ -44,7 +44,7 @@ function eventsStack(app: RenderRouterResult): string[] {
     }
     return undefined;
   };
-  return find(app.getRouterState() as NavState | undefined)?.routes.map((route) => route.name) ?? [];
+  return find(app.getRouterState())?.routes.map((route) => route.name) ?? [];
 }
 
 function GuardedPage() {

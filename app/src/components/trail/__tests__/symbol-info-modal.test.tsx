@@ -21,12 +21,7 @@ const SYMBOL_URL = "https://media.stigvidd.se/symbols/bla-trekant.png";
 
 const onDismiss = jest.fn();
 
-function show({
-  imageUrl = SYMBOL_URL,
-  symbol = "Blå trekant",
-  visible = true,
-  theme = AppDefaultTheme as typeof AppDefaultTheme | typeof AppDarkTheme,
-} = {}) {
+function show({ imageUrl = SYMBOL_URL, symbol = "Blå trekant", visible = true, theme = AppDefaultTheme } = {}) {
   return renderWithProviders(
     <SymbolInfoModal imageUrl={imageUrl} symbol={symbol} visible={visible} onDismiss={onDismiss} />,
     { theme },

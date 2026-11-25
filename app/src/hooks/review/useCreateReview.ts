@@ -30,7 +30,7 @@ export function useCreateReview(onSuccess: () => void) {
       rating: number;
       imageUris: string[];
     }) => {
-      return await createReview({
+      return createReview({
         trailIdentifier,
         review,
         rating,

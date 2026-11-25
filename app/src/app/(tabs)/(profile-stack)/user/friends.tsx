@@ -30,7 +30,7 @@ import { useQuery } from "@tanstack/react-query";
 import { router } from "expo-router";
 import { TFunction } from "i18next";
 import { useAtom } from "jotai";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Button, IconButton, Searchbar, useTheme } from "react-native-paper";

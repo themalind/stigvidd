@@ -291,11 +291,9 @@ function refreshOnce(): Promise<RefreshOutcome> {
   if (!token) {
     return Promise.resolve("expired");
   }
-  if (!refreshPromise) {
-    refreshPromise = refresh(token).finally(() => {
-      refreshPromise = null;
-    });
-  }
+  refreshPromise ??= refresh(token).finally(() => {
+    refreshPromise = null;
+  });
   return refreshPromise;
 }
 

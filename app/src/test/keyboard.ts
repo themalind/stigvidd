@@ -6,14 +6,14 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { act } from "@testing-library/react-native";
-import { EmitterSubscription, Keyboard, KeyboardEvent } from "react-native";
+import { Keyboard, KeyboardEvent } from "react-native";
 
 // keep-comment: call before rendering; keeps every listener, since KeyboardAwareScrollView subscribes to the same events
 export function captureKeyboard() {
   const listeners: { event: string; listener: (e: KeyboardEvent) => void }[] = [];
   jest.spyOn(Keyboard, "addListener").mockImplementation((event, listener) => {
-    listeners.push({ event, listener: listener as (e: KeyboardEvent) => void });
-    return { remove: jest.fn() } as unknown as EmitterSubscription;
+    listeners.push({ event, listener: listener });
+    return { remove: jest.fn() };
   });
 
   const emit = (event: string, height: number) =>

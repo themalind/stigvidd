@@ -85,7 +85,7 @@ beforeEach(async () => {
   mockHasStarted.mockResolvedValue(true);
   mockStopUpdates.mockResolvedValue(undefined);
   mockDrainLive.mockResolvedValue([]);
-  jest.spyOn(AppState, "addEventListener").mockReturnValue({ remove: jest.fn() } as never);
+  jest.spyOn(AppState, "addEventListener").mockReturnValue({ remove: jest.fn() });
   jest.spyOn(Date, "now").mockReturnValue(NOW);
 });
 

@@ -37,7 +37,7 @@ export async function apiErrorFrom(response: Response, message: string): Promise
     body = undefined;
   }
   if (body !== null && typeof body === "object" && "code" in body && typeof body.code === "string") {
-    return new ApiError(message, response.status, body.code, body as Record<string, unknown>);
+    return new ApiError(message, response.status, body.code, body);
   }
   return new ApiError(message, response.status);
 }

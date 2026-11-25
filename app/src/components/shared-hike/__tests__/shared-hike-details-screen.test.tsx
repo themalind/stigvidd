@@ -246,7 +246,7 @@ it.each([
   [400, "Något gick fel försök igen senare.", "error"],
   [500, "Något gick fel försök igen senare.", "error"],
 ])("explains a %s from the reshare", async (status, message, outcome) => {
-  mockReshare.mockRejectedValue(new ApiError("nope", status as number));
+  mockReshare.mockRejectedValue(new ApiError("nope", status));
   const { store } = await show();
 
   await reshareWith("cissi");

@@ -136,7 +136,7 @@ beforeEach(async () => {
   appStateListeners.length = 0;
   jest.spyOn(AppState, "addEventListener").mockImplementation((event, handler) => {
     if (event === "change") appStateListeners.push(handler as (next: string) => void);
-    return { remove: jest.fn() } as never;
+    return { remove: jest.fn() };
   });
   jest.spyOn(Date, "now").mockReturnValue(NOW);
 });

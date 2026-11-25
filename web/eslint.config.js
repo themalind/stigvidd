@@ -56,7 +56,24 @@ export default defineConfig([
       "@typescript-eslint/no-misused-promises": ["error", { checksVoidReturn: { attributes: false } }],
       "@typescript-eslint/await-thenable": "error",
       "@typescript-eslint/switch-exhaustiveness-check": ["error", { considerDefaultExhaustiveForUnions: true }],
+      "@typescript-eslint/no-deprecated": "error",
+      "@typescript-eslint/prefer-nullish-coalescing": [
+        "error",
+        { ignorePrimitives: { string: true, boolean: true }, ignoreBooleanCoercion: true },
+      ],
+      "@typescript-eslint/return-await": ["error", "in-try-catch"],
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/use-unknown-in-catch-callback-variable": "error",
+      "@typescript-eslint/restrict-template-expressions": "error",
+      "@typescript-eslint/only-throw-error": "error",
+      eqeqeq: ["error", "always", { null: "ignore" }],
+      "no-console": "error",
     },
+  },
+  {
+    // keep-comment: the logger is the one place that writes to the console
+    files: ["src/lib/telemetry.ts", ...tests],
+    rules: { "no-console": "off" },
   },
   {
     files: ["src/{api,lib,testing}/**/*.{ts,tsx}"],

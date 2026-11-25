@@ -13,7 +13,6 @@ import { getAllByType } from "@/test/composites";
 import { renderWithProviders } from "@/test/render";
 import { Slider as RangeSlider } from "@miblanchard/react-native-slider";
 import { act, fireEvent, screen } from "@testing-library/react-native";
-import React from "react";
 import { Platform } from "react-native";
 
 const onClose = jest.fn();

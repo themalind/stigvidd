@@ -105,9 +105,9 @@ it("warns with the event when the route has coordinates that draw nothing", asyn
   expect(unreadableWarnings()).toEqual([["Event route unreadable", { eventIdentifier: "e1" }]]);
 });
 
-it.each([
+it.each<[string, EventRoute | null]>([
   ["no route", null],
-  ["a trail route, whose coordinates the API sends as null", { kind: "Trail", coordinates: null } as EventRoute],
+  ["a trail route, whose coordinates the API sends as null", { kind: "Trail", coordinates: null }],
 ])("counts %s without a warning", async (_label, route) => {
   await show(route);
 

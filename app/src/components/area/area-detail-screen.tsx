@@ -15,7 +15,6 @@ import { track } from "@/services/analytics";
 import { guardedNavigate } from "@/utils/navigation";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Icon, Text, useTheme } from "react-native-paper";

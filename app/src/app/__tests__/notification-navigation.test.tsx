@@ -138,7 +138,7 @@ type NavigationLevel = {
 };
 
 function focusedTabStack(app: RenderRouterResult): string[] {
-  let level = app.getRouterState() as unknown as NavigationLevel | undefined;
+  let level = app.getRouterState();
   while (level) {
     const focused: NavigationLevel["routes"][number] = level.routes[level.index ?? level.routes.length - 1];
     if (focused.name === "events" || focused.name === "(profile-stack)") {

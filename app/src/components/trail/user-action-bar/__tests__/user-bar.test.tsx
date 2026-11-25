@@ -21,7 +21,7 @@ function mockStub(name: string, prop: "trailIdentifier" | "trail" | "none") {
   const ReactActual = jest.requireActual("react");
   const Stub = (props: Record<string, unknown>) => {
     const detail = prop === "none" ? "" : prop === "trail" ? (props.trail as Trail).identifier : props.trailIdentifier;
-    return ReactActual.createElement(Text, { testID: `action-${name}` }, `${name}:${detail}`);
+    return ReactActual.createElement(Text, { testID: `action-${name}` }, `${name}:${String(detail)}`);
   };
   Stub.displayName = name;
   return { __esModule: true, default: Stub };

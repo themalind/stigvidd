@@ -42,7 +42,7 @@ function stored({ isTracking = false, segments = 0, totalDistance = 0 } = {}) {
   });
 }
 
-async function show({ signedIn = true, theme = AppDefaultTheme as typeof AppDefaultTheme | typeof AppDarkTheme } = {}) {
+async function show({ signedIn = true, theme = AppDefaultTheme } = {}) {
   const rendered = await renderWithProviders(<RecordingBar signedIn={signedIn} />, { theme });
   await flushUntil(() => screen.queryByTestId("recording-bar"), 5);
   return rendered;

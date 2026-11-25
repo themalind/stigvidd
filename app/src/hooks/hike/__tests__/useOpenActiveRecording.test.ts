@@ -61,7 +61,7 @@ beforeEach(() => {
   recording(true);
   jest.spyOn(Date, "now").mockImplementation(() => clock);
   jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
-    onAppState = listener as (state: AppStateStatus) => void;
+    onAppState = listener;
     return { remove: jest.fn() };
   });
 });

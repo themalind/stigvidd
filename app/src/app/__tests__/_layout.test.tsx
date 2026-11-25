@@ -14,7 +14,7 @@ import { settle } from "@/test/flush";
 import { focusManager, QueryClient } from "@tanstack/react-query";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { act, render, screen, waitFor } from "@testing-library/react-native";
-import * as NavigationBar from "expo-navigation-bar";
+import { NavigationBar } from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { getDefaultStore } from "jotai";
@@ -98,7 +98,7 @@ jest.mock("expo-router", () => {
   };
 });
 
-jest.mock("expo-navigation-bar", () => ({ setStyle: jest.fn() }));
+jest.mock("expo-navigation-bar", () => ({ NavigationBar: { setStyle: jest.fn() } }));
 
 // GestureHandlerRootView needs a native module that Jest has none of; a plain View is the same box.
 jest.mock("react-native-gesture-handler", () => {
@@ -196,13 +196,12 @@ beforeEach(async () => {
   store.set(snackbarAtom, { visible: false, message: "", type: "success" });
   jest.spyOn(QueryClient.prototype, "invalidateQueries").mockReturnValue(Promise.resolve());
   appStateChanged = undefined;
-  jest.spyOn(AppState, "addEventListener").mockImplementation(((
-    type: string,
-    handler: (status: AppStateStatus) => void,
-  ) => {
-    if (type === "change") appStateChanged = handler;
-    return { remove: mockRemoveAppStateListener };
-  }) as never);
+  jest
+    .spyOn(AppState, "addEventListener")
+    .mockImplementation((type: string, handler: (status: AppStateStatus) => void) => {
+      if (type === "change") appStateChanged = handler;
+      return { remove: mockRemoveAppStateListener };
+    });
 });
 
 afterEach(() => {

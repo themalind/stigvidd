@@ -14,5 +14,5 @@ const NAMESPACE = "6f1c8a52-3d47-4e0b-9a16-2b7d5c9e8f30";
 export function recordingRequestKey(hike: ActiveHike): string {
   const points = hike.segments.flatMap((segment) => segment.coordinates);
   const name = `${hike.segments[0]?.startTime}:${points.length}:${points.at(-1)?.timeStamp}`;
-  return uuid.v5(name, NAMESPACE) as string;
+  return uuid.v5(name, NAMESPACE);
 }

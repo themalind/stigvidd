@@ -65,8 +65,8 @@ function installedSink(): Sink {
 }
 
 function mockFetch(ok: boolean, status = ok ? 200 : 500) {
-  const fn = jest.fn().mockResolvedValue({ ok, status } as unknown as Response);
-  global.fetch = fn as unknown as typeof fetch;
+  const fn = jest.fn().mockResolvedValue({ ok, status });
+  global.fetch = fn;
   return fn;
 }
 
@@ -176,9 +176,7 @@ describe("the log sink", () => {
   // a shadowed level or message would misfile the entry in the observatory.
   it("does not let a context key shadow the record", async () => {
     const fetchMock = mockFetch(true);
-    await installedSink()([
-      { ...record, context: { level: "debug", message: "överskriven", _timestamp: 1 } } as LogRecord,
-    ]);
+    await installedSink()([{ ...record, context: { level: "debug", message: "överskriven", _timestamp: 1 } }]);
 
     const [entry] = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(entry.level).toBe("error");
@@ -263,7 +261,7 @@ describe("a stalled request", () => {
   });
 
   it("clears its timer even when the request fails", async () => {
-    global.fetch = jest.fn().mockRejectedValue(new Error("network down")) as unknown as typeof fetch;
+    global.fetch = jest.fn().mockRejectedValue(new Error("network down"));
     const clearTimeoutSpy = jest.spyOn(global, "clearTimeout");
 
     await expect(installedSink()([record])).rejects.toThrow("network down");

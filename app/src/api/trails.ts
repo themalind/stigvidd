@@ -108,7 +108,7 @@ export async function addTrail(request: CreateTrailRequest): Promise<{ success: 
   form.append("description", `${request.description}`);
   form.append("fullDescription", `${request.fullDescription}`);
   form.append("coordinates", `${request.coordinates}`);
-  form.append("tags", `${request.tags}`);
+  form.append("tags", request.tags.join(","));
   form.append("isVerified", `${request.isVerified}`);
   form.append("city", `${request.city}`);
 

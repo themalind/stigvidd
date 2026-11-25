@@ -17,5 +17,7 @@ export function shareLinkUrl(kind: SharedLinkKind, identifier: string): string {
 }
 
 export function shareMessage(message: string, kind: SharedLinkKind): void {
-  Share.share({ message }).catch((error) => logger.warn(`Sharing a ${kind} failed`, { errorMessage: String(error) }));
+  Share.share({ message }).catch((error: unknown) =>
+    logger.warn(`Sharing a ${kind} failed`, { errorMessage: String(error) }),
+  );
 }

@@ -100,7 +100,7 @@ describe("adding a tag", () => {
   });
 
   it("does not submit the surrounding form", async () => {
-    const submit = vi.fn((e: React.FormEvent) => e.preventDefault());
+    const submit = vi.fn((e: React.SubmitEvent) => e.preventDefault());
     render(
       <form onSubmit={submit}>
         <TagInput value="" onChange={vi.fn()} />

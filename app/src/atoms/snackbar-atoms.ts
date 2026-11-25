@@ -25,7 +25,7 @@ export const snackbarAtom = atom<SnackbarState>({
   icon: undefined,
 });
 
-export const showSuccessAtom = atom(null, (get, set, message: string, icon?: IconName) => {
+export const showSuccessAtom = atom(null, (_get, set, message: string, icon?: IconName) => {
   set(snackbarAtom, {
     visible: true,
     message,
@@ -34,7 +34,7 @@ export const showSuccessAtom = atom(null, (get, set, message: string, icon?: Ico
   });
 });
 
-export const showErrorAtom = atom(null, (get, set, message: string, icon?: IconName) => {
+export const showErrorAtom = atom(null, (_get, set, message: string, icon?: IconName) => {
   set(snackbarAtom, {
     visible: true,
     message,
@@ -43,11 +43,11 @@ export const showErrorAtom = atom(null, (get, set, message: string, icon?: IconN
   });
 });
 
-export const hideSnackbarAtom = atom(null, (get, set) => {
+export const hideSnackbarAtom = atom(null, (_get, set) => {
   set(snackbarAtom, (prev) => ({ ...prev, visible: false }));
 });
 
-export const showWarningAtom = atom(null, (get, set, message: string) => {
+export const showWarningAtom = atom(null, (_get, set, message: string) => {
   set(snackbarAtom, {
     visible: true,
     message,

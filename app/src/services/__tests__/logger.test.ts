@@ -179,15 +179,14 @@ describe("logger lifecycle", () => {
 
   beforeAll(() => {
     // startLogLifecycle() subscribes once per module instance, so the handler is captured here.
-    jest.spyOn(AppState, "addEventListener").mockImplementation(((
-      _type: string,
-      handler: (state: AppStateStatus) => void,
-    ) => {
-      background = () => handler("background" as AppStateStatus);
-      foreground = () => handler("active" as AppStateStatus);
+    jest
+      .spyOn(AppState, "addEventListener")
+      .mockImplementation((_type: string, handler: (state: AppStateStatus) => void) => {
+        background = () => handler("background");
+        foreground = () => handler("active");
 
-      return { remove: jest.fn() };
-    }) as typeof AppState.addEventListener);
+        return { remove: jest.fn() };
+      });
 
     startLogLifecycle();
   });

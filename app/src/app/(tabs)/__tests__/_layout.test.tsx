@@ -38,7 +38,7 @@ jest.mock("expo-router", () => {
     usePathname: () => mockPathname(),
     useSegments: () => mockSegments(),
     __options: {},
-    __screens: {} as Record<string, object>,
+    __screens: {},
   };
 });
 

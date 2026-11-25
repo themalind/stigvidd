@@ -141,7 +141,7 @@ describe("useTrailCard", () => {
     mockGetTrailCard.mockResolvedValueOnce(card1).mockResolvedValueOnce(card2);
 
     const { result, rerender } = await renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
-      initialProps: { id: "trail-1" as string | null },
+      initialProps: { id: "trail-1" },
     });
 
     await waitFor(() => expect(result.current.card).toEqual(card1));
@@ -157,7 +157,7 @@ describe("useTrailCard", () => {
     mockGetItem.mockResolvedValue(JSON.stringify({ data: card, cachedAt: Date.now() }));
 
     const { result, rerender } = await renderHook(({ id }: { id: string | null }) => useTrailCard(id), {
-      initialProps: { id: "trail-1" as string | null },
+      initialProps: { id: "trail-1" },
     });
 
     await waitFor(() => expect(result.current.card).toEqual(card));

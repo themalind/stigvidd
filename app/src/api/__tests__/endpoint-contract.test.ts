@@ -133,8 +133,8 @@ function mockFetch(ok: boolean, status = ok ? 200 : 500, body: unknown = {}) {
     status,
     headers: new Headers(),
     json: jest.fn().mockResolvedValue(body),
-  } as unknown as Response);
-  global.fetch = fn as unknown as typeof fetch;
+  });
+  global.fetch = fn;
   return fn;
 }
 

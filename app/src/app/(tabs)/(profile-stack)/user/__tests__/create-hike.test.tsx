@@ -82,7 +82,7 @@ beforeEach(() => {
   mockGetBackgroundPermissions.mockResolvedValue({ granted: true, canAskAgain: false });
   mockHasHikeInProgress.mockResolvedValue(false);
   jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
-    onAppState = listener as (state: AppStateStatus) => void;
+    onAppState = listener;
     return { remove: mockRemoveListener };
   });
   // renderWithProviders builds the client, so the screen's invalidation is observed on the prototype.
@@ -116,7 +116,7 @@ async function showDisclosure({ foregroundGranted = false, atoms = user() } = {}
 }
 
 // The denied screen is reached only by refusing the prompt.
-async function showDenied({ canAskAgain = true, atoms = user(), theme = AppDefaultTheme as AppTheme } = {}) {
+async function showDenied({ canAskAgain = true, atoms = user(), theme = AppDefaultTheme } = {}) {
   mockGetPermissions.mockResolvedValue({ granted: false, canAskAgain: true });
   mockRequestPermissions.mockResolvedValue({ granted: false, canAskAgain });
   const rendered = await renderWithProviders(<CreateHikeScreen />, { initialAtoms: atoms, theme });

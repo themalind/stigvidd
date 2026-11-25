@@ -60,7 +60,7 @@ beforeEach(async () => {
   Platform.OS = "android";
   mockHasStarted.mockResolvedValue(true);
   mockStopUpdates.mockResolvedValue(undefined);
-  jest.spyOn(AppState, "addEventListener").mockReturnValue({ remove: jest.fn() } as never);
+  jest.spyOn(AppState, "addEventListener").mockReturnValue({ remove: jest.fn() });
   jest.spyOn(Date, "now").mockReturnValue(NOW);
 });
 

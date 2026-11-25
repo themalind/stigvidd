@@ -37,7 +37,7 @@ function mockFetch(ok: boolean, status = ok ? 200 : 500) {
     status,
     headers: new Headers(),
     body: null,
-  } as unknown as Response);
+  });
 }
 
 const baseRequest = {
@@ -51,7 +51,7 @@ const baseRequest = {
   description: "kort",
   fullDescription: "lång",
   coordinates: "59.3,18.0",
-  tags: "",
+  tags: [],
   isVerified: false,
   city: "Borås",
 } as unknown as CreateTrailRequest;
@@ -92,7 +92,7 @@ describe("getPopularContributedTrails", () => {
       status: 200,
       headers: new Headers(),
       json: async () => [],
-    } as unknown as Response);
+    });
   }
 
   it("sends the position as query parameters", async () => {

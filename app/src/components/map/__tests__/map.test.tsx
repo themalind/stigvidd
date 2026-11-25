@@ -8,7 +8,6 @@
 import Map, { MAP_FADE_MS, MAP_REVEAL_FALLBACK_MS } from "@/components/map/map";
 import { SCREEN_PADDING } from "@/constants/constants";
 import { act, render, screen } from "@testing-library/react-native";
-import React from "react";
 import { Animated, StyleSheet } from "react-native";
 
 function map() {

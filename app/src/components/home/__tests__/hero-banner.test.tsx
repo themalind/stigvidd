@@ -10,7 +10,7 @@ import { SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { renderWithProviders } from "@/test/render";
 import { act, screen, within } from "@testing-library/react-native";
-import { AppState, type AppStateStatus, type NativeEventSubscription } from "react-native";
+import { AppState, type AppStateStatus } from "react-native";
 
 const mockWeather = jest.fn();
 const mockCityName = jest.fn();
@@ -32,7 +32,7 @@ beforeEach(() => {
   onAppState = undefined;
   jest.spyOn(AppState, "addEventListener").mockImplementation((_type, listener) => {
     onAppState = listener;
-    return { remove: jest.fn() } as unknown as NativeEventSubscription;
+    return { remove: jest.fn() };
   });
   hours = jest.spyOn(Date.prototype, "getHours").mockReturnValue(12);
   mockWeather.mockReturnValue({ data: { temperature: 14, symbolCode: 1 } });

@@ -45,7 +45,7 @@ import { StatusBar } from "expo-status-bar";
 import { useSetAtom } from "jotai";
 import { queryClientAtom } from "jotai-tanstack-query";
 import { Inter_600SemiBold, useFonts } from "@expo-google-fonts/inter";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PaperProvider, ThemeProvider as PaperThemeProvider } from "react-native-paper";
@@ -170,7 +170,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!user) return;
-    registerForPushNotificationsAsync().catch((error) =>
+    registerForPushNotificationsAsync().catch((error: unknown) =>
       logger.error("Push notification registration failed", { errorMessage: String(error) }),
     );
   }, [user]);

@@ -11,6 +11,8 @@ import { hasSession } from "@/lib/keycloak-auth";
 
 // keep-comment: not awaited - the page renders its Suspense skeleton at once and its useSuspenseQuery joins the request already in flight
 export function detailLoaders(client: QueryClient) {
+  // keep-comment: a failed warm-up is left for the page's own query to show
+  const warm = (request: Promise<unknown>) => void request.catch(() => undefined);
   const start = (prefetch: () => void) => {
     if (hasSession()) prefetch();
     return null;
@@ -20,15 +22,15 @@ export function detailLoaders(client: QueryClient) {
     hikeSubmission: ({ params }: LoaderFunctionArgs) =>
       start(() => {
         const identifier = params.identifier ?? "";
-        void client.prefetchQuery(submissionQueryOptions(identifier));
-        void client.prefetchQuery(similarRoutesQueryOptions(identifier));
+        warm(client.query(submissionQueryOptions(identifier)));
+        warm(client.query(similarRoutesQueryOptions(identifier)));
       }),
     mailTemplate: ({ params }: LoaderFunctionArgs) =>
-      start(() => void client.prefetchQuery(mailTemplateQueryOptions(params.identifier ?? ""))),
+      start(() => warm(client.query(mailTemplateQueryOptions(params.identifier ?? "")))),
     trailImportSession: ({ params }: LoaderFunctionArgs) =>
       start(() => {
-        void client.prefetchQuery(sessionQueryOptions(Number(params.sessionId)));
-        void client.prefetchQuery(trailsQueryOptions());
+        warm(client.query(sessionQueryOptions(Number(params.sessionId))));
+        warm(client.query(trailsQueryOptions()));
       }),
   };
 }

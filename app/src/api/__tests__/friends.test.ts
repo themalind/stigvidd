@@ -28,7 +28,7 @@ function mockFetch(status: number, body: unknown = {}) {
     status,
     headers: new Headers(),
     json: jest.fn().mockResolvedValue(body),
-  } as unknown as Response);
+  });
 }
 
 beforeEach(() => {
@@ -55,7 +55,7 @@ describe("getFriendProfile", () => {
       status: 504,
       headers: new Headers({ server: "Caddy", via: "1.1 carrier-proxy" }),
       json: jest.fn().mockRejectedValue(new Error("not json")),
-    } as unknown as Response);
+    });
 
     await expect(getFriendProfile("id-anna")).rejects.toMatchObject({ status: 504 });
 

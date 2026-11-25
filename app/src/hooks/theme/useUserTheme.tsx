@@ -7,7 +7,7 @@
 
 import { userThemeAtom } from "@/atoms/user-theme-atom";
 import { resolveTheme } from "@/constants/theme";
-import * as NavigationBar from "expo-navigation-bar";
+import { NavigationBar } from "expo-navigation-bar";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { Platform, useColorScheme } from "react-native";

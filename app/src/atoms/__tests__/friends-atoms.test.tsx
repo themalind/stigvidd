@@ -48,7 +48,7 @@ interface QueryResult {
 async function renderQuery(queryAtom: Atom<unknown>, user: AuthUser | null = USER) {
   let result!: QueryResult;
   function Probe() {
-    result = useAtomValue(queryAtom as never) as unknown as QueryResult;
+    result = useAtomValue<QueryResult>(queryAtom as never);
     return null;
   }
 

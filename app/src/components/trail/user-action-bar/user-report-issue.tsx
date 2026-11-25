@@ -7,7 +7,7 @@
 
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import { MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text, useTheme } from "react-native-paper";

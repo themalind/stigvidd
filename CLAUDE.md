@@ -107,7 +107,7 @@ Core/TrailImport/         own namespaces, NOT global using (Core/Results, Core/S
   (push token, token refresh) are only in `stigvidd_app_logs`, not `stigvidd_api_logs`; select columns, not `_timestamp, *`.
   Which alert fired: `ListAlerts` with `detail: "full"` (`last_outcome`); `GetAlertHistory` 404s and there is no `triggers`
   stream. API errors: `severity IN ('Error','Critical')` (not `level`); `output_format: "csv"` returns empty hits here.
-- **Adding telemetry**: app failures go to `logger` (`services/logger.ts`, no consent gate, so never usage); usage goes to
+- **Adding telemetry**: lint forbids `console` outside the loggers and tests. App failures go to `logger` (`services/logger.ts`, no consent gate, so never usage); usage goes to
   `track()` with an entry in `services/event-catalogue.ts` (consent-gated, the privacy disclosure). Failed API calls are
   already logged in `api/core/request.ts`; API 4xx refusals in `StigViddController.ToActionResult`. Map: `docs/observability.md`.
 - **Secrets**: `.env`, `mail-config/` and `*firebase-adminsdk*.json` hold real credentials. Never commit or echo

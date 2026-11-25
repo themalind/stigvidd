@@ -27,7 +27,7 @@ const onShare = jest.fn();
 const onDismiss = jest.fn();
 
 function friend(nickName: string): FriendResponse {
-  return { identifier: `id-${nickName}`, nickName } as FriendResponse;
+  return { identifier: `id-${nickName}`, nickName };
 }
 
 function show(props: Partial<React.ComponentProps<typeof ShareHikeModal>> = {}) {

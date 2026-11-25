@@ -66,7 +66,7 @@ describe("the detail loaders", () => {
     const client = createTestQueryClient();
     detailLoaders(client).mailTemplate(args({ identifier: "welcome" }));
 
-    const page = client.ensureQueryData(mailTemplateQueryOptions("welcome"));
+    const page = client.query({ ...mailTemplateQueryOptions("welcome"), staleTime: "static" });
     release();
 
     expect(await page).toEqual({ path: "/api/v1/admin/mail-templates/welcome" });

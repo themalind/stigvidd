@@ -8,6 +8,7 @@
 import { asTranslationKey } from "@/i18n";
 import { AccountNotVerifiedError, InvalidCredentialsError } from "@/services/keycloak-auth";
 import PasswordInputField from "@/components/auth/password-input-field";
+import { ImageBackdrop } from "@/components/layout/image-backdrop";
 import ScreenHeader from "@/components/layout/screen-header";
 import { BORDER_RADIUS, SURFACE_BORDER_RADIUS } from "@/constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +19,7 @@ import { useStore } from "jotai";
 import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Dimensions, ImageBackground, Pressable, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,7 +37,7 @@ const addOpacity = (color: string, opacity: number): string => {
 };
 
 const loginFields = z.object({
-  email: z.string({ error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
+  email: z.string({ error: "auth.validation.emailRequired" }).trim().pipe(z.email("auth.validation.emailInvalid")),
   password: z.string({ error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
 });
 
@@ -92,7 +93,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
         scrollEnabled={false}
         contentContainerStyle={s.scrollContent}
       >
-        <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
+        <ImageBackdrop source={background} style={s.backgroundImage}>
           {showBackButton && (
             <View style={s.backButtonContainer} pointerEvents="box-none">
               <ScreenHeader />
@@ -210,7 +211,7 @@ export default function LoginScreen({ showBackButton = false }: { showBackButton
               </Link>
             </View>
           </View>
-        </ImageBackground>
+        </ImageBackdrop>
       </KeyboardAwareScrollView>
       <ResetPasswordModal visible={visible} onDismiss={() => setVisible(false)} />
     </SafeAreaView>

@@ -105,7 +105,7 @@ export default function TrailDetailsScreen({ followRoute, guideRoute }: Props) {
     return <ErrorView error={error} onRetry={refetch} />;
   }
 
-  const images = trail?.trailImagesResponse || [];
+  const images = trail?.trailImagesResponse ?? [];
   let coordinates: GeoJSON.Position[] = [];
 
   if (coords && trail) {

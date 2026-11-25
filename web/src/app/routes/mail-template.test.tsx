@@ -162,7 +162,7 @@ describe("the guard against rewriting a template nobody edited", () => {
 
     await userEvent.click(screen.getByRole("tab", { name: "HTML source" }));
 
-    expect((screen.getByLabelText("HTML source code") as HTMLTextAreaElement).value).toContain("nytt innehåll");
+    expect(screen.getByLabelText<HTMLTextAreaElement>("HTML source code").value).toContain("nytt innehåll");
   });
 
   it("becomes saveable once the operator changes something", async () => {
@@ -193,7 +193,7 @@ describe("the guard against rewriting a template nobody edited", () => {
 describe("inserting a placeholder from the palette", () => {
   it("puts it where the caret is in the subject, replacing a selection", async () => {
     renderPage();
-    const subject = (await screen.findByLabelText("Subject")) as HTMLInputElement;
+    const subject = await screen.findByLabelText<HTMLInputElement>("Subject");
 
     await userEvent.click(subject);
     subject.setSelectionRange(0, 8);
@@ -206,7 +206,7 @@ describe("inserting a placeholder from the palette", () => {
   it("puts it in the plain-text body when that was the last field in focus", async () => {
     renderPage();
     await userEvent.click(await screen.findByRole("tab", { name: "Plain text" }));
-    const plain = screen.getByLabelText("Plain-text version") as HTMLTextAreaElement;
+    const plain = screen.getByLabelText<HTMLTextAreaElement>("Plain-text version");
 
     await userEvent.click(plain);
     plain.setSelectionRange(0, 0);
@@ -331,12 +331,12 @@ describe("the plain-text body", () => {
 
     await userEvent.click(await screen.findByRole("tab", { name: "Plain text" }));
 
-    const before = (screen.getByLabelText("Plain-text version") as HTMLTextAreaElement).value;
+    const before = screen.getByLabelText<HTMLTextAreaElement>("Plain-text version").value;
     expect(before).toContain("{{VerificationUrl}}");
 
     await userEvent.click(screen.getByRole("button", { name: /Generate from HTML/ }));
 
-    expect((screen.getByLabelText("Plain-text version") as HTMLTextAreaElement).value).not.toBe(before);
+    expect(screen.getByLabelText<HTMLTextAreaElement>("Plain-text version").value).not.toBe(before);
   });
 });
 

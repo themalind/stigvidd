@@ -9,6 +9,7 @@ import { ApiError } from "@/api/core/api-error";
 import { asTranslationKey } from "@/i18n";
 import { showSuccessAtom } from "@/atoms/snackbar-atoms";
 import PasswordInputField from "@/components/auth/password-input-field";
+import { ImageBackdrop } from "@/components/layout/image-backdrop";
 import ScreenHeader from "@/components/layout/screen-header";
 import {
   BORDER_RADIUS,
@@ -21,10 +22,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import { useSetAtom } from "jotai";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Dimensions, ImageBackground, Linking, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Linking, StyleSheet, Text, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Button, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -42,7 +43,7 @@ const registerFields = z
       .min(MIN_NICKNAME_LENGTH, "auth.validation.nicknameTooShort")
       .max(20, "auth.validation.nicknameTooLong")
       .regex(/^[a-zA-Z0-9åäöÅÄÖ_-]+$/, "auth.validation.nicknameInvalidChars"),
-    email: z.string({ error: "auth.validation.emailRequired" }).trim().email("auth.validation.emailInvalid"),
+    email: z.string({ error: "auth.validation.emailRequired" }).trim().pipe(z.email("auth.validation.emailInvalid")),
     password: z.string({ error: "auth.validation.passwordRequired" }).min(8, "auth.validation.passwordTooShort"),
     confirmPassword: z
       .string({ error: "auth.validation.confirmPasswordRequired" })
@@ -115,7 +116,7 @@ export default function RegisterScreen() {
         extraScrollHeight={20}
         contentContainerStyle={s.scrollContent}
       >
-        <ImageBackground resizeMode="cover" source={background} style={s.backgroundImage}>
+        <ImageBackdrop source={background} style={s.backgroundImage}>
           <View style={s.backButtonContainer} pointerEvents="box-none">
             <ScreenHeader />
           </View>
@@ -296,7 +297,7 @@ export default function RegisterScreen() {
               </View>
             </View>
           </View>
-        </ImageBackground>
+        </ImageBackdrop>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

@@ -32,7 +32,7 @@ function mockFetch(status: number, body: unknown = {}, text = "") {
     status,
     json: jest.fn().mockResolvedValue(body),
     text: jest.fn().mockResolvedValue(text),
-  } as unknown as Response);
+  });
 }
 
 const registerData: RegisterData = {

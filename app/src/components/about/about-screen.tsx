@@ -22,7 +22,7 @@ export default function AboutScreen() {
   const theme = useTheme();
   const { t } = useTranslation();
 
-  const features = t("about.features", { returnObjects: true }) as string[];
+  const features: string[] = t("about.features", { returnObjects: true });
   const version = Constants.expoConfig?.version;
   const email = t("about.contactEmail");
 

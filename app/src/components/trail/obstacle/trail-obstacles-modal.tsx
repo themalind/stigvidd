@@ -9,7 +9,6 @@ import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailObstacle } from "@/data/types";
 import { MaterialIcons } from "@expo/vector-icons";
 import ModalScrim from "@/components/dialog/modal-scrim";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { Modal, Portal, Text, useTheme } from "react-native-paper";

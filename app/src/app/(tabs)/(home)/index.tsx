@@ -63,7 +63,7 @@ export default function HomeScreen() {
         <GetStartedCard signedIn={latest.kind === "empty"} />
       )}
       {/* Offline with nothing cached there is nothing to show; the offline banner says why. keep-comment: hidden coupling to the banner */}
-      {(query.data || isOnline) && (
+      {(query.data != null || isOnline) && (
         <SectionPanel testID="home-popular" title={hasPosition ? t("home.popularNearYou") : t("home.popular")}>
           {query.data ? (
             <View style={PANEL_BLEED}>

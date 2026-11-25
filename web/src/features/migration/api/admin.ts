@@ -10,7 +10,7 @@ import { describeRequest, logRefused, logUnanswered } from "@/api/mutator";
 
 export type ImportOutcome = { message: string; notes: string[] };
 
-const apiBase = () => import.meta.env.VITE_API_URL as string;
+const apiBase = () => import.meta.env.VITE_API_URL;
 
 async function authHeaders(): Promise<Record<string, string>> {
   const token = await getValidAccessToken();

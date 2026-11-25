@@ -73,7 +73,7 @@ function mockFetch(status: number, body: unknown = {}) {
     json: jest.fn().mockResolvedValue(body),
     clone: () => response,
   };
-  global.fetch = jest.fn().mockResolvedValue(response as unknown as Response);
+  global.fetch = jest.fn().mockResolvedValue(response);
 }
 
 /** Load known tokens into the module's in-memory cache via loadTokens(). */
@@ -207,7 +207,7 @@ describe("passwordGrant", () => {
       ok: false,
       status: 400,
       clone: () => ({ json: jest.fn().mockRejectedValue(new Error("not json")) }),
-    } as unknown as Response);
+    });
 
     await expect(passwordGrant("alice@example.com", "wrong")).rejects.not.toBeInstanceOf(AccountNotVerifiedError);
   });

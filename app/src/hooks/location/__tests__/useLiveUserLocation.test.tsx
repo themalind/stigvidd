@@ -74,10 +74,10 @@ beforeEach(() => {
     emit = callback;
     return { remove: removeWatcher };
   });
-  jest.spyOn(AppState, "addEventListener").mockImplementation(((_event: string, listener: typeof appStateListener) => {
+  jest.spyOn(AppState, "addEventListener").mockImplementation((_event: string, listener: typeof appStateListener) => {
     appStateListener = listener;
     return { remove: jest.fn() };
-  }) as never);
+  });
 });
 
 afterEach(() => {
@@ -374,10 +374,10 @@ describe("unmounting", () => {
 
   it("stops listening for foreground returns", async () => {
     const removeListener = jest.fn();
-    jest.spyOn(AppState, "addEventListener").mockImplementation(((_e: string, listener: typeof appStateListener) => {
+    jest.spyOn(AppState, "addEventListener").mockImplementation((_e: string, listener: typeof appStateListener) => {
       appStateListener = listener;
       return { remove: removeListener };
-    }) as never);
+    });
 
     const harness = await renderArmed();
     await harness.unmount();

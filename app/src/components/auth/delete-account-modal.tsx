@@ -90,7 +90,7 @@ export default function DeleteAccountModal({ visible, onDismiss }: Props) {
           <View style={s.textInputContainer}>
             <Controller
               control={control}
-              render={({ field: { onChange, onBlur, value } }) => (
+              render={({ field: { onChange, onBlur } }) => (
                 <PasswordInputField
                   testID="delete-account-password"
                   passwordCallback={onChange}

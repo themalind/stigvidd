@@ -153,7 +153,7 @@ describe("customFetch", () => {
     it("shows a non-JSON body, capped so an HTML error page cannot fill the toast", async () => {
       vi.mocked(fetch).mockResolvedValue(reply("<html>".repeat(200), 502));
 
-      const error = await customFetch("/api/x", {}).catch((e: Error) => e);
+      const error = await customFetch("/api/x", {}).catch((e: unknown) => e);
 
       expect((error as Error).message).toHaveLength(300);
     });
@@ -169,7 +169,7 @@ describe("customFetch", () => {
 
       await expect(
         customFetch("/api/v1/admin/media?near=57.70887,11.97456&q=someone", { method: "get" }),
-      ).rejects.toThrowError(/^Not yours$/);
+      ).rejects.toThrow(/^Not yours$/);
 
       expect(logger.warn).toHaveBeenCalledExactlyOnceWith("API request failed", {
         method: "GET",
@@ -197,7 +197,7 @@ describe("customFetch", () => {
     it("logs a server failure as an error", async () => {
       vi.mocked(fetch).mockResolvedValue(reply("", 500));
 
-      await expect(customFetch("/api/v1/admin/trails/abc", { method: "PUT" })).rejects.toThrowError(/^HTTP error 500$/);
+      await expect(customFetch("/api/v1/admin/trails/abc", { method: "PUT" })).rejects.toThrow(/^HTTP error 500$/);
 
       expect(logger.error).toHaveBeenCalledExactlyOnceWith("API request failed", {
         method: "PUT",
