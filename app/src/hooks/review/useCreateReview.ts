@@ -7,10 +7,12 @@
 
 import { createReview } from "@/api/reviews";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { CreateReviewRequest } from "@/data/types";
+import { logger } from "@/services/logger";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
-import { logger } from "@/services/logger";
+import { invalidateTrailReviews } from "./review-queries";
 
 export function useCreateReview(onSuccess: () => void) {
   const { t } = useTranslation();
@@ -19,41 +21,11 @@ export function useCreateReview(onSuccess: () => void) {
   const setError = useSetAtom(showErrorAtom);
 
   return useMutation({
-    mutationFn: async ({
-      trailIdentifier,
-      review,
-      rating,
-      imageUris,
-    }: {
-      trailIdentifier: string;
-      review: string;
-      rating: number;
-      imageUris: string[];
-    }) => {
-      return createReview({
-        trailIdentifier,
-        review,
-        rating,
-        imageUris,
-      });
-    },
-    onSuccess: (result, variables) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({
-          queryKey: ["trail", variables.trailIdentifier],
-        });
-        void queryClient.invalidateQueries({
-          queryKey: ["reviews", variables.trailIdentifier],
-        });
-        void queryClient.invalidateQueries({
-          queryKey: ["review-exists", variables.trailIdentifier],
-        });
-        setSuccess(t("review.added"));
-        onSuccess();
-      } else {
-        logger.error("Create review returned no review");
-        setError(t("review.saveError"));
-      }
+    mutationFn: (request: CreateReviewRequest) => createReview(request),
+    onSuccess: (_, request) => {
+      invalidateTrailReviews(queryClient, request.trailIdentifier);
+      setSuccess(t("review.added"));
+      onSuccess();
     },
     onError: (error) => {
       logger.error("Create review failed", { error: String(error) });

@@ -58,6 +58,44 @@ public class ReviewResponseFactoryTests
     }
 
     [Fact]
+    public void Create_WhenOnlyCreated_HasNoEditedAt()
+    {
+        // Arrange
+        var review = new Review { TrailReview = "Great trail", Rating = 4.0M };
+
+        // Act
+        var result = BuildFactory().Create(review);
+
+        // Assert
+        result.EditedAt.Should().BeNull();
+    }
+
+    [Fact]
+    public void NewEntity_HasLastUpdatedAtEqualToCreatedAt()
+    {
+        // Act
+        var review = new Review { TrailReview = "Great trail", Rating = 4.0M };
+
+        // Assert
+        review.LastUpdatedAt.Should().Be(review.CreatedAt);
+    }
+
+    [Fact]
+    public void Create_WhenUpdatedAfterCreation_HasEditedAt()
+    {
+        // Arrange
+        var review = BaseReview();
+        review.CreatedAt = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
+        review.LastUpdatedAt = review.CreatedAt.AddSeconds(30);
+
+        // Act
+        var result = BuildFactory().Create(review);
+
+        // Assert
+        result.EditedAt.Should().Be(review.LastUpdatedAt);
+    }
+
+    [Fact]
     public void Create_WhenReviewHasNoImages_ReturnsEmptyImages()
     {
         // Arrange

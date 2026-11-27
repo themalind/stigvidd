@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import ImageViewer from "@/components/review/image-viewer";
+import ImageViewer from "@/components/media/image-viewer";
 import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
 import { ReviewImage } from "@/data/types";
 import { getAllByType } from "@/test/composites";
@@ -37,7 +37,7 @@ function show(
 }
 
 function list() {
-  return screen.getByTestId("review-image-list");
+  return screen.getByTestId("image-viewer-list");
 }
 
 // The gallery's own scroll: the platform reports where the strip came to rest.
@@ -55,7 +55,7 @@ beforeEach(() => {
 it("shows every picture the review carries", async () => {
   await show();
 
-  expect(screen.getAllByTestId("review-image-item")).toHaveLength(3);
+  expect(screen.getAllByTestId("image-viewer-item")).toHaveLength(3);
   expect(getAllByType(Image).map((image) => image.props.source)).toEqual([
     "https://media.stigvidd.se/reviews/bild-1.jpg",
     "https://media.stigvidd.se/reviews/bild-2.jpg",
@@ -66,7 +66,7 @@ it("shows every picture the review carries", async () => {
 it("stays out of sight until it is opened", async () => {
   await show(images(3), false);
 
-  expect(screen.queryByTestId("review-image-item")).toBeNull();
+  expect(screen.queryByTestId("image-viewer-item")).toBeNull();
   expect(screen.queryByTestId("image-viewer-close")).toBeNull();
 });
 
@@ -77,7 +77,7 @@ it("shows each picture whole, filling the screen", async () => {
     expect(image.props.contentFit).toBe("contain");
     expect(StyleSheet.flatten(image.props.style)).toMatchObject({ width: "100%", height: "100%" });
   }
-  expect(screen.getAllByTestId("review-image-item")[0]).toHaveStyle({ width: ITEM_WIDTH, height: ITEM_HEIGHT });
+  expect(screen.getAllByTestId("image-viewer-item")[0]).toHaveStyle({ width: ITEM_WIDTH, height: ITEM_HEIGHT });
 });
 
 it("covers the whole screen in black, whatever the theme", async () => {
@@ -92,7 +92,7 @@ it("sizes the frame to the screen itself, since Paper's iOS modal surface gives 
   await show();
 
   expect(screen.getByTestId("modal-surface")).not.toHaveStyle({ flex: 1 });
-  expect(screen.getByTestId("review-image-frame")).toHaveStyle({ width: ITEM_WIDTH, height: ITEM_HEIGHT });
+  expect(screen.getByTestId("image-viewer-frame")).toHaveStyle({ width: ITEM_WIDTH, height: ITEM_HEIGHT });
 });
 
 // One swipe is one picture, not a free scroll that leaves two half-shown.
@@ -147,28 +147,28 @@ it("counts the picture nearest to where the swipe stopped", async () => {
 it("shows no dots for a single picture", async () => {
   await show(images(1));
 
-  expect(screen.queryByTestId("review-image-pagination")).toBeNull();
-  expect(screen.queryAllByTestId("review-image-dot")).toHaveLength(0);
+  expect(screen.queryByTestId("image-viewer-pagination")).toBeNull();
+  expect(screen.queryAllByTestId("image-viewer-dot")).toHaveLength(0);
 });
 
 it("marks one dot per picture, with a ring around the one being shown", async () => {
   await show();
 
-  expect(screen.getAllByTestId("review-image-dot")).toHaveLength(3);
-  expect(screen.getByTestId("review-image-indicator")).toBeTruthy();
+  expect(screen.getAllByTestId("image-viewer-dot")).toHaveLength(3);
+  expect(screen.getByTestId("image-viewer-indicator")).toBeTruthy();
 });
 
 it("sets the dots in the theme's accent, and the ring in its primary", async () => {
   await show();
 
-  expect(screen.getAllByTestId("review-image-dot")[0]).toHaveStyle({
+  expect(screen.getAllByTestId("image-viewer-dot")[0]).toHaveStyle({
     backgroundColor: AppDefaultTheme.colors.tertiary,
     width: 8,
     height: 8,
     borderRadius: 8,
     marginRight: 8,
   });
-  expect(screen.getByTestId("review-image-indicator")).toHaveStyle({
+  expect(screen.getByTestId("image-viewer-indicator")).toHaveStyle({
     borderColor: AppDefaultTheme.colors.primary,
     borderWidth: 2,
     width: 16,
@@ -181,7 +181,7 @@ it("sets the dots in the theme's accent, and the ring in its primary", async () 
 it("centres the ring on the dot it marks", async () => {
   await show();
 
-  expect(screen.getByTestId("review-image-indicator")).toHaveStyle({
+  expect(screen.getByTestId("image-viewer-indicator")).toHaveStyle({
     position: "absolute",
     top: -4,
     left: -4,
@@ -191,14 +191,14 @@ it("centres the ring on the dot it marks", async () => {
 it("carries the dark theme's colours too", async () => {
   await show(images(3), true, AppDarkTheme);
 
-  expect(screen.getAllByTestId("review-image-dot")[0]).toHaveStyle({ backgroundColor: AppDarkTheme.colors.tertiary });
-  expect(screen.getByTestId("review-image-indicator")).toHaveStyle({ borderColor: AppDarkTheme.colors.primary });
+  expect(screen.getAllByTestId("image-viewer-dot")[0]).toHaveStyle({ backgroundColor: AppDarkTheme.colors.tertiary });
+  expect(screen.getByTestId("image-viewer-indicator")).toHaveStyle({ borderColor: AppDarkTheme.colors.primary });
 });
 
 it("lays the dots over the bottom of the picture", async () => {
   await show();
 
-  expect(screen.getByTestId("review-image-pagination")).toHaveStyle({
+  expect(screen.getByTestId("image-viewer-pagination")).toHaveStyle({
     position: "absolute",
     flexDirection: "row",
     alignSelf: "center",
@@ -245,7 +245,7 @@ describe("zooming", () => {
     await act(() => zoom().props.onPinchStart());
 
     expect(list().props.scrollEnabled).toBe(false);
-    expect(screen.queryByTestId("review-image-pagination")).toBeNull();
+    expect(screen.queryByTestId("image-viewer-pagination")).toBeNull();
   });
 
   it("swipes again once zoomed back out", async () => {
@@ -299,89 +299,6 @@ describe("opening on a chosen picture", () => {
   });
 });
 
-describe("deleting", () => {
-  const onDelete = jest.fn();
-
-  beforeEach(() => {
-    onDelete.mockResolvedValue(undefined);
-  });
-
-  it("offers no bin when the viewer may not delete", async () => {
-    await show();
-
-    expect(screen.queryByTestId("image-viewer-delete")).toBeNull();
-  });
-
-  it("asks before deleting, and deletes the picture on screen", async () => {
-    await renderWithProviders(
-      <ImageViewer images={images(3)} visible initialIndex={1} onDismiss={onDismiss} onDelete={onDelete} />,
-    );
-
-    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
-    await settle();
-    expect(screen.getByText("Ta bort bilden?")).toBeTruthy();
-    expect(onDelete).not.toHaveBeenCalled();
-
-    await fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
-    await settle();
-
-    expect(onDelete).toHaveBeenCalledWith(images(3)[1]);
-    expect(onDismiss).not.toHaveBeenCalled();
-  });
-
-  it("deletes nothing when the question is cancelled", async () => {
-    await renderWithProviders(<ImageViewer images={images(2)} visible onDismiss={onDismiss} onDelete={onDelete} />);
-
-    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
-    await settle();
-    await fireEvent.press(screen.getByText("Avbryt"));
-    await settle();
-
-    expect(onDelete).not.toHaveBeenCalled();
-  });
-
-  it("closes once the last picture is gone", async () => {
-    await renderWithProviders(<ImageViewer images={images(1)} visible onDismiss={onDismiss} onDelete={onDelete} />);
-
-    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
-    await settle();
-    await fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
-    await settle();
-
-    expect(onDismiss).toHaveBeenCalled();
-  });
-
-  it("stays open on a failed delete", async () => {
-    onDelete.mockRejectedValue(new Error("500"));
-    await renderWithProviders(<ImageViewer images={images(1)} visible onDismiss={onDismiss} onDelete={onDelete} />);
-
-    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
-    await settle();
-    await fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
-    await settle();
-
-    expect(onDelete).toHaveBeenCalled();
-    expect(onDismiss).not.toHaveBeenCalled();
-  });
-
-  it("moves back onto the new last picture when the last one is deleted", async () => {
-    const { rerender } = await renderWithProviders(
-      <ImageViewer images={images(3)} visible initialIndex={2} onDismiss={onDismiss} onDelete={onDelete} />,
-    );
-
-    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
-    await settle();
-    await fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
-    await settle();
-    await rerender(
-      <ImageViewer images={images(2)} visible initialIndex={2} onDismiss={onDismiss} onDelete={onDelete} />,
-    );
-    await settle();
-
-    expect(list().props.initialScrollIndex).toBe(1);
-  });
-});
-
 describe("reporting", () => {
   const onReport = jest.fn();
 
@@ -393,15 +310,6 @@ describe("reporting", () => {
     await fireEvent.press(screen.getByTestId("image-viewer-report"));
 
     expect(onReport).toHaveBeenCalledWith(images(3)[2]);
-  });
-
-  it("offers no flag to someone who may delete the picture", async () => {
-    await renderWithProviders(
-      <ImageViewer images={images(2)} visible onDismiss={onDismiss} onDelete={jest.fn()} onReport={onReport} />,
-    );
-
-    expect(screen.queryByTestId("image-viewer-report")).toBeNull();
-    expect(screen.getByTestId("image-viewer-delete")).toBeTruthy();
   });
 
   it("offers no flag when nobody asked for one", async () => {

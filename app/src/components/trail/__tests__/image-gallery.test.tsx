@@ -140,14 +140,14 @@ describe("ImageGallery — large image and thumbnails follow each other", () => 
     await fireEvent.press(screen.getByTestId("gallery-page-button-1"));
 
     expect(screen.getByTestId("image-viewer-close")).toBeTruthy();
-    expect(screen.getByTestId("review-image-list").props.initialScrollIndex).toBe(1);
+    expect(screen.getByTestId("image-viewer-list").props.initialScrollIndex).toBe(1);
   });
 
   it("lands on the image the viewer was closed on", async () => {
     await show();
     await fireEvent.press(screen.getByTestId("gallery-page-button-0"));
     const { width } = Dimensions.get("window");
-    await fireEvent(screen.getByTestId("review-image-list"), "momentumScrollEnd", {
+    await fireEvent(screen.getByTestId("image-viewer-list"), "momentumScrollEnd", {
       nativeEvent: { contentOffset: { x: width * 2 } },
     });
 

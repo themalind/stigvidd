@@ -14,8 +14,8 @@ import AlertDialog from "@/components/dialog/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import HikeDetailLayout, { HikeDetailFallback } from "@/components/hike/hike-detail-layout";
-import HikeImageSection from "@/components/hike/hike-image-section";
-import ImageViewer, { ViewerImage } from "@/components/review/image-viewer";
+import ImageStrip from "@/components/media/image-strip";
+import { ViewerImage } from "@/components/media/image-viewer";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import SlimButton from "@/components/display/slim-button";
 import ReportContentForm from "@/components/report/report-content-form";
@@ -59,7 +59,6 @@ export default function SharedHikeDetailsScreen() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showBannedDialog, setShowBannedDialog] = useState(false);
   const [removedHike, setRemovedHike] = useState<SharedHike | null>(null);
-  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [reportedImage, setReportedImage] = useState<ViewerImage | null>(null);
 
   const { identifier } = useLocalSearchParams<{ identifier: string }>();
@@ -143,7 +142,13 @@ export default function SharedHikeDetailsScreen() {
         { label: t("hike.sharedOn"), value: formatDate(sharedHike.sharedAt) },
       ]}
       info={sharedHike}
-      media={<HikeImageSection images={sharedHike.images} onOpen={setViewerIndex} />}
+      media={
+        <ImageStrip
+          title={t("hike.images")}
+          images={sharedHike.images}
+          onReport={(image) => (reason === "banned" ? setShowBannedDialog(true) : setReportedImage(image))}
+        />
+      }
       actions={
         <View style={s.actionColumn}>
           {!sharedHike.allowResharing && (
@@ -188,17 +193,6 @@ export default function SharedHikeDetailsScreen() {
         onConfirm={() => deleteMutation.mutate(sharedHike)}
       />
       <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setShowBannedDialog(false)} />
-      <ImageViewer
-        images={sharedHike.images}
-        visible={viewerIndex !== null}
-        initialIndex={viewerIndex ?? 0}
-        onDismiss={() => setViewerIndex(null)}
-        onReport={(image) => {
-          setViewerIndex(null);
-          if (reason === "banned") setShowBannedDialog(true);
-          else setReportedImage(image);
-        }}
-      />
       {reportedImage && (
         <ReportContentForm
           visible

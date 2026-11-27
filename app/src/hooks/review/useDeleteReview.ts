@@ -7,11 +7,13 @@
 
 import { deleteReview } from "@/api/reviews";
 import { showErrorAtom, showSuccessAtom } from "@/atoms/snackbar-atoms";
+import { logger } from "@/services/logger";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSetAtom } from "jotai";
 import { useTranslation } from "react-i18next";
+import { invalidateTrailReviews } from "./review-queries";
 
-export function useDeleteReview() {
+export function useDeleteReview(onDeleted?: () => void) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const setSuccessMessage = useSetAtom(showSuccessAtom);
@@ -20,18 +22,13 @@ export function useDeleteReview() {
   return useMutation({
     mutationFn: ({ reviewIdentifier }: { reviewIdentifier: string; trailIdentifier: string }) =>
       deleteReview(reviewIdentifier),
-    onSuccess: (result, { trailIdentifier }) => {
-      if (result.success) {
-        void queryClient.invalidateQueries({ queryKey: ["trail", trailIdentifier] });
-        void queryClient.invalidateQueries({ queryKey: ["reviews", trailIdentifier] });
-        // keep-comment: brings the add option back
-        void queryClient.invalidateQueries({ queryKey: ["review-exists", trailIdentifier] });
-        setSuccessMessage(t("review.deleted"));
-      } else {
-        setError(t("review.deleteError"));
-      }
+    onSuccess: (_, { trailIdentifier }) => {
+      invalidateTrailReviews(queryClient, trailIdentifier);
+      setSuccessMessage(t("review.deleted"));
+      onDeleted?.();
     },
-    onError: () => {
+    onError: (error) => {
+      logger.error("Delete review failed", { error: String(error) });
       setError(t("review.deleteError"));
     },
   });

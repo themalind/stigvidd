@@ -6,11 +6,15 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { showErrorAtom } from "@/atoms/snackbar-atoms";
+import AlertDialog from "@/components/dialog/alert-dialog";
 import CountedTextInput from "@/components/form/counted-text-input";
 import InfoHeading from "@/components/layout/info-heading";
 import { asTranslationKey } from "@/i18n";
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, MAX_REVIEW_IMAGES, MAX_REVIEW_LENGTH } from "@/constants/constants";
+import { Review } from "@/data/types";
 import { useCreateReview } from "@/hooks/review/useCreateReview";
+import { useDeleteReview } from "@/hooks/review/useDeleteReview";
+import { useUpdateReview } from "@/hooks/review/useUpdateReview";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useSetAtom } from "jotai";
 import { useState } from "react";
@@ -20,15 +24,17 @@ import { StyleSheet, View } from "react-native";
 import { Button, Divider, Text, useTheme } from "react-native-paper";
 import StarRating from "react-native-star-rating-widget";
 import { z } from "zod";
-import AddReviewImages from "./add-review-images";
+import AddReviewImages, { ReviewFormImage } from "./add-review-images";
 
 interface ReviewFormProps {
   trailIdentifier: string;
+  // keep-comment: given when editing; the form then starts from it and saves over it
+  review?: Review;
   onSuccess: () => void;
 }
 
 const newReviewForm = z.object({
-  trailReview: z.optional(z.string().max(500, "review.reviewTooLong")),
+  trailReview: z.optional(z.string().max(MAX_REVIEW_LENGTH, "review.reviewTooLong")),
   rating: z.number().min(1, "review.ratingRequired").max(5, "review.ratingRequired"),
   trailIdentifier: z
     .string({ error: "trailIdentifier is required." })
@@ -37,12 +43,24 @@ const newReviewForm = z.object({
 
 type FormFields = z.infer<typeof newReviewForm>;
 
-export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewFormProps) {
+function storedImages(review: Review | undefined): ReviewFormImage[] {
+  return (review?.reviewImages ?? []).map((image) => ({
+    kind: "stored",
+    identifier: image.identifier,
+    uri: image.imageUrl,
+  }));
+}
+
+export default function AddReviewForm({ trailIdentifier, review, onSuccess }: ReviewFormProps) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [reviewImages, setReviewImages] = useState<string[]>([]);
+  const [images, setImages] = useState(() => storedImages(review));
   const setError = useSetAtom(showErrorAtom);
   const createReviewMutation = useCreateReview(onSuccess);
+  const updateReviewMutation = useUpdateReview(onSuccess);
+  const deleteReviewMutation = useDeleteReview(onSuccess);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const isPending = createReviewMutation.isPending || updateReviewMutation.isPending || deleteReviewMutation.isPending;
 
   const {
     control,
@@ -53,13 +71,31 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
     // keep-comment: 0 is "no star yet"; the schema's min(1) makes a rating required
     defaultValues: {
       trailIdentifier: trailIdentifier,
-      rating: 0,
+      rating: review?.rating ?? 0,
+      trailReview: review?.trailReview ?? undefined,
     },
   });
 
-  const onSubmit: SubmitHandler<FormFields> = async (data) => {
+  const onSubmit: SubmitHandler<FormFields> = (data) => {
     if (!trailIdentifier) {
       setError("Error: No TrailIdentifier");
+      return;
+    }
+
+    const newImageUris = images.flatMap((image) => (image.kind === "new" ? [image.uri] : []));
+
+    if (review) {
+      const keptIdentifiers = new Set(images.flatMap((image) => (image.kind === "stored" ? [image.identifier] : [])));
+
+      updateReviewMutation.mutate({
+        reviewIdentifier: review.identifier,
+        review: data.trailReview ?? "",
+        rating: data.rating,
+        removedImageIdentifiers: (review.reviewImages ?? [])
+          .map((image) => image.identifier)
+          .filter((identifier) => !keptIdentifiers.has(identifier)),
+        newImageUris,
+      });
       return;
     }
 
@@ -67,7 +103,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
       trailIdentifier: data.trailIdentifier,
       review: data.trailReview ?? "",
       rating: data.rating,
-      imageUris: reviewImages,
+      imageUris: newImageUris,
     });
   };
 
@@ -102,10 +138,14 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
       <InfoHeading
         label={t("review.addImage")}
         infoTitle={t("review.addImageTitle")}
-        infoText={[t("review.addImageInfo1"), t("review.addImageInfo2"), t("review.addImageInfo3")]}
+        infoText={[
+          t("review.addImageInfo1"),
+          t("review.addImageInfo2"),
+          t("review.addImageInfo3", { max: MAX_REVIEW_IMAGES }),
+        ]}
       />
       <View style={s.rowGap}>
-        <AddReviewImages setReviewImages={setReviewImages} />
+        <AddReviewImages images={images} onChange={setImages} />
       </View>
       <Divider />
       <View style={s.gap}>
@@ -127,7 +167,7 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
               textAlignVertical="top"
               onChangeText={onChange}
               value={value}
-              maxLength={500}
+              maxLength={MAX_REVIEW_LENGTH}
               label={t("review.reviewLabel")}
               theme={{
                 colors: {
@@ -150,11 +190,42 @@ export default function AddReviewForm({ trailIdentifier, onSuccess }: ReviewForm
           mode="contained"
           style={s.button}
           onPress={() => handleSubmit(onSubmit)()}
-          disabled={isSubmitting || createReviewMutation.isPending}
+          disabled={isSubmitting || isPending}
         >
-          {createReviewMutation.isPending ? t("common.saving") : t("common.save")}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
+        {review && (
+          <Button
+            testID="delete-own-review"
+            mode="text"
+            icon="delete-outline"
+            textColor={theme.colors.error}
+            style={s.deleteButton}
+            onPress={() => setConfirmDelete(true)}
+            disabled={isPending}
+          >
+            {t("review.deleteTitle")}
+          </Button>
+        )}
       </View>
+      {review && (
+        <AlertDialog
+          testID="review-delete-dialog"
+          visible={confirmDelete}
+          onDismiss={() => setConfirmDelete(false)}
+          title={t("review.deleteTitle")}
+          infoText={[t("review.deleteConfirm")]}
+          icon="delete-outline"
+          tone="danger"
+          irreversible
+          confirmText={t("common.delete")}
+          cancelText={t("common.cancel")}
+          onConfirm={() => {
+            deleteReviewMutation.mutate({ reviewIdentifier: review.identifier, trailIdentifier });
+            setConfirmDelete(false);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -174,6 +245,10 @@ const s = StyleSheet.create({
   },
   button: {
     borderRadius: BORDER_RADIUS,
+  },
+  deleteButton: {
+    alignSelf: "center",
+    marginTop: 10,
   },
   error: {
     fontWeight: "700",

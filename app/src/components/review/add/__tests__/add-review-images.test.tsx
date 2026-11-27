@@ -6,9 +6,8 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { snackbarAtom } from "@/atoms/snackbar-atoms";
-import AddReviewImages from "@/components/review/add/add-review-images";
-import { AppDarkTheme, AppDefaultTheme } from "@/constants/theme";
-import { closestByType, getAllByType } from "@/test/composites";
+import AddReviewImages, { ReviewFormImage } from "@/components/review/add/add-review-images";
+import { getAllByType } from "@/test/composites";
 import { settle } from "@/test/flush";
 import { getDialog, hideDialog } from "@/services/dialog";
 import { defined } from "@/test/defined";
@@ -17,9 +16,9 @@ import { resizeImage } from "@/utils/image/resize-image";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { Dimensions, Pressable, StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { useState } from "react";
 
-// The picker dialog and the resizer are the platform's; the component owns what it does with their answers.
+// keep-comment: the picker dialog and the resizer are the platform's; the component owns what it does with their answers
 jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
@@ -30,10 +29,25 @@ const requestPermission = ImagePicker.requestMediaLibraryPermissionsAsync as jes
 const launchLibrary = ImagePicker.launchImageLibraryAsync as jest.Mock;
 const resize = resizeImage as jest.Mock;
 
-const { width: WIDTH } = Dimensions.get("screen");
-const BUTTON_WIDTH = WIDTH * 0.25;
+const onChange = jest.fn();
 
-const setReviewImages = jest.fn();
+// keep-comment: the component is controlled, so the test plays the form that holds the list
+function Form({ initial = [] }: { initial?: ReviewFormImage[] }) {
+  const [images, setImages] = useState(initial);
+  return (
+    <AddReviewImages
+      images={images}
+      onChange={(next) => {
+        onChange(next);
+        setImages(next);
+      }}
+    />
+  );
+}
+
+function picked(uri: string) {
+  return expect.objectContaining({ kind: "new", uri });
+}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -45,42 +59,41 @@ afterEach(() => {
   hideDialog();
 });
 
-function show(theme: typeof AppDefaultTheme | typeof AppDarkTheme = AppDefaultTheme) {
-  return renderWithProviders(<AddReviewImages setReviewImages={setReviewImages} />, { theme });
+function show() {
+  return renderWithProviders(<Form />);
 }
 
-// One trip through the picker: the dialog answers with this asset.
-async function pickAsset(asset: Record<string, unknown>) {
-  launchLibrary.mockResolvedValueOnce({ canceled: false, assets: [asset] });
-  await fireEvent.press(screen.getByTestId("add-review-image-add"));
+function addButton() {
+  return screen.queryByTestId("image-strip-add") ?? screen.getByTestId("image-strip-empty");
+}
+
+async function pickAssets(assets: Record<string, unknown>[]) {
+  launchLibrary.mockResolvedValueOnce({ canceled: false, assets });
+  await fireEvent.press(addButton());
   await settle();
 }
 
 async function pick(name: string) {
-  await pickAsset({ uri: `file:///dcim/${name}.jpg`, mimeType: "image/jpeg", width: 4000, height: 3000 });
-}
-
-// The button's style is a function of the press state, and it sits on the Pressable above the host view.
-function buttonStyle(pressed: boolean) {
-  const style = closestByType(screen.getByTestId("add-review-image-add"), Pressable).props.style as (state: {
-    pressed: boolean;
-  }) => StyleProp<ViewStyle>;
-  return StyleSheet.flatten(style({ pressed }));
+  await pickAssets([{ uri: `file:///dcim/${name}.jpg`, mimeType: "image/jpeg", width: 4000, height: 3000 }]);
 }
 
 function sources() {
   return getAllByType(Image).map((image) => image.props.source.uri);
 }
 
-it("starts with nothing but the button that opens the picker", async () => {
+async function remove(index: number) {
+  await fireEvent.press(defined(screen.getAllByTestId("image-strip-remove")[index], `cross ${index}`));
+  await settle();
+}
+
+it("starts with only the invitation to add photos", async () => {
   await show();
 
-  expect(screen.getByTestId("add-review-image-add")).toBeTruthy();
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
-  expect(screen.queryAllByTestId("add-review-image-delete")).toHaveLength(0);
+  expect(screen.getByTestId("image-strip-empty")).toBeTruthy();
+  expect(screen.getByText("Upp till 3 bilder")).toBeTruthy();
+  expect(screen.queryAllByTestId("image-strip-item")).toHaveLength(0);
 });
 
-// The upload is the shrunken copy, so it is that uri the review carries.
 it("shows the shrunken copy of the picked photo, not the original", async () => {
   await show();
 
@@ -94,22 +107,41 @@ it("hands the review form the pictures it is holding", async () => {
   await show();
 
   await pick("vandring");
-  expect(setReviewImages).toHaveBeenLastCalledWith(["file:///dcim/vandring-liten.jpg"]);
+  expect(onChange).toHaveBeenLastCalledWith([picked("file:///dcim/vandring-liten.jpg")]);
 
   await pick("utsikt");
-  expect(setReviewImages).toHaveBeenLastCalledWith([
-    "file:///dcim/vandring-liten.jpg",
-    "file:///dcim/utsikt-liten.jpg",
+  expect(onChange).toHaveBeenLastCalledWith([
+    picked("file:///dcim/vandring-liten.jpg"),
+    picked("file:///dcim/utsikt-liten.jpg"),
   ]);
 });
 
-// Cropping is off: the component resizes and re-compresses the picked file itself.
-it("asks the library for photos, uncropped", async () => {
+it("lets the library pick as many uncropped photos as still fit", async () => {
+  await show();
+  await pick("ett");
+
+  await pick("tva");
+
+  expect(launchLibrary).toHaveBeenNthCalledWith(1, {
+    mediaTypes: ["images"],
+    allowsEditing: false,
+    allowsMultipleSelection: true,
+    selectionLimit: 3,
+  });
+  expect(launchLibrary).toHaveBeenLastCalledWith({
+    mediaTypes: ["images"],
+    allowsEditing: false,
+    allowsMultipleSelection: true,
+    selectionLimit: 2,
+  });
+});
+
+it("takes several photos in one pick", async () => {
   await show();
 
-  await pick("vandring");
+  await pickAssets([{ uri: "file:///dcim/ett.jpg" }, { uri: "file:///dcim/tva.jpg" }]);
 
-  expect(launchLibrary).toHaveBeenCalledWith({ mediaTypes: ["images"], allowsEditing: false });
+  expect(sources()).toEqual(["file:///dcim/ett-liten.jpg", "file:///dcim/tva-liten.jpg"]);
 });
 
 it("keeps the pictures in the order they were picked", async () => {
@@ -122,59 +154,37 @@ it("keeps the pictures in the order they were picked", async () => {
   expect(sources()).toEqual(["file:///dcim/ett-liten.jpg", "file:///dcim/tva-liten.jpg", "file:///dcim/tre-liten.jpg"]);
 });
 
-it("works on its own, without a form to report to", async () => {
-  await renderWithProviders(<AddReviewImages />);
-
-  await pick("vandring");
-
-  expect(sources()).toEqual(["file:///dcim/vandring-liten.jpg"]);
-});
-
 it("asks for the library before opening it, and gives up when it is refused", async () => {
   requestPermission.mockResolvedValue({ granted: false });
   await show();
 
-  await fireEvent.press(screen.getByTestId("add-review-image-add"));
+  await fireEvent.press(addButton());
   await settle();
 
   expect(getDialog()).toMatchObject({ title: "Tillgång krävs", message: "Tillgång till mediabiblioteket krävs." });
   expect(launchLibrary).not.toHaveBeenCalled();
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
+  expect(screen.queryAllByTestId("image-strip-item")).toHaveLength(0);
 });
 
 it("does nothing when the picker is closed without a picture", async () => {
   const { store } = await show();
   launchLibrary.mockResolvedValueOnce({ canceled: true, assets: null });
 
-  await fireEvent.press(screen.getByTestId("add-review-image-add"));
+  await fireEvent.press(addButton());
   await settle();
 
   expect(resize).not.toHaveBeenCalled();
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
-  expect(setReviewImages).not.toHaveBeenCalled();
-  // Closing the picker is not a failure, and raises no error the user never caused.
+  expect(onChange).not.toHaveBeenCalled();
   expect(store.get(snackbarAtom).visible).toBe(false);
 });
 
-// iPhones store photos as HEIC; the resize re-encodes every pick as JPEG, so the original format must not matter.
 it("takes an iPhone HEIC picture and hands it to the resizer", async () => {
   const { store } = await show();
 
-  await pickAsset({ uri: "file:///dcim/IMG_0001.heic", mimeType: "image/heic" });
+  await pickAssets([{ uri: "file:///dcim/IMG_0001.heic", mimeType: "image/heic" }]);
 
   expect(resize).toHaveBeenCalledWith("file:///dcim/IMG_0001.heic");
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(1);
-  expect(setReviewImages).toHaveBeenCalledTimes(1);
-  expect(store.get(snackbarAtom).visible).toBe(false);
-});
-
-it("takes a picture the library cannot name a type for", async () => {
-  const { store } = await show();
-
-  await pickAsset({ uri: "file:///dcim/okand.jpg" });
-
-  expect(resize).toHaveBeenCalledWith("file:///dcim/okand.jpg");
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(1);
+  expect(screen.queryAllByTestId("image-strip-item")).toHaveLength(1);
   expect(store.get(snackbarAtom).visible).toBe(false);
 });
 
@@ -197,142 +207,103 @@ it("says so when the picker itself fails", async () => {
   const { store } = await show();
   launchLibrary.mockRejectedValueOnce(new Error("no library"));
 
-  await fireEvent.press(screen.getByTestId("add-review-image-add"));
+  await fireEvent.press(addButton());
   await settle();
 
   expect(store.get(snackbarAtom)).toMatchObject({ visible: true, message: "Kunde inte spara bilder" });
-  expect(screen.queryAllByTestId("add-review-image")).toHaveLength(0);
+  expect(screen.queryAllByTestId("image-strip-item")).toHaveLength(0);
 });
 
-it("removes the picture whose cross is pressed, and only that one", async () => {
+it("removes the picture whose cross is pressed, and only that one, without asking", async () => {
   await show();
   await pick("ett");
   await pick("tva");
   await pick("tre");
 
-  await fireEvent.press(defined(screen.getAllByTestId("add-review-image-delete")[1], "second delete"));
-  await settle();
+  await remove(1);
 
   expect(sources()).toEqual(["file:///dcim/ett-liten.jpg", "file:///dcim/tre-liten.jpg"]);
-  expect(setReviewImages).toHaveBeenLastCalledWith(["file:///dcim/ett-liten.jpg", "file:///dcim/tre-liten.jpg"]);
+  expect(onChange).toHaveBeenLastCalledWith([
+    picked("file:///dcim/ett-liten.jpg"),
+    picked("file:///dcim/tre-liten.jpg"),
+  ]);
 });
 
-it("gives every picture a cross of its own", async () => {
+it("removes only the pressed copy when the same photo was picked twice", async () => {
+  await show();
+  await pick("samma");
+  await pick("samma");
+
+  await remove(0);
+
+  expect(sources()).toEqual(["file:///dcim/samma-liten.jpg"]);
+});
+
+it("stops offering the picker at three pictures, and offers it again after a removal", async () => {
   await show();
   await pick("ett");
   await pick("tva");
-
-  expect(screen.getAllByTestId("add-review-image")).toHaveLength(2);
-  expect(screen.getAllByTestId("add-review-image-delete")).toHaveLength(2);
-});
-
-// Three is the limit a review carries, so the button is taken away rather than failing on the fourth.
-it("stops offering the picker at three pictures", async () => {
-  await show();
-  await pick("ett");
-  await pick("tva");
-  expect(screen.getByTestId("add-review-image-add")).toBeTruthy();
+  expect(screen.getByTestId("image-strip-add")).toBeTruthy();
 
   await pick("tre");
+  expect(screen.queryByTestId("image-strip-add")).toBeNull();
+  expect(screen.getByTestId("image-strip-count")).toHaveTextContent("3/3");
 
-  expect(screen.queryByTestId("add-review-image-add")).toBeNull();
-  expect(screen.getAllByTestId("add-review-image")).toHaveLength(3);
+  await remove(0);
+  expect(screen.getByTestId("image-strip-add")).toBeTruthy();
 });
 
-it("offers the picker again once a picture is removed", async () => {
+it("opens a tapped picture full screen", async () => {
   await show();
   await pick("ett");
   await pick("tva");
-  await pick("tre");
 
-  await fireEvent.press(defined(screen.getAllByTestId("add-review-image-delete")[0], "first delete"));
+  await fireEvent.press(defined(screen.getAllByTestId("image-strip-thumb")[1], "second thumb"));
   await settle();
 
-  expect(screen.getByTestId("add-review-image-add")).toBeTruthy();
+  expect(screen.getByTestId("image-viewer-list").props.initialScrollIndex).toBe(1);
 });
 
-it("lays the pictures out in a row that wraps", async () => {
-  await show();
+describe("with the images a review already has", () => {
+  const stored: ReviewFormImage[] = [
+    { kind: "stored", identifier: "img-1", uri: "https://media.stigvidd.se/reviews/1.jpg" },
+    { kind: "stored", identifier: "img-2", uri: "https://media.stigvidd.se/reviews/2.jpg" },
+  ];
 
-  expect(screen.getByTestId("add-review-images")).toHaveStyle({
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
+  function showStored() {
+    return renderWithProviders(<Form initial={stored} />);
+  }
+
+  it("shows them from the start, each with a cross", async () => {
+    await showStored();
+
+    expect(sources()).toEqual(["https://media.stigvidd.se/reviews/1.jpg", "https://media.stigvidd.se/reviews/2.jpg"]);
+    expect(screen.getAllByTestId("image-strip-remove")).toHaveLength(2);
+    expect(onChange).not.toHaveBeenCalled();
   });
-});
 
-// The thumbnails are portrait and a quarter of the screen wide, so three and the button share the row.
-it("shows each thumbnail as a quarter-width portrait, cropped to fill", async () => {
-  await show();
-  await pick("vandring");
+  it("keeps the identifier of a stored image when another is removed", async () => {
+    await showStored();
 
-  const image = defined(getAllByType(Image)[0], "first thumbnail");
-  expect(image.props.contentFit).toBe("cover");
-  expect(image.props.style).toMatchObject({ width: BUTTON_WIDTH, aspectRatio: 3 / 4 });
-});
+    await remove(0);
 
-it("gives the picker button the same footprint as a thumbnail", async () => {
-  await show();
-
-  expect(screen.getByTestId("add-review-image-add")).toHaveStyle({
-    width: BUTTON_WIDTH,
-    aspectRatio: 3 / 4,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    backgroundColor: AppDefaultTheme.colors.surface,
-    borderColor: AppDefaultTheme.colors.primary,
+    expect(onChange).toHaveBeenLastCalledWith([stored[1]]);
   });
-});
 
-it("dims the picker button while it is held down", async () => {
-  await show();
+  it("adds a picked image after the stored ones, as a new one", async () => {
+    await showStored();
 
-  expect(buttonStyle(false)?.opacity).toBeUndefined();
-  expect(buttonStyle(true)?.opacity).toBe(0.7);
-});
+    await pick("ny");
 
-it("draws the plus in the theme's primary", async () => {
-  await show();
-
-  const plus = screen.getByTestId("icon-file-image-plus-outline");
-  expect(plus.props.size).toBe(40);
-  expect(plus.props.color).toBe(AppDefaultTheme.colors.primary);
-});
-
-// The cross sits over the thumbnail's top corner, on the background colour so it stays readable.
-it("puts the cross in the thumbnail's top corner, above the picture", async () => {
-  await show();
-  await pick("vandring");
-
-  expect(screen.getByTestId("add-review-image-delete")).toHaveStyle({
-    position: "absolute",
-    top: 0,
-    right: 0,
-    zIndex: 1337,
-    borderRadius: 50,
-    backgroundColor: AppDefaultTheme.colors.background,
+    expect(onChange).toHaveBeenLastCalledWith([...stored, picked("file:///dcim/ny-liten.jpg")]);
   });
-});
 
-it("draws the cross large enough to hit", async () => {
-  await show();
-  await pick("vandring");
+  it("counts the stored images toward the limit of three", async () => {
+    await showStored();
 
-  const cross = screen.getByTestId("icon-close");
-  expect(cross.props.size).toBe(25);
-  expect(cross.props.color).toBe(AppDefaultTheme.colors.onBackground);
-});
+    await pick("ny");
 
-it("carries the dark theme's colours too", async () => {
-  await show(AppDarkTheme);
-  await pick("vandring");
-
-  expect(screen.getByTestId("add-review-image-delete")).toHaveStyle({
-    backgroundColor: AppDarkTheme.colors.background,
+    expect(launchLibrary).toHaveBeenCalledWith(expect.not.objectContaining({ allowsMultipleSelection: true }));
+    expect(screen.queryByTestId("image-strip-add")).toBeNull();
   });
-  expect(screen.getByTestId("icon-close").props.color).toBe(AppDarkTheme.colors.onBackground);
-  expect(screen.getByTestId("icon-file-image-plus-outline").props.color).toBe(AppDarkTheme.colors.primary);
 });

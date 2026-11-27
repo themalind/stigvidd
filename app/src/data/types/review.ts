@@ -12,6 +12,7 @@ export interface Review {
   // keep-comment: both null once the author has deleted their account
   userName: string | null;
   createdAt: string;
+  editedAt?: string | null;
   userIdentifier: string | null;
   trailIdentifier: string;
   reviewImages?: ReviewImage[];
@@ -38,10 +39,13 @@ export interface CreateReviewRequest {
   review: string;
   rating: number;
   trailIdentifier: string;
-  imageUris?: string[];
+  imageUris: string[];
 }
 
-export interface DeleteReviewRequest {
+export interface UpdateReviewRequest {
   reviewIdentifier: string;
-  userIdentifier: string;
+  review: string;
+  rating: number;
+  removedImageIdentifiers: string[];
+  newImageUris: string[];
 }

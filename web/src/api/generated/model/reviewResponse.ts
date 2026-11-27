@@ -16,6 +16,8 @@ export interface ReviewResponse {
   userName?: string | null;
   createdAt?: string;
   /** @nullable */
+  editedAt?: string | null;
+  /** @nullable */
   userIdentifier?: string | null;
   trailIdentifier: string;
   /** @nullable */

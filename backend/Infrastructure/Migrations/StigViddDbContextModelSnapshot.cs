@@ -1507,9 +1507,10 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TrailId");
-
                     b.HasIndex("UserId");
+
+                    b.HasIndex("TrailId", "UserId")
+                        .IsUnique();
 
                     b.ToTable("Reviews", "dbo");
                 });

@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { BORDER_RADIUS } from "@/constants/constants";
+import { BORDER_RADIUS, IMAGE_CHIP_BACKGROUND } from "@/constants/constants";
 import { coverOverflow, focusAfterDrag, ImageSize } from "@/components/media/cover-focus";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -27,7 +27,6 @@ type Props = {
 };
 
 const STEP = 0.1;
-const CHIP_BACKGROUND = "rgba(25, 25, 25, 0.72)";
 
 // Shows an image in a fixed-aspect frame and lets the user drag which band of it shows. keep-comment: the frame is what every screen shows
 export default function CoverFramer({
@@ -139,7 +138,7 @@ const s = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: BORDER_RADIUS,
-    backgroundColor: CHIP_BACKGROUND,
+    backgroundColor: IMAGE_CHIP_BACKGROUND,
   },
   hintText: {
     color: "#ffffff",

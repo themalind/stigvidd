@@ -11,17 +11,17 @@ import { REVIEWS_STALE_TIME } from "@/constants/cache";
 import { Review, Trail } from "@/data/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { type ComponentRef, RefObject, useEffect, useMemo, useState } from "react";
+import { type ComponentRef, RefObject, useEffect, useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Button, Surface, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
-import NotAuthenticatedDialog from "../auth/not-authenticated-msg-dialog";
 import ErrorView from "@/components/status/error-view";
 import LoadingIndicator from "@/components/status/loading-indicator";
-import AddReview from "./add/add-review-modal";
+import ReviewEditor from "./review-editor";
 import ReviewSection from "./review-section";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useHasReviewedTrail } from "@/hooks/review/useHasReviewedTrail";
+import { useReviewEditor } from "@/hooks/review/useReviewEditor";
 
 interface ReviewWrapperProps {
   trail: Trail;
@@ -30,9 +30,8 @@ interface ReviewWrapperProps {
 }
 
 export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onReviewsLoaded }: ReviewWrapperProps) {
-  const { user, isAuthenticated } = useAuth();
-  const [isReviewModalVisible, setIsReviewModalVisible] = useState(false);
-  const [isAuthDialogVisible, setIsAuthDialogVisible] = useState(false);
+  const { user } = useAuth();
+  const editor = useReviewEditor(trail.identifier);
   const theme = useTheme();
   const { t } = useTranslation();
   const { data: hasReviewed } = useHasReviewedTrail(trail.identifier);
@@ -75,18 +74,6 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
     return <LoadingIndicator />;
   }
 
-  const handleAddReviewPress = () => {
-    if (!isAuthenticated) {
-      setIsAuthDialogVisible(true);
-      return;
-    }
-    setIsReviewModalVisible(true);
-  };
-
-  const handleReviewAdded = () => {
-    setIsReviewModalVisible(false);
-  };
-
   return (
     <View ref={surfaceToScrollToRef}>
       <Surface
@@ -101,15 +88,8 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
           </View>
           <View style={s.iconSection}>
             {!hasReviewed && (
-              <Pressable onPress={handleAddReviewPress}>
+              <Pressable testID="add-review-button" onPress={editor.openCreate}>
                 <Ionicons name="create-outline" size={30} color={theme.colors.onBackground} />
-                <AddReview
-                  trailIdentifier={trail.identifier}
-                  trailName={trail.name}
-                  trailLength={trail.trailLength}
-                  visible={isReviewModalVisible}
-                  onDismiss={handleReviewAdded}
-                />
               </Pressable>
             )}
           </View>
@@ -120,7 +100,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
           </Surface>
         ) : (
           <>
-            <ReviewSection reviews={reviews} />
+            <ReviewSection reviews={reviews} onEditOwn={() => void editor.openOwn()} />
             {(hasNextPage || isFetchingNextPage) && (
               <Button
                 style={{ borderRadius: BORDER_RADIUS }}
@@ -135,11 +115,7 @@ export default function TrailReviewsContainer({ trail, surfaceToScrollToRef, onR
           </>
         )}
       </Surface>
-      <NotAuthenticatedDialog
-        visible={isAuthDialogVisible}
-        onDissmiss={() => setIsAuthDialogVisible(false)}
-        infoMessage={t("review.notAuthReview")}
-      />
+      <ReviewEditor trail={trail} editor={editor} notAuthMessage={t("review.notAuthReview")} />
     </View>
   );
 }
@@ -172,5 +148,4 @@ const s = StyleSheet.create({
   },
 });
 
-//TODO https://tanstack.com/query/v5/docs/framework/react/examples/load-more-infinite-scroll
-// TODO https://tanstack.com/query/v5/docs/framework/react/guides/infinite-queries
+// TODO: load the next page on scroll instead of a button. keep-comment: planned

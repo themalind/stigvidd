@@ -187,8 +187,9 @@ describe("deleting", () => {
     const { current, imagesOf } = await render([hike("h1", [image(1), image(2)])]);
 
     await act(async () => {
-      await current().deleteImage("img-1");
+      current().deleteImage("img-1");
     });
+    await flushUntil(() => imagesOf("h1")?.length === 1);
 
     expect(mockDelete).toHaveBeenCalledWith("h1", "img-1");
     expect(imagesOf("h1")).toEqual([image(2)]);
@@ -200,10 +201,9 @@ describe("deleting", () => {
     const { current, imagesOf, store } = await render([hike("h1", [image(1)])]);
 
     await act(async () => {
-      await current()
-        .deleteImage("img-1")
-        .catch(() => {});
+      current().deleteImage("img-1");
     });
+    await flushUntil(() => store.get(snackbarAtom).visible);
 
     expect(imagesOf("h1")).toEqual([image(1)]);
     expect(store.get(snackbarAtom)).toMatchObject({

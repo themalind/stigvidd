@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { CreateReviewRequest, PagedReviewResponse } from "@/data/types";
+import { CreateReviewRequest, PagedReviewResponse, Review, UpdateReviewRequest } from "@/data/types";
 import { imageFormPart } from "./core/image-form-part";
 import { queryString, send, sendForJson } from "./core/request";
 
@@ -30,10 +30,19 @@ export function hasReviewedTrail(trailIdentifier: string): Promise<boolean> {
   });
 }
 
-export async function createReview(request: CreateReviewRequest): Promise<{ success: boolean }> {
+export function getOwnReview(trailIdentifier: string): Promise<Review> {
+  return sendForJson({
+    name: "getOwnReview",
+    path: `/reviews/trail/${trailIdentifier}/mine/review`,
+    endpoint: "/reviews/trail/{param}/mine/review",
+    quietStatuses: [404],
+  });
+}
+
+export async function createReview(request: CreateReviewRequest): Promise<void> {
   const form = new FormData();
 
-  request.imageUris?.forEach((uri) => {
+  request.imageUris.forEach((uri) => {
     form.append("images", imageFormPart(uri));
   });
 
@@ -42,15 +51,36 @@ export async function createReview(request: CreateReviewRequest): Promise<{ succ
   form.append("rating", `${request.rating}`);
 
   await send({ name: "createReview", method: "POST", path: "/reviews/create", endpoint: "/reviews/create", form });
-  return { success: true };
 }
 
-export async function deleteReview(reviewIdentifier: string): Promise<{ success: boolean }> {
+export function updateReview(request: UpdateReviewRequest): Promise<Review> {
+  const form = new FormData();
+
+  request.newImageUris.forEach((uri) => {
+    form.append("images", imageFormPart(uri));
+  });
+
+  request.removedImageIdentifiers.forEach((identifier) => {
+    form.append("removedImageIdentifiers", identifier);
+  });
+
+  form.append("trailReview", request.review);
+  form.append("rating", `${request.rating}`);
+
+  return sendForJson({
+    name: "updateReview",
+    method: "PUT",
+    path: `/reviews/${request.reviewIdentifier}`,
+    endpoint: "/reviews/{param}",
+    form,
+  });
+}
+
+export async function deleteReview(reviewIdentifier: string): Promise<void> {
   await send({
     name: "deleteReview",
     method: "DELETE",
     path: `/reviews/${reviewIdentifier}`,
     endpoint: "/reviews/{param}",
   });
-  return { success: true };
 }

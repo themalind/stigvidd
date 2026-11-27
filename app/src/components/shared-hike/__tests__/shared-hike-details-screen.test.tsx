@@ -162,7 +162,7 @@ it("asks for a sign-in instead of crashing once signed out", async () => {
 
 it("opens the follow screen in the profile stack with the route already seeded", async () => {
   const { queryClient } = await show();
-  // Read as the screen opens: at gcTime 0 an entry with no observer is collected next tick.
+  // Read as the screen opens: at gcTime 0 an entry with no observer is collected next tick. keep-comment: explains a non-obvious timing
   let seeded: unknown;
   mockNavigate.mockImplementationOnce(() => {
     seeded = queryClient.getQueryData(["hike-route", "hike-1"]);
@@ -283,32 +283,32 @@ describe("images", () => {
   it("shows nothing where the owner's images would be when there are none", async () => {
     await show();
 
-    expect(screen.queryByTestId("hike-images-empty")).toBeNull();
-    expect(screen.queryByTestId("hike-images")).toBeNull();
+    expect(screen.queryByTestId("image-strip-empty")).toBeNull();
+    expect(screen.queryByTestId("image-strip")).toBeNull();
   });
 
-  it("shows the owner's images without any way to add to them", async () => {
+  it("shows the owner's images without any way to add to or remove them", async () => {
     await show({ images: [photo(1), photo(2)] });
 
-    expect(screen.getAllByTestId("hike-image-thumb")).toHaveLength(2);
-    expect(screen.queryByTestId("hike-images-add")).toBeNull();
+    expect(screen.getAllByTestId("image-strip-thumb")).toHaveLength(2);
+    expect(screen.queryByTestId("image-strip-add")).toBeNull();
+    expect(screen.queryByTestId("image-strip-remove")).toBeNull();
   });
 
-  it("opens the viewer on the tapped image, without a bin", async () => {
+  it("opens the viewer on the tapped image", async () => {
     await show({ images: [photo(1), photo(2)] });
 
-    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[1], "second thumb"));
+    await fireEvent.press(defined(screen.getAllByTestId("image-strip-thumb")[1], "second thumb"));
     await settle();
 
-    expect(screen.getByTestId("review-image-list").props.initialScrollIndex).toBe(1);
-    expect(screen.queryByTestId("image-viewer-delete")).toBeNull();
+    expect(screen.getByTestId("image-viewer-list").props.initialScrollIndex).toBe(1);
   });
 
   it("reports the image on screen as a hike image, then refetches the walk", async () => {
     mockCreateReport.mockResolvedValue({ identifier: "report-1" });
     await show({ images: [photo(1), photo(2)] });
 
-    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[1], "second thumb"));
+    await fireEvent.press(defined(screen.getAllByTestId("image-strip-thumb")[1], "second thumb"));
     await settle();
     await fireEvent.press(screen.getByTestId("image-viewer-report"));
     await flushUntil(() => screen.queryByTestId("report-submit"));
@@ -316,12 +316,12 @@ describe("images", () => {
     await fireEvent.press(screen.getByTestId("report-submit"));
     await flushUntil(() => (mockGetSharedHikes.mock.calls.length > fetchesBefore ? true : null));
     await flushUntil(() => mockTrack.mock.calls.length > 0);
-    await flushUntilGone(() => screen.queryByTestId("review-image-list"));
+    await flushUntilGone(() => screen.queryByTestId("image-viewer-list"));
 
     expect(mockCreateReport).toHaveBeenCalledWith(
       expect.objectContaining({ contentType: "HikeImage", contentIdentifier: "img-2" }),
     );
-    expect(screen.queryByTestId("review-image-list")).toBeNull();
+    expect(screen.queryByTestId("image-viewer-list")).toBeNull();
     expect(mockTrack).toHaveBeenCalledWith("hike.image_reported", {});
   });
 
@@ -329,7 +329,7 @@ describe("images", () => {
     mockWriteBlocked = "banned";
     await show({ images: [photo(1)] });
 
-    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[0], "first thumb"));
+    await fireEvent.press(defined(screen.getAllByTestId("image-strip-thumb")[0], "first thumb"));
     await settle();
     await fireEvent.press(screen.getByTestId("image-viewer-report"));
     await settle();

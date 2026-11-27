@@ -390,7 +390,7 @@ describe("images", () => {
   it("invites the owner to add images to a walk that has none", async () => {
     await show();
 
-    expect(screen.getByTestId("hike-images-empty")).toBeTruthy();
+    expect(screen.getByTestId("image-strip-empty")).toBeTruthy();
   });
 
   it("picks only as many as still fit, then uploads them", async () => {
@@ -398,7 +398,7 @@ describe("images", () => {
     mockUploadImage.mockResolvedValue(photo(9));
     await show({ images: [photo(1), photo(2), photo(3)] });
 
-    await fireEvent.press(screen.getByTestId("hike-images-add"));
+    await fireEvent.press(screen.getByTestId("image-strip-add"));
     await flushUntil(() => mockUploadImage.mock.calls.length > 0);
 
     expect(mockPickImages).toHaveBeenCalledWith({ limit: 7 });
@@ -409,7 +409,7 @@ describe("images", () => {
     mockPickImages.mockResolvedValue(null);
     await show();
 
-    await fireEvent.press(screen.getByTestId("hike-images-empty"));
+    await fireEvent.press(screen.getByTestId("image-strip-empty"));
     await settle();
 
     expect(mockUploadImage).not.toHaveBeenCalled();
@@ -419,25 +419,44 @@ describe("images", () => {
     mockWriteBlocked = "banned";
     await show();
 
-    await fireEvent.press(screen.getByTestId("hike-images-empty"));
+    await fireEvent.press(screen.getByTestId("image-strip-empty"));
     await settle();
 
     expect(mockPickImages).not.toHaveBeenCalled();
   });
 
-  it("opens the viewer on the tapped image, and the owner can delete it there", async () => {
+  it("opens the viewer on the tapped image", async () => {
     await show({ images: [photo(1), photo(2)] });
 
-    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[1], "second thumb"));
+    await fireEvent.press(defined(screen.getAllByTestId("image-strip-thumb")[1], "second thumb"));
     await settle();
-    expect(screen.getByTestId("review-image-list").props.initialScrollIndex).toBe(1);
 
-    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    expect(screen.getByTestId("image-viewer-list").props.initialScrollIndex).toBe(1);
+  });
+
+  it("deletes the image whose cross is pressed, once the owner confirms", async () => {
+    await show({ images: [photo(1), photo(2)] });
+
+    await fireEvent.press(defined(screen.getAllByTestId("image-strip-remove")[1], "second cross"));
     await settle();
+    expect(screen.getByText("Ta bort bilden?")).toBeTruthy();
+    expect(mockDeleteImage).not.toHaveBeenCalled();
+
     await fireEvent.press(screen.getAllByText("Ta bort").at(-1) ?? screen.getByText("Ta bort"));
     await flushUntil(() => mockDeleteImage.mock.calls.length > 0);
 
     expect(mockDeleteImage).toHaveBeenCalledWith("hike-1", "img-2");
+  });
+
+  it("deletes nothing when the owner cancels", async () => {
+    await show({ images: [photo(1)] });
+
+    await fireEvent.press(defined(screen.getAllByTestId("image-strip-remove")[0], "cross"));
+    await settle();
+    await fireEvent.press(screen.getByText("Avbryt"));
+    await settle();
+
+    expect(mockDeleteImage).not.toHaveBeenCalled();
   });
 });
 
@@ -847,9 +866,7 @@ describe("publishing", () => {
     await show({ images: [{ identifier: "img-1", imageUrl: "https://media.stigvidd.se/hikes/1.jpg" }] });
     await settle();
 
-    await fireEvent.press(defined(screen.getAllByTestId("hike-image-thumb")[0], "first thumb"));
-    await settle();
-    await fireEvent.press(screen.getByTestId("image-viewer-delete"));
+    await fireEvent.press(defined(screen.getAllByTestId("image-strip-remove")[0], "first cross"));
     await settle();
 
     expect(screen.getByText(/ligger kopian kvar där/)).toBeTruthy();

@@ -6,6 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 export const BORDER_RADIUS = 5;
+export const IMAGE_CHIP_BACKGROUND = "rgba(25, 25, 25, 0.72)";
 // Width per height of an event cover; the server cuts uploads to the same shape. keep-comment: must match EventImageService.CoverAspect
 export const EVENT_COVER_ASPECT = 2;
 export const SLIM_BUTTON_HEIGHT = 32;
@@ -21,6 +22,10 @@ export const MAX_SHARE_RECIPIENTS = 10;
 export const MAX_HIKE_IMAGES = 10;
 // keep-comment: must match HikeSubmissionLimits.PendingPerUser in the backend
 export const MAX_PENDING_SUBMISSIONS = 3;
+// keep-comment: must match ReviewService.MaxReviewImages in the backend
+export const MAX_REVIEW_IMAGES = 3;
+// keep-comment: must match the review request validators in the backend
+export const MAX_REVIEW_LENGTH = 500;
 // keep-comment: must match CreateUserRequestValidator in the backend
 export const MIN_NICKNAME_LENGTH = 2;
 // keep-comment: must not exceed the shortest nickname any existing account has, or that account can't be found

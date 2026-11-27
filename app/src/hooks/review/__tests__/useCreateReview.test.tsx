@@ -53,7 +53,7 @@ let consoleError: jest.SpyInstance;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockCreateReview.mockResolvedValue({ success: true });
+  mockCreateReview.mockResolvedValue(undefined);
   consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -102,31 +102,6 @@ describe("useCreateReview", () => {
       await run();
 
       expect(onSuccess).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("when the server answers success: false", () => {
-    beforeEach(() => {
-      mockCreateReview.mockResolvedValue({ success: false });
-    });
-
-    it("reports the failure", async () => {
-      const { run, store } = await render();
-      await run();
-
-      expect(store.get(snackbarAtom)).toMatchObject({
-        visible: true,
-        type: "error",
-        message: "Kunde inte spara recensionen",
-      });
-    });
-
-    it("leaves the form open and the caches alone", async () => {
-      const { run, onSuccess, invalidated } = await render();
-      await run();
-
-      expect(onSuccess).not.toHaveBeenCalled();
-      expect(invalidated(REVIEWS_QUERY)).toBe(false);
     });
   });
 

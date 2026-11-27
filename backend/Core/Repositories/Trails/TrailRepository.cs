@@ -539,7 +539,7 @@ public class TrailRepository : ITrailRepository
                     StartLongitude = t.GeoPath == null ? 0.0 : t.GeoPath.StartPoint.X,
                     Reviews = context.Reviews
                         .Where(r => r.TrailId == t.Id)
-                        .Select(r => new { r.Rating, r.LastUpdatedAt })
+                        .Select(r => new { r.Rating, r.CreatedAt })
                         .ToList(),
                     Likes = context.TrailContributionLikes
                         .Where(l => l.TrailId == t.Id)
@@ -551,7 +551,7 @@ public class TrailRepository : ITrailRepository
             IReadOnlyCollection<ContributionRankingInput> inputs = rows
                 .Select(r => new ContributionRankingInput(
                     r.Identifier,
-                    r.Reviews.Select(x => new RankedReview(x.Rating, x.LastUpdatedAt)).ToList(),
+                    r.Reviews.Select(x => new RankedReview(x.Rating, x.CreatedAt)).ToList(),
                     r.Likes,
                     r.StartLatitude,
                     r.StartLongitude))

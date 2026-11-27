@@ -2,18 +2,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using Core.Interfaces.Repositories;
+using Core.Interfaces.Repositories.Trails.Models;
 using Core.Interfaces.Services;
 using Core.Telemetry;
 using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
+using WebDataContracts.RequestModels.Review;
 using WebDataContracts.ResponseModels.Review;
 
 namespace Core.Services.Trails;
 
 public class ReviewService : IReviewService
 {
+    // keep-comment: must match MAX_REVIEW_IMAGES in the app
+    public const int MaxReviewImages = 3;
+
     private readonly IReviewRepository _reviewRepository;
     private readonly IWebDavService _webDavService;
     private readonly IMediaUploadService _mediaUploadService;
@@ -64,6 +69,7 @@ public class ReviewService : IReviewService
                 r.Rating,
                 r.User != null ? r.User.NickName : null,
                 r.CreatedAt,
+                ReviewResponseFactory.EditedAt(r.CreatedAt, r.LastUpdatedAt),
                 r.Trail != null ? r.Trail.Identifier : string.Empty,
                 r.User != null ? r.User.Identifier : null,
                 r.ReviewImages!.Select(img => ReviewImageResponse.Create(baseUrl, img.Identifier, img.ImageUrl)).ToList()),
@@ -79,6 +85,19 @@ public class ReviewService : IReviewService
             HasMore = result.Value.HasMore,
             Total = result.Value.TotalCount
         });
+    }
+
+    public async Task<Result<ReviewResponse>> GetOwnReviewAsync(string userIdentifier, string trailIdentifier, CancellationToken ctoken)
+    {
+        var result = await _reviewRepository.GetReviewByTrailAndUserAsync(trailIdentifier, userIdentifier, ctoken);
+
+        if (result.Status == RepositoryResultStatus.Error)
+            return Result.Fail<ReviewResponse>(FetchFailed());
+
+        if (!result.IsSuccess)
+            return Result.Fail<ReviewResponse>(ReviewNotFound());
+
+        return Result.Ok(_reviewResponseFactory.Create(result.Value));
     }
 
     public async Task<Result<ReviewResponse?>> AddReviewAsync(
@@ -118,7 +137,7 @@ public class ReviewService : IReviewService
         try
         {
             if (rating < 1M || rating > 5M)
-                return Result.Fail<ReviewResponse?>(new Message(400, "Rating must be between 0 and 5."));
+                return Result.Fail<ReviewResponse?>(new Message(400, "Rating must be between 1 and 5."));
 
             // User and trail are resolved before anything is uploaded, so a rejected review
             // leaves no files behind.
@@ -136,32 +155,23 @@ public class ReviewService : IReviewService
             var existingResult = await _reviewRepository.HasUserReviewedTrailAsync(trailResult.Value, userResult.Value, ctoken);
 
             if (!existingResult.IsSuccess)
-                return Result.Fail<ReviewResponse?>(new Message(500, "An error occurred while adding the review."));
+                return Result.Fail<ReviewResponse?>(AddFailed());
 
             if (existingResult.Value)
-                return Result.Fail<ReviewResponse?>(new Message(409, "User has already reviewed this trail."));
+                return Result.Fail<ReviewResponse?>(AlreadyReviewed());
 
-            if (imageUrls != null)
+            if ((imageUrls?.Count ?? 0) > MaxReviewImages)
+                return Result.Fail<ReviewResponse?>(TooManyImages());
+
+            if (!await UploadImagesAsync(imageUrls, uploadedUrls))
             {
-                // Uploaded via the media upload service, which strips EXIF/GPS.
-                foreach (var image in imageUrls)
-                {
-                    var result = await _mediaUploadService.ProcessAndUploadAsync(
-                        image.OpenReadStream(), "reviews", ImageProcessingOptions.StripMetadataOnly);
-
-                    if (result.IsFailure || result.Value == null)
-                    {
-                        await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a failed review upload. UserIdentifier: {userIdentifier}, TrailIdentifier: {trailIdentifier}");
-                        return Result.Fail<ReviewResponse?>(new Message(500, "Something went wrong, could not create review. Try again later."));
-                    }
-
-                    uploadedUrls.Add(result.Value.Path);
-                }
+                await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a failed review upload. UserIdentifier: {userIdentifier}, TrailIdentifier: {trailIdentifier}");
+                return Result.Fail<ReviewResponse?>(new Message(500, "Something went wrong, could not create review. Try again later."));
             }
 
             var review = new Review
             {
-                TrailReview = trailReview,
+                TrailReview = NormaliseText(trailReview),
                 Rating = rating,
                 TrailId = trailResult.Value,
                 UserId = userResult.Value,
@@ -179,7 +189,7 @@ public class ReviewService : IReviewService
             if (!addResult.IsSuccess)
             {
                 await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a review that could not be saved. UserIdentifier: {userIdentifier}, TrailIdentifier: {trailIdentifier}");
-                return Result.Fail<ReviewResponse?>(new Message(500, "An error occurred while adding the review."));
+                return Result.Fail<ReviewResponse?>(addResult.Status == RepositoryResultStatus.Conflict ? AlreadyReviewed() : AddFailed());
             }
 
             return Result.Ok<ReviewResponse?>(_reviewResponseFactory.Create(addResult.Value));
@@ -191,8 +201,162 @@ public class ReviewService : IReviewService
             if (uploadedUrls.Any())
                 await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a failed review upload. UserIdentifier: {userIdentifier}, TrailIdentifier: {trailIdentifier}");
 
-            return Result.Fail<ReviewResponse?>(new Message(500, "An error occurred while adding the review."));
+            return Result.Fail<ReviewResponse?>(AddFailed());
         }
+    }
+
+    public async Task<Result<ReviewResponse>> UpdateReviewAsync(
+        string reviewIdentifier,
+        string userIdentifier,
+        UpdateReviewRequest request,
+        IFormFileCollection? newImages,
+        CancellationToken ctoken)
+    {
+        var result = await UpdateReviewCoreAsync(reviewIdentifier, userIdentifier, request, newImages, ctoken);
+
+        _metrics.RecordReviewChange(MetricTags.Values.OperationUpdate, MetricOutcome.From(result));
+
+        return result;
+    }
+
+    private async Task<Result<ReviewResponse>> UpdateReviewCoreAsync(
+        string reviewIdentifier,
+        string userIdentifier,
+        UpdateReviewRequest request,
+        IFormFileCollection? newImages,
+        CancellationToken ctoken)
+    {
+        var uploadedUrls = new List<string>();
+        var saved = false;
+        var logContext = $"ReviewIdentifier: {reviewIdentifier}, UserIdentifier: {userIdentifier}";
+
+        try
+        {
+            var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifier, ctoken);
+
+            if (reviewResult.Status == RepositoryResultStatus.Error)
+                return Result.Fail<ReviewResponse>(UpdateFailed());
+
+            if (!reviewResult.IsSuccess)
+                return Result.Fail<ReviewResponse>(ReviewNotFound());
+
+            var currentImages = reviewResult.Value.ReviewImages ?? [];
+            var removedIdentifiers = (request.RemovedImageIdentifiers ?? []).ToHashSet();
+
+            if (!removedIdentifiers.All(identifier => currentImages.Any(image => image.Identifier == identifier)))
+                return Result.Fail<ReviewResponse>(new Message(400, "An image to remove does not belong to this review."));
+
+            var imageCountAfterEdit = currentImages.Count - removedIdentifiers.Count + (newImages?.Count ?? 0);
+
+            if (imageCountAfterEdit > MaxReviewImages)
+                return Result.Fail<ReviewResponse>(TooManyImages());
+
+            if (!await UploadImagesAsync(newImages, uploadedUrls))
+            {
+                await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a failed review upload. {logContext}");
+                return Result.Fail<ReviewResponse>(new Message(500, "Something went wrong, could not update review. Try again later."));
+            }
+
+            var update = new ReviewUpdate(
+                reviewResult.Value.Id,
+                NormaliseText(request.TrailReview),
+                request.Rating,
+                removedIdentifiers,
+                uploadedUrls,
+                MaxReviewImages,
+                DateTime.UtcNow);
+
+            var updateResult = await _reviewRepository.UpdateReviewAsync(update, ctoken);
+
+            if (!updateResult.IsSuccess)
+            {
+                await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a review update that could not be saved. {logContext}");
+
+                return Result.Fail<ReviewResponse>(updateResult.Status switch
+                {
+                    RepositoryResultStatus.NotFound => ReviewNotFound(),
+                    RepositoryResultStatus.Conflict => TooManyImages(),
+                    _ => UpdateFailed(),
+                });
+            }
+
+            saved = true;
+
+            await DeleteImageFilesAsync(updateResult.Value.RemovedImageUrls, logContext);
+
+            return Result.Ok(_reviewResponseFactory.Create(updateResult.Value.Review));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating review {ReviewIdentifier} for User: {UserIdentifier}", reviewIdentifier, userIdentifier);
+
+            // keep-comment: once saved, the new rows point at these files
+            if (!saved && uploadedUrls.Count != 0)
+                await DeleteImageFilesAsync(uploadedUrls, $"Rollback of a failed review upload. {logContext}");
+
+            return Result.Fail<ReviewResponse>(UpdateFailed());
+        }
+    }
+
+    private static string? NormaliseText(string? text)
+    {
+        return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+    }
+
+    private static Message ReviewNotFound()
+    {
+        return new Message(404, "Review not found.");
+    }
+
+    private static Message TooManyImages()
+    {
+        return new Message(400, $"A review can have at most {MaxReviewImages} images.");
+    }
+
+    private static Message AlreadyReviewed()
+    {
+        return new Message(409, "User has already reviewed this trail.");
+    }
+
+    private static Message FetchFailed()
+    {
+        return new Message(500, "An error occurred while fetching the review.");
+    }
+
+    private static Message AddFailed()
+    {
+        return new Message(500, "An error occurred while adding the review.");
+    }
+
+    private static Message UpdateFailed()
+    {
+        return new Message(500, "An error occurred while updating the review.");
+    }
+
+    private static Message DeleteFailed()
+    {
+        return new Message(500, "An error occurred while deleting the review.");
+    }
+
+    // Uploaded via the media upload service, which strips EXIF/GPS. keep-comment: privacy guarantee not visible here
+    // Each stored path is added to uploadedUrls as it lands, so the caller can roll back a partial upload. keep-comment: out-parameter contract
+    private async Task<bool> UploadImagesAsync(IFormFileCollection? images, List<string> uploadedUrls)
+    {
+        if (images == null)
+            return true;
+
+        foreach (var image in images)
+        {
+            var result = await _mediaUploadService.ProcessAndUploadAsync(
+                image.OpenReadStream(), "reviews", ImageProcessingOptions.StripMetadataOnly);
+
+            if (result.IsFailure || result.Value == null)
+                return false;
+
+            uploadedUrls.Add(result.Value.Path);
+        }
+
+        return true;
     }
 
     // Best-effort file removal: a leftover file is recoverable, so a WebDAV failure is logged
@@ -223,33 +387,33 @@ public class ReviewService : IReviewService
         }
     }
 
-    public async Task<Result> DeleteReviewAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
+    public async Task<Result> DeleteReviewAsync(string reviewIdentifier, string userIdentifier, CancellationToken ctoken)
     {
-        var result = await DeleteReviewCoreAsync(reviewIdentifier, userIdentifer, ctoken);
+        var result = await DeleteReviewCoreAsync(reviewIdentifier, userIdentifier, ctoken);
 
         _metrics.RecordReviewChange(MetricTags.Values.OperationRemove, MetricOutcome.From(result));
 
         return result;
     }
 
-    private async Task<Result> DeleteReviewCoreAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken)
+    private async Task<Result> DeleteReviewCoreAsync(string reviewIdentifier, string userIdentifier, CancellationToken ctoken)
     {
-        var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifer, ctoken);
+        var reviewResult = await _reviewRepository.GetReviewByIdentifierAsync(reviewIdentifier, userIdentifier, ctoken);
 
         if (reviewResult.Status == RepositoryResultStatus.Error)
-            return Result.Fail(new Message(500, "An error occurred while deleting the review."));
+            return Result.Fail(DeleteFailed());
 
         if (!reviewResult.IsSuccess)
-            return Result.Fail(new Message(404, $"RemoveReviewAsync: Could not find review with identifier: {reviewIdentifier} and user identifier: {userIdentifer}"));
+            return Result.Fail(ReviewNotFound());
 
         var reviewImages = reviewResult.Value.ReviewImages?.Select(img => img.ImageUrl).ToList() ?? new List<string>();
 
         var result = await _reviewRepository.DeleteReviewAsync(reviewResult.Value, ctoken);
 
         if (!result.IsSuccess)
-            return Result.Fail(new Message(500, "An error occurred while deleting the review."));
+            return Result.Fail(DeleteFailed());
 
-        await DeleteImageFilesAsync(reviewImages, $"ReviewIdentifier: {reviewIdentifier}, UserIdentifier: {userIdentifer}");
+        await DeleteImageFilesAsync(reviewImages, $"ReviewIdentifier: {reviewIdentifier}, UserIdentifier: {userIdentifier}");
 
         return Result.Ok();
     }

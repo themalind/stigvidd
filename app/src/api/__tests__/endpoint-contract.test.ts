@@ -81,7 +81,14 @@ import {
 } from "../events";
 import { getFacilityMarkers, getTrailMarkers } from "../map-markers";
 import { registerPushToken, unregisterPushToken } from "../notifications";
-import { createReview, deleteReview, getReviewsByTrailIdentifier, hasReviewedTrail } from "../reviews";
+import {
+  createReview,
+  deleteReview,
+  getOwnReview,
+  getReviewsByTrailIdentifier,
+  hasReviewedTrail,
+  updateReview,
+} from "../reviews";
 import {
   acceptSharedHike,
   getIncomingSharedHike,
@@ -277,9 +284,30 @@ const endpoints: Endpoint[] = [
   },
   {
     name: "createReview",
-    call: () => createReview({ trailIdentifier: "t1", review: "Fin led", rating: 4 }),
+    call: () => createReview({ trailIdentifier: "t1", review: "Fin led", rating: 4, imageUris: [] }),
     method: "POST",
     path: "/reviews/create",
+    auth: "required",
+  },
+  {
+    name: "getOwnReview",
+    call: () => getOwnReview("t1"),
+    method: "GET",
+    path: "/reviews/trail/t1/mine/review",
+    auth: "required",
+  },
+  {
+    name: "updateReview",
+    call: () =>
+      updateReview({
+        reviewIdentifier: "r1",
+        review: "Fin led",
+        rating: 4,
+        removedImageIdentifiers: [],
+        newImageUris: [],
+      }),
+    method: "PUT",
+    path: "/reviews/r1",
     auth: "required",
   },
   {
@@ -927,7 +955,7 @@ beforeEach(() => {
 
 describe("api endpoint contract", () => {
   it("covers every exported endpoint in the table", () => {
-    expect(endpoints).toHaveLength(92);
+    expect(endpoints).toHaveLength(94);
     expect(new Set(endpoints.map((e) => e.name)).size).toBe(endpoints.length);
   });
 
@@ -1023,7 +1051,7 @@ describe("api endpoint contract", () => {
 describe("endpoints that are not plain JSON", () => {
   it("createReview posts multipart with the review fields", async () => {
     const fetchMock = mockFetch(true);
-    await createReview({ trailIdentifier: "t1", review: "Fin led", rating: 4 });
+    await createReview({ trailIdentifier: "t1", review: "Fin led", rating: 4, imageUris: [] });
 
     const body = fetchMock.mock.calls[0][1].body as unknown as RecordingFormData;
     expect(body).toBeInstanceOf(RecordingFormData);
@@ -1055,11 +1083,37 @@ describe("endpoints that are not plain JSON", () => {
   // Setting Content-Type by hand drops the multipart boundary and the upload fails server-side.
   it("createReview leaves Content-Type to the runtime", async () => {
     const fetchMock = mockFetch(true);
-    await createReview({ trailIdentifier: "t1", review: "Fin led", rating: 4 });
+    await createReview({ trailIdentifier: "t1", review: "Fin led", rating: 4, imageUris: [] });
 
     const headers = fetchMock.mock.calls[0][1].headers as Record<string, string>;
     expect(headers["Content-Type"]).toBeUndefined();
     expect(headers.Authorization).toBe("Bearer bearer-token");
+  });
+
+  it("updateReview puts multipart with the fields, the removed identifiers and the new images", async () => {
+    const fetchMock = mockFetch(true, 200, {});
+    await updateReview({
+      reviewIdentifier: "r1",
+      review: "Blöt efter regnet",
+      rating: 2,
+      removedImageIdentifiers: ["img-1", "img-2"],
+      newImageUris: ["file:///cache/ny.jpg"],
+    });
+
+    const init = fetchMock.mock.calls[0][1];
+    const body = init.body as unknown as RecordingFormData;
+    expect(body.parts).toEqual(
+      expect.arrayContaining([
+        ["trailReview", "Blöt efter regnet"],
+        ["rating", "2"],
+        ["removedImageIdentifiers", "img-1"],
+        ["removedImageIdentifiers", "img-2"],
+      ]),
+    );
+    const images = body.parts.filter(([key]) => key === "images").map(([, part]) => part);
+    expect(images).toHaveLength(1);
+    expect((images[0] as File).uri).toBe("file:///cache/ny.jpg");
+    expect((init.headers as Record<string, string>)["Content-Type"]).toBeUndefined();
   });
 
   it("setEventImage posts the cover as one multipart image part", async () => {

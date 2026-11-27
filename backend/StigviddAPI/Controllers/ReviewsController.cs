@@ -70,6 +70,30 @@ public class ReviewsController : StigViddController
     }
 
     [Authorize]
+    [HttpGet]
+    [Route("trail/{trailIdentifier}/mine/review")]
+    public async Task<ActionResult<ReviewResponse>> GetOwnReview(
+        [FromRoute] string trailIdentifier,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _reviewService.GetOwnReviewAsync(userResponse.Identifier, trailIdentifier, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [Authorize]
     [HttpPost]
     [Route("create")]
     public async Task<ActionResult> CreateReview(
@@ -97,6 +121,32 @@ public class ReviewsController : StigViddController
         }
 
         return Created($"/api/v1/review/{result.Value.Identifier}", result.Value);
+    }
+
+    [Authorize]
+    [HttpPut]
+    [Route("{reviewIdentifier}")]
+    public async Task<ActionResult<ReviewResponse>> UpdateReview(
+        [FromRoute] string reviewIdentifier,
+        [FromForm] UpdateReviewRequest request,
+        [FromForm] IFormFileCollection? images,
+        CancellationToken ctoken)
+    {
+        var userResponse = await GetAuthenticatedUserAsync(_userService, ctoken);
+
+        if (userResponse == null)
+        {
+            return Unauthorized("User not found");
+        }
+
+        var result = await _reviewService.UpdateReviewAsync(reviewIdentifier, userResponse.Identifier, request, images, ctoken);
+
+        if (!result.Success && result.Message != null)
+        {
+            return ToActionResult(result.Message);
+        }
+
+        return Ok(result.Value);
     }
 
     [Authorize]

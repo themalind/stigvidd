@@ -5,7 +5,7 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { snackbarAtom } from "@/atoms/snackbar-atoms";
+import { ApiError } from "@/api/core/api-error";
 import UserRating from "@/components/trail/user-action-bar/user-rating";
 import { Trail } from "@/data/types";
 import { settle } from "@/test/flush";
@@ -39,23 +39,33 @@ jest.mock("@/components/review/add/add-review-modal", () => {
       trailIdentifier,
       trailName,
       trailLength,
+      review,
       onDismiss,
     }: {
       visible: boolean;
       trailIdentifier: string;
       trailName: string;
       trailLength: number;
+      review?: { identifier: string };
       onDismiss: () => void;
     }) =>
-      visible
+      (mockModalProps({ visible, review }) ?? visible)
         ? ReactActual.createElement(
             Text,
             { testID: "add-review", onPress: onDismiss },
-            `${trailIdentifier}|${trailName}|${trailLength}`,
+            `${trailIdentifier}|${trailName}|${trailLength}${review ? `|${review.identifier}` : ""}`,
           )
         : null,
   };
 });
+
+const mockGetOwnReview = jest.fn();
+const mockHasReviewedTrailApi = jest.fn();
+const mockModalProps = jest.fn();
+jest.mock("@/api/reviews", () => ({
+  getOwnReview: (...args: unknown[]) => mockGetOwnReview(...args),
+  hasReviewedTrail: (...args: unknown[]) => mockHasReviewedTrailApi(...args),
+}));
 
 function trail(): Trail {
   return { identifier: TRAIL_ID, name: "Kronängsleden", trailLength: 4.2 } as Trail;
@@ -111,20 +121,72 @@ describe("UserRating", () => {
     expect(screen.queryByTestId("add-review")).toBeNull();
   });
 
-  // Editing an existing review is not built, so a second attempt has to be turned away rather
-  // than opening a form that would post a duplicate.
-  it("warns instead of opening the form when the trail is already rated", async () => {
+  it("opens the user's own review for editing when the trail is already rated", async () => {
     mockHasReviewed = true;
-    const { store } = await renderWithProviders(<UserRating trail={trail()} />);
+    mockGetOwnReview.mockResolvedValue({ identifier: "r1" });
+    await renderWithProviders(<UserRating trail={trail()} />);
     await fireEvent.press(screen.getByText("Betygsatt"));
     await settle();
 
-    expect(store.get(snackbarAtom)).toMatchObject({
-      visible: true,
-      type: "warning",
-      message: "Du har redan betygsatt den här leden.",
-    });
+    expect(mockGetOwnReview).toHaveBeenCalledWith(TRAIL_ID);
+    expect(screen.getByTestId("add-review")).toHaveTextContent(`${TRAIL_ID}|Kronängsleden|4.2|r1`);
+  });
+
+  it("opens no form when the own review cannot be fetched", async () => {
+    mockHasReviewed = true;
+    mockGetOwnReview.mockRejectedValue(new Error("offline"));
+    await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsatt"));
+    await settle();
+
     expect(screen.queryByTestId("add-review")).toBeNull();
+  });
+
+  it("opens a new review when the cached rating is stale and the review is gone", async () => {
+    mockHasReviewed = true;
+    mockGetOwnReview.mockRejectedValue(new ApiError("not found", 404));
+    mockHasReviewedTrailApi.mockResolvedValue(false);
+    await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsatt"));
+    await settle();
+
+    expect(screen.getByTestId("add-review")).toHaveTextContent(`${TRAIL_ID}|Kronängsleden|4.2`);
+    expect(screen.getByTestId("add-review")).not.toHaveTextContent("|r1");
+  });
+
+  it("keeps the edited review in the form while it closes", async () => {
+    mockHasReviewed = true;
+    mockGetOwnReview.mockResolvedValue({ identifier: "r1" });
+    const { rerender } = await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsatt"));
+    await settle();
+
+    await fireEvent.press(screen.getByTestId("add-review"));
+    await settle();
+    mockModalProps.mockClear();
+    await rerender(<UserRating trail={trail()} />);
+
+    expect(mockModalProps).toHaveBeenLastCalledWith(
+      expect.objectContaining({ visible: false, review: { identifier: "r1" } }),
+    );
+  });
+
+  it("opens a new review, not the old one, once a deleted review is no longer counted", async () => {
+    mockHasReviewed = true;
+    mockGetOwnReview.mockResolvedValue({ identifier: "r1" });
+    const { rerender } = await renderWithProviders(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsatt"));
+    await settle();
+    await fireEvent.press(screen.getByTestId("add-review"));
+    await settle();
+
+    mockHasReviewed = false;
+    await rerender(<UserRating trail={trail()} />);
+    await fireEvent.press(screen.getByText("Betygsätt"));
+    await settle();
+
+    expect(screen.getByTestId("add-review")).toHaveTextContent(`${TRAIL_ID}|Kronängsleden|4.2`);
+    expect(screen.getByTestId("add-review")).not.toHaveTextContent("|r1");
   });
 
   it("treats an unknown review state as not yet rated", async () => {
@@ -134,17 +196,5 @@ describe("UserRating", () => {
     await settle();
 
     expect(screen.getByTestId("add-review")).toBeTruthy();
-  });
-
-  it("refreshes the trail when the form closes, so the new rating is shown", async () => {
-    const { queryClient } = await renderWithProviders(<UserRating trail={trail()} />);
-    const invalidate = jest.spyOn(queryClient, "invalidateQueries");
-
-    await fireEvent.press(screen.getByText("Betygsätt"));
-    await settle();
-    await fireEvent.press(screen.getByTestId("add-review"));
-    await settle();
-
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["trail", TRAIL_ID] });
   });
 });

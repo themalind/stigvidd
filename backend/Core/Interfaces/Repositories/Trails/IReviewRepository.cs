@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using System.Linq.Expressions;
+using Core.Interfaces.Repositories.Trails.Models;
 using Infrastructure.Data.Entities;
 
 namespace Core.Interfaces.Repositories.Trails;
@@ -10,8 +11,10 @@ public interface IReviewRepository
 {
     Task<RepositoryResult<PagedResult<T>>> GetReviewsByTrailIdentifierAsync<T>(string trailIdentifier, int page, int limit, int[] hiddenUserIds, Expression<Func<Review, T>> selector, CancellationToken ctoken);
     Task<RepositoryResult<IReadOnlyCollection<T>>> GetReviewsByUserIdAsync<T>(int userId, Expression<Func<Review, T>> selector, CancellationToken ctoken);
-    Task<RepositoryResult<Review>> GetReviewByIdentifierAsync(string reviewIdentifier, string userIdentifer, CancellationToken ctoken);
+    Task<RepositoryResult<Review>> GetReviewByIdentifierAsync(string reviewIdentifier, string userIdentifier, CancellationToken ctoken);
+    Task<RepositoryResult<Review>> GetReviewByTrailAndUserAsync(string trailIdentifier, string userIdentifier, CancellationToken ctoken);
     Task<RepositoryResult<Review>> AddReviewAsync(Review review, CancellationToken ctoken);
+    Task<RepositoryResult<UpdatedReview>> UpdateReviewAsync(ReviewUpdate update, CancellationToken ctoken);
     Task<RepositoryResult> DeleteReviewAsync(Review review, CancellationToken ctoken);
     Task<RepositoryResult<bool>> HasUserReviewedTrailAsync(int trailId, int userId, CancellationToken ctoken);
 }

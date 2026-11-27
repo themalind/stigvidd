@@ -24,5 +24,9 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
 
         builder.Property(r => r.Rating)
             .HasPrecision(3, 1);
+
+        // A deleted author's UserId is null, and nulls never collide, so their reviews all stay. keep-comment: why a nullable column can be unique here
+        builder.HasIndex(r => new { r.TrailId, r.UserId })
+            .IsUnique();
     }
 }

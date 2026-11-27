@@ -7,6 +7,7 @@
 
 import { BORDER_RADIUS } from "@/constants/constants";
 import ModalScrim from "@/components/dialog/modal-scrim";
+import { Review } from "@/data/types";
 import { Dimensions, Pressable, StyleSheet, View } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Icon, Modal, Portal, Text, useTheme } from "react-native-paper";
@@ -19,11 +20,19 @@ interface AddReviewProps {
   trailIdentifier: string;
   trailName: string;
   trailLength: number;
+  review?: Review;
   visible: boolean;
   onDismiss: () => void;
 }
 
-export default function AddReview({ visible, onDismiss, trailIdentifier, trailName, trailLength }: AddReviewProps) {
+export default function AddReview({
+  visible,
+  onDismiss,
+  trailIdentifier,
+  trailName,
+  trailLength,
+  review,
+}: AddReviewProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   return (
@@ -42,14 +51,19 @@ export default function AddReview({ visible, onDismiss, trailIdentifier, trailNa
         >
           <View style={s.titleAndCloseContainer}>
             <View style={s.topTextContainer}>
-              <Text style={s.title}>{t("review.createTitle")}</Text>
+              <Text style={s.title}>{review ? t("review.editTitle") : t("review.createTitle")}</Text>
               <Text style={s.text}>{`${trailName} ${trailLength} km`}</Text>
             </View>
             <Pressable hitSlop={12} onPress={onDismiss}>
               <Icon size={30} source="close" />
             </Pressable>
           </View>
-          <AddReviewForm trailIdentifier={trailIdentifier} onSuccess={onDismiss} />
+          <AddReviewForm
+            key={review?.identifier ?? "new"}
+            trailIdentifier={trailIdentifier}
+            review={review}
+            onSuccess={onDismiss}
+          />
         </KeyboardAwareScrollView>
       </Modal>
     </Portal>

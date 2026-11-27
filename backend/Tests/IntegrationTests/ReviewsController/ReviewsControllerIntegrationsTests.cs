@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
+using Infrastructure.Data;
+using Infrastructure.Data.Entities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using StigviddAPI;
 using System.Net;
 using System.Net.Http.Headers;
@@ -33,6 +37,35 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
     {
         _factory = factory;
         _factory.SeedDatabase();
+    }
+
+    [Fact]
+    public async Task Database_RefusesASecondReviewByTheSameUserOnTheSameTrail()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StigViddDbContext>();
+        var existing = await db.Reviews.FirstAsync(r => r.Identifier == Review1Identifier, TestContext.Current.CancellationToken);
+        db.Reviews.Add(new Review { Rating = 3M, TrailId = existing.TrailId, UserId = existing.UserId });
+
+        var save = () => db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        await save.Should().ThrowAsync<DbUpdateException>();
+    }
+
+    [Fact]
+    public async Task Database_KeepsEveryReviewOfDeletedAuthorsOnOneTrail()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StigViddDbContext>();
+        await using var transaction = await db.Database.BeginTransactionAsync(TestContext.Current.CancellationToken);
+        var trailId = await db.Trails.Where(t => t.Identifier == HultaforsIdentifier).Select(t => t.Id).FirstAsync(TestContext.Current.CancellationToken);
+        db.Reviews.AddRange(
+            new Review { Rating = 3M, TrailId = trailId, UserId = null },
+            new Review { Rating = 4M, TrailId = trailId, UserId = null });
+
+        var save = () => db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        await save.Should().NotThrowAsync();
     }
 
     [Fact]
@@ -595,5 +628,193 @@ public class ReviewsControllerIntegrationsTests : IClassFixture<StigViddWebAppli
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetOwnReview_WhenTheUserHasReviewedTheTrail_ShouldReturnIt()
+    {
+        // Arrange — VandrarVennen owns Review 1 on Tiveden
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}/mine/review", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var review = await response.Content.ReadFromJsonAsync<ReviewResponse>(TestContext.Current.CancellationToken);
+        review.Should().NotBeNull();
+        review.Identifier.Should().Be(Review1Identifier);
+    }
+
+    [Fact]
+    public async Task GetOwnReview_WhenTheUserHasNotReviewedTheTrail_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{HultaforsIdentifier}/mine/review", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetOwnReview_WithoutAuthentication_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}/mine/review", TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdateReview_ByTheAuthor_ShouldSaveTheEditAndMarkItEdited()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+        var formData = UpdateForm("3", "Lerigt efter regnet.");
+        formData.Add(new StringContent("rev-img-1"), "RemovedImageIdentifiers");
+
+        // Act
+        var response = await client.PutAsync($"/api/v1/reviews/{Review1Identifier}", formData, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updated = await response.Content.ReadFromJsonAsync<ReviewResponse>(TestContext.Current.CancellationToken);
+        updated.Should().NotBeNull();
+        updated.TrailReview.Should().Be("Lerigt efter regnet.");
+        updated.Rating.Should().Be(3M);
+        updated.EditedAt.Should().NotBeNull();
+        updated.ReviewImages.Should().NotBeNull();
+        updated.ReviewImages.Should().NotContain(image => image.Identifier == "rev-img-1");
+
+        var getResponse = await client.GetAsync($"/api/v1/reviews/trail/{TivedenIdentifier}?page=0&limit=20", TestContext.Current.CancellationToken);
+        var paged = await getResponse.Content.ReadFromJsonAsync<PagedReviewResponse>(TestContext.Current.CancellationToken);
+        paged.Should().NotBeNull();
+        var listed = paged.Reviews.Single(r => r.Identifier == Review1Identifier);
+        listed.TrailReview.Should().Be("Lerigt efter regnet.");
+        listed.EditedAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task UpdateReview_WithANewImage_ShouldAddIt()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+        var formData = UpdateForm("4", null);
+        formData.Add(JpegPart(), "images", "new.jpg");
+
+        // Act
+        var response = await client.PutAsync($"/api/v1/reviews/{Review1Identifier}", formData, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var updated = await response.Content.ReadFromJsonAsync<ReviewResponse>(TestContext.Current.CancellationToken);
+        updated.Should().NotBeNull();
+        updated.ReviewImages.Should().NotBeNull();
+        updated.ReviewImages.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task UpdateReview_PastTheImageLimit_ShouldReturnBadRequest()
+    {
+        // Arrange — Review1 already has two images
+        var client = AuthenticatedClient();
+        var formData = UpdateForm("4", null);
+
+        formData.Add(JpegPart(), "images", "new1.jpg");
+        formData.Add(JpegPart(), "images", "new2.jpg");
+
+        // Act
+        var response = await client.PutAsync($"/api/v1/reviews/{Review1Identifier}", formData, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task UpdateReview_BelongingToAnotherUser_ShouldReturnNotFound()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+
+        // Act — Review2 belongs to NaturElskaren, not VandrarVennen
+        var response = await client.PutAsync($"/api/v1/reviews/{Review2Identifier}", UpdateForm("1", "Kapat"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateReview_WithoutAuthentication_ShouldReturnUnauthorized()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        // Act
+        var response = await client.PutAsync($"/api/v1/reviews/{Review1Identifier}", UpdateForm("3", "text"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("5.5")]
+    public async Task UpdateReview_WithRatingOutOfRange_ShouldReturnBadRequest(string rating)
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.PutAsync($"/api/v1/reviews/{Review1Identifier}", UpdateForm(rating, "text"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task UpdateReview_WithTooLongText_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var client = AuthenticatedClient();
+
+        // Act
+        var response = await client.PutAsync($"/api/v1/reviews/{Review1Identifier}", UpdateForm("3", new string('a', 501)), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    private HttpClient AuthenticatedClient()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AuthenticatedUser);
+        return client;
+    }
+
+    private static ByteArrayContent JpegPart()
+    {
+        var image = new ByteArrayContent(TestImages.Jpeg());
+        image.Headers.ContentType = new MediaTypeHeaderValue("image/jpeg");
+        return image;
+    }
+
+    private static MultipartFormDataContent UpdateForm(string rating, string? text)
+    {
+        var formData = new MultipartFormDataContent
+        {
+            { new StringContent(rating), "Rating" }
+        };
+
+        if (text != null)
+            formData.Add(new StringContent(text), "TrailReview");
+
+        return formData;
     }
 }

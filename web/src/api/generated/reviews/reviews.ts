@@ -23,7 +23,13 @@ import type {
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 
-import type { PagedReviewResponse, ReviewsCreateReviewBody, ReviewsGetReviewsByTrailIdentifierParams } from "../model";
+import type {
+  PagedReviewResponse,
+  ReviewResponse,
+  ReviewsCreateReviewBody,
+  ReviewsGetReviewsByTrailIdentifierParams,
+  ReviewsUpdateReviewBody,
+} from "../model";
 
 import { customFetch } from "../../mutator";
 
@@ -487,6 +493,193 @@ export function useReviewsHasReviewedTrailSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getReviewsGetOwnReviewUrl = (trailIdentifier: string) => {
+  return `/api/v1/Reviews/trail/${trailIdentifier}/mine/review`;
+};
+
+export const reviewsGetOwnReview = async (
+  trailIdentifier: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ReviewResponse> => {
+  return customFetch<ReviewResponse>(getReviewsGetOwnReviewUrl(trailIdentifier), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getReviewsGetOwnReviewQueryKey = (trailIdentifier: string) => {
+  return [`/api/v1/Reviews/trail/${trailIdentifier}/mine/review`] as const;
+};
+
+export const getReviewsGetOwnReviewQueryOptions = <
+  TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+  TError = unknown,
+>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReviewsGetOwnReviewQueryKey(trailIdentifier);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsGetOwnReview>>> = ({ signal }) =>
+    reviewsGetOwnReview(trailIdentifier, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: trailIdentifier !== null && trailIdentifier !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type ReviewsGetOwnReviewQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsGetOwnReview>>>;
+export type ReviewsGetOwnReviewQueryError = unknown;
+
+export function useReviewsGetOwnReview<TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError = unknown>(
+  trailIdentifier: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+          TError,
+          Awaited<ReturnType<typeof reviewsGetOwnReview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReviewsGetOwnReview<TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError = unknown>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+          TError,
+          Awaited<ReturnType<typeof reviewsGetOwnReview>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReviewsGetOwnReview<TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError = unknown>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReviewsGetOwnReview<TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError = unknown>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReviewsGetOwnReviewQueryOptions(trailIdentifier, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getReviewsGetOwnReviewSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+  TError = unknown,
+>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getReviewsGetOwnReviewQueryKey(trailIdentifier);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof reviewsGetOwnReview>>> = ({ signal }) =>
+    reviewsGetOwnReview(trailIdentifier, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & { throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never } };
+};
+
+export type ReviewsGetOwnReviewSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof reviewsGetOwnReview>>>;
+export type ReviewsGetOwnReviewSuspenseQueryError = unknown;
+
+export function useReviewsGetOwnReviewSuspense<
+  TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+  TError = unknown,
+>(
+  trailIdentifier: string,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReviewsGetOwnReviewSuspense<
+  TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+  TError = unknown,
+>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReviewsGetOwnReviewSuspense<
+  TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+  TError = unknown,
+>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useReviewsGetOwnReviewSuspense<
+  TData = Awaited<ReturnType<typeof reviewsGetOwnReview>>,
+  TError = unknown,
+>(
+  trailIdentifier: string,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof reviewsGetOwnReview>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getReviewsGetOwnReviewSuspenseQueryOptions(trailIdentifier, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getReviewsCreateReviewUrl = () => {
   return `/api/v1/Reviews/create`;
 };
@@ -588,6 +781,111 @@ export const useReviewsCreateReview = <TError = unknown, TContext = unknown>(
   TContext
 > => {
   return useMutation(getReviewsCreateReviewMutationOptions(options), queryClient);
+};
+export const getReviewsUpdateReviewUrl = (reviewIdentifier: string) => {
+  return `/api/v1/Reviews/${reviewIdentifier}`;
+};
+
+export const reviewsUpdateReview = async (
+  reviewIdentifier: string,
+  reviewsUpdateReviewBody?: ReviewsUpdateReviewBody,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ReviewResponse> => {
+  const formData =
+    reviewsUpdateReviewBody === undefined
+      ? undefined
+      : (() => {
+          const formData = new FormData();
+          if (reviewsUpdateReviewBody?.Rating !== undefined) {
+            formData.append(`Rating`, reviewsUpdateReviewBody.Rating.toString());
+          }
+          if (reviewsUpdateReviewBody?.TrailReview !== undefined && reviewsUpdateReviewBody.TrailReview !== null) {
+            formData.append(`TrailReview`, reviewsUpdateReviewBody.TrailReview);
+          }
+          if (
+            reviewsUpdateReviewBody?.RemovedImageIdentifiers !== undefined &&
+            reviewsUpdateReviewBody.RemovedImageIdentifiers !== null
+          ) {
+            reviewsUpdateReviewBody?.RemovedImageIdentifiers.forEach((value) =>
+              formData.append(`RemovedImageIdentifiers`, value),
+            );
+          }
+          if (reviewsUpdateReviewBody?.images !== undefined && reviewsUpdateReviewBody.images !== null) {
+            reviewsUpdateReviewBody?.images.forEach((value) => formData.append(`images`, value));
+          }
+          return formData;
+        })();
+
+  const requestInit: { body?: unknown } & NonNullable<Parameters<typeof customFetch>[1]> = {
+    ...options,
+    method: "PUT",
+  };
+  if (formData === undefined) {
+    delete requestInit.body;
+  } else {
+    requestInit.body = formData;
+  }
+  return customFetch<ReviewResponse>(getReviewsUpdateReviewUrl(reviewIdentifier), requestInit);
+};
+
+export const getReviewsUpdateReviewMutationKey = () => ["reviewsUpdateReview"] as const;
+
+export const getReviewsUpdateReviewMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reviewsUpdateReview>>,
+    TError,
+    ReviewsUpdateReviewMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reviewsUpdateReview>>,
+  TError,
+  ReviewsUpdateReviewMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReviewsUpdateReviewMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reviewsUpdateReview>>,
+    ReviewsUpdateReviewMutationVariables
+  > = (props) => {
+    const { reviewIdentifier, data } = props ?? {};
+
+    return reviewsUpdateReview(reviewIdentifier, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReviewsUpdateReviewMutationResult = NonNullable<Awaited<ReturnType<typeof reviewsUpdateReview>>>;
+export type ReviewsUpdateReviewMutationBody = ReviewsUpdateReviewBody | undefined;
+export type ReviewsUpdateReviewMutationError = unknown;
+export type ReviewsUpdateReviewMutationVariables = { reviewIdentifier: string; data?: ReviewsUpdateReviewBody };
+
+export const useReviewsUpdateReview = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reviewsUpdateReview>>,
+      TError,
+      ReviewsUpdateReviewMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reviewsUpdateReview>>,
+  TError,
+  ReviewsUpdateReviewMutationVariables,
+  TContext
+> => {
+  return useMutation(getReviewsUpdateReviewMutationOptions(options), queryClient);
 };
 export const getReviewsDeleteReviewUrl = (reviewIdentifier: string) => {
   return `/api/v1/Reviews/${reviewIdentifier}`;

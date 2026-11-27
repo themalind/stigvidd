@@ -53,14 +53,18 @@ jest.mock("@/atoms/user-atoms", () => {
   return { stigviddUserAtom: atom({ data: { identifier: "me" } }) };
 });
 
-// The grid opens a full-screen zoom viewer of its own; here only what it is handed matters.
-jest.mock("@/components/review/review-image-grid", () => {
+// keep-comment: the strip opens a full-screen zoom viewer of its own; here only what it is handed matters
+jest.mock("@/components/media/image-strip", () => {
   const { Text } = jest.requireActual("react-native");
   const ReactActual = jest.requireActual("react");
   return {
     __esModule: true,
-    default: ({ reviewImages }: { reviewImages: { identifier: string }[] }) =>
-      ReactActual.createElement(Text, { testID: "image-grid" }, reviewImages.map((i) => i.identifier).join(",")),
+    default: ({ images, variant }: { images: { identifier: string }[]; variant?: string }) =>
+      ReactActual.createElement(
+        Text,
+        { testID: "image-strip" },
+        `${variant ?? "card"}:${images.map((i) => i.identifier).join(",")}`,
+      ),
   };
 });
 
@@ -147,15 +151,15 @@ it("shows the images belonging to the review", async () => {
 
   await expand("Alva");
 
-  expect(screen.getByTestId("image-grid")).toHaveTextContent("i1");
+  expect(screen.getByTestId("image-strip")).toHaveTextContent("plain:i1");
 });
 
-it("draws no image grid for a review without pictures", async () => {
+it("draws no image strip for a review without pictures", async () => {
   await show([review({ reviewImages: undefined })]);
 
   await expand("Alva");
 
-  expect(screen.queryByTestId("image-grid")).toBeNull();
+  expect(screen.queryByTestId("image-strip")).toBeNull();
 });
 
 it("offers to report someone else's review, but not to delete it", async () => {
@@ -184,6 +188,75 @@ it("offers neither action on a review whose author no longer exists", async () =
 
   expect(screen.queryByTestId("icon-alert-circle", { includeHiddenElements: true })).toBeNull();
   expect(screen.queryByTestId("icon-trash-can-outline", { includeHiddenElements: true })).toBeNull();
+});
+
+describe("editing", () => {
+  const onEditOwn = jest.fn();
+
+  function showEditable(reviews: Review[]) {
+    return renderWithProviders(<ReviewSection reviews={reviews} onEditOwn={onEditOwn} />);
+  }
+
+  it("offers to edit your own review", async () => {
+    await showEditable([review({ userIdentifier: "me" })]);
+
+    await expand("Alva");
+
+    expect(screen.getByLabelText("Redigera recension")).toBeTruthy();
+  });
+
+  it("does not offer to edit someone else's review", async () => {
+    await showEditable([review({ userIdentifier: "someone-else" })]);
+
+    await expand("Alva");
+
+    expect(screen.queryByTestId("edit-review-button")).toBeNull();
+  });
+
+  it("does not offer to edit a review whose author no longer exists", async () => {
+    await showEditable([review({ userName: null, userIdentifier: null })]);
+
+    await expand("Borttagen användare");
+
+    expect(screen.queryByTestId("edit-review-button")).toBeNull();
+  });
+
+  it("does not offer to edit when there is nowhere to edit it", async () => {
+    await show([review({ userIdentifier: "me" })]);
+
+    await expand("Alva");
+
+    expect(screen.queryByTestId("edit-review-button")).toBeNull();
+  });
+
+  it("asks to edit the user's own review when its pencil is pressed", async () => {
+    await showEditable([
+      review({ identifier: "r1", userName: "Alva" }),
+      review({ identifier: "r2", userName: "Bo", userIdentifier: "me" }),
+    ]);
+
+    await expand("Bo");
+    await fireEvent.press(screen.getByTestId("edit-review-button"));
+
+    expect(onEditOwn).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks an edited review next to its date", async () => {
+    await show([review({ editedAt: "2026-06-01T08:00:00Z" })]);
+
+    await expand("Alva");
+
+    expect(screen.getByText("2026-05-01 · Redigerad")).toBeTruthy();
+  });
+
+  it("shows only the date on a review that was never edited", async () => {
+    await show([review({ editedAt: null })]);
+
+    await expand("Alva");
+
+    expect(screen.getByText("2026-05-01")).toBeTruthy();
+    expect(screen.queryByText(/Redigerad/)).toBeNull();
+  });
 });
 
 it("opens the report form on the review that was flagged", async () => {

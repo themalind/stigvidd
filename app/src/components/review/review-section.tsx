@@ -9,6 +9,7 @@ import AlertDialog from "@/components/dialog/alert-dialog";
 import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
 import ReportContentForm from "@/components/report/report-content-form";
 import { useAuth } from "@/components/auth/auth-provider";
+import ImageStrip from "@/components/media/image-strip";
 import { stigviddUserAtom } from "@/atoms/user-atoms";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { Review } from "@/data/types";
@@ -20,13 +21,14 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Divider, List, Text, useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
 import { Rating } from "./rating";
-import ReviewImageGrid from "./review-image-grid";
 
 interface ReviewProps {
   reviews: Review[];
+  // keep-comment: takes no review, since the editor fetches the user's own one fresh
+  onEditOwn?: () => void;
 }
 
-export default function ReviewSection({ reviews }: ReviewProps) {
+export default function ReviewSection({ reviews, onEditOwn }: ReviewProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
@@ -84,11 +86,25 @@ export default function ReviewSection({ reviews }: ReviewProps) {
           >
             <View style={[s.reviewTextContainer, { backgroundColor: theme.colors.surface }]}>
               <View style={{ gap: 20 }}>{review.trailReview && <Text>{review.trailReview}</Text>}</View>
-              {review.reviewImages && <ReviewImageGrid reviewImages={review.reviewImages} />}
+              {review.reviewImages && <ImageStrip images={review.reviewImages} variant="plain" />}
             </View>
             <View style={[s.bottomContainer, { backgroundColor: theme.colors.surface }]}>
-              <Text>{formatDate(review.createdAt)}</Text>
+              <Text>
+                {review.editedAt
+                  ? `${formatDate(review.createdAt)} · ${t("review.edited")}`
+                  : formatDate(review.createdAt)}
+              </Text>
               <View style={s.actionContainer}>
+                {!!onEditOwn && !!review.userIdentifier && user?.identifier === review.userIdentifier && (
+                  <Pressable
+                    testID="edit-review-button"
+                    accessibilityRole="button"
+                    accessibilityLabel={t("review.edit")}
+                    onPress={onEditOwn}
+                  >
+                    <List.Icon color={theme.colors.outline} icon="pencil-outline" />
+                  </Pressable>
+                )}
                 {!!review.userIdentifier && user?.identifier !== review.userIdentifier && (
                   <Pressable testID="report-review-button" onPress={() => handleReportReview(review)}>
                     <List.Icon color={theme.colors.outline} icon="alert-circle" />

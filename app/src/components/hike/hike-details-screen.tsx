@@ -13,8 +13,7 @@ import AlertDialog from "@/components/dialog/alert-dialog";
 import AccountBannedDialog from "@/components/auth/account-banned-dialog";
 import { useAuth } from "@/components/auth/auth-provider";
 import HikeDetailLayout, { HikeDetailFallback } from "@/components/hike/hike-detail-layout";
-import HikeImageSection from "@/components/hike/hike-image-section";
-import ImageViewer from "@/components/review/image-viewer";
+import ImageStrip from "@/components/media/image-strip";
 import LoadingIndicator from "@/components/status/loading-indicator";
 import SlimButton from "@/components/display/slim-button";
 import ShareHikeModal, { ShareHikeFormFields } from "@/components/shared-hike/share-hike-modal";
@@ -76,7 +75,7 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [showBannedDialog, setShowBannedDialog] = useState(() => !!shareWithName && reason === "banned");
   const [deletedHike, setDeletedHike] = useState<Hike | null>(null);
-  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null);
   const [showRecipients, setShowRecipients] = useState(false);
 
   const hikeIdentifier: string = Array.isArray(identifier) ? identifier[0] : identifier;
@@ -258,13 +257,15 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
       facts={[{ label: t("hike.created"), value: formatDate(hike.createdAt) }]}
       info={hike}
       media={
-        <HikeImageSection
+        <ImageStrip
+          title={t("hike.images")}
           images={images}
-          onOpen={setViewerIndex}
           edit={{
             max: MAX_HIKE_IMAGES,
+            emptyHint: t("hike.addImagesHint", { max: MAX_HIKE_IMAGES }),
             uploadingCount: hikeImages.uploadingCount,
             onAdd: unlessBanned(() => void addImages()),
+            onRemove: (image) => setImageToDelete(image.identifier),
           }}
         />
       }
@@ -320,15 +321,25 @@ export default function HikeDetailsScreen({ hikeFollowRoute }: { hikeFollowRoute
         cancelText={t("common.cancel")}
         onConfirm={() => deleteMutation.mutate(hike)}
       />
-      <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setShowBannedDialog(false)} />
-      <ImageViewer
-        images={images}
-        visible={viewerIndex !== null}
-        initialIndex={viewerIndex ?? 0}
-        onDismiss={() => setViewerIndex(null)}
-        onDelete={(image) => hikeImages.deleteImage(image.identifier)}
-        deleteNotes={hasPendingSubmission ? [t("hike.deleteImageSubmissionNote")] : []}
+      <AlertDialog
+        visible={imageToDelete !== null}
+        onDismiss={() => setImageToDelete(null)}
+        title={t("hike.deleteImageTitle")}
+        infoText={[
+          t("hike.deleteImageConfirm"),
+          ...(hasPendingSubmission ? [t("hike.deleteImageSubmissionNote")] : []),
+        ]}
+        icon="image-remove-outline"
+        tone="danger"
+        irreversible
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
+        onConfirm={() => {
+          if (imageToDelete) hikeImages.deleteImage(imageToDelete);
+          setImageToDelete(null);
+        }}
       />
+      <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setShowBannedDialog(false)} />
       <ShareRecipientsDialog
         visible={showRecipients}
         recipients={recipients}

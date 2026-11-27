@@ -11,11 +11,11 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { REVIEWS_STALE_TIME } from "@/constants/cache";
 import { useQuery } from "@tanstack/react-query";
 import { useAtomValue } from "jotai";
+import { hasReviewedTrailPrefix } from "./review-queries";
 
 // keep-comment: per user, so the next signed-in user does not inherit the answer
 export const hasReviewedTrailKey = (trailIdentifier: string, userIdentifier?: string) => [
-  "review-exists",
-  trailIdentifier,
+  ...hasReviewedTrailPrefix(trailIdentifier),
   userIdentifier,
 ];
 

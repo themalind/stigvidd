@@ -5,7 +5,6 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import AlertDialog from "@/components/dialog/alert-dialog";
 import { ZOOM_TYPE, Zoomable } from "@likashefqet/react-native-image-zoom";
 import { Image } from "expo-image";
 import { StatusBar } from "expo-status-bar";
@@ -33,8 +32,6 @@ interface ModalProps {
   visible: boolean;
   onDismiss: (lastIndex: number) => void;
   initialIndex?: number;
-  onDelete?: (image: ViewerImage) => Promise<unknown>;
-  deleteNotes?: string[];
   onReport?: (image: ViewerImage) => void;
 }
 
@@ -44,15 +41,7 @@ const DOT_INDICATOR_SIZE = DOT_SIZE + DOT_SPACING;
 const MAX_ZOOM = 5;
 const DOUBLE_TAP_ZOOM = 2.5;
 
-export default function ImageViewer({
-  images,
-  visible,
-  onDismiss,
-  initialIndex,
-  onDelete,
-  deleteNotes = [],
-  onReport,
-}: ModalProps) {
+export default function ImageViewer({ images, visible, onDismiss, initialIndex, onReport }: ModalProps) {
   const theme = useTheme();
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -60,7 +49,6 @@ export default function ImageViewer({
   const [scrollX] = useState(() => new Animated.Value(0));
   const [currentIndex, setCurrentIndex] = useState(initialIndex ?? 0);
   const [wasVisible, setWasVisible] = useState(visible);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [zoomed, setZoomed] = useState(false);
 
   // keep-comment: set during render, not in an effect, so the list mounts on the tapped picture
@@ -78,19 +66,6 @@ export default function ImageViewer({
   const current = images[lastIndex];
   const close = () => onDismiss(lastIndex);
 
-  const confirmDelete = async () => {
-    setShowDeleteDialog(false);
-    if (!onDelete || !current) return;
-    const remaining = images.length - 1;
-    try {
-      await onDelete(current);
-    } catch {
-      return;
-    }
-    if (remaining === 0) onDismiss(0);
-    else setCurrentIndex((index) => Math.min(index, remaining - 1));
-  };
-
   const onMomentumScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(e.nativeEvent.contentOffset.x / itemWidth);
     setCurrentIndex(index);
@@ -101,9 +76,9 @@ export default function ImageViewer({
       <Modal visible={visible} onDismiss={close} style={s.fullScreen} contentContainerStyle={s.surface}>
         {visible && <StatusBar style="light" />}
         {/* keep-comment: Paper's iOS Surface drops flex on its inner layer for a Modal, so the frame needs a fixed size */}
-        <View testID="review-image-frame" style={{ width: itemWidth, height: itemHeight }}>
+        <View testID="image-viewer-frame" style={{ width: itemWidth, height: itemHeight }}>
           <Animated.FlatList
-            testID="review-image-list"
+            testID="image-viewer-list"
             horizontal
             pagingEnabled
             scrollEnabled={!zoomed}
@@ -120,7 +95,7 @@ export default function ImageViewer({
             onMomentumScrollEnd={onMomentumScrollEnd}
             onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
             renderItem={({ item }) => (
-              <View testID="review-image-item" style={{ width: itemWidth, height: itemHeight }}>
+              <View testID="image-viewer-item" style={{ width: itemWidth, height: itemHeight }}>
                 <Zoomable
                   style={s.zoomable}
                   maxScale={MAX_ZOOM}
@@ -145,19 +120,7 @@ export default function ImageViewer({
           >
             <Icon size={26} source="close" color="#fff" />
           </Pressable>
-          {onDelete && current && (
-            <Pressable
-              testID="image-viewer-delete"
-              hitSlop={12}
-              onPress={() => setShowDeleteDialog(true)}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.delete")}
-              style={[s.cornerButton, { top: insets.top + 8, right: 12 }]}
-            >
-              <Icon size={24} source="delete" color={theme.colors.error} />
-            </Pressable>
-          )}
-          {!onDelete && onReport && current && (
+          {onReport && current && (
             <Pressable
               testID="image-viewer-report"
               hitSlop={12}
@@ -170,16 +133,16 @@ export default function ImageViewer({
             </Pressable>
           )}
           {images.length > 1 && !zoomed && (
-            <View testID="review-image-pagination" style={[s.pagination, { bottom: insets.bottom + 24 }]}>
+            <View testID="image-viewer-pagination" style={[s.pagination, { bottom: insets.bottom + 24 }]}>
               {images.map((_, index) => (
                 <View
                   key={index}
-                  testID="review-image-dot"
+                  testID="image-viewer-dot"
                   style={[s.dot, { backgroundColor: theme.colors.tertiary }]}
                 />
               ))}
               <Animated.View
-                testID="review-image-indicator"
+                testID="image-viewer-indicator"
                 style={[
                   s.dotIndicator,
                   {
@@ -199,18 +162,6 @@ export default function ImageViewer({
           )}
         </View>
       </Modal>
-      <AlertDialog
-        visible={showDeleteDialog}
-        onDismiss={() => setShowDeleteDialog(false)}
-        title={t("hike.deleteImageTitle")}
-        infoText={[t("hike.deleteImageConfirm"), ...deleteNotes]}
-        icon="image-remove-outline"
-        tone="danger"
-        irreversible
-        confirmText={t("common.delete")}
-        cancelText={t("common.cancel")}
-        onConfirm={confirmDelete}
-      />
     </Portal>
   );
 }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 using AwesomeAssertions;
+using Core.Interfaces.Repositories.Trails.Models;
 using Core.Repositories;
 using Infrastructure.Data.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -12,6 +13,7 @@ public class TrailContributionLikeRepositoryTests : TestBase
 {
     private const string ContributedIdentifier = "con-1a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
     private const string CuratedIdentifier = "cur-1a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d";
+    private static readonly DateTime ReviewCreatedAt = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     private static TrailRepository Build()
     {
@@ -26,6 +28,10 @@ public class TrailContributionLikeRepositoryTests : TestBase
                     IsVerified = true,
                     GeoPath = Utilities.GeoPath((12.94, 57.72), (12.95, 57.73)),
                     Contribution = new TrailContribution { SubmittedByUserId = 2, ShowSubmitterName = true },
+                    Reviews =
+                    [
+                        new Review { Rating = 5m, UserId = 1, CreatedAt = ReviewCreatedAt, LastUpdatedAt = ReviewCreatedAt.AddMonths(10) },
+                    ],
                 });
                 db.Trails.Add(new Trail
                 {
@@ -89,6 +95,16 @@ public class TrailContributionLikeRepositoryTests : TestBase
         var input = result.Value.Single();
         input.StartLatitude.Should().BeApproximately(57.72, 1e-9);
         input.StartLongitude.Should().BeApproximately(12.94, 1e-9);
+    }
+
+    [Fact]
+    public async Task RankingInputs_DateAReviewByWhenItWasWritten_NotWhenItWasLastEdited()
+    {
+        var result = await Build().GetContributionRankingInputsAsync(TestContext.Current.CancellationToken);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Single().Reviews.Should().Equal(new RankedReview(5m, ReviewCreatedAt));
     }
 
     [Fact]

@@ -71,7 +71,6 @@ export function useHikeImageMutations(hikeIdentifier: string) {
     upload: uploadMutation.mutate,
     uploadingCount,
     isUploading: uploadMutation.isPending,
-    deleteImage: deleteMutation.mutateAsync,
-    isDeleting: deleteMutation.isPending,
+    deleteImage: deleteMutation.mutate,
   };
 }

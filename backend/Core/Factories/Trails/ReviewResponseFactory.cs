@@ -30,9 +30,15 @@ public class ReviewResponseFactory
             review.Rating,
             review.User?.NickName,
             review.CreatedAt,
+            EditedAt(review.CreatedAt, review.LastUpdatedAt),
             review.Trail?.Identifier ?? string.Empty,
             review.User?.Identifier,
             images);
+    }
+
+    public static DateTime? EditedAt(DateTime createdAt, DateTime lastUpdatedAt)
+    {
+        return lastUpdatedAt > createdAt ? lastUpdatedAt : null;
     }
 
     public PagedReviewResponse Create(List<ReviewResponse> reviews, int page, bool hasMore, int total = 0)

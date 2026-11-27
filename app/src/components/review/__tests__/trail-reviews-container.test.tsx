@@ -18,8 +18,20 @@ import { ActivityIndicator, View } from "react-native";
 const mockGetReviews = jest.fn();
 const mockNavigate = jest.fn();
 
+const mockGetOwnReview = jest.fn();
+const mockModalProps = jest.fn();
+
 jest.mock("@/api/reviews", () => ({
   getReviewsByTrailIdentifier: (...args: unknown[]) => mockGetReviews(...args),
+  getOwnReview: (...args: unknown[]) => mockGetOwnReview(...args),
+}));
+
+let mockCanWrite = true;
+jest.mock("@/hooks/auth/useCanWrite", () => ({
+  useCanWrite: () =>
+    mockIsAuthenticated
+      ? { canWrite: mockCanWrite, reason: mockCanWrite ? null : "banned" }
+      : { canWrite: false, reason: "unauthenticated" },
 }));
 
 let mockHasReviewed: boolean | undefined = false;
@@ -36,18 +48,28 @@ jest.mock("expo-router", () => ({
   router: { navigate: (...args: unknown[]) => mockNavigate(...args) },
 }));
 
-// The list itself has its own suite; what this container decides is which reviews reach it.
+// The list has its own suite; this container decides which reviews reach it and whether they can be edited. keep-comment: why the list is mocked
 jest.mock("@/components/review/review-section", () => {
-  const { Text } = jest.requireActual("react-native");
+  const { Pressable, Text, View } = jest.requireActual("react-native");
   const ReactActual = jest.requireActual("react");
   return {
     __esModule: true,
-    default: ({ reviews }: { reviews: { identifier: string }[] }) =>
-      ReactActual.createElement(Text, { testID: "review-section" }, reviews.map((r) => r.identifier).join(",")),
+    default: ({ reviews, onEditOwn }: { reviews: { identifier: string }[]; onEditOwn?: () => void }) =>
+      ReactActual.createElement(
+        View,
+        null,
+        ReactActual.createElement(Text, { testID: "review-section" }, reviews.map((r) => r.identifier).join(",")),
+        onEditOwn &&
+          ReactActual.createElement(
+            Pressable,
+            { testID: "edit-first-review", onPress: onEditOwn },
+            ReactActual.createElement(Text, null, "edit"),
+          ),
+      ),
   };
 });
 
-// The modal is a Portal over a form with its own suite; only the props it opens with matter.
+// The modal is a Portal over a form with its own suite; only the props it opens with matter. keep-comment: why the modal is mocked
 jest.mock("@/components/review/add/add-review-modal", () => {
   const { Text } = jest.requireActual("react-native");
   const ReactActual = jest.requireActual("react");
@@ -58,17 +80,21 @@ jest.mock("@/components/review/add/add-review-modal", () => {
       trailIdentifier,
       trailName,
       trailLength,
+      review,
+      onDismiss,
     }: {
       visible: boolean;
       trailIdentifier: string;
       trailName: string;
       trailLength: number;
+      review?: { identifier: string };
+      onDismiss: () => void;
     }) =>
-      visible
+      (mockModalProps({ visible, review }) ?? visible)
         ? ReactActual.createElement(
             Text,
-            { testID: "add-review-modal" },
-            `${trailIdentifier}|${trailName}|${trailLength}`,
+            { testID: review ? "edit-review-modal" : "add-review-modal", onPress: onDismiss },
+            `${trailIdentifier}|${trailName}|${trailLength}${review ? `|${review.identifier}` : ""}`,
           )
         : null,
   };
@@ -114,6 +140,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockHasReviewed = false;
   mockIsAuthenticated = true;
+  mockCanWrite = true;
   mockGetReviews.mockResolvedValue(page());
 });
 
@@ -140,7 +167,6 @@ it("shows a spinner rather than an empty review list while the first page is in 
   expect(queryByType(ActivityIndicator)).toBeNull();
 });
 
-// The count is the server's total, not the number of pages fetched so far.
 it("counts every review on the trail, not the ones loaded", async () => {
   mockGetReviews.mockResolvedValue(page({ reviews: [review("r1"), review("r2")], hasMore: true, total: 17 }));
 
@@ -190,7 +216,7 @@ it("appends the next page below the ones already shown", async () => {
   expect(screen.queryByText("Ladda fler")).toBeNull();
 });
 
-// Without the disable, a second press starts the same page over again.
+// Without the disable, a second press starts the same page over again. keep-comment: what the guarded bug looks like
 it("disables the load-more button while the next page is loading", async () => {
   mockGetReviews.mockResolvedValueOnce(page({ reviews: [review("r1")], hasMore: true, total: 2 }));
   let release: (value: PagedReviewResponse) => void = () => {};
@@ -246,6 +272,99 @@ it("asks an anonymous visitor to log in instead of opening the form", async () =
 
   expect(screen.getByText("Du behöver vara inloggad för att skriva en recension.")).toBeTruthy();
   expect(screen.queryByTestId("add-review-modal")).toBeNull();
+});
+
+it("opens the form on the review as the server has it now, not as the list cached it", async () => {
+  mockGetOwnReview.mockResolvedValue(review("r1-fresh"));
+  await show();
+  expect(screen.queryByTestId("edit-review-modal")).toBeNull();
+
+  await fireEvent.press(screen.getByTestId("edit-first-review"));
+  await settle();
+
+  expect(mockGetOwnReview).toHaveBeenCalledWith(TRAIL_ID);
+  expect(screen.getByTestId("edit-review-modal")).toHaveTextContent(`${TRAIL_ID}|Kvarnstigen|4.2|r1-fresh`);
+});
+
+it("fetches the review once when the pencil is pressed again while it loads", async () => {
+  let release: (value: Review) => void = () => {};
+  mockGetOwnReview.mockReturnValue(new Promise<Review>((resolve) => (release = resolve)));
+  await show();
+
+  await fireEvent.press(screen.getByTestId("edit-first-review"));
+  await settle();
+  await fireEvent.press(screen.getByTestId("edit-first-review"));
+  await settle();
+
+  expect(mockGetOwnReview).toHaveBeenCalledTimes(1);
+
+  await act(async () => {
+    release(review("r1"));
+    await Promise.resolve();
+  });
+  await settle();
+  expect(screen.getByTestId("edit-review-modal")).toHaveTextContent(`${TRAIL_ID}|Kvarnstigen|4.2|r1`);
+});
+
+it("opens no form when the review cannot be fetched", async () => {
+  mockGetOwnReview.mockRejectedValue(new Error("offline"));
+  await show();
+
+  await fireEvent.press(screen.getByTestId("edit-first-review"));
+  await settle();
+
+  expect(screen.queryByTestId("edit-review-modal")).toBeNull();
+});
+
+it("tells a banned user so instead of opening their review", async () => {
+  mockCanWrite = false;
+  await show();
+
+  await fireEvent.press(screen.getByTestId("edit-first-review"));
+  await settle();
+
+  expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+  expect(mockGetOwnReview).not.toHaveBeenCalled();
+  expect(screen.queryByTestId("edit-review-modal")).toBeNull();
+});
+
+it("tells a banned user so instead of opening an empty review form", async () => {
+  mockCanWrite = false;
+  await show();
+
+  await fireEvent.press(screen.getByTestId("add-review-button"));
+  await settle();
+
+  expect(screen.getByText("Du har blivit avstängd")).toBeTruthy();
+  expect(screen.queryByTestId("add-review-modal")).toBeNull();
+});
+
+it("closes the edit form when it is dismissed", async () => {
+  mockGetOwnReview.mockResolvedValue(review("r1"));
+  await show();
+  await fireEvent.press(screen.getByTestId("edit-first-review"));
+  await settle();
+
+  await fireEvent.press(screen.getByTestId("edit-review-modal"));
+  await settle();
+
+  expect(screen.queryByTestId("edit-review-modal")).toBeNull();
+});
+
+// Unmounting on close drops the modal's closing animation. keep-comment: what the guarded bug looks like
+it("keeps the edit form mounted with its review while it closes", async () => {
+  mockGetOwnReview.mockResolvedValue(review("r1"));
+  await show();
+  await fireEvent.press(screen.getByTestId("edit-first-review"));
+  await settle();
+
+  mockModalProps.mockClear();
+  await fireEvent.press(screen.getByTestId("edit-review-modal"));
+  await settle();
+
+  expect(mockModalProps).toHaveBeenLastCalledWith(
+    expect.objectContaining({ visible: false, review: expect.objectContaining({ identifier: "r1" }) }),
+  );
 });
 
 it("opens the form on the trail being viewed", async () => {

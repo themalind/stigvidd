@@ -5,20 +5,14 @@
 // v. 2.0. If a copy of the MPL was not distributed with this file, You can
 // obtain one at https://mozilla.org/MPL/2.0/.
 
-import { showWarningAtom } from "@/atoms/snackbar-atoms";
-import NotAuthenticatedDialog from "@/components/auth/not-authenticated-msg-dialog";
-import AccountBannedDialog from "@/components/auth/account-banned-dialog";
-import { useCanWrite } from "@/hooks/auth/useCanWrite";
-import AddReview from "@/components/review/add/add-review-modal";
+import ReviewEditor from "@/components/review/review-editor";
 import { Trail } from "@/data/types";
+import { useHasReviewedTrail } from "@/hooks/review/useHasReviewedTrail";
+import { useReviewEditor } from "@/hooks/review/useReviewEditor";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
-import { useSetAtom } from "jotai";
-import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { useTranslation } from "react-i18next";
-import { useHasReviewedTrail } from "@/hooks/review/useHasReviewedTrail";
 
 interface UserRatingProps {
   trail: Trail;
@@ -26,37 +20,18 @@ interface UserRatingProps {
 
 export default function UserRating({ trail }: UserRatingProps) {
   const theme = useTheme();
-  const { canWrite, reason } = useCanWrite();
   const { t } = useTranslation();
-  const [showAuthDialog, setAuthDialog] = useState(false);
-  const [showBannedDialog, setBannedDialog] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const queryClient = useQueryClient();
-  const setWarning = useSetAtom(showWarningAtom);
   const { data: hasReviewed } = useHasReviewedTrail(trail.identifier);
+  const editor = useReviewEditor(trail.identifier);
 
   const onPress = () => {
-    if (!canWrite) {
-      if (reason === "banned") setBannedDialog(true);
-      else setAuthDialog(true);
-      return;
-    }
-    // keep-comment: editing an existing review is not built yet
-    if (hasReviewed) {
-      setWarning(t("review.alreadyReviewed"));
-      return;
-    }
-    setShowModal(true);
-  };
-
-  const handleReviewAdded = () => {
-    setShowModal(false);
-    void queryClient.invalidateQueries({ queryKey: ["trail", trail.identifier] });
+    if (hasReviewed) void editor.openOwn();
+    else editor.openCreate();
   };
 
   return (
     <View style={s.container}>
-      <Pressable onPress={onPress} style={s.pressable}>
+      <Pressable onPress={onPress} disabled={editor.isLoading} style={s.pressable}>
         <MaterialIcons
           name={hasReviewed ? "thumb-up-alt" : "thumb-up-off-alt"}
           size={30}
@@ -66,19 +41,7 @@ export default function UserRating({ trail }: UserRatingProps) {
           {hasReviewed ? t("review.rated") : t("review.rate")}
         </Text>
       </Pressable>
-      <AddReview
-        trailIdentifier={trail.identifier}
-        trailName={trail.name}
-        trailLength={trail.trailLength}
-        visible={showModal}
-        onDismiss={handleReviewAdded}
-      />
-      <AccountBannedDialog visible={showBannedDialog} onDismiss={() => setBannedDialog(false)} />
-      <NotAuthenticatedDialog
-        visible={showAuthDialog}
-        onDissmiss={() => setAuthDialog(false)}
-        infoMessage={t("review.notAuthRating")}
-      />
+      <ReviewEditor trail={trail} editor={editor} notAuthMessage={t("review.notAuthRating")} />
     </View>
   );
 }

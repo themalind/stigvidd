@@ -8,9 +8,10 @@ public class ReviewResponse
     public required string Identifier { get; set; }
     public string? TrailReview { get; set; }
     public decimal Rating { get; set; }
-    // Both null once the author has deleted their account.
+    // Both null once the author has deleted their account. keep-comment: not visible from the types
     public string? UserName { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? EditedAt { get; set; }
     public string? UserIdentifier { get; set; }
     public required string TrailIdentifier { get; set; }
     public IReadOnlyCollection<ReviewImageResponse>? ReviewImages { get; set; }
@@ -21,6 +22,7 @@ public class ReviewResponse
         decimal rating,
         string? username,
         DateTime createdAt,
+        DateTime? editedAt,
         string trailIdentifier,
         string? userIdentifier,
         IEnumerable<ReviewImageResponse>? reviewImages)
@@ -32,10 +34,10 @@ public class ReviewResponse
             Rating = rating,
             UserName = username,
             CreatedAt = createdAt,
+            EditedAt = editedAt,
             TrailIdentifier = trailIdentifier,
             UserIdentifier = userIdentifier,
             ReviewImages = reviewImages?.ToList(),
         };
     }
 }
-

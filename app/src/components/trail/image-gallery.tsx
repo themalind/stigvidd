@@ -6,7 +6,7 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import ExampleImageOverlay from "@/components/media/example-image-overlay";
-import ImageViewer from "@/components/review/image-viewer";
+import ImageViewer from "@/components/media/image-viewer";
 import { BORDER_RADIUS } from "@/constants/constants";
 import { TrailImage } from "@/data/types";
 import { useIsOnline } from "@/hooks/useIsOnline";

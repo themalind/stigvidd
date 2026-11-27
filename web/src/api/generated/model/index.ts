@@ -176,6 +176,7 @@ export * from "./reviewImageResponse";
 export * from "./reviewResponse";
 export * from "./reviewsCreateReviewBody";
 export * from "./reviewsGetReviewsByTrailIdentifierParams";
+export * from "./reviewsUpdateReviewBody";
 export * from "./saveCityAreaBoundaryRequest";
 export * from "./saveFacilityRequest";
 export * from "./saveUserMappingRequest";

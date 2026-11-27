@@ -50,7 +50,7 @@ async function render() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockDeleteReview.mockResolvedValue({ success: true });
+  mockDeleteReview.mockResolvedValue(undefined);
 });
 
 describe("useDeleteReview", () => {
@@ -81,30 +81,6 @@ describe("useDeleteReview", () => {
         type: "success",
         message: "Recensionen har tagits bort",
       });
-    });
-  });
-
-  describe("when the server answers success: false", () => {
-    beforeEach(() => {
-      mockDeleteReview.mockResolvedValue({ success: false });
-    });
-
-    it("reports the failure", async () => {
-      const { run, store } = await render();
-      await run();
-
-      expect(store.get(snackbarAtom)).toMatchObject({
-        visible: true,
-        type: "error",
-        message: "Kunde inte ta bort recensionen",
-      });
-    });
-
-    it("leaves the caches alone", async () => {
-      const { run, invalidated } = await render();
-      await run();
-
-      expect(invalidated(REVIEWS_QUERY)).toBe(false);
     });
   });
 
