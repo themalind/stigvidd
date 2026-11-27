@@ -67,6 +67,7 @@ web/node_modules
 web/dist
 web/dist-ssr
 web/*.local
+web/coverage
 
 # site (vite) — the public landing page
 site/node_modules

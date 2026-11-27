@@ -162,6 +162,13 @@ describe("location background task", () => {
     expect(mockSetItem).not.toHaveBeenCalled();
   });
 
+  it("skips a native wake-up that carries no locations at all", async () => {
+    await expect(locationTaskCallback({ data: {}, error: null })).resolves.toBeUndefined();
+    await expect(locationTaskCallback({ data: undefined, error: null })).resolves.toBeUndefined();
+
+    expect(mockSetItem).not.toHaveBeenCalled();
+  });
+
   it("does nothing when isTracking is false", async () => {
     const pausedState: StoredHikeState = { ...activeState, isTracking: false };
     mockGetItem.mockResolvedValue(JSON.stringify(pausedState));

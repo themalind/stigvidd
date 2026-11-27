@@ -440,9 +440,12 @@ export async function ingestFixes(fixes: RawFix[]): Promise<IngestResult> {
   return { notTracking, didFinalize, resultPts };
 }
 
-type LocationTaskData = {
-  locations: Location.LocationObject[];
-};
+// keep-comment: native code fills this, so a wake-up can arrive without data or locations
+type LocationTaskData =
+  | {
+      locations?: Location.LocationObject[];
+    }
+  | undefined;
 
 TaskManager.defineTask(
   LOCATION_TASK_NAME,
@@ -453,8 +456,8 @@ TaskManager.defineTask(
       return;
     }
 
-    const { locations } = data;
-    if (locations.length === 0) return;
+    const locations = data?.locations;
+    if (!locations?.length) return;
 
     try {
       const fixes: RawFix[] = locations.map((location) => ({
