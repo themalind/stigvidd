@@ -8,13 +8,14 @@
 import ImageStrip from "@/components/media/image-strip";
 import { ViewerImage } from "@/components/media/image-viewer";
 import { BORDER_RADIUS } from "@/constants/constants";
-import { getAllByType } from "@/test/composites";
+import { getAllByType, getByType } from "@/test/composites";
 import { defined } from "@/test/defined";
 import { flushUntilGone, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { Image } from "expo-image";
-import { StyleSheet } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
+import { Surface } from "react-native-paper";
 
 const onAdd = jest.fn();
 const onRemove = jest.fn();
@@ -212,9 +213,23 @@ describe("inside another card", () => {
   it("drops the card's own padding and header", async () => {
     await renderWithProviders(<ImageStrip images={images(2)} variant="plain" />);
 
-    expect(StyleSheet.flatten(screen.getByTestId("image-strip").props.style).paddingVertical).toBeUndefined();
+    expect(StyleSheet.flatten(getByType(Surface).props.style).paddingVertical).toBeUndefined();
     expect(screen.queryByTestId("image-strip-count")).toBeNull();
     expect(screen.getAllByTestId("image-strip-thumb")).toHaveLength(2);
+  });
+
+  it("spans the width of the card it sits in", async () => {
+    await renderWithProviders(<ImageStrip images={images(2)} variant="plain" />);
+
+    expect(StyleSheet.flatten(getByType(Surface).props.style).alignSelf).toBe("stretch");
+  });
+});
+
+describe("height", () => {
+  it("keeps the strip as tall as its thumbnails instead of filling its parent", async () => {
+    await show({ list: images(2) });
+
+    expect(StyleSheet.flatten(getByType(ScrollView).props.style).flexGrow).toBe(0);
   });
 });
 

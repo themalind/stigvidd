@@ -94,6 +94,7 @@ export default function ImageStrip({ images, title, variant = "card", onReport, 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={s.scroller}
         contentContainerStyle={[s.strip, !plain && s.stripInset]}
       >
         {images.map((image, index) => (
@@ -175,6 +176,11 @@ const s = StyleSheet.create({
   },
   plain: {
     marginTop: 10,
+    alignSelf: "stretch",
+  },
+  // keep-comment: a horizontal ScrollView grows by default and would fill every bit of height its parent offers
+  scroller: {
+    flexGrow: 0,
   },
   headerRow: {
     flexDirection: "row",
