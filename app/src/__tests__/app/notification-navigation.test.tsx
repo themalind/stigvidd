@@ -11,8 +11,8 @@ import { Stack, Tabs, router } from "expo-router";
 import { act, renderRouter, type RenderRouterResult } from "expo-router/testing-library";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
-import EventsStackLayout, * as eventsLayout from "../(tabs)/events/_layout";
-import ProfileStackLayout, * as profileLayout from "../(tabs)/(profile-stack)/_layout";
+import EventsStackLayout, * as eventsLayout from "@/app/(tabs)/events/_layout";
+import ProfileStackLayout, * as profileLayout from "@/app/(tabs)/(profile-stack)/_layout";
 
 jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: true }),

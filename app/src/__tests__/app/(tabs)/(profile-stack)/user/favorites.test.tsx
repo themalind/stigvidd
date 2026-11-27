@@ -7,7 +7,7 @@
 
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
-import FavoritesScreen from "../favorites";
+import FavoritesScreen from "@/app/(tabs)/(profile-stack)/user/favorites";
 
 let mockFavoritesQuery: {
   data?: unknown[];

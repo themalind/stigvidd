@@ -23,7 +23,7 @@ import { AppState, AppStateStatus, Platform, View } from "react-native";
 import { Modal, Portal, Text } from "react-native-paper";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 import RootErrorBoundary from "@/components/status/root-error-boundary";
-import RootLayout, { ErrorBoundary } from "../_layout";
+import RootLayout, { ErrorBoundary } from "@/app/_layout";
 
 const mockLogWarn = jest.fn();
 const mockTrack = jest.fn();

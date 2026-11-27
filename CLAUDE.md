@@ -32,7 +32,7 @@ stack    docker compose up -d, then /healthz and /readyz (checks the DB)
   `npm install <pkg>@<version from node_modules/expo/bundledNativeModules.json>`. `runtimeVersion` is fixed, so OTA
   reaches old binaries: a new native module must be `require`d lazily in a try/catch (`services/recording-diagnostics.ts`).
 - Stop a background `expo start` by PID or `TaskStop`: `pkill -f "expo start"` also matches the shell running it and kills that.
-- A jest path with `(tabs)` is a regex: escape it (`"src/app/\(tabs\)/trails"`), or the run silently skips that file and reads green.
+- A jest path with `(tabs)` is a regex: escape it (`"src/__tests__/app/\(tabs\)/trails"`), or the run silently skips that file and reads green.
 - RNTL 14's `render`/`renderHook` are async: without `await`, effects never run in any test after the file's first.
 - `npm test` type-checks nothing; `npm run build` / `npx tsc --noEmit` do. Pass `--silent` to app jest, whose
   console noise is 279 KB against a 7 KB summary.

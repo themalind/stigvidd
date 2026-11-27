@@ -8,7 +8,7 @@
 import { ApiError } from "@/api/core/api-error";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react-native";
-import VerifyEmailScreen from "../verify-email";
+import VerifyEmailScreen from "@/app/(tabs)/(profile-stack)/verify-email";
 
 const mockVerify = jest.fn();
 const mockResend = jest.fn();

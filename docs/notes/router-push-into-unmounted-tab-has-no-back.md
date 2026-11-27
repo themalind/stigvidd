@@ -45,7 +45,7 @@ at most about 2 s, until the path is the event's and no focused route still hold
 `renderRouter` turns on fake timers, so a test that awaits a frame hangs until the 5 s timeout. Call
 `jest.useRealTimers()` after it and navigate with `IS_REACT_ACT_ENVIRONMENT` off, since `act` holds
 back the render the tab mounts in. All eight push types are in
-[notification-navigation.test.tsx](../../app/src/app/__tests__/notification-navigation.test.tsx).
+[notification-navigation.test.tsx](../../app/src/__tests__/app/notification-navigation.test.tsx).
 
 **A shared link in a running app skips the anchor on SDK 58.** `useLinking` hands it to
 `NAVIGATE_TO_HREF` without `withAnchor`, so back left the tab. `+native-intent.tsx` navigates itself
@@ -54,7 +54,7 @@ replaces the first. To reach that path in a test, pass `legacy_subscribe` in the
 of the `renderRouter` context: its `linking.subscribe` option is not called.
 
 **Measured** with the real router in
-[(profile-stack)/__tests__/_layout.test.tsx](../../app/src/app/%28tabs%29/%28profile-stack%29/__tests__/_layout.test.tsx).
+[\_\_tests\_\_/app/(tabs)/(profile-stack)/\_layout.test.tsx](../../app/src/__tests__/app/%28tabs%29/%28profile-stack%29/_layout.test.tsx).
 A plain push goes back to `/`, and `withAnchor` goes back to `/profile-page`.
 
 **The tap does not have to be recent.** The affected user had opened the app from the share
@@ -90,7 +90,7 @@ page (device and renderRouter). That is why the tab got its own segment. Ruled o
 `?trail=` param that the list pushed from. It needed the screen's own `navigation` (the global
 `router` throws "navigate before mounting the Root Layout" on a cold start) and `useFocusEffect`
 (a push from the first `useEffect` behind the root layout's render gate is dropped silently).
-Tests: `trails/__tests__/_layout.test.tsx`. Without the anchor, or with the old `/trail/<id>`
+Tests: `__tests__/app/(tabs)/trails/_layout.test.tsx`. Without the anchor, or with the old `/trail/<id>`
 redirect, three of five fail. The test kit stubs out the `url` event, so a link while the app
 runs is replayed the way `fork/useLinking.native.js` does it: `getStateFromPath`, then
 `getActionFromState`, then `store.navigationRef.dispatch`.
@@ -104,6 +104,9 @@ carries no identifier to dedupe on. Telling a replay apart needs the native
 
 - `renderRouter` from `expo-router/testing-library`. Key the route map `"(tabs)/..."` so the
   pushed path type-checks against the typed routes.
+- A tab press is tested by giving the `Tabs.Screen` a `tabBarButtonTestID`, pressing it, then
+  `act(() => jest.runOnlyPendingTimers())`: native-stack pops to the top in a `requestAnimationFrame`,
+  and `renderRouter` fakes the timers, so without that step the press reads as "nothing happened".
 - Use `renderRouter(...).getPathname()`. `expect(screen).toHavePathname` runs, but `tsc` rejects
   it.
 - Stub every `Stack.Screen` name the layout declares, or each missing one logs

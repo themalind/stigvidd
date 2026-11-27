@@ -11,7 +11,7 @@ import { stubMeasureInWindow } from "@/test/measure";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Platform } from "react-native";
-import MyHikesScreen from "../my-hikes";
+import MyHikesScreen from "@/app/(tabs)/(profile-stack)/user/my-hikes";
 
 const mockGetHikes = jest.fn();
 const mockNavigate = jest.fn();

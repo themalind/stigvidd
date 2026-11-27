@@ -12,7 +12,7 @@ import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { Platform } from "react-native";
-import SharedHikesScreen from "../shared-hikes";
+import SharedHikesScreen from "@/app/(tabs)/(profile-stack)/user/shared-hikes";
 
 const mockGetSharedHikes = jest.fn();
 const mockGetIncoming = jest.fn();

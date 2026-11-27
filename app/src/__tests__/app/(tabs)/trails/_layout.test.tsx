@@ -6,11 +6,11 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { Stack, Tabs, router } from "expo-router";
-import { act, renderRouter, screen } from "expo-router/testing-library";
+import { act, fireEvent, renderRouter, screen } from "expo-router/testing-library";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
-import TrailsStackLayout, * as layout from "../_layout";
-import * as nativeIntent from "../../../+native-intent";
+import TrailsStackLayout, * as layout from "@/app/(tabs)/trails/_layout";
+import * as nativeIntent from "@/app/+native-intent";
 
 function page(label: string) {
   return function Page() {
@@ -45,7 +45,7 @@ async function renderApp(initialUrl: string) {
         <Tabs>
           <Tabs.Screen name="(home)" />
           <Tabs.Screen name="(map)" />
-          <Tabs.Screen name="trails" />
+          <Tabs.Screen name="trails" options={{ tabBarButtonTestID: "trails-tab" }} />
         </Tabs>
       ),
       "(tabs)/(home)/_layout": () => <Stack />,
@@ -78,6 +78,14 @@ async function openLinkWhileRunning(url: string) {
   });
 }
 
+// The stack pops to its top a frame after the press, and renderRouter fakes the timers. keep-comment: native-stack's tabPress listener uses requestAnimationFrame
+async function pressTab(testID: string) {
+  await fireEvent.press(screen.getByTestId(testID));
+  await act(async () => {
+    jest.runOnlyPendingTimers();
+  });
+}
+
 it("starts on the start page", async () => {
   const app = await renderApp("/");
 
@@ -92,6 +100,24 @@ it("puts the trail list beneath a trail a shared link opens the app on", async (
   await act(() => router.back());
   expect(app.getPathname()).toBe("/trails");
   expect(screen.getByText("trail list")).toBeTruthy();
+});
+
+it("returns to the trail list when the tab is pressed on a trail a shared link opened the app on", async () => {
+  const app = await renderApp(linkTo("abc123"));
+
+  await pressTab("trails-tab");
+
+  expect(app.getPathname()).toBe("/trails");
+  expect(screen.getByText("trail list")).toBeTruthy();
+});
+
+it("returns to the trail list when the tab is pressed on a trail a shared link opened while the app ran", async () => {
+  const app = await renderApp("/");
+
+  await openLinkWhileRunning(linkTo("abc123"));
+  await pressTab("trails-tab");
+
+  expect(app.getPathname()).toBe("/trails");
 });
 
 it("puts the trail list beneath a trail a shared link opens while the app is running", async () => {

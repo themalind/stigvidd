@@ -12,8 +12,8 @@ import { act, fireEvent, renderRouter, screen } from "expo-router/testing-librar
 import { useState } from "react";
 import { Text } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import TabsLayout from "../_layout";
-import SettingsLayout from "../(settings)/_layout";
+import TabsLayout from "@/app/(tabs)/_layout";
+import SettingsLayout from "@/app/(tabs)/(settings)/_layout";
 
 jest.mock("@/components/auth/auth-provider", () => ({
   useAuth: () => ({ isAuthenticated: false, logout: jest.fn() }),

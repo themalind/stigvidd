@@ -8,7 +8,7 @@
 import { ApiError } from "@/api/core/api-error";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
-import RegisterScreen from "../register";
+import RegisterScreen from "@/app/(tabs)/(profile-stack)/register";
 
 const mockRegister = jest.fn();
 const mockReplace = jest.fn();

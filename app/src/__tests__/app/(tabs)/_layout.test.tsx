@@ -13,7 +13,7 @@ import { renderWithProviders, SeededAtom } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
 import { screen } from "@testing-library/react-native";
 import type { ReactElement } from "react";
-import TabsLayout from "../_layout";
+import TabsLayout from "@/app/(tabs)/_layout";
 
 const mockPathname = jest.fn();
 const mockSegments = jest.fn();

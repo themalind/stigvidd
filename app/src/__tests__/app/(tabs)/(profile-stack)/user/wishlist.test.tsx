@@ -7,7 +7,7 @@
 
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
-import WishlistScreen from "../wishlist";
+import WishlistScreen from "@/app/(tabs)/(profile-stack)/user/wishlist";
 
 let mockWishlistQuery: {
   data?: unknown[];

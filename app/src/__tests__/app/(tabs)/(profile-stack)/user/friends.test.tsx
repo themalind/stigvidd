@@ -11,7 +11,7 @@ import { flushUntil } from "@/test/flush";
 import { defined } from "@/test/defined";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
-import FriendsScreen from "../friends";
+import FriendsScreen from "@/app/(tabs)/(profile-stack)/user/friends";
 
 type Row = { identifier: string; nickName: string; note?: string | null };
 

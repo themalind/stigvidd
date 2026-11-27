@@ -6,9 +6,9 @@
 // obtain one at https://mozilla.org/MPL/2.0/.
 
 import { Tabs, router } from "expo-router";
-import { act, renderRouter, screen } from "expo-router/testing-library";
+import { act, fireEvent, renderRouter, screen } from "expo-router/testing-library";
 import { Text } from "react-native";
-import ProfileStackLayout, { unstable_settings } from "../_layout";
+import ProfileStackLayout, { unstable_settings } from "@/app/(tabs)/(profile-stack)/_layout";
 
 let mockAuthenticated = true;
 
@@ -54,7 +54,7 @@ function renderApp() {
       "(tabs)/_layout": () => (
         <Tabs>
           <Tabs.Screen name="(home)/index" />
-          <Tabs.Screen name="(profile-stack)" />
+          <Tabs.Screen name="(profile-stack)" options={{ tabBarButtonTestID: "profile-tab" }} />
         </Tabs>
       ),
       "(tabs)/(home)/index": page("Start"),
@@ -63,6 +63,14 @@ function renderApp() {
     },
     { initialUrl: "/" },
   );
+}
+
+// The stack pops to its top a frame after the press, and renderRouter fakes the timers. keep-comment: native-stack's tabPress listener uses requestAnimationFrame
+async function pressTab(testID: string) {
+  await fireEvent.press(screen.getByTestId(testID));
+  await act(async () => {
+    jest.runOnlyPendingTimers();
+  });
 }
 
 async function openFromNotification(route: string) {
@@ -76,6 +84,16 @@ it("puts the profile page beneath a screen a notification opens in an unvisited 
   expect(app.getPathname()).toBe("/user/shared-hikes");
 
   await act(() => router.back());
+  expect(app.getPathname()).toBe("/profile-page");
+  expect(screen.getByText("profile-page")).toBeTruthy();
+});
+
+it("returns to the profile page when the tab is pressed on a screen a notification opened", async () => {
+  const app = await renderApp();
+
+  await openFromNotification("/(tabs)/(profile-stack)/user/shared-hikes");
+  await pressTab("profile-tab");
+
   expect(app.getPathname()).toBe("/profile-page");
   expect(screen.getByText("profile-page")).toBeTruthy();
 });

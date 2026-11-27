@@ -15,7 +15,7 @@ import { renderWithProviders } from "@/test/render";
 import { onlineManager } from "@tanstack/react-query";
 import { act, fireEvent, screen } from "@testing-library/react-native";
 import { StyleSheet } from "react-native";
-import HomeScreen from "../index";
+import HomeScreen from "@/app/(tabs)/(home)/index";
 
 const mockGetPopularTrails = jest.fn();
 const mockNavigate = jest.fn();

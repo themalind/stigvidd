@@ -190,4 +190,18 @@ module.exports = defineConfig([
       ],
     },
   },
+  {
+    // keep-comment: expo-router turns every file under src/app/ into a route, tests included
+    files: ["src/app/**/__tests__/**", "src/app/**/__mocks__/**", "src/app/**/*.test.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Program",
+          message:
+            "Every file under src/app/ is a route. Put a route's test in src/__tests__/app/, mirroring its path.",
+        },
+      ],
+    },
+  },
 ]);

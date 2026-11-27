@@ -12,7 +12,7 @@ import { flushUntil, settle } from "@/test/flush";
 import { renderWithProviders } from "@/test/render";
 import { fireEvent, screen } from "@testing-library/react-native";
 import { ActivityIndicator, StyleSheet } from "react-native";
-import ProfilePageScreen from "../profile-page";
+import ProfilePageScreen from "@/app/(tabs)/(profile-stack)/profile-page";
 
 const mockLogout = jest.fn();
 const mockDeleteAccount = jest.fn();

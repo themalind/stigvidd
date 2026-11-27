@@ -9,8 +9,8 @@ import { Stack, Tabs, router } from "expo-router";
 import { act, renderRouter, screen } from "expo-router/testing-library";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
-import EventsStackLayout, * as layout from "../_layout";
-import * as nativeIntent from "../../../+native-intent";
+import EventsStackLayout, * as layout from "@/app/(tabs)/events/_layout";
+import * as nativeIntent from "@/app/+native-intent";
 
 function page(label: string) {
   return function Page() {

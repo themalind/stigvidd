@@ -50,6 +50,8 @@ folder are free. Tests (`__tests__/`, `*.test.ts(x)`, `__mocks__/`, `src/test/`)
   `no-restricted-globals` rule refuses `fetch` everywhere else. The exceptions are
   `api/core/`, `services/keycloak-auth.ts` (Keycloak) and `services/telemetry.ts` (OpenObserve).
 - Tests live in `__tests__/` beside the code they test. The harness is in `src/test/`.
+  Route tests are the exception: expo-router turns every file under `src/app/` into a route, so they live
+  in `src/__tests__/app/`, mirroring the route's path. Lint refuses a test under `src/app/`.
 - UI is a reusable component in `components/<domain>/`. Look for an existing one first.
 - A screen shown in more than one tab takes its routes as a prop, one set per stack
   (`components/event/event-routes.ts`, `components/area/area-routes.ts`), so a tap stays in that tab's history.
